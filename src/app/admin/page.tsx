@@ -16,7 +16,12 @@ import {
   RefreshCcw,
   Copy,
   UserCheck,
-  Calendar
+  Calendar,
+  Search,
+  Filter,
+  ArrowUpDown,
+  AlertCircle,
+  LayoutDashboard
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -38,6 +43,7 @@ import {
 import { generatePromotionalContent, type GeneratePromotionalContentOutput } from "@/ai/flows/generate-promotional-content-flow";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import { GAMES_DATA } from "@/lib/games-data";
 
 export default function AdminPage() {
   const { user, storeSettings, updateStoreSettings, allUsers } = useApp();
@@ -97,255 +103,225 @@ export default function AdminPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-24 md:pb-10">
+    <div className="min-h-screen bg-[#F8F9FD] pb-24 md:pb-10">
       <Header />
       
-      <main className="container mx-auto px-4 py-8">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center text-white">
-              <Settings className="w-6 h-6" />
+      <main className="container mx-auto px-4 py-8 max-w-5xl">
+        {/* Console Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-primary/60 mb-1">Inventory Management</h2>
+            <h1 className="text-2xl font-headline font-bold text-gray-900">Active Stock</h1>
+          </div>
+          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center border-2 border-white shadow-sm overflow-hidden">
+             <div className="w-full h-full bg-primary/20 flex items-center justify-center text-primary font-bold">
+               {user.name?.[0]}
+             </div>
+          </div>
+        </div>
+
+        <Tabs defaultValue="stock" className="space-y-8">
+          {/* Stats Section - Visualized like the design */}
+          <div className="grid grid-cols-2 gap-4">
+            <Card className="rounded-[2rem] border-none shadow-sm bg-white p-6">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">Total Value</p>
+              <h3 className="text-2xl md:text-3xl font-headline font-bold text-secondary">$24,590</h3>
+            </Card>
+            <Card className="rounded-[2rem] border-none shadow-sm bg-white p-6">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">Low Stock</p>
+              <h3 className="text-2xl md:text-3xl font-headline font-bold text-red-500">3 Items</h3>
+            </Card>
+          </div>
+
+          {/* Search and Filters */}
+          <div className="space-y-4">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input 
+                className="pl-12 h-14 rounded-2xl bg-white border-none shadow-sm text-sm" 
+                placeholder="Search product ID or name..." 
+              />
             </div>
-            <div>
-              <h1 className="text-3xl font-headline font-bold">Admin Dashboard</h1>
-              <p className="text-muted-foreground">Manage products, users, and store visibility</p>
+            <div className="flex gap-3">
+              <Button variant="outline" className="flex-1 h-12 rounded-2xl bg-white border-none shadow-sm font-bold gap-2 text-xs">
+                <Filter className="w-4 h-4" /> Filter
+              </Button>
+              <Button variant="outline" className="flex-1 h-12 rounded-2xl bg-white border-none shadow-sm font-bold gap-2 text-xs">
+                <ArrowUpDown className="w-4 h-4" /> Sort
+              </Button>
             </div>
           </div>
 
-          <Card className="rounded-2xl border-none shadow-sm bg-white p-4 flex items-center gap-6 self-start md:self-auto">
-            <div className="flex items-center gap-3">
-              <div className={`w-3 h-3 rounded-full ${storeSettings.isLive ? 'bg-red-500 animate-pulse' : 'bg-gray-300'}`} />
-              <div className="space-y-0.5">
-                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Live Mode</p>
-                <p className="text-sm font-bold">{storeSettings.isLive ? 'Online' : 'Offline'}</p>
-              </div>
-            </div>
-            <Switch 
-              checked={storeSettings.isLive} 
-              onCheckedChange={toggleLiveStatus}
-              className="data-[state=checked]:bg-red-500"
-            />
-          </Card>
-        </div>
-
-        <Tabs defaultValue="products" className="space-y-8">
-          <TabsList className="bg-white p-1 rounded-2xl border border-gray-100 shadow-sm w-full md:w-auto">
-            <TabsTrigger value="products" className="rounded-xl px-6 data-[state=active]:bg-primary data-[state=active]:text-white">
-              <Package className="w-4 h-4 mr-2" /> Products
+          <TabsList className="bg-white/50 backdrop-blur-sm p-1.5 rounded-2xl border border-gray-100 shadow-sm w-full md:w-auto">
+            <TabsTrigger value="stock" className="rounded-xl px-6 data-[state=active]:bg-primary data-[state=active]:text-white">
+              <Package className="w-4 h-4 mr-2" /> Stock
             </TabsTrigger>
             <TabsTrigger value="users" className="rounded-xl px-6 data-[state=active]:bg-primary data-[state=active]:text-white">
               <Users className="w-4 h-4 mr-2" /> Users
             </TabsTrigger>
-            <TabsTrigger value="promo" className="rounded-xl px-6 data-[state=active]:bg-primary data-[state=active]:text-white">
-              <Sparkles className="w-4 h-4 mr-2" /> AI Promo Tool
+            <TabsTrigger value="settings" className="rounded-xl px-6 data-[state=active]:bg-primary data-[state=active]:text-white">
+              <Settings className="w-4 h-4 mr-2" /> Settings
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="products" className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-headline font-bold">Manage Packages</h2>
-              <Button className="rounded-xl gap-2">
-                <Plus className="w-4 h-4" /> Add New Package
-              </Button>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3].map((i) => (
-                <Card key={i} className="rounded-2xl border-gray-100 shadow-sm overflow-hidden">
-                  <div className="h-32 bg-gray-100 relative">
-                    <div className="absolute top-3 right-3 flex gap-2">
-                      <Button size="icon" variant="secondary" className="w-8 h-8 rounded-full"><Edit className="w-4 h-4" /></Button>
-                      <Button size="icon" variant="destructive" className="w-8 h-8 rounded-full"><Trash2 className="w-4 h-4" /></Button>
+          <TabsContent value="stock" className="space-y-6">
+            <div className="grid grid-cols-1 gap-4">
+              {GAMES_DATA.slice(0, 3).map((item) => (
+                <Card key={item.id} className="rounded-[2.5rem] border-none shadow-sm bg-white p-6 relative overflow-hidden group">
+                  <div className="flex items-start justify-between mb-6">
+                    <div className="flex items-center gap-4">
+                      <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center font-headline font-bold text-xl text-primary shadow-inner">
+                        {item.title[0]}
+                      </div>
+                      <div>
+                        <h3 className="font-headline font-bold text-lg leading-tight">{item.title}</h3>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">ID: {item.id.toUpperCase()}</p>
+                      </div>
+                    </div>
+                    <Button size="icon" variant="secondary" className="w-10 h-10 rounded-2xl bg-gray-50 text-gray-400 group-hover:text-primary transition-colors">
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 mb-6">
+                    <div className="bg-gray-50 p-4 rounded-2xl">
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase mb-1">Base Price</p>
+                      <p className="font-headline font-bold text-lg">${item.price.toFixed(2)}</p>
+                    </div>
+                    <div className="bg-gray-50 p-4 rounded-2xl">
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase mb-1">Category</p>
+                      <p className="font-headline font-bold text-sm truncate uppercase">{item.category}</p>
                     </div>
                   </div>
-                  <CardContent className="p-4">
-                    <h3 className="font-bold">Example Game Package {i}</h3>
-                    <p className="text-sm text-muted-foreground mb-4">Sample description for the package.</p>
-                    <div className="flex justify-between items-center">
-                      <span className="font-bold text-lg">$10.00</span>
-                      <Badge>Active</Badge>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]" />
+                      <span className="text-[11px] font-bold text-green-600">In Stock (1,204)</span>
                     </div>
-                  </CardContent>
+                    <Badge variant="secondary" className="bg-gray-100 text-[10px] font-bold uppercase rounded-xl px-3 py-1 text-gray-500 border-none">
+                      {item.gameId === 'freefire' ? 'Digital' : 'Codes'}
+                    </Badge>
+                  </div>
                 </Card>
               ))}
             </div>
+
+            <Button className="w-full h-16 rounded-[2rem] bg-primary hover:bg-primary/90 text-white font-bold text-lg gap-3 shadow-xl shadow-primary/20 transition-all active:scale-[0.98] fixed bottom-24 left-4 right-4 z-40 md:relative md:bottom-0 md:left-0 md:right-0">
+              <Plus className="w-6 h-6" /> Add New Package
+            </Button>
           </TabsContent>
 
           <TabsContent value="users" className="space-y-6">
-            <div className="flex justify-between items-center">
-              <div>
-                <h2 className="text-2xl font-headline font-bold">Registered Users</h2>
-                <p className="text-sm text-muted-foreground">Monitor your growing community ({allUsers.length} users)</p>
-              </div>
-            </div>
-
-            <Card className="rounded-3xl border-none shadow-sm overflow-hidden">
+             <Card className="rounded-[2.5rem] border-none shadow-sm overflow-hidden bg-white">
               <Table>
                 <TableHeader className="bg-gray-50/50">
                   <TableRow>
-                    <TableHead className="font-bold">User</TableHead>
-                    <TableHead className="font-bold">Email</TableHead>
-                    <TableHead className="font-bold">Joined Date</TableHead>
-                    <TableHead className="font-bold">Status</TableHead>
-                    <TableHead className="text-right font-bold">Actions</TableHead>
+                    <TableHead className="font-bold text-[10px] uppercase tracking-wider">User</TableHead>
+                    <TableHead className="font-bold text-[10px] uppercase tracking-wider">Status</TableHead>
+                    <TableHead className="text-right font-bold text-[10px] uppercase tracking-wider">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {allUsers.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={5} className="text-center py-10 text-muted-foreground">
-                        No users registered yet.
+                  {allUsers.map((u) => (
+                    <TableRow key={u.uid} className="hover:bg-gray-50/50 transition-colors border-gray-50">
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span className="font-bold text-sm">{u.name}</span>
+                          <span className="text-[10px] text-muted-foreground">{u.email}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={`text-[9px] uppercase font-bold rounded-full ${u.isAdmin ? 'border-primary text-primary bg-primary/5' : 'border-gray-200'}`}>
+                          {u.isAdmin ? 'Admin' : 'User'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl"><Edit className="w-3 h-3" /></Button>
                       </TableCell>
                     </TableRow>
-                  ) : (
-                    allUsers.map((u) => (
-                      <TableRow key={u.uid} className="hover:bg-gray-50/50 transition-colors">
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                              <UserCheck className="w-4 h-4" />
-                            </div>
-                            <span className="font-medium">{u.name}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-muted-foreground text-xs md:text-sm">
-                          {u.email}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground text-xs md:text-sm">
-                          <div className="flex items-center gap-1.5">
-                            <Calendar className="w-3.5 h-3.5" />
-                            {u.createdAt ? format(new Date(u.createdAt), 'MMM dd, yyyy') : 'N/A'}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {u.isAdmin ? (
-                            <Badge variant="secondary" className="bg-primary/10 text-primary border-none text-[10px] uppercase font-bold">Admin</Badge>
-                          ) : (
-                            <Badge variant="outline" className="text-[10px] uppercase font-bold">Member</Badge>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
-                            <Edit className="w-4 h-4 text-muted-foreground" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
+                  ))}
                 </TableBody>
               </Table>
             </Card>
           </TabsContent>
 
-          <TabsContent value="promo" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <Card className="rounded-3xl border-none shadow-lg">
-                <CardHeader>
-                  <CardTitle className="font-headline font-bold text-xl flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-primary" /> Promotional Tool (AI)
-                  </CardTitle>
-                  <CardDescription>Generate catchy announcements and descriptions for your events.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Promotion Type</Label>
-                    <Select value={promoInput.promotionType} onValueChange={(v) => setPromoInput({...promoInput, promotionType: v as any})}>
-                      <SelectTrigger className="rounded-xl h-12">
-                        <SelectValue placeholder="Select type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="discount">Discount</SelectItem>
-                        <SelectItem value="spin-to-win">Spin to Win</SelectItem>
-                        <SelectItem value="bonus">Bonus</SelectItem>
-                        <SelectItem value="new-product">New Product</SelectItem>
-                        <SelectItem value="event">Event</SelectItem>
-                      </SelectContent>
-                    </Select>
+          <TabsContent value="settings" className="space-y-6">
+            <Card className="rounded-[2.5rem] border-none shadow-sm bg-white p-6">
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-red-50 rounded-2xl flex items-center justify-center text-red-500">
+                    <AlertCircle className="w-6 h-6" />
                   </div>
+                  <div>
+                    <h3 className="font-bold text-lg">Live Visibility</h3>
+                    <p className="text-xs text-muted-foreground">Toggle homepage "Live Now" banner</p>
+                  </div>
+                </div>
+                <Switch 
+                  checked={storeSettings.isLive} 
+                  onCheckedChange={toggleLiveStatus}
+                  className="data-[state=checked]:bg-red-500"
+                />
+              </div>
+
+              <div className="space-y-6 pt-6 border-t border-gray-50">
+                 <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 bg-primary/5 rounded-2xl flex items-center justify-center text-primary">
+                    <Sparkles className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg">AI Marketing Lab</h3>
+                    <p className="text-xs text-muted-foreground">Generate promotional content</p>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 gap-4">
                   <div className="space-y-2">
-                    <Label>Short Title</Label>
+                    <Label className="text-[10px] font-bold uppercase text-muted-foreground">Title</Label>
                     <Input 
-                      className="rounded-xl h-12" 
-                      placeholder="e.g. Free Fire Mega Sale" 
+                      className="rounded-2xl h-12 bg-gray-50 border-none" 
+                      placeholder="e.g. Weekend Flash Sale" 
                       value={promoInput.title}
                       onChange={(e) => setPromoInput({...promoInput, title: e.target.value})}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Promotion Details</Label>
+                    <Label className="text-[10px] font-bold uppercase text-muted-foreground">Details</Label>
                     <Textarea 
-                      className="rounded-xl min-h-[100px]" 
-                      placeholder="Enter specific details like 50% off or free diamonds..." 
+                      className="rounded-2xl bg-gray-50 border-none min-h-[100px]" 
+                      placeholder="Enter promotion details..." 
                       value={promoInput.promotionDetails}
                       onChange={(e) => setPromoInput({...promoInput, promotionDetails: e.target.value})}
                     />
                   </div>
                   <Button 
                     onClick={handleGeneratePromo} 
-                    className="w-full h-12 rounded-xl gap-2 font-bold"
+                    className="w-full h-14 rounded-2xl gap-2 font-bold"
                     disabled={isGenerating}
                   >
                     {isGenerating ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                    Generate Content
+                    Generate Suggestions
                   </Button>
-                </CardContent>
+                </div>
+              </div>
+            </Card>
+
+            {promoOutput && (
+              <Card className="rounded-[2.5rem] border-none shadow-sm bg-primary/5 p-6 space-y-4 animate-in fade-in slide-in-from-bottom-4">
+                <div className="flex justify-between items-center">
+                  <h4 className="font-bold text-primary">AI Suggestions</h4>
+                  <Button variant="ghost" size="sm" onClick={() => setPromoOutput(null)}>Clear</Button>
+                </div>
+                <div className="bg-white p-4 rounded-2xl border border-primary/10">
+                   <p className="text-xs font-bold uppercase text-primary mb-2">Ticker Preview</p>
+                   <p className="text-sm font-medium">{promoOutput.announcementText}</p>
+                </div>
+                <Button className="w-full h-12 rounded-2xl bg-secondary hover:bg-secondary/90 text-white font-bold">
+                  Apply to Ticker
+                </Button>
               </Card>
-
-              <Card className="rounded-3xl border-none shadow-lg bg-primary/5 min-h-[400px]">
-                <CardHeader>
-                  <CardTitle className="font-headline font-bold text-xl">Generated Result</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {!promoOutput ? (
-                    <div className="flex flex-col items-center justify-center py-20 text-muted-foreground opacity-50">
-                      <Sparkles className="w-12 h-12 mb-4" />
-                      <p>AI suggestions will appear here.</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-6">
-                      <div className="space-y-2">
-                        <Label className="text-xs uppercase font-bold text-primary">Ticker Announcement</Label>
-                        <div className="bg-white p-4 rounded-xl border border-primary/20 flex justify-between items-start gap-4">
-                          <p className="text-sm font-medium">{promoOutput.announcementText}</p>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => {
-                            navigator.clipboard.writeText(promoOutput.announcementText);
-                            toast({ title: "Copied!" });
-                          }}>
-                            <Copy className="w-3 h-3" />
-                          </Button>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label className="text-xs uppercase font-bold text-primary">Event Description</Label>
-                        <div className="bg-white p-4 rounded-xl border border-primary/20 whitespace-pre-wrap text-sm leading-relaxed">
-                          {promoOutput.eventDescription}
-                        </div>
-                      </div>
-
-                      <div className="flex gap-4">
-                        <div className="flex-1 space-y-2">
-                          <Label className="text-xs uppercase font-bold text-primary">Hashtags</Label>
-                          <div className="flex flex-wrap gap-2">
-                            {promoOutput.suggestedHashtags?.map((tag, i) => (
-                              <Badge key={i} variant="secondary" className="rounded-full">{tag}</Badge>
-                            ))}
-                          </div>
-                        </div>
-                        <div className="flex-1 space-y-2">
-                          <Label className="text-xs uppercase font-bold text-primary">Emojis</Label>
-                          <div className="text-2xl">{promoOutput.emojiSuggestions?.join(" ")}</div>
-                        </div>
-                      </div>
-
-                      <Button className="w-full h-12 rounded-xl font-bold bg-secondary hover:bg-secondary/90 shadow-lg shadow-secondary/20">
-                        Apply to Store
-                      </Button>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
+            )}
           </TabsContent>
         </Tabs>
       </main>
