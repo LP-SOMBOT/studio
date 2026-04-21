@@ -34,7 +34,7 @@ Set the following variables in your deployment dashboard:
 
 If you encounter the error **"failed to push some refs to..."**:
 
-1.  **Pull First**: The remote repository has changes you don't have. Click the `...` in the Source Control panel and select **Pull**.
+1.  **Pull First**: The remote repository has changes you don't have. Run `git pull origin main` in the terminal or click the `...` in the Source Control panel and select **Pull**.
 2.  **Sync Local & Remote**: Use the **Sync Changes** button to ensure your local workspace matches GitHub.
 3.  **Check Permissions**: Ensure your GitHub token has "repo" and "workflow" scopes enabled.
 4.  **Resolve Conflicts**: If files are modified in both places, you must resolve conflicts before the push will be accepted.
