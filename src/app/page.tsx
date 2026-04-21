@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -10,6 +11,7 @@ import { GAMES_DATA } from "@/lib/games-data";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import { useApp } from "@/lib/context";
 import { 
   Flame, 
   Trophy, 
@@ -24,7 +26,13 @@ import {
 } from "lucide-react";
 
 export default function Home() {
-  const [showLiveBanner, setShowLiveBanner] = useState(true);
+  const { storeSettings } = useApp();
+  const [localDismiss, setLocalDismiss] = useState(false);
+
+  // The banner is visible if:
+  // 1. The admin has turned it on globally (storeSettings.isLive)
+  // 2. The user hasn't dismissed it in the current session (localDismiss)
+  const isVisible = storeSettings.isLive && !localDismiss;
 
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-10">
@@ -38,13 +46,13 @@ export default function Home() {
         </section>
 
         {/* Live Status Section */}
-        {showLiveBanner && (
-          <section className="relative bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden">
+        {isVisible && (
+          <section className="relative bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden animate-in fade-in slide-in-from-top-4 duration-500">
             <Button 
               variant="ghost" 
               size="icon" 
               className="absolute top-2 right-2 h-8 w-8 rounded-full text-muted-foreground hover:bg-red-50 hover:text-red-500 transition-colors opacity-100"
-              onClick={() => setShowLiveBanner(false)}
+              onClick={() => setLocalDismiss(true)}
             >
               <X className="w-4 h-4" />
             </Button>

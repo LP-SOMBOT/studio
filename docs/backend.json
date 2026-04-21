@@ -3,44 +3,55 @@
   "entities": {
     "UserProfile": {
       "title": "User Profile",
-      "description": "Extended user information stored in Firestore.",
+      "description": "Extended user information stored in Realtime Database.",
       "type": "object",
       "properties": {
         "uid": { "type": "string" },
         "email": { "type": "string", "format": "email" },
         "name": { "type": "string" },
         "isAdmin": { "type": "boolean" },
-        "phoneNumber": { "type": "string" }
+        "phoneNumber": { "type": "string" },
+        "createdAt": { "type": "number" }
       },
       "required": ["uid", "email"]
     },
     "Order": {
       "title": "Order",
-      "description": "A game package purchase order.",
+      "description": "A game package purchase order stored in Realtime Database.",
       "type": "object",
       "properties": {
         "userId": { "type": "string" },
         "items": { "type": "array" },
         "total": { "type": "number" },
         "status": { "type": "string", "enum": ["pending", "processing", "successful", "cancelled"] },
-        "createdAt": { "type": "string", "format": "date-time" },
+        "createdAt": { "type": "number" },
         "paymentMethod": { "type": "string" },
         "gameDetails": { "type": "object" }
       },
       "required": ["userId", "items", "total", "status", "createdAt"]
+    },
+    "StoreSettings": {
+      "title": "Store Settings",
+      "description": "Global configuration for the application.",
+      "type": "object",
+      "properties": {
+        "isLive": { "type": "boolean" },
+        "announcementTicker": { "type": "string" }
+      }
     }
   },
   "auth": {
     "providers": ["password", "google.com"]
   },
-  "firestore": {
-    "/users/{userId}": {
-      "schema": "UserProfile",
-      "description": "User profiles for both admins and customers."
+  "database": {
+    "users": {
+      "description": "User profiles managed via uid keys."
     },
-    "/orders/{orderId}": {
-      "schema": "Order",
-      "description": "Collection of all game top-up and account orders."
+    "orders": {
+      "description": "All orders created by users."
+    },
+    "settings": {
+      "description": "Global application settings like live status."
     }
   }
 }

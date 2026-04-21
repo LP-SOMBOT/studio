@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -9,12 +10,14 @@ import {
   Plus, 
   Trash2, 
   Edit, 
-  LayoutGrid, 
   Users, 
   Package, 
   Sparkles,
   RefreshCcw,
-  Copy
+  Copy,
+  Radio,
+  Eye,
+  EyeOff
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,11 +27,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { generatePromotionalContent, type GeneratePromotionalContentOutput } from "@/ai/flows/generate-promotional-content-flow";
 import { toast } from "@/hooks/use-toast";
 
 export default function AdminPage() {
-  const { user } = useApp();
+  const { user, storeSettings, updateStoreSettings } = useApp();
   const [isGenerating, setIsGenerating] = useState(false);
   const [promoInput, setPromoInput] = useState({
     promotionType: 'discount' as any,
@@ -68,19 +72,52 @@ export default function AdminPage() {
     }
   };
 
+  const toggleLiveStatus = async (checked: boolean) => {
+    try {
+      await updateStoreSettings({ isLive: checked });
+      toast({
+        title: checked ? "Live Banner Enabled" : "Live Banner Disabled",
+        description: `The homepage live section is now ${checked ? 'visible' : 'hidden'} to users.`
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Update Failed",
+        description: "Could not update store settings."
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background pb-24 md:pb-10">
       <Header />
       
       <main className="container mx-auto px-4 py-8">
-        <div className="flex items-center gap-3 mb-8">
-          <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center text-white">
-            <Settings className="w-6 h-6" />
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center text-white">
+              <Settings className="w-6 h-6" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-headline font-bold">Admin Dashboard</h1>
+              <p className="text-muted-foreground">Manage products, users, and store visibility</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-3xl font-headline font-bold">Admin Dashboard</h1>
-            <p className="text-muted-foreground">Manage products, users, and store settings</p>
-          </div>
+
+          <Card className="rounded-2xl border-none shadow-sm bg-white p-4 flex items-center gap-6">
+            <div className="flex items-center gap-3">
+              <div className={`w-3 h-3 rounded-full ${storeSettings.isLive ? 'bg-red-500 animate-pulse' : 'bg-gray-300'}`} />
+              <div className="space-y-0.5">
+                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Live Mode</p>
+                <p className="text-sm font-bold">{storeSettings.isLive ? 'Online' : 'Offline'}</p>
+              </div>
+            </div>
+            <Switch 
+              checked={storeSettings.isLive} 
+              onCheckedChange={toggleLiveStatus}
+              className="data-[state=checked]:bg-red-500"
+            />
+          </Card>
         </div>
 
         <Tabs defaultValue="products" className="space-y-8">

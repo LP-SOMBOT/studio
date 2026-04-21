@@ -23,7 +23,8 @@ import {
   query, 
   orderByChild, 
   equalTo,
-  serverTimestamp
+  serverTimestamp,
+  update
 } from 'firebase/database';
 import { toast } from '@/hooks/use-toast';
 
@@ -47,6 +48,11 @@ type Order = {
   gameDetails?: any;
 };
 
+type StoreSettings = {
+  isLive: boolean;
+  announcementTicker?: string;
+};
+
 type AppContextType = {
   user: any;
   loading: boolean;
@@ -60,6 +66,8 @@ type AppContextType = {
   clearCart: () => void;
   orders: Order[];
   createOrder: (paymentMethod: string, gameDetails: any) => void;
+  storeSettings: StoreSettings;
+  updateStoreSettings: (settings: Partial<StoreSettings>) => Promise<void>;
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -72,6 +80,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [storeSettings, setStoreSettings] = useState<StoreSettings>({ isLive: true });
 
   // Sync user profile from RTDB
   useEffect(() => {
@@ -84,6 +93,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setUserProfile(snapshot.val());
     });
   }, [rtdb, user]);
+
+  // Sync global store settings
+  useEffect(() => {
+    if (!rtdb) return;
+    const settingsRef = ref(rtdb, 'settings');
+    return onValue(settingsRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        setStoreSettings(prev => ({ ...prev, ...data }));
+      }
+    });
+  }, [rtdb]);
 
   // Sync orders from RTDB
   useEffect(() => {
@@ -135,7 +156,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     
     await updateProfile(newUser, { displayName: name });
     
-    // Save profile to RTDB
     await set(ref(rtdb, `users/${newUser.uid}`), {
       uid: newUser.uid,
       email,
@@ -151,9 +171,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
     
-    // Create/Update profile in RTDB if it doesn't exist
     const userRef = ref(rtdb, `users/${user.uid}`);
-    await set(userRef, {
+    await update(userRef, {
       uid: user.uid,
       email: user.email,
       name: user.displayName,
@@ -222,6 +241,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       });
   };
 
+  const updateStoreSettings = async (settings: Partial<StoreSettings>) => {
+    if (!rtdb || !enhancedUser?.isAdmin) return;
+    const settingsRef = ref(rtdb, 'settings');
+    await update(settingsRef, settings);
+  };
+
   return (
     <AppContext.Provider value={{ 
       user: enhancedUser, 
@@ -235,7 +260,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       removeFromCart, 
       clearCart, 
       orders, 
-      createOrder 
+      createOrder,
+      storeSettings,
+      updateStoreSettings
     }}>
       {children}
     </AppContext.Provider>
