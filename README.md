@@ -22,35 +22,25 @@ Set the following variables in your deployment dashboard:
 
 ## 🛠 Troubleshooting Git Issues (THE NUCLEAR OPTION)
 
-If you are stuck with "failed to push" or "authentication failed" and nothing else works, follow these steps in your terminal:
+If you are stuck with "failed to push" or "authentication failed" (as seen in your screenshot) and the sidebar shows `11↑`, follow these steps exactly in your **Terminal**:
 
-### Step 1: Fix the Divergent Branch Error
-Run this command to tell Git how to handle different histories:
-```bash
-git config pull.rebase false
-```
-
-### Step 2: Fix Authentication (Token Error)
-GitHub does **not** accept your regular password in the terminal. You must use a **Personal Access Token (PAT)**:
-
-1.  **Generate Token**: Go to your GitHub account -> **Settings** -> **Developer Settings** -> **Personal Access Tokens** -> **Tokens (classic)**.
-2.  **Generate New**: Click "Generate new token (classic)", name it "OskarShop", and check the **repo** box.
-3.  **Copy Token**: Copy the code immediately.
-4.  **Terminal Login**: Run `git pull origin main`. 
-    *   **Username**: Your GitHub username.
-    *   **Password**: **Paste the Token** (it will be invisible while you paste).
-
-### Step 3: Re-login in the Editor
-1. Click the **Profile/Account icon** at the bottom-left of the editor.
-2. Select **Sign Out**.
-3. Click it again and select **Sign in with GitHub**.
-
-### Step 4: The "Force Sync" (Last Resort)
-If you want to **discard** what is on GitHub and overwrite it with your **current local code** (this fixes almost all sync errors once you are authenticated):
-**WARNING: This will delete any changes on GitHub that are NOT in your local workspace.**
+### Step 1: The "Force Push" Command
+Copy and paste this exact line into your terminal and press Enter:
 ```bash
 git push origin main --force
 ```
+
+### Step 2: Handle Authentication
+When you run the command above, Git will likely ask for your credentials:
+
+1.  **Username**: Type your GitHub username and press Enter.
+2.  **Password**: **DO NOT use your normal password.** Paste your **Personal Access Token (PAT)** here. (Note: The terminal will not show any characters while you paste/type).
+
+### Step 3: Resetting the IDE Connection
+If the error dialog persists in the editor:
+1.  Click the **Profile icon** at the very bottom-left of the screen.
+2.  Select **Sign Out**.
+3.  Click it again and select **Sign in with GitHub**.
 
 ---
 
