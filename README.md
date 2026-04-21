@@ -38,7 +38,7 @@ The remote repository has changes you don't have.
 2.  **Sync Local & Remote**: Use the **Sync Changes** button.
 
 ### "Authentication Failed" or "How to Re-login"
-If you cannot pull or push due to a login error:
+If you cannot pull or push due to a login error or if you revoked your token:
 1.  **IDE Re-login**: Look for your GitHub profile icon at the bottom-left of the editor. Click it, sign out, and then sign back in.
 2.  **Refresh Connection**: Go to your workspace/project settings dashboard (outside the editor) and look for the "GitHub" or "Integrations" section to reconnect your account.
 3.  **Terminal Fix**: If you are comfortable with the terminal, you can force a credential prompt by running:
