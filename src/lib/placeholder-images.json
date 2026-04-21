@@ -3,13 +3,13 @@
     {
       "id": "app-logo",
       "description": "Oskar Shop Official Logo",
-      "imageUrl": "https://picsum.photos/seed/oskar-logo/512/512",
+      "imageUrl": "/0ae2784359e2ca500788f3545ce9ba3b.jpg",
       "imageHint": "app logo"
     },
     {
       "id": "hero-1",
       "description": "Free Fire Promo Banner",
-      "imageUrl": "https://files.catbox.moe/e00tos.jpg",
+      "imageUrl": "/0ae2784359e2ca500788f3545ce9ba3b.jpg",
       "imageHint": "gaming fire"
     },
     {
@@ -27,7 +27,7 @@
     {
       "id": "freefire-logo",
       "description": "Free Fire Logo",
-      "imageUrl": "https://files.catbox.moe/e00tos.jpg",
+      "imageUrl": "/0ae2784359e2ca500788f3545ce9ba3b.jpg",
       "imageHint": "free fire"
     },
     {
@@ -57,7 +57,7 @@
     {
       "id": "onboarding-1",
       "description": "Instant Top Up Illustration",
-      "imageUrl": "https://files.catbox.moe/e00tos.jpg",
+      "imageUrl": "/0ae2784359e2ca500788f3545ce9ba3b.jpg",
       "imageHint": "game diamonds"
     },
     {
