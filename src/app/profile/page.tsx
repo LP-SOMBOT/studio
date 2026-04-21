@@ -1,18 +1,25 @@
 "use client";
 
+import { useEffect } from "react";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
 import { useApp } from "@/lib/context";
 import { User, LogOut, Package, Clock, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 
 export default function ProfilePage() {
   const { user, logout, orders } = useApp();
   const router = useRouter();
+
+  useEffect(() => {
+    if (!user) {
+      router.push('/login');
+    }
+  }, [user, router]);
 
   const handleLogout = () => {
     logout();
@@ -38,7 +45,6 @@ export default function ProfilePage() {
   };
 
   if (!user) {
-    if (typeof window !== 'undefined') router.push('/login');
     return null;
   }
 
