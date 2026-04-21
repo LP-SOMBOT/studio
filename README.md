@@ -20,32 +20,34 @@ Set the following variables in your deployment dashboard:
 
 ---
 
-## 🛠 Troubleshooting Git Issues
+## 🛠 Troubleshooting Git Issues (THE NUCLEAR OPTION)
 
-If you see errors like **"failed to push"** or **"Authentication failed"** in your terminal, follow these steps exactly:
+If you are stuck with "failed to push" or "authentication failed" and nothing else works, follow these steps in your terminal:
 
-### Fix Divergent Branches
-If `git pull` gives a "hint" about divergent branches, run these two commands in your terminal:
+### Step 1: Fix the Divergent Branch Error
+Run this command to tell Git how to handle different histories:
 ```bash
 git config pull.rebase false
-git pull origin main
 ```
 
-### Fix Authentication (Token) Error
+### Step 2: The "Force Sync" (Last Resort)
+If you want to **discard** what is on GitHub and overwrite it with your **current local code** (this fixes almost all sync errors):
+**WARNING: This will delete any changes on GitHub that are NOT in your local workspace.**
+```bash
+git push origin main --force
+```
+
+### Step 3: Fixing Authentication (Token Error)
 GitHub does **not** accept your regular password in the terminal. You must use a **Personal Access Token (PAT)**:
 
-1.  **Generate Token**: Go to your GitHub account on the web -> **Settings** -> **Developer Settings** (at the bottom) -> **Personal Access Tokens** -> **Tokens (classic)**.
-2.  **Generate New**: Click "Generate new token (classic)", give it a name (e.g., "OskarShop"), and check the **repo** box.
-3.  **Copy Token**: Scroll down and click "Generate token". **Copy the code immediately** (you won't see it again).
-4.  **Terminal Login**: Go back to your terminal and run:
-    ```bash
-    git pull origin main
-    ```
-    *   **Username**: Type your GitHub username.
-    *   **Password**: **Paste the Token** you just copied (it will look like nothing is happening while you paste, this is normal).
+1.  **Generate Token**: Go to your GitHub account -> **Settings** -> **Developer Settings** -> **Personal Access Tokens** -> **Tokens (classic)**.
+2.  **Generate New**: Click "Generate new token (classic)", name it "OskarShop", and check the **repo** box.
+3.  **Copy Token**: Copy the code immediately.
+4.  **Terminal Login**: Run `git pull origin main`. 
+    *   **Username**: Your GitHub username.
+    *   **Password**: **Paste the Token** (it will be invisible while you paste).
 
-### Re-login in the Editor
-If you want to use the buttons instead of the terminal:
+### Step 4: Re-login in the Editor
 1. Click the **Profile/Account icon** at the bottom-left of the editor.
 2. Select **Sign Out**.
 3. Click it again and select **Sign in with GitHub**.
@@ -57,6 +59,5 @@ If you want to use the buttons instead of the terminal:
 npm install
 npm run dev
 ```
-The app will be available at `http://localhost:9002`.
 
 **Note:** The onboarding flow exclusively appears when the user has installed the OskarShop PWA to their home screen and is opening it for the very first time. It will never show on a regular browser visit.
