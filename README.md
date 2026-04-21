@@ -10,9 +10,9 @@ A modern, high-performance PWA for gaming top-ups and account trading, built wit
 - **Secure Payments**: Integrated mobile payment verification workflow.
 - **Responsive Console**: Advanced admin dashboard for inventory and user management.
 
-## Deployment to Vercel or Netlify
+## Deployment
 
-To deploy this application, follow these steps:
+To deploy this application to **Vercel** or **Netlify**:
 
 ### 1. Environment Variables
 
@@ -24,11 +24,17 @@ Set the following variables in your deployment dashboard:
 *   `NEXT_PUBLIC_FIREBASE_DATABASE_URL`: Found in `src/firebase/config.ts`
 *   `NEXT_PUBLIC_FIREBASE_PROJECT_ID`: Found in `src/firebase/config.ts`
 
-### 2. Admin Access
+### 2. Connect Repository
+
+1. Push your code to a GitHub/GitLab/Bitbucket repository.
+2. Link the repository to your hosting platform (Vercel/Netlify).
+3. The platform will automatically detect the Next.js project and deploy it.
+
+### 3. Admin Access
 
 The user with email `admin@lp.com` is automatically granted administrative privileges. You can also manually set `isAdmin: true` in the Realtime Database for any UID.
 
-### 3. Local Development
+## Local Development
 
 ```bash
 npm install

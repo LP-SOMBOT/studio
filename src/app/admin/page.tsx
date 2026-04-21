@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Header from "@/components/layout/Header";
-import BottomNav from "@/components/layout/BottomNav";
 import { useApp } from "@/lib/context";
 import { 
   Settings, 
@@ -24,7 +22,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -116,12 +114,6 @@ export default function AdminPage() {
       </header>
       
       <main className="container mx-auto px-6 py-8 max-w-4xl space-y-10">
-        {/* Section Label */}
-        <div className="space-y-1">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary/60">Inventory Management</p>
-          <h2 className="text-lg font-bold">Active Stock</h2>
-        </div>
-
         {/* Stats Grid */}
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
@@ -131,25 +123,6 @@ export default function AdminPage() {
           <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
             <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">Low Stock</p>
             <h3 className="text-2xl md:text-3xl font-headline font-bold text-destructive">3 Items</h3>
-          </div>
-        </div>
-
-        {/* Console Search Bar */}
-        <div className="space-y-4">
-          <div className="relative group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-primary transition-colors" />
-            <Input 
-              className="pl-12 h-14 rounded-2xl bg-white border-gray-100 text-foreground text-sm focus-visible:ring-1 focus-visible:ring-primary/30 placeholder:text-muted-foreground/30" 
-              placeholder="Search product ID or name..." 
-            />
-          </div>
-          <div className="flex gap-3">
-            <Button variant="ghost" className="flex-1 h-12 rounded-xl bg-white hover:bg-gray-50 border border-gray-100 text-muted-foreground font-bold gap-2 text-xs">
-              <Filter className="w-4 h-4" /> Filter
-            </Button>
-            <Button variant="ghost" className="flex-1 h-12 rounded-xl bg-white hover:bg-gray-50 border border-gray-100 text-muted-foreground font-bold gap-2 text-xs">
-              <ArrowUpDown className="w-4 h-4" /> Sort
-            </Button>
           </div>
         </div>
 
@@ -191,9 +164,9 @@ export default function AdminPage() {
                       <p className="font-headline font-bold text-xl">${item.price.toFixed(2)}</p>
                     </div>
                     <div className="bg-gray-50 p-5 rounded-2xl border border-gray-100">
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase mb-2">Denomination</p>
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase mb-2">Status</p>
                       <p className="font-headline font-bold text-sm truncate uppercase text-secondary">
-                        {item.gameId === 'freefire' ? '5350 VP' : '8080 GC'}
+                        {item.category === 'accounts' ? 'PRO ACCOUNT' : 'INSTANT'}
                       </p>
                     </div>
                   </div>
@@ -208,22 +181,13 @@ export default function AdminPage() {
                         "text-[11px] font-bold uppercase tracking-wider",
                         item.price > 100 ? "text-destructive" : "text-primary"
                       )}>
-                        {item.price > 100 ? `Low Stock (12)` : `In Stock (1,204)`}
-                      </span>
-                    </div>
-                    <div className="bg-gray-50 px-4 py-1.5 rounded-full border border-gray-100">
-                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                        {item.category === 'accounts' ? 'Codes' : 'Digital'}
+                        {item.price > 100 ? `High Demand` : `In Stock`}
                       </span>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
-
-            <Button className="w-16 h-16 rounded-full bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 fixed bottom-24 right-6 z-50 md:bottom-10">
-              <Plus className="w-8 h-8" />
-            </Button>
           </TabsContent>
 
           <TabsContent value="users" className="space-y-6">
