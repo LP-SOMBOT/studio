@@ -53,6 +53,15 @@ type StoreSettings = {
   announcementTicker?: string;
 };
 
+type UserProfile = {
+  uid: string;
+  email: string;
+  name: string;
+  isAdmin: boolean;
+  createdAt: number;
+  lastLogin?: number;
+};
+
 type AppContextType = {
   user: any;
   loading: boolean;
@@ -65,6 +74,7 @@ type AppContextType = {
   removeFromCart: (id: string) => void;
   clearCart: () => void;
   orders: Order[];
+  allUsers: UserProfile[];
   createOrder: (paymentMethod: string, gameDetails: any) => void;
   storeSettings: StoreSettings;
   updateStoreSettings: (settings: Partial<StoreSettings>) => Promise<void>;
@@ -79,6 +89,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   
   const [cart, setCart] = useState<CartItem[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [storeSettings, setStoreSettings] = useState<StoreSettings>({ isLive: true });
 
@@ -106,6 +117,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     });
   }, [rtdb]);
 
+  const enhancedUser = useMemo(() => {
+    if (!user) return null;
+    const isAdmin = user.email === 'admin@lp.com' || userProfile?.isAdmin;
+    return {
+      ...user,
+      isAdmin,
+      name: user.displayName || userProfile?.name || user.email?.split('@')[0],
+    };
+  }, [user, userProfile]);
+
   // Sync orders from RTDB
   useEffect(() => {
     if (!rtdb || !user) {
@@ -129,15 +150,26 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     });
   }, [rtdb, user]);
 
-  const enhancedUser = useMemo(() => {
-    if (!user) return null;
-    const isAdmin = user.email === 'admin@lp.com' || userProfile?.isAdmin;
-    return {
-      ...user,
-      isAdmin,
-      name: user.displayName || userProfile?.name || user.email?.split('@')[0],
-    };
-  }, [user, userProfile]);
+  // Sync ALL users for Admin
+  useEffect(() => {
+    if (!rtdb || !enhancedUser?.isAdmin) {
+      setAllUsers([]);
+      return;
+    }
+    const usersRef = ref(rtdb, 'users');
+    return onValue(usersRef, (snapshot) => {
+      const data = snapshot.val();
+      if (!data) {
+        setAllUsers([]);
+        return;
+      }
+      const userList = Object.entries(data).map(([id, val]: [string, any]) => ({
+        uid: id,
+        ...val
+      })).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      setAllUsers(userList);
+    });
+  }, [rtdb, enhancedUser]);
 
   useEffect(() => {
     const savedCart = localStorage.getItem('oskar_cart');
@@ -260,6 +292,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       removeFromCart, 
       clearCart, 
       orders, 
+      allUsers,
       createOrder,
       storeSettings,
       updateStoreSettings

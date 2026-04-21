@@ -15,9 +15,8 @@ import {
   Sparkles,
   RefreshCcw,
   Copy,
-  Radio,
-  Eye,
-  EyeOff
+  UserCheck,
+  Calendar
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -28,11 +27,20 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
 import { generatePromotionalContent, type GeneratePromotionalContentOutput } from "@/ai/flows/generate-promotional-content-flow";
 import { toast } from "@/hooks/use-toast";
+import { format } from "date-fns";
 
 export default function AdminPage() {
-  const { user, storeSettings, updateStoreSettings } = useApp();
+  const { user, storeSettings, updateStoreSettings, allUsers } = useApp();
   const [isGenerating, setIsGenerating] = useState(false);
   const [promoInput, setPromoInput] = useState({
     promotionType: 'discount' as any,
@@ -93,7 +101,7 @@ export default function AdminPage() {
       <Header />
       
       <main className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center text-white">
               <Settings className="w-6 h-6" />
@@ -104,7 +112,7 @@ export default function AdminPage() {
             </div>
           </div>
 
-          <Card className="rounded-2xl border-none shadow-sm bg-white p-4 flex items-center gap-6">
+          <Card className="rounded-2xl border-none shadow-sm bg-white p-4 flex items-center gap-6 self-start md:self-auto">
             <div className="flex items-center gap-3">
               <div className={`w-3 h-3 rounded-full ${storeSettings.isLive ? 'bg-red-500 animate-pulse' : 'bg-gray-300'}`} />
               <div className="space-y-0.5">
@@ -161,6 +169,72 @@ export default function AdminPage() {
                 </Card>
               ))}
             </div>
+          </TabsContent>
+
+          <TabsContent value="users" className="space-y-6">
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="text-2xl font-headline font-bold">Registered Users</h2>
+                <p className="text-sm text-muted-foreground">Monitor your growing community ({allUsers.length} users)</p>
+              </div>
+            </div>
+
+            <Card className="rounded-3xl border-none shadow-sm overflow-hidden">
+              <Table>
+                <TableHeader className="bg-gray-50/50">
+                  <TableRow>
+                    <TableHead className="font-bold">User</TableHead>
+                    <TableHead className="font-bold">Email</TableHead>
+                    <TableHead className="font-bold">Joined Date</TableHead>
+                    <TableHead className="font-bold">Status</TableHead>
+                    <TableHead className="text-right font-bold">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {allUsers.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center py-10 text-muted-foreground">
+                        No users registered yet.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    allUsers.map((u) => (
+                      <TableRow key={u.uid} className="hover:bg-gray-50/50 transition-colors">
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                              <UserCheck className="w-4 h-4" />
+                            </div>
+                            <span className="font-medium">{u.name}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground text-xs md:text-sm">
+                          {u.email}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground text-xs md:text-sm">
+                          <div className="flex items-center gap-1.5">
+                            <Calendar className="w-3.5 h-3.5" />
+                            {u.createdAt ? format(new Date(u.createdAt), 'MMM dd, yyyy') : 'N/A'}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {u.isAdmin ? (
+                            <Badge variant="secondary" className="bg-primary/10 text-primary border-none text-[10px] uppercase font-bold">Admin</Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-[10px] uppercase font-bold">Member</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
+                            <Edit className="w-4 h-4 text-muted-foreground" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </Card>
           </TabsContent>
 
           <TabsContent value="promo" className="space-y-6">
