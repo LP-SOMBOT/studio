@@ -30,14 +30,7 @@ Run this command to tell Git how to handle different histories:
 git config pull.rebase false
 ```
 
-### Step 2: The "Force Sync" (Last Resort)
-If you want to **discard** what is on GitHub and overwrite it with your **current local code** (this fixes almost all sync errors):
-**WARNING: This will delete any changes on GitHub that are NOT in your local workspace.**
-```bash
-git push origin main --force
-```
-
-### Step 3: Fixing Authentication (Token Error)
+### Step 2: Fix Authentication (Token Error)
 GitHub does **not** accept your regular password in the terminal. You must use a **Personal Access Token (PAT)**:
 
 1.  **Generate Token**: Go to your GitHub account -> **Settings** -> **Developer Settings** -> **Personal Access Tokens** -> **Tokens (classic)**.
@@ -47,10 +40,17 @@ GitHub does **not** accept your regular password in the terminal. You must use a
     *   **Username**: Your GitHub username.
     *   **Password**: **Paste the Token** (it will be invisible while you paste).
 
-### Step 4: Re-login in the Editor
+### Step 3: Re-login in the Editor
 1. Click the **Profile/Account icon** at the bottom-left of the editor.
 2. Select **Sign Out**.
 3. Click it again and select **Sign in with GitHub**.
+
+### Step 4: The "Force Sync" (Last Resort)
+If you want to **discard** what is on GitHub and overwrite it with your **current local code** (this fixes almost all sync errors once you are authenticated):
+**WARNING: This will delete any changes on GitHub that are NOT in your local workspace.**
+```bash
+git push origin main --force
+```
 
 ---
 
