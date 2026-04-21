@@ -24,9 +24,11 @@ import {
   orderByChild, 
   equalTo,
   serverTimestamp,
-  update
+  update,
+  remove
 } from 'firebase/database';
 import { toast } from '@/hooks/use-toast';
+import { GAMES_DATA, type GamePackage } from './games-data';
 
 type CartItem = {
   id: string;
@@ -51,6 +53,9 @@ type Order = {
 type StoreSettings = {
   isLive: boolean;
   announcementTicker?: string;
+  logo?: string;
+  onboardingImages?: string[];
+  sliderImages?: string[];
 };
 
 type UserProfile = {
@@ -58,6 +63,7 @@ type UserProfile = {
   email: string;
   name: string;
   isAdmin: boolean;
+  isBanned?: boolean;
   createdAt: number;
   lastLogin?: number;
 };
@@ -74,8 +80,15 @@ type AppContextType = {
   removeFromCart: (id: string) => void;
   clearCart: () => void;
   orders: Order[];
+  allOrders: Order[];
+  products: GamePackage[];
   allUsers: UserProfile[];
   createOrder: (paymentMethod: string, gameDetails: any) => void;
+  updateOrderStatus: (orderId: string, status: string) => Promise<void>;
+  updateUserStatus: (uid: string, updates: Partial<UserProfile>) => Promise<void>;
+  deleteUser: (uid: string) => Promise<void>;
+  saveProduct: (product: Partial<GamePackage>) => Promise<void>;
+  deleteProduct: (id: string) => Promise<void>;
   storeSettings: StoreSettings;
   updateStoreSettings: (settings: Partial<StoreSettings>) => Promise<void>;
 };
@@ -89,9 +102,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   
   const [cart, setCart] = useState<CartItem[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [allOrders, setAllOrders] = useState<Order[]>([]);
+  const [products, setProducts] = useState<GamePackage[]>([]);
   const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
   const [userProfile, setUserProfile] = useState<any>(null);
-  const [storeSettings, setStoreSettings] = useState<StoreSettings>({ isLive: true });
+  const [storeSettings, setStoreSettings] = useState<StoreSettings>({ 
+    isLive: true,
+    onboardingImages: [],
+    sliderImages: []
+  });
 
   // Sync user profile from RTDB
   useEffect(() => {
@@ -117,17 +136,40 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     });
   }, [rtdb]);
 
+  // Sync products from RTDB or fallback to initial data
+  useEffect(() => {
+    if (!rtdb) return;
+    const productsRef = ref(rtdb, 'products');
+    return onValue(productsRef, (snapshot) => {
+      const data = snapshot.val();
+      if (!data) {
+        // Bootstrap if empty
+        GAMES_DATA.forEach(p => {
+          set(ref(rtdb, `products/${p.id}`), p);
+        });
+        setProducts(GAMES_DATA);
+      } else {
+        const productList = Object.entries(data).map(([id, val]: [string, any]) => ({
+          ...val,
+          id
+        }));
+        setProducts(productList);
+      }
+    });
+  }, [rtdb]);
+
   const enhancedUser = useMemo(() => {
     if (!user) return null;
     const isAdmin = user.email === 'admin@lp.com' || userProfile?.isAdmin;
     return {
       ...user,
       isAdmin,
+      isBanned: userProfile?.isBanned,
       name: user.displayName || userProfile?.name || user.email?.split('@')[0],
     };
   }, [user, userProfile]);
 
-  // Sync orders from RTDB
+  // Sync user's own orders
   useEffect(() => {
     if (!rtdb || !user) {
       setOrders([]);
@@ -149,6 +191,27 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setOrders(orderList);
     });
   }, [rtdb, user]);
+
+  // Sync ALL orders for Admin
+  useEffect(() => {
+    if (!rtdb || !enhancedUser?.isAdmin) {
+      setAllOrders([]);
+      return;
+    }
+    const ordersRef = ref(rtdb, 'orders');
+    return onValue(ordersRef, (snapshot) => {
+      const data = snapshot.val();
+      if (!data) {
+        setAllOrders([]);
+        return;
+      }
+      const orderList = Object.entries(data).map(([id, val]: [string, any]) => ({
+        id,
+        ...val
+      })).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      setAllOrders(orderList);
+    });
+  }, [rtdb, enhancedUser]);
 
   // Sync ALL users for Admin
   useEffect(() => {
@@ -259,18 +322,36 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     };
 
     const ordersRef = ref(rtdb, 'orders');
-    push(ordersRef, orderData)
-      .then(() => {
-        clearCart();
-      })
-      .catch((error) => {
-        console.error("Order creation failed:", error);
-        toast({
-          variant: "destructive",
-          title: "Order Failed",
-          description: "Could not process your order. Please try again."
-        });
-      });
+    push(ordersRef, orderData).then(() => clearCart());
+  };
+
+  const updateOrderStatus = async (orderId: string, status: string) => {
+    if (!rtdb || !enhancedUser?.isAdmin) return;
+    await update(ref(rtdb, `orders/${orderId}`), { status });
+    toast({ title: "Order Status Updated", description: `Order is now ${status}` });
+  };
+
+  const updateUserStatus = async (uid: string, updates: Partial<UserProfile>) => {
+    if (!rtdb || !enhancedUser?.isAdmin) return;
+    await update(ref(rtdb, `users/${uid}`), updates);
+  };
+
+  const deleteUser = async (uid: string) => {
+    if (!rtdb || !enhancedUser?.isAdmin) return;
+    await remove(ref(rtdb, `users/${uid}`));
+  };
+
+  const saveProduct = async (product: Partial<GamePackage>) => {
+    if (!rtdb || !enhancedUser?.isAdmin) return;
+    const id = product.id || `prod_${Date.now()}`;
+    await set(ref(rtdb, `products/${id}`), { ...product, id });
+    toast({ title: "Product Saved" });
+  };
+
+  const deleteProduct = async (id: string) => {
+    if (!rtdb || !enhancedUser?.isAdmin) return;
+    await remove(ref(rtdb, `products/${id}`));
+    toast({ title: "Product Removed" });
   };
 
   const updateStoreSettings = async (settings: Partial<StoreSettings>) => {
@@ -292,8 +373,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       removeFromCart, 
       clearCart, 
       orders, 
+      allOrders,
+      products,
       allUsers,
       createOrder,
+      updateOrderStatus,
+      updateUserStatus,
+      deleteUser,
+      saveProduct,
+      deleteProduct,
       storeSettings,
       updateStoreSettings
     }}>

@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useApp } from "@/lib/context";
 import { 
@@ -18,12 +19,19 @@ import {
   AlertCircle,
   Menu,
   Gamepad2,
-  Bell
+  Bell,
+  CheckCircle,
+  XCircle,
+  Clock,
+  LayoutDashboard,
+  ShoppingBag,
+  Image as ImageIcon,
+  LogOut,
+  Upload
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -36,14 +44,40 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogTrigger,
+  DialogFooter
+} from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { generatePromotionalContent, type GeneratePromotionalContentOutput } from "@/ai/flows/generate-promotional-content-flow";
 import { toast } from "@/hooks/use-toast";
-import { GAMES_DATA } from "@/lib/games-data";
 import { cn } from "@/lib/utils";
+import { format, isToday, isYesterday, startOfToday } from "date-fns";
 
 export default function AdminPage() {
-  const { user, storeSettings, updateStoreSettings, allUsers } = useApp();
+  const { 
+    user, 
+    storeSettings, 
+    updateStoreSettings, 
+    allUsers, 
+    allOrders, 
+    products, 
+    updateOrderStatus,
+    updateUserStatus,
+    deleteUser,
+    saveProduct,
+    deleteProduct,
+    logout
+  } = useApp();
+
+  const [activeView, setActiveView] = useState<'dashboard' | 'orders' | 'products' | 'users' | 'settings'>('dashboard');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<any>(null);
+  
   const [promoInput, setPromoInput] = useState({
     promotionType: 'discount' as any,
     title: '',
@@ -52,17 +86,59 @@ export default function AdminPage() {
   });
   const [promoOutput, setPromoOutput] = useState<GeneratePromotionalContentOutput | null>(null);
 
+  // Dashboard Calculations
+  const metrics = useMemo(() => {
+    const today = startOfToday();
+    const successful = allOrders.filter(o => o.status === 'successful');
+    
+    const todayRevenue = successful
+      .filter(o => o.createdAt && new Date(o.createdAt).getTime() >= today.getTime())
+      .reduce((acc, o) => acc + o.total, 0);
+
+    const yesterdayRevenue = successful
+      .filter(o => o.createdAt && isYesterday(new Date(o.createdAt)))
+      .reduce((acc, o) => acc + o.total, 0);
+
+    const allRevenue = successful.reduce((acc, o) => acc + o.total, 0);
+    const pendingCount = allOrders.filter(o => o.status === 'pending').length;
+    
+    return { todayRevenue, yesterdayRevenue, allRevenue, pendingCount, totalCount: allOrders.length };
+  }, [allOrders]);
+
   if (!user?.isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-background">
         <Card className="max-w-md w-full p-8 text-center rounded-3xl border-none shadow-xl bg-white">
           <h2 className="text-2xl font-headline font-bold mb-4 text-foreground">Access Denied</h2>
           <p className="text-muted-foreground mb-6">You do not have administrative privileges.</p>
-          <Button className="bg-primary hover:bg-primary/90" onClick={() => window.location.href = '/'}>Return Home</Button>
+          <Button className="bg-primary hover:bg-primary/90" asChild><Link href="/">Return Home</Link></Button>
         </Card>
       </div>
     );
   }
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'onboarding' | 'slider', index?: number) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = reader.result as string;
+      if (type === 'logo') {
+        updateStoreSettings({ logo: base64 });
+      } else if (type === 'onboarding' && typeof index === 'number') {
+        const current = [...(storeSettings.onboardingImages || [])];
+        current[index] = base64;
+        updateStoreSettings({ onboardingImages: current });
+      } else if (type === 'slider' && typeof index === 'number') {
+        const current = [...(storeSettings.sliderImages || [])];
+        current[index] = base64;
+        updateStoreSettings({ sliderImages: current });
+      }
+      toast({ title: "Image Uploaded", description: "Saved as Base64 in database." });
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleGeneratePromo = async () => {
     if (!promoInput.title || !promoInput.promotionDetails) {
@@ -75,24 +151,9 @@ export default function AdminPage() {
       setPromoOutput(result);
       toast({ title: "AI Generated Successfully!" });
     } catch (error) {
-      console.error(error);
-      toast({ title: "AI Generation Failed", description: "Could not connect to service." });
+      toast({ title: "AI Generation Failed", variant: "destructive" });
     } finally {
       setIsGenerating(false);
-    }
-  };
-
-  const toggleLiveStatus = async (checked: boolean) => {
-    try {
-      await updateStoreSettings({ isLive: checked });
-      toast({
-        title: checked ? "Live Banner Enabled" : "Live Banner Disabled",
-      });
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Update Failed",
-      });
     }
   };
 
@@ -101,231 +162,449 @@ export default function AdminPage() {
       {/* Top Console Header */}
       <header className="h-20 border-b border-gray-100 px-6 flex items-center justify-between sticky top-0 bg-white/80 backdrop-blur-md z-50">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
-            <Menu className="w-6 h-6" />
-          </Button>
+          <Gamepad2 className="w-8 h-8 text-primary" />
           <h1 className="text-xl md:text-2xl font-headline font-bold text-primary">
-            Top-Up Console
+            Oskar<span className="text-secondary">Admin</span>
           </h1>
         </div>
-        <div className="w-10 h-10 rounded-full border-2 border-primary/20 overflow-hidden shadow-sm">
-           <img src={`https://picsum.photos/seed/${user.uid}/100/100`} alt="Avatar" className="w-full h-full object-cover" />
+        <div className="flex items-center gap-4">
+          <div className="text-right hidden md:block">
+            <p className="text-sm font-bold leading-none">{user.name}</p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Master Console</p>
+          </div>
+          <Button variant="ghost" size="icon" onClick={logout} className="rounded-xl text-muted-foreground hover:text-destructive">
+            <LogOut className="w-5 h-5" />
+          </Button>
         </div>
       </header>
       
-      <main className="container mx-auto px-6 py-8 max-w-4xl space-y-10">
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">Total Value</p>
-            <h3 className="text-2xl md:text-3xl font-headline font-bold text-secondary">$24,590</h3>
-          </div>
-          <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">Low Stock</p>
-            <h3 className="text-2xl md:text-3xl font-headline font-bold text-destructive">3 Items</h3>
-          </div>
-        </div>
-
-        <Tabs defaultValue="stock" className="space-y-8">
-          <TabsList className="bg-white p-1.5 rounded-2xl border border-gray-100 w-full md:w-auto shadow-sm">
-            <TabsTrigger value="stock" className="rounded-xl px-6 data-[state=active]:bg-primary data-[state=active]:text-white text-muted-foreground">
-              <Package className="w-4 h-4 mr-2" /> Stock
-            </TabsTrigger>
-            <TabsTrigger value="users" className="rounded-xl px-6 data-[state=active]:bg-primary data-[state=active]:text-white text-muted-foreground">
-              <Users className="w-4 h-4 mr-2" /> Users
-            </TabsTrigger>
-            <TabsTrigger value="settings" className="rounded-xl px-6 data-[state=active]:bg-primary data-[state=active]:text-white text-muted-foreground">
-              <Settings className="w-4 h-4 mr-2" /> Console
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="stock" className="space-y-6">
-            <div className="grid grid-cols-1 gap-6">
-              {GAMES_DATA.map((item) => (
-                <div key={item.id} className="bg-white border border-gray-100 rounded-[2rem] p-6 relative overflow-hidden group shadow-sm hover:shadow-md transition-shadow">
-                  <div className="flex items-start justify-between mb-8">
-                    <div className="flex items-center gap-5">
-                      <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center font-headline font-bold text-xl text-primary border border-gray-100">
-                        {item.title[0]}
-                      </div>
-                      <div>
-                        <h3 className="font-headline font-bold text-lg text-foreground">{item.title}</h3>
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">ID: {item.id.toUpperCase()}</p>
-                      </div>
-                    </div>
-                    <Button size="icon" variant="ghost" className="w-10 h-10 rounded-xl bg-gray-50 text-muted-foreground hover:text-primary transition-colors border border-gray-100">
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4 mb-8">
-                    <div className="bg-gray-50 p-5 rounded-2xl border border-gray-100">
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase mb-2">Base Price</p>
-                      <p className="font-headline font-bold text-xl">${item.price.toFixed(2)}</p>
-                    </div>
-                    <div className="bg-gray-50 p-5 rounded-2xl border border-gray-100">
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase mb-2">Status</p>
-                      <p className="font-headline font-bold text-sm truncate uppercase text-secondary">
-                        {item.category === 'accounts' ? 'PRO ACCOUNT' : 'INSTANT'}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className={cn(
-                        "w-2 h-2 rounded-full",
-                        item.price > 100 ? "bg-destructive shadow-[0_0_10px_rgba(239,68,68,0.2)]" : "bg-primary shadow-[0_0_10px_rgba(133,38,204,0.2)]"
-                      )} />
-                      <span className={cn(
-                        "text-[11px] font-bold uppercase tracking-wider",
-                        item.price > 100 ? "text-destructive" : "text-primary"
-                      )}>
-                        {item.price > 100 ? `High Demand` : `In Stock`}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              ))}
+      <main className="container mx-auto px-6 py-8 max-w-6xl space-y-10">
+        
+        {activeView === 'dashboard' && (
+          <div className="space-y-8 animate-in fade-in duration-500">
+             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+              <StatCard label="Today Rev" value={`$${metrics.todayRevenue.toFixed(2)}`} color="text-primary" />
+              <StatCard label="Yesterday Rev" value={`$${metrics.yesterdayRevenue.toFixed(2)}`} color="text-secondary" />
+              <StatCard label="All-Time Rev" value={`$${metrics.allRevenue.toFixed(2)}`} color="text-green-600" />
+              <StatCard label="Pending" value={metrics.pendingCount} color="text-orange-500" />
+              <StatCard label="Total Orders" value={metrics.totalCount} color="text-muted-foreground" />
             </div>
-          </TabsContent>
 
-          <TabsContent value="users" className="space-y-6">
-             <Card className="rounded-2xl bg-white border-gray-100 border overflow-hidden shadow-sm">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <Card className="rounded-[2rem] p-6 border-gray-100 shadow-sm">
+                <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                  <ShoppingBag className="w-5 h-5 text-primary" /> Recent Activity
+                </h3>
+                <div className="space-y-4">
+                  {allOrders.slice(0, 5).map(o => (
+                    <div key={o.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-2xl">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center font-bold text-xs shadow-sm">
+                          {o.items[0]?.gameId.substring(0,2).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold">{o.items[0]?.title}</p>
+                          <p className="text-[10px] text-muted-foreground">ID: {o.id.substring(0,8)}</p>
+                        </div>
+                      </div>
+                      <Badge variant="outline" className="text-[10px] uppercase">{o.status}</Badge>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+
+              <Card className="rounded-[2rem] p-6 border-gray-100 shadow-sm bg-gradient-to-br from-primary/5 to-secondary/5">
+                <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-secondary" /> Quick Marketing
+                </h3>
+                <div className="space-y-4">
+                   <Input 
+                    placeholder="Promotion Title..." 
+                    value={promoInput.title}
+                    onChange={(e) => setPromoInput({...promoInput, title: e.target.value})}
+                    className="rounded-xl border-none bg-white shadow-sm"
+                  />
+                  <Textarea 
+                    placeholder="Brief details..." 
+                    value={promoInput.promotionDetails}
+                    onChange={(e) => setPromoInput({...promoInput, promotionDetails: e.target.value})}
+                    className="rounded-xl border-none bg-white shadow-sm"
+                  />
+                  <Button 
+                    className="w-full h-12 rounded-xl bg-secondary text-white font-bold" 
+                    onClick={handleGeneratePromo}
+                    disabled={isGenerating}
+                  >
+                    {isGenerating ? <RefreshCcw className="animate-spin mr-2" /> : <Sparkles className="mr-2" />}
+                    Generate Strategy
+                  </Button>
+                </div>
+              </Card>
+            </div>
+          </div>
+        )}
+
+        {activeView === 'orders' && (
+          <div className="animate-in slide-in-from-bottom-4 duration-500">
+            <Card className="rounded-[2.5rem] bg-white border-gray-100 shadow-sm overflow-hidden">
               <Table>
                 <TableHeader className="bg-gray-50">
-                  <TableRow className="border-gray-100 hover:bg-transparent">
-                    <TableHead className="text-muted-foreground font-bold text-[10px] uppercase tracking-wider">User</TableHead>
-                    <TableHead className="text-muted-foreground font-bold text-[10px] uppercase tracking-wider">Role</TableHead>
-                    <TableHead className="text-right text-muted-foreground font-bold text-[10px] uppercase tracking-wider">Actions</TableHead>
+                  <TableRow className="hover:bg-transparent border-none">
+                    <TableHead className="font-bold text-[10px] uppercase tracking-wider">Order / User</TableHead>
+                    <TableHead className="font-bold text-[10px] uppercase tracking-wider">Game Info</TableHead>
+                    <TableHead className="font-bold text-[10px] uppercase tracking-wider">Total</TableHead>
+                    <TableHead className="font-bold text-[10px] uppercase tracking-wider">Status</TableHead>
+                    <TableHead className="text-right font-bold text-[10px] uppercase tracking-wider">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {allUsers.map((u) => (
-                    <TableRow key={u.uid} className="hover:bg-gray-50 transition-colors border-gray-100">
+                  {allOrders.map(order => (
+                    <TableRow key={order.id} className="hover:bg-gray-50 border-gray-50">
                       <TableCell>
                         <div className="flex flex-col">
-                          <span className="font-bold text-sm text-foreground">{u.name}</span>
-                          <span className="text-[10px] text-muted-foreground">{u.email}</span>
+                          <span className="font-bold text-sm">#{order.id.substring(0,8)}</span>
+                          <span className="text-[10px] text-muted-foreground">{order.userId}</span>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className={cn(
-                          "text-[9px] uppercase font-bold rounded-full border-gray-100",
-                          u.isAdmin ? 'text-primary border-primary/20 bg-primary/5' : 'text-muted-foreground'
+                         <div className="flex flex-col">
+                          <span className="text-xs font-medium">{order.gameDetails?.playerID || "N/A"}</span>
+                          <span className="text-[10px] text-muted-foreground">{order.gameDetails?.playerName}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="font-bold text-primary">${order.total.toFixed(2)}</TableCell>
+                      <TableCell>
+                        <Badge className={cn(
+                          "text-[9px] uppercase font-bold rounded-full px-3",
+                          order.status === 'successful' ? 'bg-green-100 text-green-700' :
+                          order.status === 'cancelled' ? 'bg-red-100 text-red-700' :
+                          'bg-orange-100 text-orange-700'
                         )}>
-                          {u.isAdmin ? 'Admin' : 'Member'}
+                          {order.status}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground"><Edit className="w-3 h-3" /></Button>
+                        <Select onValueChange={(v) => updateOrderStatus(order.id, v)}>
+                          <SelectTrigger className="w-[120px] h-8 rounded-lg text-[10px] font-bold">
+                            <SelectValue placeholder="Update" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="pending">Pending</SelectItem>
+                            <SelectItem value="processing">Processing</SelectItem>
+                            <SelectItem value="successful">Complete</SelectItem>
+                            <SelectItem value="cancelled">Cancel</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
             </Card>
-          </TabsContent>
+          </div>
+        )}
 
-          <TabsContent value="settings" className="space-y-6">
-            <Card className="rounded-[2rem] bg-white border-gray-100 border p-6 shadow-sm">
-              <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-primary border border-gray-100">
-                    <AlertCircle className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-lg text-foreground">Live Visibility</h3>
-                    <p className="text-xs text-muted-foreground">Control "Live Now" homepage banner</p>
-                  </div>
-                </div>
-                <Switch 
-                  checked={storeSettings.isLive} 
-                  onCheckedChange={toggleLiveStatus}
-                  className="data-[state=checked]:bg-primary"
-                />
-              </div>
-
-              <div className="space-y-6 pt-6 border-t border-gray-100">
-                 <div className="flex items-center gap-4 mb-4">
-                  <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-secondary border border-gray-100">
-                    <Sparkles className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-lg text-foreground">AI Marketing Lab</h3>
-                    <p className="text-xs text-muted-foreground">Generate promotional content</p>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-1 gap-5">
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-bold uppercase text-muted-foreground">Promotion Title</Label>
-                    <Input 
-                      className="rounded-xl h-12 bg-gray-50 border-gray-100 text-foreground focus-visible:ring-secondary" 
-                      placeholder="e.g. Weekend Flash Sale" 
-                      value={promoInput.title}
-                      onChange={(e) => setPromoInput({...promoInput, title: e.target.value})}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-bold uppercase text-muted-foreground">Offer Details</Label>
-                    <Textarea 
-                      className="rounded-xl bg-gray-50 border-gray-100 text-foreground min-h-[100px] focus-visible:ring-secondary" 
-                      placeholder="Enter promotion details..." 
-                      value={promoInput.promotionDetails}
-                      onChange={(e) => setPromoInput({...promoInput, promotionDetails: e.target.value})}
-                    />
-                  </div>
-                  <Button 
-                    onClick={handleGeneratePromo} 
-                    className="w-full h-14 rounded-xl gap-2 font-bold bg-secondary hover:bg-secondary/90 text-white shadow-sm"
-                    disabled={isGenerating}
-                  >
-                    {isGenerating ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                    Generate Strategy
+        {activeView === 'products' && (
+          <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-headline font-bold">Product Library</h2>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button className="rounded-full bg-primary gap-2 h-12 px-8 font-bold shadow-lg shadow-primary/20">
+                    <Plus className="w-5 h-5" /> Add Package
                   </Button>
-                </div>
-              </div>
-            </Card>
+                </DialogTrigger>
+                <DialogContent className="rounded-[2.5rem] max-w-xl">
+                  <DialogHeader>
+                    <DialogTitle className="text-2xl font-headline font-bold">New Game Package</DialogTitle>
+                  </DialogHeader>
+                  <ProductForm onSave={saveProduct} />
+                </DialogContent>
+              </Dialog>
+            </div>
 
-            {promoOutput && (
-              <Card className="rounded-[2rem] bg-primary/5 border-primary/20 border p-6 space-y-4 animate-in fade-in slide-in-from-bottom-4 shadow-sm">
-                <div className="flex justify-between items-center">
-                  <h4 className="font-bold text-primary">AI Strategy Suggestions</h4>
-                  <Button variant="ghost" size="sm" onClick={() => setPromoOutput(null)} className="text-muted-foreground hover:text-foreground">Clear</Button>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {products.map(p => (
+                <Card key={p.id} className="rounded-[2rem] p-6 relative group overflow-hidden border-gray-100 hover:shadow-lg transition-shadow bg-white">
+                  <div className="flex justify-between mb-4">
+                    <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center font-bold text-primary border border-gray-100">
+                      {p.gameId[0].toUpperCase()}
+                    </div>
+                    <div className="flex gap-2">
+                      <Button variant="ghost" size="icon" onClick={() => setEditingProduct(p)} className="h-9 w-9 rounded-xl hover:text-primary"><Edit className="w-4 h-4" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => deleteProduct(p.id)} className="h-9 w-9 rounded-xl hover:text-destructive"><Trash2 className="w-4 h-4" /></Button>
+                    </div>
+                  </div>
+                  <h4 className="font-bold text-lg mb-1">{p.title}</h4>
+                  <p className="text-xs text-muted-foreground mb-4 line-clamp-1">{p.description}</p>
+                  <div className="flex justify-between items-end">
+                    <div>
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Price</p>
+                      <p className="text-2xl font-headline font-bold text-primary">${p.price.toFixed(2)}</p>
+                    </div>
+                    <Badge variant="secondary" className="rounded-full text-[9px] uppercase px-3">{p.category}</Badge>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {activeView === 'users' && (
+          <div className="animate-in slide-in-from-bottom-4 duration-500">
+            <Card className="rounded-[2.5rem] bg-white border-gray-100 shadow-sm overflow-hidden">
+              <Table>
+                <TableHeader className="bg-gray-50">
+                  <TableRow className="border-none">
+                    <TableHead className="font-bold text-[10px] uppercase">User Profile</TableHead>
+                    <TableHead className="font-bold text-[10px] uppercase">Account Created</TableHead>
+                    <TableHead className="font-bold text-[10px] uppercase">Status</TableHead>
+                    <TableHead className="text-right font-bold text-[10px] uppercase">Control</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {allUsers.map(u => (
+                    <TableRow key={u.uid} className="hover:bg-gray-50 border-gray-50">
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
+                            {u.name[0]}
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="font-bold text-sm">{u.name}</span>
+                            <span className="text-[10px] text-muted-foreground">{u.email}</span>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {u.createdAt ? format(new Date(u.createdAt), 'PP') : 'N/A'}
+                      </TableCell>
+                      <TableCell>
+                         <Badge className={cn(
+                          "text-[9px] uppercase font-bold rounded-full",
+                          u.isBanned ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'
+                        )}>
+                          {u.isBanned ? 'Banned' : 'Active'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                           <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="h-8 text-[10px] font-bold rounded-lg"
+                            onClick={() => updateUserStatus(u.uid, { isBanned: !u.isBanned })}
+                          >
+                            {u.isBanned ? 'Unban' : 'Ban'}
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 text-destructive hover:bg-red-50"
+                            onClick={() => deleteUser(u.uid)}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Card>
+          </div>
+        )}
+
+        {activeView === 'settings' && (
+          <div className="space-y-10 animate-in slide-in-from-bottom-4 duration-500">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <Card className="rounded-[2.5rem] p-8 border-gray-100 shadow-sm bg-white">
+                <h3 className="text-xl font-headline font-bold mb-6 flex items-center gap-2">
+                  <ImageIcon className="w-6 h-6 text-primary" /> Visual Identity
+                </h3>
+                <div className="space-y-8">
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
+                    <div>
+                      <p className="font-bold text-sm">App Logo</p>
+                      <p className="text-[10px] text-muted-foreground">Current logo: {storeSettings.logo ? 'Active' : 'Default'}</p>
+                    </div>
+                    <label className="cursor-pointer">
+                      <input type="file" className="hidden" accept="image/*" onChange={(e) => handleImageUpload(e, 'logo')} />
+                      <div className="w-10 h-10 bg-primary text-white rounded-xl flex items-center justify-center"><Upload className="w-5 h-5" /></div>
+                    </label>
+                  </div>
+
+                  <div className="space-y-4">
+                    <p className="font-bold text-sm">Onboarding Screens (3 Required)</p>
+                    <div className="grid grid-cols-3 gap-4">
+                      {[0, 1, 2].map(i => (
+                        <label key={i} className="aspect-square rounded-2xl bg-gray-50 border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-gray-100 transition-colors">
+                          <input type="file" className="hidden" accept="image/*" onChange={(e) => handleImageUpload(e, 'onboarding', i)} />
+                          {storeSettings.onboardingImages?.[i] ? (
+                            <img src={storeSettings.onboardingImages[i]} className="w-full h-full object-cover rounded-2xl" />
+                          ) : (
+                            <>
+                              <Plus className="w-4 h-4 text-muted-foreground" />
+                              <span className="text-[9px] font-bold text-muted-foreground"># {i + 1}</span>
+                            </>
+                          )}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-                <div className="bg-white p-5 rounded-2xl border border-primary/10">
-                   <p className="text-[10px] font-bold uppercase text-secondary mb-2 tracking-widest">Ticker Copy</p>
-                   <p className="text-sm font-medium text-foreground">{promoOutput.announcementText}</p>
-                </div>
-                <Button className="w-full h-12 rounded-xl bg-secondary hover:bg-secondary/90 text-white font-bold shadow-sm">
-                  Update Store Ticker
-                </Button>
               </Card>
-            )}
-          </TabsContent>
-        </Tabs>
+
+              <div className="space-y-6">
+                <Card className="rounded-[2.5rem] p-8 border-gray-100 shadow-sm bg-white">
+                   <div className="flex items-center justify-between mb-8">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-primary border border-gray-100">
+                        <AlertCircle className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-lg">System Visibility</h3>
+                        <p className="text-xs text-muted-foreground">Control overall store status</p>
+                      </div>
+                    </div>
+                    <Switch 
+                      checked={storeSettings.isLive} 
+                      onCheckedChange={(checked) => updateStoreSettings({ isLive: checked })}
+                    />
+                  </div>
+                  
+                  <div className="space-y-4 pt-6 border-t border-gray-100">
+                    <Label className="text-[10px] font-bold uppercase text-muted-foreground">Announcement Ticker</Label>
+                    <Textarea 
+                      className="rounded-xl bg-gray-50 border-none min-h-[100px]" 
+                      placeholder="Enter global announcements separated by new lines..." 
+                      value={storeSettings.announcementTicker}
+                      onChange={(e) => updateStoreSettings({ announcementTicker: e.target.value })}
+                    />
+                  </div>
+                </Card>
+              </div>
+            </div>
+          </div>
+        )}
+
       </main>
 
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-50 px-4 py-2 flex justify-around items-center shadow-[0_-4px_10px_rgba(0,0,0,0.03)]">
-        <Link href="/" className="flex flex-col items-center gap-1 p-2 text-muted-foreground hover:text-primary transition-colors">
-          <Gamepad2 className="w-6 h-6" />
-          <span className="text-[10px] font-bold uppercase">Home</span>
-        </Link>
-        <div className="flex flex-col items-center gap-1 p-2 text-primary transition-colors relative">
-          <Package className="w-6 h-6" />
-          <span className="text-[10px] font-bold uppercase">Stock</span>
-          <div className="absolute -bottom-1 w-1 h-1 bg-primary rounded-full shadow-[0_0_5px_rgba(133,38,204,0.4)]" />
-        </div>
-        <div className="flex flex-col items-center gap-1 p-2 text-muted-foreground hover:text-primary transition-colors">
-          <Users className="w-6 h-6" />
-          <span className="text-[10px] font-bold uppercase">Users</span>
-        </div>
-        <div className="flex flex-col items-center gap-1 p-2 text-muted-foreground hover:text-primary transition-colors">
-          <Bell className="w-6 h-6" />
-          <span className="text-[10px] font-bold uppercase">Alerts</span>
-        </div>
+      {/* Persistent Console Bottom Nav */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-100 z-[100] px-4 py-2 flex justify-around items-center shadow-[0_-10px_30px_rgba(0,0,0,0.05)]">
+        <NavButton active={activeView === 'dashboard'} onClick={() => setActiveView('dashboard')} icon={LayoutDashboard} label="Desk" />
+        <NavButton active={activeView === 'orders'} onClick={() => setActiveView('orders')} icon={ShoppingBag} label="Orders" />
+        <NavButton active={activeView === 'products'} onClick={() => setActiveView('products')} icon={Package} label="Stock" />
+        <NavButton active={activeView === 'users'} onClick={() => setActiveView('users')} icon={Users} label="Users" />
+        <NavButton active={activeView === 'settings'} onClick={() => setActiveView('settings')} icon={Settings} label="Console" />
       </nav>
+
+      {/* Editing Dialog */}
+      {editingProduct && (
+        <Dialog open={!!editingProduct} onOpenChange={() => setEditingProduct(null)}>
+          <DialogContent className="rounded-[2.5rem] max-w-xl">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-headline font-bold">Edit Package</DialogTitle>
+            </DialogHeader>
+            <ProductForm initialData={editingProduct} onSave={(p) => { saveProduct(p); setEditingProduct(null); }} />
+          </DialogContent>
+        </Dialog>
+      )}
+    </div>
+  );
+}
+
+function StatCard({ label, value, color }: { label: string, value: any, color: string }) {
+  return (
+    <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm flex flex-col justify-center text-center">
+      <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground mb-1">{label}</p>
+      <h3 className={cn("text-lg md:text-xl font-headline font-bold", color)}>{value}</h3>
+    </div>
+  );
+}
+
+function NavButton({ active, onClick, icon: Icon, label }: { active: boolean, onClick: () => void, icon: any, label: string }) {
+  return (
+    <button 
+      onClick={onClick}
+      className={cn(
+        "flex flex-col items-center gap-1 p-2 transition-all relative group",
+        active ? "text-primary scale-110" : "text-muted-foreground hover:text-primary"
+      )}
+    >
+      <Icon className={cn("w-6 h-6", active && "animate-pulse")} />
+      <span className="text-[10px] font-bold uppercase tracking-tighter">{label}</span>
+      {active && <div className="absolute -bottom-1 w-6 h-1 bg-primary rounded-full shadow-[0_0_10px_rgba(133,38,204,0.5)]" />}
+    </button>
+  );
+}
+
+function ProductForm({ initialData, onSave }: { initialData?: any, onSave: (p: any) => void }) {
+  const [data, setData] = useState(initialData || {
+    title: "",
+    description: "",
+    price: 0,
+    category: "top-up",
+    gameId: "freefire",
+    thumbnail: "",
+    imageHint: "gaming"
+  });
+
+  return (
+    <div className="space-y-5 py-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label className="text-[10px] uppercase font-bold">Title</Label>
+          <Input className="rounded-xl h-12 bg-gray-50 border-none" value={data.title} onChange={e => setData({...data, title: e.target.value})} />
+        </div>
+        <div className="space-y-2">
+          <Label className="text-[10px] uppercase font-bold">Base Price</Label>
+          <Input type="number" className="rounded-xl h-12 bg-gray-50 border-none" value={data.price} onChange={e => setData({...data, price: parseFloat(e.target.value)})} />
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label className="text-[10px] uppercase font-bold">Game ID</Label>
+          <Select value={data.gameId} onValueChange={v => setData({...data, gameId: v})}>
+            <SelectTrigger className="h-12 rounded-xl bg-gray-50 border-none">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="freefire">Free Fire</SelectItem>
+              <SelectItem value="bloodstrike">Blood Strike</SelectItem>
+              <SelectItem value="efootball">eFootball</SelectItem>
+              <SelectItem value="pubg">PUBG Mobile</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label className="text-[10px] uppercase font-bold">Category</Label>
+          <Select value={data.category} onValueChange={v => setData({...data, category: v})}>
+            <SelectTrigger className="h-12 rounded-xl bg-gray-50 border-none">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="top-up">Top-Up</SelectItem>
+              <SelectItem value="accounts">Account</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label className="text-[10px] uppercase font-bold">Description</Label>
+        <Textarea className="rounded-xl bg-gray-50 border-none" value={data.description} onChange={e => setData({...data, description: e.target.value})} />
+      </div>
+
+      <div className="space-y-2">
+        <Label className="text-[10px] uppercase font-bold">Thumbnail URL / Base64</Label>
+        <Input className="rounded-xl h-12 bg-gray-50 border-none" value={data.thumbnail} onChange={e => setData({...data, thumbnail: e.target.value})} />
+      </div>
+
+      <Button className="w-full h-14 rounded-2xl bg-primary text-white font-bold" onClick={() => onSave(data)}>
+        {initialData ? "Update Package" : "Create Package"}
+      </Button>
     </div>
   );
 }

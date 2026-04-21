@@ -6,25 +6,22 @@ import Image from "next/image";
 import { useApp } from "@/lib/context";
 import { ShoppingCart, User, Settings, Gamepad2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { PlaceHolderImages } from "@/lib/placeholder-images";
 
 export default function Header() {
-  const { cart, user } = useApp();
+  const { cart, user, storeSettings } = useApp();
   const cartCount = cart.reduce((acc, i) => acc + i.quantity, 0);
-  const logo = PlaceHolderImages.find(img => img.id === 'app-logo');
 
   return (
     <header className="sticky top-0 z-40 w-full bg-white border-b border-gray-100 shadow-sm">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
           <div className="relative w-10 h-10 overflow-hidden rounded-xl">
-            {logo ? (
+            {storeSettings.logo ? (
               <Image 
-                src={logo.imageUrl} 
+                src={storeSettings.logo} 
                 alt="Oskar Shop Logo" 
                 fill 
                 className="object-cover"
-                data-ai-hint={logo.imageHint}
               />
             ) : (
               <div className="w-full h-full bg-primary flex items-center justify-center text-white font-headline font-bold text-xl">
