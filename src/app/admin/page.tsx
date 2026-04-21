@@ -1,7 +1,7 @@
-
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
 import { useApp } from "@/lib/context";
