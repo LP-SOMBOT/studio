@@ -36,7 +36,7 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
         <link rel="apple-touch-icon" href="https://picsum.photos/seed/oskar-apple/180/180" />
       </head>
-      <body className="font-body antialiased pb-20 md:pb-0">
+      <body className="font-body antialiased">
         <AppProvider>
           <PWAInstaller />
           {children}

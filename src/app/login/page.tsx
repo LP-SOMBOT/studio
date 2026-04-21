@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -22,9 +21,9 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-secondary overflow-hidden">
+    <div className="min-h-screen flex flex-col bg-secondary overflow-x-hidden">
       {/* Header Section */}
-      <div className="pt-20 pb-16 px-8 md:px-12">
+      <div className="pt-12 pb-10 px-8 md:px-12 shrink-0">
         <h1 className="text-4xl md:text-5xl font-headline font-bold text-white leading-tight">
           Welcome to <br /> Oskar Shop
         </h1>
@@ -36,11 +35,11 @@ export default function LoginPage() {
       {/* Login Card */}
       <div className="flex-1 bg-white rounded-t-[3rem] p-8 md:p-12 shadow-2xl">
         <div className="max-w-md mx-auto h-full flex flex-col">
-          <h2 className="text-3xl font-headline font-bold mb-10 text-gray-900">
+          <h2 className="text-3xl font-headline font-bold mb-8 text-gray-900">
             Login
           </h2>
 
-          <form onSubmit={handleLogin} className="space-y-6 flex-1">
+          <form onSubmit={handleLogin} className="space-y-5">
             <div className="relative group">
               <div className="absolute left-4 top-1/2 -translate-y-1/2 text-secondary">
                 <User className="w-5 h-5" />
@@ -85,7 +84,7 @@ export default function LoginPage() {
               LOG IN
             </Button>
 
-            <div className="relative py-4">
+            <div className="relative py-2">
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t border-gray-100"></span>
               </div>
@@ -120,7 +119,7 @@ export default function LoginPage() {
               Sign in with Google
             </Button>
 
-            <div className="text-center pt-8">
+            <div className="text-center pt-6">
               <p className="text-sm text-muted-foreground font-medium">
                 Don't have an account? <Link href="#" className="text-secondary font-bold hover:underline">Sign Up</Link>
               </p>
