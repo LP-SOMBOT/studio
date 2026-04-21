@@ -56,10 +56,10 @@ export default function AdminPage() {
 
   if (!user?.isAdmin) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-[#0A0B10]">
-        <Card className="max-w-md w-full p-8 text-center rounded-3xl bg-[#14161F] border-white/5 border-none">
-          <h2 className="text-2xl font-headline font-bold mb-4 text-white">Access Denied</h2>
-          <p className="text-white/40 mb-6">You do not have administrative privileges.</p>
+      <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+        <Card className="max-w-md w-full p-8 text-center rounded-3xl border-none shadow-xl bg-white">
+          <h2 className="text-2xl font-headline font-bold mb-4 text-foreground">Access Denied</h2>
+          <p className="text-muted-foreground mb-6">You do not have administrative privileges.</p>
           <Button className="bg-primary hover:bg-primary/90" onClick={() => window.location.href = '/'}>Return Home</Button>
         </Card>
       </div>
@@ -99,18 +99,18 @@ export default function AdminPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0A0B10] text-white pb-24 md:pb-10 font-body">
+    <div className="min-h-screen bg-background text-foreground pb-24 md:pb-10 font-body">
       {/* Top Console Header */}
-      <header className="h-20 border-b border-white/5 px-6 flex items-center justify-between sticky top-0 bg-[#0A0B10]/80 backdrop-blur-md z-50">
+      <header className="h-20 border-b border-gray-100 px-6 flex items-center justify-between sticky top-0 bg-white/80 backdrop-blur-md z-50">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" className="text-white/60 hover:text-white">
+          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
             <Menu className="w-6 h-6" />
           </Button>
-          <h1 className="text-xl md:text-2xl font-headline font-bold text-primary drop-shadow-[0_0_8px_rgba(133,38,204,0.4)]">
+          <h1 className="text-xl md:text-2xl font-headline font-bold text-primary">
             Top-Up Console
           </h1>
         </div>
-        <div className="w-10 h-10 rounded-full border-2 border-primary/20 overflow-hidden shadow-[0_0_15px_rgba(133,38,204,0.1)]">
+        <div className="w-10 h-10 rounded-full border-2 border-primary/20 overflow-hidden shadow-sm">
            <img src={`https://picsum.photos/seed/${user.uid}/100/100`} alt="Avatar" className="w-full h-full object-cover" />
         </div>
       </header>
@@ -124,12 +124,12 @@ export default function AdminPage() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 gap-4">
-          <div className="bg-[#14161F] border border-white/5 rounded-2xl p-6 shadow-sm">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-white/40 mb-2">Total Value</p>
+          <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">Total Value</p>
             <h3 className="text-2xl md:text-3xl font-headline font-bold text-secondary">$24,590</h3>
           </div>
-          <div className="bg-[#14161F] border border-white/5 rounded-2xl p-6 shadow-sm">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-white/40 mb-2">Low Stock</p>
+          <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">Low Stock</p>
             <h3 className="text-2xl md:text-3xl font-headline font-bold text-destructive">3 Items</h3>
           </div>
         </div>
@@ -137,31 +137,31 @@ export default function AdminPage() {
         {/* Console Search Bar */}
         <div className="space-y-4">
           <div className="relative group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-primary transition-colors" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-primary transition-colors" />
             <Input 
-              className="pl-12 h-14 rounded-2xl bg-[#000000] border-none text-white text-sm focus-visible:ring-1 focus-visible:ring-primary/30 placeholder:text-white/10" 
+              className="pl-12 h-14 rounded-2xl bg-white border-gray-100 text-foreground text-sm focus-visible:ring-1 focus-visible:ring-primary/30 placeholder:text-muted-foreground/30" 
               placeholder="Search product ID or name..." 
             />
           </div>
           <div className="flex gap-3">
-            <Button variant="ghost" className="flex-1 h-12 rounded-xl bg-[#14161F] hover:bg-[#1A1D29] border-none text-white/60 font-bold gap-2 text-xs">
+            <Button variant="ghost" className="flex-1 h-12 rounded-xl bg-white hover:bg-gray-50 border border-gray-100 text-muted-foreground font-bold gap-2 text-xs">
               <Filter className="w-4 h-4" /> Filter
             </Button>
-            <Button variant="ghost" className="flex-1 h-12 rounded-xl bg-[#14161F] hover:bg-[#1A1D29] border-none text-white/60 font-bold gap-2 text-xs">
+            <Button variant="ghost" className="flex-1 h-12 rounded-xl bg-white hover:bg-gray-50 border border-gray-100 text-muted-foreground font-bold gap-2 text-xs">
               <ArrowUpDown className="w-4 h-4" /> Sort
             </Button>
           </div>
         </div>
 
         <Tabs defaultValue="stock" className="space-y-8">
-          <TabsList className="bg-[#14161F] p-1.5 rounded-2xl border border-white/5 w-full md:w-auto">
-            <TabsTrigger value="stock" className="rounded-xl px-6 data-[state=active]:bg-primary data-[state=active]:text-white text-white/40">
+          <TabsList className="bg-white p-1.5 rounded-2xl border border-gray-100 w-full md:w-auto shadow-sm">
+            <TabsTrigger value="stock" className="rounded-xl px-6 data-[state=active]:bg-primary data-[state=active]:text-white text-muted-foreground">
               <Package className="w-4 h-4 mr-2" /> Stock
             </TabsTrigger>
-            <TabsTrigger value="users" className="rounded-xl px-6 data-[state=active]:bg-primary data-[state=active]:text-white text-white/40">
+            <TabsTrigger value="users" className="rounded-xl px-6 data-[state=active]:bg-primary data-[state=active]:text-white text-muted-foreground">
               <Users className="w-4 h-4 mr-2" /> Users
             </TabsTrigger>
-            <TabsTrigger value="settings" className="rounded-xl px-6 data-[state=active]:bg-primary data-[state=active]:text-white text-white/40">
+            <TabsTrigger value="settings" className="rounded-xl px-6 data-[state=active]:bg-primary data-[state=active]:text-white text-muted-foreground">
               <Settings className="w-4 h-4 mr-2" /> Console
             </TabsTrigger>
           </TabsList>
@@ -169,29 +169,29 @@ export default function AdminPage() {
           <TabsContent value="stock" className="space-y-6">
             <div className="grid grid-cols-1 gap-6">
               {GAMES_DATA.map((item) => (
-                <div key={item.id} className="bg-[#14161F] border border-white/5 rounded-[2rem] p-6 relative overflow-hidden group">
+                <div key={item.id} className="bg-white border border-gray-100 rounded-[2rem] p-6 relative overflow-hidden group shadow-sm hover:shadow-md transition-shadow">
                   <div className="flex items-start justify-between mb-8">
                     <div className="flex items-center gap-5">
-                      <div className="w-14 h-14 rounded-2xl bg-black flex items-center justify-center font-headline font-bold text-xl text-primary shadow-[inset_0_0_15px_rgba(0,0,0,0.5)]">
+                      <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center font-headline font-bold text-xl text-primary border border-gray-100">
                         {item.title[0]}
                       </div>
                       <div>
-                        <h3 className="font-headline font-bold text-lg text-white">{item.title}</h3>
-                        <p className="text-[10px] font-bold text-white/20 uppercase tracking-widest mt-1">ID: {item.id.toUpperCase()}</p>
+                        <h3 className="font-headline font-bold text-lg text-foreground">{item.title}</h3>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">ID: {item.id.toUpperCase()}</p>
                       </div>
                     </div>
-                    <Button size="icon" variant="ghost" className="w-10 h-10 rounded-xl bg-black/40 text-white/40 hover:text-primary transition-colors">
+                    <Button size="icon" variant="ghost" className="w-10 h-10 rounded-xl bg-gray-50 text-muted-foreground hover:text-primary transition-colors border border-gray-100">
                       <Edit className="w-4 h-4" />
                     </Button>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4 mb-8">
-                    <div className="bg-black/40 p-5 rounded-2xl border border-white/5">
-                      <p className="text-[10px] font-bold text-white/20 uppercase mb-2">Base Price</p>
+                    <div className="bg-gray-50 p-5 rounded-2xl border border-gray-100">
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase mb-2">Base Price</p>
                       <p className="font-headline font-bold text-xl">${item.price.toFixed(2)}</p>
                     </div>
-                    <div className="bg-black/40 p-5 rounded-2xl border border-white/5">
-                      <p className="text-[10px] font-bold text-white/20 uppercase mb-2">Denomination</p>
+                    <div className="bg-gray-50 p-5 rounded-2xl border border-gray-100">
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase mb-2">Denomination</p>
                       <p className="font-headline font-bold text-sm truncate uppercase text-secondary">
                         {item.gameId === 'freefire' ? '5350 VP' : '8080 GC'}
                       </p>
@@ -202,7 +202,7 @@ export default function AdminPage() {
                     <div className="flex items-center gap-3">
                       <div className={cn(
                         "w-2 h-2 rounded-full",
-                        item.price > 100 ? "bg-destructive shadow-[0_0_10px_rgba(239,68,68,0.4)]" : "bg-primary shadow-[0_0_10px_rgba(133,38,204,0.4)]"
+                        item.price > 100 ? "bg-destructive shadow-[0_0_10px_rgba(239,68,68,0.2)]" : "bg-primary shadow-[0_0_10px_rgba(133,38,204,0.2)]"
                       )} />
                       <span className={cn(
                         "text-[11px] font-bold uppercase tracking-wider",
@@ -211,8 +211,8 @@ export default function AdminPage() {
                         {item.price > 100 ? `Low Stock (12)` : `In Stock (1,204)`}
                       </span>
                     </div>
-                    <div className="bg-black px-4 py-1.5 rounded-full border border-white/5">
-                      <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">
+                    <div className="bg-gray-50 px-4 py-1.5 rounded-full border border-gray-100">
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                         {item.category === 'accounts' ? 'Codes' : 'Digital'}
                       </span>
                     </div>
@@ -221,40 +221,40 @@ export default function AdminPage() {
               ))}
             </div>
 
-            <Button className="w-16 h-16 rounded-full bg-primary hover:bg-primary/90 text-white shadow-[0_0_30px_rgba(133,38,204,0.4)] fixed bottom-24 right-6 z-50 md:bottom-10">
+            <Button className="w-16 h-16 rounded-full bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 fixed bottom-24 right-6 z-50 md:bottom-10">
               <Plus className="w-8 h-8" />
             </Button>
           </TabsContent>
 
           <TabsContent value="users" className="space-y-6">
-             <Card className="rounded-2xl bg-[#14161F] border-white/5 border overflow-hidden">
+             <Card className="rounded-2xl bg-white border-gray-100 border overflow-hidden shadow-sm">
               <Table>
-                <TableHeader className="bg-black/40">
-                  <TableRow className="border-white/5 hover:bg-transparent">
-                    <TableHead className="text-white/40 font-bold text-[10px] uppercase tracking-wider">User</TableHead>
-                    <TableHead className="text-white/40 font-bold text-[10px] uppercase tracking-wider">Role</TableHead>
-                    <TableHead className="text-right text-white/40 font-bold text-[10px] uppercase tracking-wider">Actions</TableHead>
+                <TableHeader className="bg-gray-50">
+                  <TableRow className="border-gray-100 hover:bg-transparent">
+                    <TableHead className="text-muted-foreground font-bold text-[10px] uppercase tracking-wider">User</TableHead>
+                    <TableHead className="text-muted-foreground font-bold text-[10px] uppercase tracking-wider">Role</TableHead>
+                    <TableHead className="text-right text-muted-foreground font-bold text-[10px] uppercase tracking-wider">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {allUsers.map((u) => (
-                    <TableRow key={u.uid} className="hover:bg-black/20 border-white/5">
+                    <TableRow key={u.uid} className="hover:bg-gray-50 transition-colors border-gray-100">
                       <TableCell>
                         <div className="flex flex-col">
-                          <span className="font-bold text-sm text-white">{u.name}</span>
-                          <span className="text-[10px] text-white/40">{u.email}</span>
+                          <span className="font-bold text-sm text-foreground">{u.name}</span>
+                          <span className="text-[10px] text-muted-foreground">{u.email}</span>
                         </div>
                       </TableCell>
                       <TableCell>
                         <Badge variant="outline" className={cn(
-                          "text-[9px] uppercase font-bold rounded-full border-white/10",
-                          u.isAdmin ? 'text-primary border-primary/20 bg-primary/5' : 'text-white/40'
+                          "text-[9px] uppercase font-bold rounded-full border-gray-100",
+                          u.isAdmin ? 'text-primary border-primary/20 bg-primary/5' : 'text-muted-foreground'
                         )}>
                           {u.isAdmin ? 'Admin' : 'Member'}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-white/20 hover:text-white"><Edit className="w-3 h-3" /></Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground"><Edit className="w-3 h-3" /></Button>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -264,15 +264,15 @@ export default function AdminPage() {
           </TabsContent>
 
           <TabsContent value="settings" className="space-y-6">
-            <Card className="rounded-[2rem] bg-[#14161F] border-white/5 border p-6">
+            <Card className="rounded-[2rem] bg-white border-gray-100 border p-6 shadow-sm">
               <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-black rounded-2xl flex items-center justify-center text-primary">
+                  <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-primary border border-gray-100">
                     <AlertCircle className="w-6 h-6" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-lg text-white">Live Visibility</h3>
-                    <p className="text-xs text-white/40">Control "Live Now" homepage banner</p>
+                    <h3 className="font-bold text-lg text-foreground">Live Visibility</h3>
+                    <p className="text-xs text-muted-foreground">Control "Live Now" homepage banner</p>
                   </div>
                 </div>
                 <Switch 
@@ -282,31 +282,31 @@ export default function AdminPage() {
                 />
               </div>
 
-              <div className="space-y-6 pt-6 border-t border-white/5">
+              <div className="space-y-6 pt-6 border-t border-gray-100">
                  <div className="flex items-center gap-4 mb-4">
-                  <div className="w-12 h-12 bg-black rounded-2xl flex items-center justify-center text-secondary">
+                  <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-secondary border border-gray-100">
                     <Sparkles className="w-6 h-6" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-lg text-white">AI Marketing Lab</h3>
-                    <p className="text-xs text-white/40">Generate promotional content</p>
+                    <h3 className="font-bold text-lg text-foreground">AI Marketing Lab</h3>
+                    <p className="text-xs text-muted-foreground">Generate promotional content</p>
                   </div>
                 </div>
                 
                 <div className="grid grid-cols-1 gap-5">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-bold uppercase text-white/40">Promotion Title</Label>
+                    <Label className="text-[10px] font-bold uppercase text-muted-foreground">Promotion Title</Label>
                     <Input 
-                      className="rounded-xl h-12 bg-black border-white/5 text-white focus-visible:ring-secondary" 
+                      className="rounded-xl h-12 bg-gray-50 border-gray-100 text-foreground focus-visible:ring-secondary" 
                       placeholder="e.g. Weekend Flash Sale" 
                       value={promoInput.title}
                       onChange={(e) => setPromoInput({...promoInput, title: e.target.value})}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-bold uppercase text-white/40">Offer Details</Label>
+                    <Label className="text-[10px] font-bold uppercase text-muted-foreground">Offer Details</Label>
                     <Textarea 
-                      className="rounded-xl bg-black border-white/5 text-white min-h-[100px] focus-visible:ring-secondary" 
+                      className="rounded-xl bg-gray-50 border-gray-100 text-foreground min-h-[100px] focus-visible:ring-secondary" 
                       placeholder="Enter promotion details..." 
                       value={promoInput.promotionDetails}
                       onChange={(e) => setPromoInput({...promoInput, promotionDetails: e.target.value})}
@@ -314,7 +314,7 @@ export default function AdminPage() {
                   </div>
                   <Button 
                     onClick={handleGeneratePromo} 
-                    className="w-full h-14 rounded-xl gap-2 font-bold bg-secondary hover:bg-secondary/90 text-white"
+                    className="w-full h-14 rounded-xl gap-2 font-bold bg-secondary hover:bg-secondary/90 text-white shadow-sm"
                     disabled={isGenerating}
                   >
                     {isGenerating ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
@@ -325,16 +325,16 @@ export default function AdminPage() {
             </Card>
 
             {promoOutput && (
-              <Card className="rounded-[2rem] bg-primary/5 border-primary/20 border p-6 space-y-4 animate-in fade-in slide-in-from-bottom-4">
+              <Card className="rounded-[2rem] bg-primary/5 border-primary/20 border p-6 space-y-4 animate-in fade-in slide-in-from-bottom-4 shadow-sm">
                 <div className="flex justify-between items-center">
                   <h4 className="font-bold text-primary">AI Strategy Suggestions</h4>
-                  <Button variant="ghost" size="sm" onClick={() => setPromoOutput(null)} className="text-white/40">Clear</Button>
+                  <Button variant="ghost" size="sm" onClick={() => setPromoOutput(null)} className="text-muted-foreground hover:text-foreground">Clear</Button>
                 </div>
-                <div className="bg-black/60 p-5 rounded-2xl border border-white/5">
+                <div className="bg-white p-5 rounded-2xl border border-primary/10">
                    <p className="text-[10px] font-bold uppercase text-secondary mb-2 tracking-widest">Ticker Copy</p>
-                   <p className="text-sm font-medium text-white/80">{promoOutput.announcementText}</p>
+                   <p className="text-sm font-medium text-foreground">{promoOutput.announcementText}</p>
                 </div>
-                <Button className="w-full h-12 rounded-xl bg-secondary hover:bg-secondary/90 text-white font-bold">
+                <Button className="w-full h-12 rounded-xl bg-secondary hover:bg-secondary/90 text-white font-bold shadow-sm">
                   Update Store Ticker
                 </Button>
               </Card>
@@ -343,21 +343,21 @@ export default function AdminPage() {
         </Tabs>
       </main>
 
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#0A0B10] border-t border-white/5 z-50 px-4 py-2 flex justify-around items-center">
-        <div className="flex flex-col items-center gap-1 p-2 text-white/40 hover:text-white transition-colors">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-50 px-4 py-2 flex justify-around items-center shadow-[0_-4px_10px_rgba(0,0,0,0.03)]">
+        <Link href="/" className="flex flex-col items-center gap-1 p-2 text-muted-foreground hover:text-primary transition-colors">
           <Gamepad2 className="w-6 h-6" />
           <span className="text-[10px] font-bold uppercase">Home</span>
-        </div>
+        </Link>
         <div className="flex flex-col items-center gap-1 p-2 text-primary transition-colors relative">
           <Package className="w-6 h-6" />
           <span className="text-[10px] font-bold uppercase">Stock</span>
-          <div className="absolute -bottom-1 w-1 h-1 bg-primary rounded-full shadow-[0_0_5px_#8526CC]" />
+          <div className="absolute -bottom-1 w-1 h-1 bg-primary rounded-full shadow-[0_0_5px_rgba(133,38,204,0.4)]" />
         </div>
-        <div className="flex flex-col items-center gap-1 p-2 text-white/40 hover:text-white transition-colors">
+        <div className="flex flex-col items-center gap-1 p-2 text-muted-foreground hover:text-primary transition-colors">
           <Users className="w-6 h-6" />
           <span className="text-[10px] font-bold uppercase">Users</span>
         </div>
-        <div className="flex flex-col items-center gap-1 p-2 text-white/40 hover:text-white transition-colors">
+        <div className="flex flex-col items-center gap-1 p-2 text-muted-foreground hover:text-primary transition-colors">
           <Bell className="w-6 h-6" />
           <span className="text-[10px] font-bold uppercase">Alerts</span>
         </div>
