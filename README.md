@@ -32,12 +32,13 @@ Set the following variables in your deployment dashboard:
 
 ## Troubleshooting Git Issues
 
-If you encounter errors when pushing to GitHub:
+If you encounter the error **"failed to push some refs to..."**:
 
-1.  **Sync Local & Remote**: Use `git pull origin main` (or use the Pull action in Source Control) before pushing to ensure you have the latest changes from the server.
-2.  **Check Permissions**: Ensure your GitHub token has "repo" and "workflow" scopes enabled.
-3.  **Resolve Conflicts**: If files are modified in both places, you must resolve conflicts before the push will be accepted.
-4.  **View Logs**: Always click "Open Git Log" in the error dialog to see the specific error message from GitHub.
+1.  **Pull First**: The remote repository has changes you don't have. Click the `...` in the Source Control panel and select **Pull**.
+2.  **Sync Local & Remote**: Use the **Sync Changes** button to ensure your local workspace matches GitHub.
+3.  **Check Permissions**: Ensure your GitHub token has "repo" and "workflow" scopes enabled.
+4.  **Resolve Conflicts**: If files are modified in both places, you must resolve conflicts before the push will be accepted.
+5.  **View Logs**: Always click "Open Git Log" in the error dialog to see the specific error message from GitHub.
 
 ## Local Development
 
