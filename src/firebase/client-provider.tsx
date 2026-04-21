@@ -7,12 +7,14 @@ import { FirebaseProvider } from './provider';
 import { FirebaseApp } from 'firebase/app';
 import { Auth } from 'firebase/auth';
 import { Firestore } from 'firebase/firestore';
+import { Database } from 'firebase/database';
 
 export function FirebaseClientProvider({ children }: { children: React.ReactNode }) {
   const [services, setServices] = useState<{
     app: FirebaseApp;
     auth: Auth;
     db: Firestore;
+    rtdb: Database;
   } | null>(null);
 
   useEffect(() => {
@@ -23,7 +25,12 @@ export function FirebaseClientProvider({ children }: { children: React.ReactNode
   if (!services) return null;
 
   return (
-    <FirebaseProvider app={services.app} auth={services.auth} db={services.db}>
+    <FirebaseProvider 
+      app={services.app} 
+      auth={services.auth} 
+      db={services.db}
+      rtdb={services.rtdb}
+    >
       {children}
     </FirebaseProvider>
   );

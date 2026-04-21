@@ -5,28 +5,27 @@ import React, { createContext, useContext, useState, useEffect, useMemo } from '
 import { 
   useUser, 
   useAuth, 
-  useFirestore, 
-  useCollection,
-  useDoc 
+  useDatabase
 } from '@/firebase';
 import { 
   signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword,
   signOut,
   GoogleAuthProvider,
-  signInWithPopup
+  signInWithPopup,
+  updateProfile
 } from 'firebase/auth';
 import { 
-  collection, 
-  addDoc, 
+  ref, 
+  onValue, 
+  push, 
+  set, 
   query, 
-  where, 
-  orderBy,
-  doc,
-  setDoc,
+  orderByChild, 
+  equalTo,
   serverTimestamp
-} from 'firebase/firestore';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
+} from 'firebase/database';
+import { toast } from '@/hooks/use-toast';
 
 type CartItem = {
   id: string;
@@ -52,6 +51,7 @@ type AppContextType = {
   user: any;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
+  signup: (email: string, password: string, name: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   cart: CartItem[];
@@ -67,37 +67,54 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const { user, loading } = useUser();
   const auth = useAuth();
-  const db = useFirestore();
+  const rtdb = useDatabase();
   
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [userProfile, setUserProfile] = useState<any>(null);
 
-  // Real-time Orders
-  const ordersQuery = useMemo(() => {
-    if (!db || !user) return null;
-    return query(
-      collection(db, 'orders'),
-      where('userId', '==', user.uid),
-      orderBy('createdAt', 'desc')
-    );
-  }, [db, user]);
+  // Sync user profile from RTDB
+  useEffect(() => {
+    if (!rtdb || !user) {
+      setUserProfile(null);
+      return;
+    }
+    const userRef = ref(rtdb, `users/${user.uid}`);
+    return onValue(userRef, (snapshot) => {
+      setUserProfile(snapshot.val());
+    });
+  }, [rtdb, user]);
 
-  const { data: ordersData } = useCollection(ordersQuery);
-  const orders = (ordersData || []) as Order[];
-
-  // Fetch extra user info (like isAdmin) from Firestore
-  const userDocRef = useMemo(() => {
-    if (!db || !user) return null;
-    return doc(db, 'users', user.uid);
-  }, [db, user]);
-  
-  const { data: userProfile } = useDoc(userDocRef);
+  // Sync orders from RTDB
+  useEffect(() => {
+    if (!rtdb || !user) {
+      setOrders([]);
+      return;
+    }
+    const ordersRef = ref(rtdb, 'orders');
+    const userOrdersQuery = query(ordersRef, orderByChild('userId'), equalTo(user.uid));
+    
+    return onValue(userOrdersQuery, (snapshot) => {
+      const data = snapshot.val();
+      if (!data) {
+        setOrders([]);
+        return;
+      }
+      const orderList = Object.entries(data).map(([id, val]: [string, any]) => ({
+        id,
+        ...val
+      })).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      setOrders(orderList);
+    });
+  }, [rtdb, user]);
 
   const enhancedUser = useMemo(() => {
     if (!user) return null;
+    const isAdmin = user.email === 'admin@lp.com' || userProfile?.isAdmin;
     return {
       ...user,
-      isAdmin: userProfile?.isAdmin || user.email?.includes('admin'),
-      name: userProfile?.name || user.displayName || user.email?.split('@')[0],
+      isAdmin,
+      name: user.displayName || userProfile?.name || user.email?.split('@')[0],
     };
   }, [user, userProfile]);
 
@@ -111,10 +128,38 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     await signInWithEmailAndPassword(auth, email, password);
   };
 
+  const signup = async (email: string, password: string, name: string) => {
+    if (!auth || !rtdb) return;
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const newUser = userCredential.user;
+    
+    await updateProfile(newUser, { displayName: name });
+    
+    // Save profile to RTDB
+    await set(ref(rtdb, `users/${newUser.uid}`), {
+      uid: newUser.uid,
+      email,
+      name,
+      isAdmin: email === 'admin@lp.com',
+      createdAt: serverTimestamp()
+    });
+  };
+
   const loginWithGoogle = async () => {
-    if (!auth) return;
+    if (!auth || !rtdb) return;
     const provider = new GoogleAuthProvider();
-    await signInWithPopup(auth, provider);
+    const result = await signInWithPopup(auth, provider);
+    const user = result.user;
+    
+    // Create/Update profile in RTDB if it doesn't exist
+    const userRef = ref(rtdb, `users/${user.uid}`);
+    await set(userRef, {
+      uid: user.uid,
+      email: user.email,
+      name: user.displayName,
+      isAdmin: user.email === 'admin@lp.com',
+      lastLogin: serverTimestamp()
+    });
   };
 
   const logout = async () => {
@@ -150,7 +195,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const createOrder = (paymentMethod: string, gameDetails: any) => {
-    if (!db || !user) return;
+    if (!rtdb || !user) return;
 
     const orderData = {
       userId: user.uid,
@@ -162,17 +207,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       gameDetails,
     };
 
-    addDoc(collection(db, 'orders'), orderData)
+    const ordersRef = ref(rtdb, 'orders');
+    push(ordersRef, orderData)
       .then(() => {
         clearCart();
       })
-      .catch(async (error) => {
-        const permissionError = new FirestorePermissionError({
-          path: 'orders',
-          operation: 'create',
-          requestResourceData: orderData,
+      .catch((error) => {
+        console.error("Order creation failed:", error);
+        toast({
+          variant: "destructive",
+          title: "Order Failed",
+          description: "Could not process your order. Please try again."
         });
-        errorEmitter.emit('permission-error', permissionError);
       });
   };
 
@@ -181,6 +227,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       user: enhancedUser, 
       loading,
       login, 
+      signup,
       loginWithGoogle,
       logout, 
       cart, 

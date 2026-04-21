@@ -5,11 +5,13 @@ import React, { createContext, useContext } from 'react';
 import { FirebaseApp } from 'firebase/app';
 import { Auth } from 'firebase/auth';
 import { Firestore } from 'firebase/firestore';
+import { Database } from 'firebase/database';
 
 interface FirebaseContextType {
   app: FirebaseApp;
   auth: Auth;
   db: Firestore;
+  rtdb: Database;
 }
 
 const FirebaseContext = createContext<FirebaseContextType | undefined>(undefined);
@@ -18,15 +20,17 @@ export function FirebaseProvider({
   children, 
   app, 
   auth, 
-  db 
+  db,
+  rtdb
 }: { 
   children: React.ReactNode; 
   app: FirebaseApp; 
   auth: Auth; 
   db: Firestore;
+  rtdb: Database;
 }) {
   return (
-    <FirebaseContext.Provider value={{ app, auth, db }}>
+    <FirebaseContext.Provider value={{ app, auth, db, rtdb }}>
       {children}
     </FirebaseContext.Provider>
   );
@@ -48,4 +52,8 @@ export function useFirestore() {
 
 export function useAuth() {
   return useFirebase().auth;
+}
+
+export function useDatabase() {
+  return useFirebase().rtdb;
 }
