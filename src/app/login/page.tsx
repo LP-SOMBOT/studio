@@ -49,7 +49,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-secondary overflow-x-hidden">
+    <div className="min-h-screen flex flex-col bg-primary overflow-x-hidden">
       {/* Header Section */}
       <div className="pt-12 pb-10 px-8 md:px-12 shrink-0">
         <h1 className="text-4xl md:text-5xl font-headline font-bold text-white leading-tight">
@@ -69,7 +69,7 @@ export default function LoginPage() {
 
           <form onSubmit={handleLogin} className="space-y-5">
             <div className="relative group">
-              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-secondary">
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-primary">
                 <User className="w-5 h-5" />
               </div>
               <Input 
@@ -79,12 +79,12 @@ export default function LoginPage() {
                 required 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="h-14 pl-12 rounded-full border-gray-100 bg-gray-50/50 focus-visible:ring-secondary text-base"
+                className="h-14 pl-12 rounded-full border-gray-100 bg-gray-50/50 focus-visible:ring-primary text-base"
               />
             </div>
 
             <div className="relative group">
-              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-secondary">
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-primary">
                 <Lock className="w-5 h-5" />
               </div>
               <Input 
@@ -94,7 +94,7 @@ export default function LoginPage() {
                 required 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="h-14 pl-12 pr-12 rounded-full border-gray-100 bg-gray-50/50 focus-visible:ring-secondary text-base"
+                className="h-14 pl-12 pr-12 rounded-full border-gray-100 bg-gray-50/50 focus-visible:ring-primary text-base"
               />
               <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">
                 <EyeOff className="w-5 h-5" />
@@ -110,7 +110,7 @@ export default function LoginPage() {
             <Button 
               type="submit" 
               disabled={isSubmitting}
-              className="w-full h-14 rounded-full text-lg font-bold bg-secondary hover:bg-secondary/90 shadow-lg shadow-secondary/20 transition-all active:scale-95"
+              className="w-full h-14 rounded-full text-lg font-bold bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all active:scale-95"
             >
               {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : "LOG IN"}
             </Button>
@@ -153,7 +153,7 @@ export default function LoginPage() {
 
             <div className="text-center pt-6">
               <p className="text-sm text-muted-foreground font-medium">
-                Don't have an account? <Link href="/signup" className="text-secondary font-bold hover:underline">Sign Up</Link>
+                Don't have an account? <Link href="/signup" className="text-primary font-bold hover:underline">Sign Up</Link>
               </p>
             </div>
           </form>
