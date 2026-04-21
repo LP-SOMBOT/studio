@@ -30,9 +30,14 @@ Set the following variables in your deployment dashboard:
 2. Link the repository to your hosting platform (Vercel/Netlify).
 3. The platform will automatically detect the Next.js project and deploy it.
 
-### 3. Admin Access
+## Troubleshooting Git Issues
 
-The user with email `admin@lp.com` is automatically granted administrative privileges. You can also manually set `isAdmin: true` in the Realtime Database for any UID.
+If you encounter errors when pushing to GitHub:
+
+1.  **Sync Local & Remote**: Use `git pull origin main` (or use the Pull action in Source Control) before pushing to ensure you have the latest changes from the server.
+2.  **Check Permissions**: Ensure your GitHub token has "repo" and "workflow" scopes enabled.
+3.  **Resolve Conflicts**: If files are modified in both places, you must resolve conflicts before the push will be accepted.
+4.  **View Logs**: Always click "Open Git Log" in the error dialog to see the specific error message from GitHub.
 
 ## Local Development
 
