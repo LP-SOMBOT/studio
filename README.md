@@ -1,46 +1,38 @@
 # Oskar Shop - Game Top-Up & Accounts
 
-A modern, high-performance PWA for gaming top-ups and account trading, built with Next.js 15, Firebase, and Genkit AI.
+A modern, high-performance PWA for gaming top-ups and account trading, built with Next.js 15, Firebase Realtime Database, and Genkit AI.
+
+## Features
+
+- **PWA Ready**: Installable on mobile devices for an app-like experience.
+- **Real-time Updates**: Order status and user profiles sync instantly via Firebase Realtime Database.
+- **AI Marketing**: Admin tools to generate promotional content using Genkit.
+- **Secure Payments**: Integrated mobile payment verification workflow.
+- **Responsive Console**: Advanced admin dashboard for inventory and user management.
 
 ## Deployment to Vercel or Netlify
 
-To deploy this application to Vercel or Netlify, follow these steps:
+To deploy this application, follow these steps:
 
 ### 1. Environment Variables
 
-You must set the following environment variables in your deployment dashboard (Vercel/Netlify):
+Set the following variables in your deployment dashboard:
 
-*   `GOOGLE_GENAI_API_KEY`: Your Google AI API key for Genkit promotional content generation.
-*   `NEXT_PUBLIC_FIREBASE_API_KEY`: (Optional if not hardcoded)
-*   `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`: (Optional if not hardcoded)
-*   `NEXT_PUBLIC_FIREBASE_PROJECT_ID`: (Optional if not hardcoded)
+*   `GOOGLE_GENAI_API_KEY`: Your Google AI API key for Genkit.
+*   `NEXT_PUBLIC_FIREBASE_API_KEY`: Found in `src/firebase/config.ts`
+*   `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`: Found in `src/firebase/config.ts`
+*   `NEXT_PUBLIC_FIREBASE_DATABASE_URL`: Found in `src/firebase/config.ts`
+*   `NEXT_PUBLIC_FIREBASE_PROJECT_ID`: Found in `src/firebase/config.ts`
 
-*Note: The current Firebase configuration is hardcoded in `src/firebase/config.ts` for convenience.*
+### 2. Admin Access
 
-### 2. Build Configuration
+The user with email `admin@lp.com` is automatically granted administrative privileges. You can also manually set `isAdmin: true` in the Realtime Database for any UID.
 
-The app is pre-configured for standard Next.js deployments.
-
-*   **Build Command**: `npm run build`
-*   **Install Command**: `npm install`
-*   **Output Directory**: `.next`
-
-### 3. PWA Features
-
-The app includes a custom PWA installer. Ensure your deployment domain is served over HTTPS to enable PWA installation and service worker features.
-
-### 4. Admin Setup
-
-The first user to sign up or any user with the email `admin@lp.com` will be granted administrative privileges automatically.
-
-## Local Development
+### 3. Local Development
 
 ```bash
 npm install
 npm run dev
 ```
 
-To start Genkit development tools:
-```bash
-npm run genkit:dev
-```
+The app will be available at `http://localhost:9002`.
