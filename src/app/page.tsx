@@ -6,9 +6,10 @@ import BottomNav from "@/components/layout/BottomNav";
 import AnnouncementTicker from "@/components/home/AnnouncementTicker";
 import HeroSlider from "@/components/home/HeroSlider";
 import GameCard from "@/components/games/GameCard";
-import { PlaceHolderImages } from "@/lib/placeholder-images";
+import { GAMES_DATA } from "@/lib/games-data";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
 import { 
   Flame, 
   Trophy, 
@@ -24,64 +25,6 @@ import {
 
 export default function Home() {
   const [showLiveBanner, setShowLiveBanner] = useState(true);
-
-  const gamesData = [
-    {
-      id: "ff-110",
-      gameId: "freefire",
-      title: "110 Diamonds",
-      description: "Direct top-up via Player ID. Fast and secure delivery.",
-      price: 1.2,
-      thumbnail: PlaceHolderImages.find(img => img.id === 'freefire-logo')?.imageUrl || "https://picsum.photos/seed/ff/400/400",
-      imageHint: "free fire"
-    },
-    {
-      id: "ff-583",
-      gameId: "freefire",
-      title: "583 Diamonds",
-      description: "Special event bonus included. Requires Player ID.",
-      price: 5.5,
-      thumbnail: PlaceHolderImages.find(img => img.id === 'freefire-logo')?.imageUrl || "https://picsum.photos/seed/ff/400/400",
-      imageHint: "free fire"
-    },
-    {
-      id: "ff-weekly",
-      gameId: "freefire",
-      title: "Weekly Pass",
-      description: "Get 450 Diamonds total over 7 days. Best value!",
-      price: 2.5,
-      thumbnail: PlaceHolderImages.find(img => img.id === 'freefire-logo')?.imageUrl || "https://picsum.photos/seed/ff/400/400",
-      imageHint: "free fire"
-    },
-    {
-      id: "bs-base",
-      gameId: "bloodstrike",
-      title: "60 Gold Coins",
-      description: "Blood Strike direct top-up. Global region supported.",
-      price: 0.99,
-      thumbnail: PlaceHolderImages.find(img => img.id === 'bloodstrike-logo')?.imageUrl || "https://picsum.photos/seed/bs/400/400",
-      imageHint: "blood strike"
-    },
-    {
-      id: "ef-100",
-      gameId: "efootball",
-      title: "100 eFootball Coins",
-      description: "Konami eFootball 2024 Coins. Instant delivery.",
-      price: 0.99,
-      thumbnail: PlaceHolderImages.find(img => img.id === 'efootball-logo')?.imageUrl || "https://picsum.photos/seed/ef/400/400",
-      imageHint: "efootball"
-    },
-    {
-      id: "ff-acc-rare",
-      gameId: "freefire-acc",
-      title: "Rare Account Bundle",
-      description: "Level 70+, Season 1-10 Elite Passes, rare skins included.",
-      price: 150.0,
-      discountedPrice: 125.0,
-      thumbnail: PlaceHolderImages.find(img => img.id === 'acc-1')?.imageUrl || "https://picsum.photos/seed/acc1/800/450",
-      imageHint: "game account"
-    }
-  ];
 
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-10">
@@ -100,7 +43,7 @@ export default function Home() {
             <Button 
               variant="ghost" 
               size="icon" 
-              className="absolute top-2 right-2 h-8 w-8 rounded-full text-muted-foreground hover:bg-red-50 hover:text-red-500 transition-colors"
+              className="absolute top-2 right-2 h-8 w-8 rounded-full text-muted-foreground hover:bg-red-50 hover:text-red-500 transition-colors opacity-100"
               onClick={() => setShowLiveBanner(false)}
             >
               <X className="w-4 h-4" />
@@ -133,10 +76,12 @@ export default function Home() {
               <Flame className="w-6 h-6 text-orange-500" />
               <h2 className="text-2xl font-headline font-bold">Trending Top Ups</h2>
             </div>
-            <Button variant="link" className="text-primary font-bold">View All</Button>
+            <Link href="/games">
+              <Button variant="link" className="text-primary font-bold">View All</Button>
+            </Link>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-            {gamesData.filter(g => !g.gameId.includes('acc')).map((game) => (
+            {GAMES_DATA.filter(g => g.category === 'top-up').slice(0, 6).map((game) => (
               <GameCard key={game.id} {...game} />
             ))}
           </div>
@@ -149,10 +94,12 @@ export default function Home() {
               <Trophy className="w-6 h-6 text-yellow-500" />
               <h2 className="text-2xl font-headline font-bold">Premium Game Accounts</h2>
             </div>
-            <Button variant="link" className="text-primary font-bold">View All</Button>
+            <Link href="/games">
+              <Button variant="link" className="text-primary font-bold">View All</Button>
+            </Link>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {gamesData.filter(g => g.gameId.includes('acc')).map((game) => (
+            {GAMES_DATA.filter(g => g.category === 'accounts').map((game) => (
               <GameCard key={game.id} {...game} />
             ))}
           </div>
@@ -173,7 +120,6 @@ export default function Home() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
-              {/* Weekday Schedule Card */}
               <div className="bg-white rounded-[2.5rem] p-8 shadow-xl shadow-gray-200/50 border border-gray-100 flex flex-col h-full">
                 <div className="flex items-center gap-4 mb-8">
                   <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
@@ -212,7 +158,6 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Weekend Schedule Card */}
               <div className="bg-primary text-white rounded-[2.5rem] p-8 shadow-xl shadow-primary/20 flex flex-col h-full relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-10 -mt-10 blur-2xl group-hover:scale-125 transition-transform duration-700" />
                 
