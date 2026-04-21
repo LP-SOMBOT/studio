@@ -2,22 +2,12 @@
 
 A modern, high-performance PWA for gaming top-ups and account trading, built with Next.js 15, Firebase Realtime Database, and Genkit AI.
 
-## Features
-
-- **PWA Ready**: Installable on mobile devices for an app-like experience.
-- **Real-time Updates**: Order status and user profiles sync instantly via Firebase Realtime Database.
-- **AI Marketing**: Admin tools to generate promotional content using Genkit.
-- **Secure Payments**: Integrated mobile payment verification workflow.
-- **Responsive Console**: Advanced admin dashboard for inventory and user management.
-
-## Deployment
+## 🚀 Deployment Guide
 
 To deploy this application to **Vercel** or **Netlify**:
 
 ### 1. Environment Variables
-
 Set the following variables in your deployment dashboard:
-
 *   `GOOGLE_GENAI_API_KEY`: Your Google AI API key for Genkit.
 *   `NEXT_PUBLIC_FIREBASE_API_KEY`: Found in `src/firebase/config.ts`
 *   `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`: Found in `src/firebase/config.ts`
@@ -25,33 +15,43 @@ Set the following variables in your deployment dashboard:
 *   `NEXT_PUBLIC_FIREBASE_PROJECT_ID`: Found in `src/firebase/config.ts`
 
 ### 2. Connect Repository
+1. Push your code to a GitHub repository.
+2. Link the repository to your hosting platform.
 
-1. Push your code to a GitHub/GitLab/Bitbucket repository.
-2. Link the repository to your hosting platform (Vercel/Netlify).
-3. The platform will automatically detect the Next.js project and deploy it.
+---
 
-## Troubleshooting Git Issues
+## 🛠 Troubleshooting Git Issues
 
-### "Failed to push some refs" or "Rejected"
-The remote repository has changes you don't have. 
-1.  **Pull First**: Click the `...` in the Source Control panel and select **Pull**.
-2.  **Sync Local & Remote**: Use the **Sync Changes** button.
+If you see errors like **"failed to push"** or **"Authentication failed"**, follow these steps in your terminal:
 
-### "Authentication Failed" or "How to Re-login"
-If you cannot pull or push due to a login error or if you revoked your token:
-1.  **IDE Re-login**: Look for your GitHub profile icon at the bottom-left of the editor. Click it, sign out, and then sign back in.
-2.  **Refresh Connection**: Go to your workspace/project settings dashboard (outside the editor) and look for the "GitHub" or "Integrations" section to reconnect your account.
-3.  **Terminal Fix**: If you are comfortable with the terminal, you can force a credential prompt by running:
-    ```bash
-    git config --global --unset credential.helper
-    ```
-    Then try to `git pull` again; it should ask for your username and password (or personal access token).
+### Fix Divergent Branches
+If `git pull` gives a "hint" about divergent branches, run:
+```bash
+git config pull.rebase false
+git pull origin main
+```
+
+### Fix Authentication (Token) Error
+GitHub no longer accepts your account password for Git. You must use a **Personal Access Token (PAT)**.
+1.  **Generate Token**: Go to your GitHub account -> **Settings** -> **Developer Settings** -> **Personal Access Tokens** -> **Tokens (classic)**.
+2.  **Permissions**: Click "Generate new token", give it a name, and check the **repo** box.
+3.  **Copy Token**: Copy the generated code (you won't see it again).
+4.  **Login in Terminal**: Run `git pull origin main`. 
+    *   **Username**: Your GitHub username.
+    *   **Password**: Paste the **Token** you copied.
+
+### Re-login in IDE
+1. Click the **Profile/Account icon** at the bottom-left of the editor.
+2. Select **Sign Out**.
+3. Click it again and select **Sign in with GitHub**.
+
+---
 
 ## Local Development
-
 ```bash
 npm install
 npm run dev
 ```
-
 The app will be available at `http://localhost:9002`.
+
+**Note:** The onboarding flow exclusively appears when the user has installed the OskarShop PWA to their home screen and is opening it for the very first time. It will never show on a regular browser visit.
