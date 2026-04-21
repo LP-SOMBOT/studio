@@ -17,26 +17,27 @@ export default function DynamicHead() {
 
     const logo = storeSettings.logo;
 
-    // Update Favicon
-    let favicon = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
-    if (!favicon) {
-      favicon = document.createElement('link');
-      favicon.rel = 'icon';
-      document.head.appendChild(favicon);
-    }
-    favicon.href = logo;
+    // Update Favicon (Standard and Shortcuts)
+    const updateIcon = (rel: string) => {
+      let icon = document.querySelector(`link[rel="${rel}"]`) as HTMLLinkElement;
+      if (!icon) {
+        icon = document.createElement('link');
+        icon.rel = rel;
+        document.head.appendChild(icon);
+      }
+      icon.href = logo;
+    };
 
-    // Update Apple Touch Icon
-    let appleIcon = document.querySelector('link[rel="apple-touch-icon"]') as HTMLLinkElement;
-    if (!appleIcon) {
-      appleIcon = document.createElement('link');
-      appleIcon.rel = 'apple-touch-icon';
-      document.head.appendChild(appleIcon);
-    }
-    appleIcon.href = logo;
+    updateIcon('icon');
+    updateIcon('shortcut icon');
+    updateIcon('apple-touch-icon');
 
-    // Update Manifest icons is difficult at runtime, 
-    // but updating the Head is sufficient for most PWA updates.
+    // For PWAs, we also update the theme color if provided in settings later
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    if (metaTheme) {
+      metaTheme.setAttribute('content', '#7C3AED');
+    }
+
   }, [storeSettings?.logo]);
 
   return null;

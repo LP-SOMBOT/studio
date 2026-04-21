@@ -1,10 +1,11 @@
+
 import { MetadataRoute } from 'next';
 
 /**
  * PWA Manifest Configuration
- * Note: Since manifest generation happens outside the React context, 
- * it uses standard icon paths. Dynamic icon updates are handled 
- * via head injection in DynamicHead.tsx.
+ * Note: For the home screen icon to update to the admin's logo,
+ * we provide standard paths here as fallbacks. The 'DynamicHead' component
+ * handles the runtime update of the favicon and apple-touch-icon.
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {

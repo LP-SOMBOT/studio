@@ -1,3 +1,4 @@
+
 import type {Metadata, Viewport} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
@@ -7,6 +8,7 @@ import { FirebaseClientProvider } from "@/firebase";
 import OnboardingGuard from "@/components/layout/OnboardingGuard";
 import GlobalLoading from "@/components/layout/GlobalLoading";
 import DynamicHead from "@/components/layout/DynamicHead";
+import SWRegistration from "@/components/layout/SWRegistration";
 
 export const metadata: Metadata = {
   title: 'Oskar Shop - Game Top-Up & Accounts',
@@ -38,11 +40,11 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
-        {/* DynamicHead will handle icon rel attributes in real-time */}
       </head>
       <body className="font-body antialiased">
         <FirebaseClientProvider>
           <AppProvider>
+            <SWRegistration />
             <DynamicHead />
             <GlobalLoading />
             <PWAInstaller />
