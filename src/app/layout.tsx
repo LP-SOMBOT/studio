@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { AppProvider } from "@/lib/context";
 import PWAInstaller from "@/components/layout/PWAInstaller";
 import { FirebaseClientProvider } from "@/firebase";
+import OnboardingGuard from "@/components/layout/OnboardingGuard";
 
 export const metadata: Metadata = {
   title: 'Oskar Shop - Game Top-Up & Accounts',
@@ -18,7 +19,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#8526CC',
+  themeColor: '#7C3AED',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
@@ -42,7 +43,9 @@ export default function RootLayout({
         <FirebaseClientProvider>
           <AppProvider>
             <PWAInstaller />
-            {children}
+            <OnboardingGuard>
+              {children}
+            </OnboardingGuard>
             <Toaster />
           </AppProvider>
         </FirebaseClientProvider>

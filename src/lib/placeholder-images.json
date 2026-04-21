@@ -47,6 +47,24 @@
       "description": "Premium Account Screenshot 2",
       "imageUrl": "https://picsum.photos/seed/acc2/800/450",
       "imageHint": "rare items"
+    },
+    {
+      "id": "onboarding-1",
+      "description": "Instant Top Up Illustration",
+      "imageUrl": "https://picsum.photos/seed/onboarding1/400/400",
+      "imageHint": "game diamonds"
+    },
+    {
+      "id": "onboarding-2",
+      "description": "Secure Payment Illustration",
+      "imageUrl": "https://picsum.photos/seed/onboarding2/400/400",
+      "imageHint": "secure payment"
+    },
+    {
+      "id": "onboarding-3",
+      "description": "Order Tracking Illustration",
+      "imageUrl": "https://picsum.photos/seed/onboarding3/400/400",
+      "imageHint": "order tracking"
     }
   ]
 }
