@@ -8,7 +8,17 @@ import GameCard from "@/components/games/GameCard";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Flame, Star, Trophy, Radio, ExternalLink } from "lucide-react";
+import { 
+  Flame, 
+  Trophy, 
+  Radio, 
+  ExternalLink, 
+  Clock, 
+  Calendar, 
+  Zap, 
+  CheckCircle2, 
+  Moon 
+} from "lucide-react";
 
 export default function Home() {
   const gamesData = [
@@ -74,7 +84,7 @@ export default function Home() {
       <Header />
       <AnnouncementTicker />
       
-      <main className="container mx-auto px-4 pt-6 space-y-10">
+      <main className="container mx-auto px-4 pt-6 space-y-12">
         {/* Hero Section */}
         <section>
           <HeroSlider />
@@ -133,32 +143,92 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Shop Schedule / Hours */}
-        <section className="bg-primary/5 rounded-3xl p-8 border border-primary/10">
-          <h2 className="text-2xl font-headline font-bold mb-6 text-center">Working Hours 🗓️</h2>
-          <div className="grid md:grid-cols-2 gap-8">
-            <div className="space-y-4">
-              <h3 className="font-headline font-bold text-lg border-b border-primary/20 pb-2">Saturday – Wednesday</h3>
-              <ul className="space-y-2">
-                <li className="flex justify-between items-center text-sm">
-                  <span>5:40 AM – 8:00 AM</span>
-                  <Badge variant="outline" className="text-green-600 bg-green-50 border-green-200">Online</Badge>
-                </li>
-                <li className="flex justify-between items-center text-sm">
-                  <span>8:00 AM – 5:10 PM</span>
-                  <Badge variant="outline" className="text-red-600 bg-red-50 border-red-200">Offline</Badge>
-                </li>
-                <li className="flex justify-between items-center text-sm">
-                  <span>5:10 PM – 9:30 PM</span>
-                  <Badge variant="outline" className="text-green-600 bg-green-50 border-green-200">Online</Badge>
-                </li>
-              </ul>
+        {/* Re-designed Shop Schedule / Hours */}
+        <section className="relative overflow-hidden py-12">
+          <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-64 h-64 bg-secondary/5 rounded-full blur-3xl" />
+          
+          <div className="relative">
+            <div className="flex flex-col items-center text-center mb-10">
+              <Badge variant="outline" className="mb-4 bg-white/50 backdrop-blur-sm border-primary/20 text-primary px-4 py-1 rounded-full flex gap-2 items-center">
+                <Clock className="w-3.5 h-3.5" /> Service Availability
+              </Badge>
+              <h2 className="text-3xl md:text-4xl font-headline font-bold mb-3 tracking-tight">Operation Hours</h2>
+              <p className="text-muted-foreground max-w-md">We ensure fast processing during our online shifts to keep your gaming journey smooth.</p>
             </div>
-            <div className="space-y-4">
-              <h3 className="font-headline font-bold text-lg border-b border-primary/20 pb-2">Thursday & Friday</h3>
-              <div className="bg-white p-4 rounded-xl flex items-center justify-between shadow-sm">
-                <span className="font-bold">24 Hours Service</span>
-                <Badge variant="default" className="bg-green-500 border-none">Available ✅</Badge>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+              {/* Weekday Schedule Card */}
+              <div className="bg-white rounded-[2.5rem] p-8 shadow-xl shadow-gray-200/50 border border-gray-100 flex flex-col h-full">
+                <div className="flex items-center gap-4 mb-8">
+                  <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
+                    <Calendar className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="font-headline font-bold text-xl leading-none">Saturday – Wednesday</h3>
+                    <p className="text-xs text-muted-foreground mt-1">Split Shifts Availability</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4 flex-1">
+                  <div className="flex items-center justify-between p-4 bg-green-50/50 rounded-2xl border border-green-100/50">
+                    <div className="flex items-center gap-3">
+                      <Zap className="w-4 h-4 text-green-500" />
+                      <span className="text-sm font-semibold">Morning Shift</span>
+                    </div>
+                    <span className="text-sm font-bold text-green-700 bg-white px-3 py-1 rounded-full shadow-sm">5:40 AM – 8:00 AM</span>
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100 opacity-60">
+                    <div className="flex items-center gap-3">
+                      <Moon className="w-4 h-4 text-gray-400" />
+                      <span className="text-sm font-medium">Break Time</span>
+                    </div>
+                    <span className="text-sm font-medium text-gray-500 italic">8:00 AM – 5:10 PM</span>
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 bg-green-50/50 rounded-2xl border border-green-100/50">
+                    <div className="flex items-center gap-3">
+                      <Zap className="w-4 h-4 text-green-500" />
+                      <span className="text-sm font-semibold">Evening Shift</span>
+                    </div>
+                    <span className="text-sm font-bold text-green-700 bg-white px-3 py-1 rounded-full shadow-sm">5:10 PM – 9:30 PM</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Weekend Schedule Card */}
+              <div className="bg-primary text-white rounded-[2.5rem] p-8 shadow-xl shadow-primary/20 flex flex-col h-full relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-10 -mt-10 blur-2xl group-hover:scale-125 transition-transform duration-700" />
+                
+                <div className="relative z-10">
+                  <div className="flex items-center gap-4 mb-8">
+                    <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center text-white backdrop-blur-md">
+                      <Calendar className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h3 className="font-headline font-bold text-xl leading-none">Thursday & Friday</h3>
+                      <p className="text-xs text-white/60 mt-1">Full Service Access</p>
+                    </div>
+                  </div>
+
+                  <div className="py-10 flex flex-col items-center justify-center text-center space-y-4">
+                    <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm border border-white/30 animate-pulse">
+                      <Zap className="w-10 h-10 text-white" />
+                    </div>
+                    <div>
+                      <h4 className="text-3xl font-headline font-bold">24/7 Online</h4>
+                      <p className="text-white/80 text-sm mt-2 max-w-[200px] mx-auto">
+                        Enjoy uninterrupted service all through the weekend.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-auto pt-6 border-t border-white/10 flex items-center justify-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-green-300" />
+                    <span className="text-sm font-bold uppercase tracking-widest text-green-300">Available Now</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
