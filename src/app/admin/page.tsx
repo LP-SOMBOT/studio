@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo } from "react";
@@ -20,7 +19,8 @@ import {
   Upload,
   X,
   LayoutDashboard,
-  ArrowLeft
+  ArrowLeft,
+  Megaphone
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -55,10 +55,10 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { generatePromotionalContent, type GeneratePromotionalContentOutput } from "@/ai/flows/generate-promotional-content-flow";
+import { generatePromotionalContent } from "@/ai/flows/generate-promotional-content-flow";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { format, isYesterday, startOfToday } from "date-fns";
+import { startOfToday, isYesterday } from "date-fns";
 import Image from "next/image";
 
 export default function AdminPage() {
@@ -524,13 +524,18 @@ export default function AdminPage() {
                   </div>
                   
                   <div className="space-y-4 pt-6 border-t border-gray-100">
-                    <Label className="text-[10px] font-bold uppercase text-muted-foreground">Ticker Text</Label>
+                    <Label className="text-[10px] font-bold uppercase text-muted-foreground flex items-center gap-2">
+                      <Megaphone className="w-3 h-3" /> Announcement Ticker Text
+                    </Label>
                     <Textarea 
-                      className="rounded-xl bg-gray-50 border-none min-h-[100px]" 
-                      placeholder="Enter global announcements..." 
+                      className="rounded-xl bg-gray-50 border-none min-h-[120px] text-sm leading-relaxed" 
+                      placeholder="Enter the message that scrolls at the top of the homepage..." 
                       value={storeSettings.announcementTicker}
                       onChange={(e) => updateStoreSettings({ announcementTicker: e.target.value })}
                     />
+                    <p className="text-[10px] text-muted-foreground px-1 italic">
+                      This text loops infinitely across the top of the app. Use emojis to make it stand out!
+                    </p>
                   </div>
                 </Card>
               </div>
@@ -544,7 +549,7 @@ export default function AdminPage() {
         <NavButton active={activeView === 'dashboard'} onClick={() => setActiveView('dashboard')} icon={LayoutDashboard} label="Desk" />
         <NavButton active={activeView === 'orders'} onClick={() => setActiveView('orders')} icon={ShoppingBag} label="Orders" />
         <NavButton active={activeView === 'products'} onClick={() => setActiveView('products')} icon={Package} label="Stock" />
-        <NavButton active={activeView === 'users'} onClick={() => setActiveView('users')} icon={Users} label="Users" />
+        <NavButton active={activeView === 'users'} onClick={() => setActiveView('users'} icon={Users} label="Users" />
         <NavButton active={activeView === 'settings'} onClick={() => setActiveView('settings')} icon={Settings} label="Console" />
       </nav>
 
