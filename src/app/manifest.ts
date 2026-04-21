@@ -1,3 +1,4 @@
+
 import { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
@@ -20,6 +21,7 @@ export default function manifest(): MetadataRoute.Manifest {
         src: 'https://picsum.photos/seed/oskar-pwa-512/512/512',
         sizes: '512x512',
         type: 'image/png',
+        purpose: 'any',
       },
     ],
   };
