@@ -14,23 +14,21 @@ import {
   Package, 
   Sparkles,
   RefreshCcw,
-  Copy,
-  UserCheck,
-  Calendar,
   Search,
   Filter,
   ArrowUpDown,
   AlertCircle,
-  LayoutDashboard
+  Menu,
+  Gamepad2,
+  Bell
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { 
   Table, 
@@ -42,8 +40,8 @@ import {
 } from "@/components/ui/table";
 import { generatePromotionalContent, type GeneratePromotionalContentOutput } from "@/ai/flows/generate-promotional-content-flow";
 import { toast } from "@/hooks/use-toast";
-import { format } from "date-fns";
 import { GAMES_DATA } from "@/lib/games-data";
+import { cn } from "@/lib/utils";
 
 export default function AdminPage() {
   const { user, storeSettings, updateStoreSettings, allUsers } = useApp();
@@ -58,11 +56,11 @@ export default function AdminPage() {
 
   if (!user?.isAdmin) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <Card className="max-w-md w-full p-8 text-center rounded-3xl">
-          <h2 className="text-2xl font-headline font-bold mb-4">Access Denied</h2>
-          <p className="text-muted-foreground mb-6">You do not have administrative privileges to access this area.</p>
-          <Button onClick={() => window.location.href = '/'}>Return Home</Button>
+      <div className="min-h-screen flex items-center justify-center p-4 bg-[#0A0B10]">
+        <Card className="max-w-md w-full p-8 text-center rounded-3xl bg-[#14161F] border-white/5 border-none">
+          <h2 className="text-2xl font-headline font-bold mb-4 text-white">Access Denied</h2>
+          <p className="text-white/40 mb-6">You do not have administrative privileges.</p>
+          <Button className="bg-primary hover:bg-primary/90" onClick={() => window.location.href = '/'}>Return Home</Button>
         </Card>
       </div>
     );
@@ -91,153 +89,172 @@ export default function AdminPage() {
       await updateStoreSettings({ isLive: checked });
       toast({
         title: checked ? "Live Banner Enabled" : "Live Banner Disabled",
-        description: `The homepage live section is now ${checked ? 'visible' : 'hidden'} to users.`
       });
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Update Failed",
-        description: "Could not update store settings."
       });
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F9FD] pb-24 md:pb-10">
-      <Header />
+    <div className="min-h-screen bg-[#0A0B10] text-white pb-24 md:pb-10 font-body">
+      {/* Top Console Header */}
+      <header className="h-20 border-b border-white/5 px-6 flex items-center justify-between sticky top-0 bg-[#0A0B10]/80 backdrop-blur-md z-50">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" className="text-white/60 hover:text-white">
+            <Menu className="w-6 h-6" />
+          </Button>
+          <h1 className="text-xl md:text-2xl font-headline font-bold text-[#00E5FF] drop-shadow-[0_0_8px_rgba(0,229,255,0.4)]">
+            Top-Up Console
+          </h1>
+        </div>
+        <div className="w-10 h-10 rounded-full border-2 border-[#00E5FF]/20 overflow-hidden shadow-[0_0_15px_rgba(0,229,255,0.1)]">
+           <img src={`https://picsum.photos/seed/${user.uid}/100/100`} alt="Avatar" className="w-full h-full object-cover" />
+        </div>
+      </header>
       
-      <main className="container mx-auto px-4 py-8 max-w-5xl">
-        {/* Console Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-primary/60 mb-1">Inventory Management</h2>
-            <h1 className="text-2xl font-headline font-bold text-gray-900">Active Stock</h1>
+      <main className="container mx-auto px-6 py-8 max-w-4xl space-y-10">
+        {/* Section Label */}
+        <div className="space-y-1">
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#00E5FF]/60">Inventory Management</p>
+          <h2 className="text-lg font-bold">Active Stock</h2>
+        </div>
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="bg-[#14161F] border border-white/5 rounded-2xl p-6 shadow-sm">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-white/40 mb-2">Total Value</p>
+            <h3 className="text-2xl md:text-3xl font-headline font-bold text-[#4D7CFF]">$24,590</h3>
           </div>
-          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center border-2 border-white shadow-sm overflow-hidden">
-             <div className="w-full h-full bg-primary/20 flex items-center justify-center text-primary font-bold">
-               {user.name?.[0]}
-             </div>
+          <div className="bg-[#14161F] border border-white/5 rounded-2xl p-6 shadow-sm">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-white/40 mb-2">Low Stock</p>
+            <h3 className="text-2xl md:text-3xl font-headline font-bold text-[#FF4D4D]">3 Items</h3>
+          </div>
+        </div>
+
+        {/* Console Search Bar */}
+        <div className="space-y-4">
+          <div className="relative group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-[#00E5FF] transition-colors" />
+            <Input 
+              className="pl-12 h-14 rounded-2xl bg-[#000000] border-none text-white text-sm focus-visible:ring-1 focus-visible:ring-[#00E5FF]/30 placeholder:text-white/10" 
+              placeholder="Search product ID or name..." 
+            />
+          </div>
+          <div className="flex gap-3">
+            <Button variant="ghost" className="flex-1 h-12 rounded-xl bg-[#14161F] hover:bg-[#1A1D29] border-none text-white/60 font-bold gap-2 text-xs">
+              <Filter className="w-4 h-4" /> Filter
+            </Button>
+            <Button variant="ghost" className="flex-1 h-12 rounded-xl bg-[#14161F] hover:bg-[#1A1D29] border-none text-white/60 font-bold gap-2 text-xs">
+              <ArrowUpDown className="w-4 h-4" /> Sort
+            </Button>
           </div>
         </div>
 
         <Tabs defaultValue="stock" className="space-y-8">
-          {/* Stats Section - Visualized like the design */}
-          <div className="grid grid-cols-2 gap-4">
-            <Card className="rounded-[2rem] border-none shadow-sm bg-white p-6">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">Total Value</p>
-              <h3 className="text-2xl md:text-3xl font-headline font-bold text-secondary">$24,590</h3>
-            </Card>
-            <Card className="rounded-[2rem] border-none shadow-sm bg-white p-6">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">Low Stock</p>
-              <h3 className="text-2xl md:text-3xl font-headline font-bold text-red-500">3 Items</h3>
-            </Card>
-          </div>
-
-          {/* Search and Filters */}
-          <div className="space-y-4">
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input 
-                className="pl-12 h-14 rounded-2xl bg-white border-none shadow-sm text-sm" 
-                placeholder="Search product ID or name..." 
-              />
-            </div>
-            <div className="flex gap-3">
-              <Button variant="outline" className="flex-1 h-12 rounded-2xl bg-white border-none shadow-sm font-bold gap-2 text-xs">
-                <Filter className="w-4 h-4" /> Filter
-              </Button>
-              <Button variant="outline" className="flex-1 h-12 rounded-2xl bg-white border-none shadow-sm font-bold gap-2 text-xs">
-                <ArrowUpDown className="w-4 h-4" /> Sort
-              </Button>
-            </div>
-          </div>
-
-          <TabsList className="bg-white/50 backdrop-blur-sm p-1.5 rounded-2xl border border-gray-100 shadow-sm w-full md:w-auto">
-            <TabsTrigger value="stock" className="rounded-xl px-6 data-[state=active]:bg-primary data-[state=active]:text-white">
+          <TabsList className="bg-[#14161F] p-1.5 rounded-2xl border border-white/5 w-full md:w-auto">
+            <TabsTrigger value="stock" className="rounded-xl px-6 data-[state=active]:bg-primary data-[state=active]:text-white text-white/40">
               <Package className="w-4 h-4 mr-2" /> Stock
             </TabsTrigger>
-            <TabsTrigger value="users" className="rounded-xl px-6 data-[state=active]:bg-primary data-[state=active]:text-white">
+            <TabsTrigger value="users" className="rounded-xl px-6 data-[state=active]:bg-primary data-[state=active]:text-white text-white/40">
               <Users className="w-4 h-4 mr-2" /> Users
             </TabsTrigger>
-            <TabsTrigger value="settings" className="rounded-xl px-6 data-[state=active]:bg-primary data-[state=active]:text-white">
-              <Settings className="w-4 h-4 mr-2" /> Settings
+            <TabsTrigger value="settings" className="rounded-xl px-6 data-[state=active]:bg-primary data-[state=active]:text-white text-white/40">
+              <Settings className="w-4 h-4 mr-2" /> Console
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="stock" className="space-y-6">
-            <div className="grid grid-cols-1 gap-4">
-              {GAMES_DATA.slice(0, 3).map((item) => (
-                <Card key={item.id} className="rounded-[2.5rem] border-none shadow-sm bg-white p-6 relative overflow-hidden group">
-                  <div className="flex items-start justify-between mb-6">
-                    <div className="flex items-center gap-4">
-                      <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center font-headline font-bold text-xl text-primary shadow-inner">
+            <div className="grid grid-cols-1 gap-6">
+              {GAMES_DATA.map((item) => (
+                <div key={item.id} className="bg-[#14161F] border border-white/5 rounded-[2rem] p-6 relative overflow-hidden group">
+                  <div className="flex items-start justify-between mb-8">
+                    <div className="flex items-center gap-5">
+                      <div className="w-14 h-14 rounded-2xl bg-black flex items-center justify-center font-headline font-bold text-xl text-[#FF4D4D] shadow-[inset_0_0_15px_rgba(0,0,0,0.5)]">
                         {item.title[0]}
                       </div>
                       <div>
-                        <h3 className="font-headline font-bold text-lg leading-tight">{item.title}</h3>
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">ID: {item.id.toUpperCase()}</p>
+                        <h3 className="font-headline font-bold text-lg text-white">{item.title}</h3>
+                        <p className="text-[10px] font-bold text-white/20 uppercase tracking-widest mt-1">ID: {item.id.toUpperCase()}</p>
                       </div>
                     </div>
-                    <Button size="icon" variant="secondary" className="w-10 h-10 rounded-2xl bg-gray-50 text-gray-400 group-hover:text-primary transition-colors">
+                    <Button size="icon" variant="ghost" className="w-10 h-10 rounded-xl bg-black/40 text-white/40 hover:text-[#00E5FF] transition-colors">
                       <Edit className="w-4 h-4" />
                     </Button>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3 mb-6">
-                    <div className="bg-gray-50 p-4 rounded-2xl">
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase mb-1">Base Price</p>
-                      <p className="font-headline font-bold text-lg">${item.price.toFixed(2)}</p>
+                  <div className="grid grid-cols-2 gap-4 mb-8">
+                    <div className="bg-black/40 p-5 rounded-2xl border border-white/5">
+                      <p className="text-[10px] font-bold text-white/20 uppercase mb-2">Base Price</p>
+                      <p className="font-headline font-bold text-xl">${item.price.toFixed(2)}</p>
                     </div>
-                    <div className="bg-gray-50 p-4 rounded-2xl">
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase mb-1">Category</p>
-                      <p className="font-headline font-bold text-sm truncate uppercase">{item.category}</p>
+                    <div className="bg-black/40 p-5 rounded-2xl border border-white/5">
+                      <p className="text-[10px] font-bold text-white/20 uppercase mb-2">Denomination</p>
+                      <p className="font-headline font-bold text-sm truncate uppercase">
+                        {item.gameId === 'freefire' ? '5350 VP' : '8080 GC'}
+                      </p>
                     </div>
                   </div>
 
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]" />
-                      <span className="text-[11px] font-bold text-green-600">In Stock (1,204)</span>
+                    <div className="flex items-center gap-3">
+                      <div className={cn(
+                        "w-2 h-2 rounded-full",
+                        item.price > 100 ? "bg-[#FF4D4D] shadow-[0_0_10px_rgba(255,77,77,0.4)]" : "bg-[#00E5FF] shadow-[0_0_10px_rgba(0,229,255,0.4)]"
+                      )} />
+                      <span className={cn(
+                        "text-[11px] font-bold uppercase tracking-wider",
+                        item.price > 100 ? "text-[#FF4D4D]" : "text-[#00E5FF]"
+                      )}>
+                        {item.price > 100 ? `Low Stock (12)` : `In Stock (1,204)`}
+                      </span>
                     </div>
-                    <Badge variant="secondary" className="bg-gray-100 text-[10px] font-bold uppercase rounded-xl px-3 py-1 text-gray-500 border-none">
-                      {item.gameId === 'freefire' ? 'Digital' : 'Codes'}
-                    </Badge>
+                    <div className="bg-black px-4 py-1.5 rounded-full border border-white/5">
+                      <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">
+                        {item.category === 'accounts' ? 'Codes' : 'Digital'}
+                      </span>
+                    </div>
                   </div>
-                </Card>
+                </div>
               ))}
             </div>
 
-            <Button className="w-full h-16 rounded-[2rem] bg-primary hover:bg-primary/90 text-white font-bold text-lg gap-3 shadow-xl shadow-primary/20 transition-all active:scale-[0.98] fixed bottom-24 left-4 right-4 z-40 md:relative md:bottom-0 md:left-0 md:right-0">
-              <Plus className="w-6 h-6" /> Add New Package
+            <Button className="w-16 h-16 rounded-full bg-[#00E5FF] hover:bg-[#00E5FF]/90 text-black shadow-[0_0_30px_rgba(0,229,255,0.4)] fixed bottom-24 right-6 z-50 md:bottom-10">
+              <Plus className="w-8 h-8" />
             </Button>
           </TabsContent>
 
           <TabsContent value="users" className="space-y-6">
-             <Card className="rounded-[2.5rem] border-none shadow-sm overflow-hidden bg-white">
+             <Card className="rounded-2xl bg-[#14161F] border-white/5 border overflow-hidden">
               <Table>
-                <TableHeader className="bg-gray-50/50">
-                  <TableRow>
-                    <TableHead className="font-bold text-[10px] uppercase tracking-wider">User</TableHead>
-                    <TableHead className="font-bold text-[10px] uppercase tracking-wider">Status</TableHead>
-                    <TableHead className="text-right font-bold text-[10px] uppercase tracking-wider">Actions</TableHead>
+                <TableHeader className="bg-black/40">
+                  <TableRow className="border-white/5 hover:bg-transparent">
+                    <TableHead className="text-white/40 font-bold text-[10px] uppercase tracking-wider">User</TableHead>
+                    <TableHead className="text-white/40 font-bold text-[10px] uppercase tracking-wider">Role</TableHead>
+                    <TableHead className="text-right text-white/40 font-bold text-[10px] uppercase tracking-wider">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {allUsers.map((u) => (
-                    <TableRow key={u.uid} className="hover:bg-gray-50/50 transition-colors border-gray-50">
+                    <TableRow key={u.uid} className="hover:bg-black/20 border-white/5">
                       <TableCell>
                         <div className="flex flex-col">
-                          <span className="font-bold text-sm">{u.name}</span>
-                          <span className="text-[10px] text-muted-foreground">{u.email}</span>
+                          <span className="font-bold text-sm text-white">{u.name}</span>
+                          <span className="text-[10px] text-white/40">{u.email}</span>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className={`text-[9px] uppercase font-bold rounded-full ${u.isAdmin ? 'border-primary text-primary bg-primary/5' : 'border-gray-200'}`}>
-                          {u.isAdmin ? 'Admin' : 'User'}
+                        <Badge variant="outline" className={cn(
+                          "text-[9px] uppercase font-bold rounded-full border-white/10",
+                          u.isAdmin ? 'text-[#00E5FF] border-[#00E5FF]/20 bg-[#00E5FF]/5' : 'text-white/40'
+                        )}>
+                          {u.isAdmin ? 'Admin' : 'Member'}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl"><Edit className="w-3 h-3" /></Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-white/20 hover:text-white"><Edit className="w-3 h-3" /></Button>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -247,49 +264,49 @@ export default function AdminPage() {
           </TabsContent>
 
           <TabsContent value="settings" className="space-y-6">
-            <Card className="rounded-[2.5rem] border-none shadow-sm bg-white p-6">
+            <Card className="rounded-[2rem] bg-[#14161F] border-white/5 border p-6">
               <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-red-50 rounded-2xl flex items-center justify-center text-red-500">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-black rounded-2xl flex items-center justify-center text-[#FF4D4D]">
                     <AlertCircle className="w-6 h-6" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-lg">Live Visibility</h3>
-                    <p className="text-xs text-muted-foreground">Toggle homepage "Live Now" banner</p>
+                    <h3 className="font-bold text-lg text-white">Live Visibility</h3>
+                    <p className="text-xs text-white/40">Control "Live Now" homepage banner</p>
                   </div>
                 </div>
                 <Switch 
                   checked={storeSettings.isLive} 
                   onCheckedChange={toggleLiveStatus}
-                  className="data-[state=checked]:bg-red-500"
+                  className="data-[state=checked]:bg-[#FF4D4D]"
                 />
               </div>
 
-              <div className="space-y-6 pt-6 border-t border-gray-50">
-                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 bg-primary/5 rounded-2xl flex items-center justify-center text-primary">
+              <div className="space-y-6 pt-6 border-t border-white/5">
+                 <div className="flex items-center gap-4 mb-4">
+                  <div className="w-12 h-12 bg-black rounded-2xl flex items-center justify-center text-primary">
                     <Sparkles className="w-6 h-6" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-lg">AI Marketing Lab</h3>
-                    <p className="text-xs text-muted-foreground">Generate promotional content</p>
+                    <h3 className="font-bold text-lg text-white">AI Marketing Lab</h3>
+                    <p className="text-xs text-white/40">Generate promotional content</p>
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-1 gap-4">
+                <div className="grid grid-cols-1 gap-5">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-bold uppercase text-muted-foreground">Title</Label>
+                    <Label className="text-[10px] font-bold uppercase text-white/40">Promotion Title</Label>
                     <Input 
-                      className="rounded-2xl h-12 bg-gray-50 border-none" 
+                      className="rounded-xl h-12 bg-black border-white/5 text-white" 
                       placeholder="e.g. Weekend Flash Sale" 
                       value={promoInput.title}
                       onChange={(e) => setPromoInput({...promoInput, title: e.target.value})}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-bold uppercase text-muted-foreground">Details</Label>
+                    <Label className="text-[10px] font-bold uppercase text-white/40">Offer Details</Label>
                     <Textarea 
-                      className="rounded-2xl bg-gray-50 border-none min-h-[100px]" 
+                      className="rounded-xl bg-black border-white/5 text-white min-h-[100px]" 
                       placeholder="Enter promotion details..." 
                       value={promoInput.promotionDetails}
                       onChange={(e) => setPromoInput({...promoInput, promotionDetails: e.target.value})}
@@ -297,28 +314,28 @@ export default function AdminPage() {
                   </div>
                   <Button 
                     onClick={handleGeneratePromo} 
-                    className="w-full h-14 rounded-2xl gap-2 font-bold"
+                    className="w-full h-14 rounded-xl gap-2 font-bold bg-primary hover:bg-primary/90 text-white"
                     disabled={isGenerating}
                   >
                     {isGenerating ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                    Generate Suggestions
+                    Generate Strategy
                   </Button>
                 </div>
               </div>
             </Card>
 
             {promoOutput && (
-              <Card className="rounded-[2.5rem] border-none shadow-sm bg-primary/5 p-6 space-y-4 animate-in fade-in slide-in-from-bottom-4">
+              <Card className="rounded-[2rem] bg-primary/5 border-primary/20 border p-6 space-y-4 animate-in fade-in slide-in-from-bottom-4">
                 <div className="flex justify-between items-center">
-                  <h4 className="font-bold text-primary">AI Suggestions</h4>
-                  <Button variant="ghost" size="sm" onClick={() => setPromoOutput(null)}>Clear</Button>
+                  <h4 className="font-bold text-primary">AI Strategy Suggestions</h4>
+                  <Button variant="ghost" size="sm" onClick={() => setPromoOutput(null)} className="text-white/40">Clear</Button>
                 </div>
-                <div className="bg-white p-4 rounded-2xl border border-primary/10">
-                   <p className="text-xs font-bold uppercase text-primary mb-2">Ticker Preview</p>
-                   <p className="text-sm font-medium">{promoOutput.announcementText}</p>
+                <div className="bg-black/60 p-5 rounded-2xl border border-white/5">
+                   <p className="text-[10px] font-bold uppercase text-[#00E5FF] mb-2 tracking-widest">Ticker Copy</p>
+                   <p className="text-sm font-medium text-white/80">{promoOutput.announcementText}</p>
                 </div>
-                <Button className="w-full h-12 rounded-2xl bg-secondary hover:bg-secondary/90 text-white font-bold">
-                  Apply to Ticker
+                <Button className="w-full h-12 rounded-xl bg-secondary hover:bg-secondary/90 text-white font-bold">
+                  Update Store Ticker
                 </Button>
               </Card>
             )}
@@ -326,7 +343,25 @@ export default function AdminPage() {
         </Tabs>
       </main>
 
-      <BottomNav />
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#0A0B10] border-t border-white/5 z-50 px-4 py-2 flex justify-around items-center">
+        <div className="flex flex-col items-center gap-1 p-2 text-white/40 hover:text-white transition-colors">
+          <Gamepad2 className="w-6 h-6" />
+          <span className="text-[10px] font-bold uppercase">Home</span>
+        </div>
+        <div className="flex flex-col items-center gap-1 p-2 text-[#00E5FF] transition-colors relative">
+          <Package className="w-6 h-6" />
+          <span className="text-[10px] font-bold uppercase">Stock</span>
+          <div className="absolute -bottom-1 w-1 h-1 bg-[#00E5FF] rounded-full shadow-[0_0_5px_#00E5FF]" />
+        </div>
+        <div className="flex flex-col items-center gap-1 p-2 text-white/40 hover:text-white transition-colors">
+          <Users className="w-6 h-6" />
+          <span className="text-[10px] font-bold uppercase">Users</span>
+        </div>
+        <div className="flex flex-col items-center gap-1 p-2 text-white/40 hover:text-white transition-colors">
+          <Bell className="w-6 h-6" />
+          <span className="text-[10px] font-bold uppercase">Alerts</span>
+        </div>
+      </nav>
     </div>
   );
 }
