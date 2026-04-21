@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -76,7 +75,7 @@ export default function CheckoutPage() {
 
   const handleFinalConfirm = () => {
     setIsProcessing(true);
-    setGlobalLoading(true); // Trigger global loader for final verification
+    setGlobalLoading(true);
     
     setTimeout(() => {
       createOrder(paymentMethod, gameDetails);
@@ -99,7 +98,6 @@ export default function CheckoutPage() {
       <Header />
       
       <main className="container mx-auto px-4 py-8 max-w-2xl">
-        {/* Responsive Progress Tracker */}
         {step < 4 && (
           <div className="flex justify-between items-center mb-10 md:mb-12 px-2 relative">
             <div className="absolute left-0 right-0 h-0.5 bg-gray-200 top-1/2 -translate-y-1/2 mx-8 -z-10" />
@@ -127,7 +125,6 @@ export default function CheckoutPage() {
         )}
 
         <div className="relative overflow-hidden min-h-[500px]">
-          {/* Step 1: Details */}
           <div className={cn(
             "transition-all duration-500 ease-in-out transform absolute w-full",
             step === 1 ? "opacity-100 translate-x-0 scale-100" : "opacity-0 -translate-x-full scale-95 pointer-events-none"
@@ -191,7 +188,6 @@ export default function CheckoutPage() {
             </Card>
           </div>
 
-          {/* Step 2: Payment */}
           <div className={cn(
             "transition-all duration-500 ease-in-out transform absolute w-full",
             step === 2 ? "opacity-100 translate-x-0 scale-100" : (step < 2 ? "opacity-0 translate-x-full" : "opacity-0 -translate-x-full") + " scale-95 pointer-events-none"
@@ -251,7 +247,6 @@ export default function CheckoutPage() {
             </Card>
           </div>
 
-          {/* Step 3: Verification */}
           <div className={cn(
             "transition-all duration-500 ease-in-out transform absolute w-full",
             step === 3 ? "opacity-100 translate-x-0 scale-100" : (step < 3 ? "opacity-0 translate-x-full" : "opacity-0 -translate-x-full") + " scale-95 pointer-events-none"
@@ -298,7 +293,6 @@ export default function CheckoutPage() {
             </Card>
           </div>
 
-          {/* Step 4: Success Screen */}
           <div className={cn(
             "transition-all duration-1000 ease-out transform absolute w-full text-center",
             step === 4 ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-12 scale-90 pointer-events-none"
