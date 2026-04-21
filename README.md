@@ -32,13 +32,20 @@ Set the following variables in your deployment dashboard:
 
 ## Troubleshooting Git Issues
 
-If you encounter the error **"failed to push some refs to..."**:
+### "Failed to push some refs" or "Rejected"
+The remote repository has changes you don't have. 
+1.  **Pull First**: Click the `...` in the Source Control panel and select **Pull**.
+2.  **Sync Local & Remote**: Use the **Sync Changes** button.
 
-1.  **Pull First**: The remote repository has changes you don't have. Run `git pull origin main` in the terminal or click the `...` in the Source Control panel and select **Pull**.
-2.  **Sync Local & Remote**: Use the **Sync Changes** button to ensure your local workspace matches GitHub.
-3.  **Check Permissions**: Ensure your GitHub token has "repo" and "workflow" scopes enabled.
-4.  **Resolve Conflicts**: If files are modified in both places, you must resolve conflicts before the push will be accepted.
-5.  **View Logs**: Always click "Open Git Log" in the error dialog to see the specific error message from GitHub.
+### "Authentication Failed" or "How to Re-login"
+If you cannot pull or push due to a login error:
+1.  **IDE Re-login**: Look for your GitHub profile icon at the bottom-left of the editor. Click it, sign out, and then sign back in.
+2.  **Refresh Connection**: Go to your workspace/project settings dashboard (outside the editor) and look for the "GitHub" or "Integrations" section to reconnect your account.
+3.  **Terminal Fix**: If you are comfortable with the terminal, you can force a credential prompt by running:
+    ```bash
+    git config --global --unset credential.helper
+    ```
+    Then try to `git pull` again; it should ask for your username and password (or personal access token).
 
 ## Local Development
 
