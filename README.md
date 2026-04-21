@@ -22,25 +22,23 @@ Set the following variables in your deployment dashboard:
 
 ## 🛠 Troubleshooting Git Issues (THE NUCLEAR OPTION)
 
-If you are stuck with "failed to push" or "authentication failed" (as seen in your screenshot) and the sidebar shows `11↑`, follow these steps exactly in your **Terminal**:
+If you are stuck with "failed to push" or "authentication failed" and cannot find the profile icon (especially on mobile):
 
-### Step 1: The "Force Push" Command
-Copy and paste this exact line into your terminal and press Enter:
+### Step 1: Open the Terminal
+1. Click the **Hamburger Menu** (top-left, three horizontal lines `☰`).
+2. Select **Terminal** -> **New Terminal**.
+
+### Step 2: Run the Force Push Command
+Copy and paste this exact line into the terminal and press Enter:
 ```bash
 git push origin main --force
 ```
 
-### Step 2: Handle Authentication
-When you run the command above, Git will likely ask for your credentials:
+### Step 3: Handle Authentication
+When you run the command above, Git will ask for your credentials:
 
 1.  **Username**: Type your GitHub username and press Enter.
-2.  **Password**: **DO NOT use your normal password.** Paste your **Personal Access Token (PAT)** here. (Note: The terminal will not show any characters while you paste/type).
-
-### Step 3: Resetting the IDE Connection
-If the error dialog persists in the editor:
-1.  Click the **Profile icon** at the very bottom-left of the screen.
-2.  Select **Sign Out**.
-3.  Click it again and select **Sign in with GitHub**.
+2.  **Password**: **DO NOT use your normal password.** Paste your **Personal Access Token (PAT)** here. (Note: On mobile, long-press to paste. The terminal will not show any characters while you paste/type).
 
 ---
 

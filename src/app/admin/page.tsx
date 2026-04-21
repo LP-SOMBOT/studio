@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo } from "react";
@@ -200,7 +199,7 @@ export default function AdminPage() {
                     <div key={o.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-2xl">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center font-bold text-xs shadow-sm">
-                          {o.items[0]?.gameId.substring(0,2).toUpperCase()}
+                          {o.items[0]?.gameId.substring(0,2).toUpperCase() || 'GS'}
                         </div>
                         <div>
                           <p className="text-sm font-bold">{o.items[0]?.title}</p>
@@ -328,7 +327,7 @@ export default function AdminPage() {
                 <Card key={p.id} className="rounded-[2rem] p-6 relative group overflow-hidden border-gray-100 hover:shadow-lg transition-shadow bg-white">
                   <div className="flex justify-between mb-4">
                     <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center font-bold text-primary border border-gray-100">
-                      {p.gameId[0].toUpperCase()}
+                      {p.gameId?.[0]?.toUpperCase() || 'P'}
                     </div>
                     <div className="flex gap-2">
                       <Button variant="ghost" size="icon" onClick={() => setEditingProduct(p)} className="h-9 w-9 rounded-xl hover:text-primary"><Edit className="w-4 h-4" /></Button>
@@ -368,7 +367,7 @@ export default function AdminPage() {
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
-                            {u.name[0]}
+                            {u.name?.[0] || 'U'}
                           </div>
                           <div className="flex flex-col">
                             <span className="font-bold text-sm">{u.name}</span>
