@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
@@ -29,7 +28,7 @@ import {
   remove
 } from 'firebase/database';
 import { toast } from '@/hooks/use-toast';
-import { GAMES_DATA, type GamePackage } from './games-data';
+import { type GamePackage } from './games-data';
 
 type CartItem = {
   id: string;
@@ -119,7 +118,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     sliderImages: []
   });
 
-  // Hydrate from LocalStorage for speed
   useEffect(() => {
     const cachedCart = localStorage.getItem('oskar_cart');
     if (cachedCart) setCart(JSON.parse(cachedCart));
@@ -134,7 +132,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (cachedProfile) setUserProfile(JSON.parse(cachedProfile));
   }, []);
 
-  // Sync RTDB state to LocalStorage
   useEffect(() => {
     if (storeSettings) localStorage.setItem('oskar_settings', JSON.stringify(storeSettings));
   }, [storeSettings]);
@@ -147,7 +144,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (userProfile) localStorage.setItem('oskar_user_profile', JSON.stringify(userProfile));
   }, [userProfile]);
 
-  // Handle route change loading
   useEffect(() => {
     setIsGlobalLoading(false);
   }, [pathname]);
@@ -180,8 +176,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return onValue(productsRef, (snapshot) => {
       const data = snapshot.val();
       if (!data) {
-        GAMES_DATA.forEach(p => set(ref(rtdb, `products/${p.id}`), p));
-        setProducts(GAMES_DATA);
+        setProducts([]);
       } else {
         const productList = Object.entries(data).map(([id, val]: [string, any]) => ({ ...val, id }));
         setProducts(productList);
