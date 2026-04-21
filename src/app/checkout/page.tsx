@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -26,7 +27,7 @@ import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
 export default function CheckoutPage() {
-  const { cart, createOrder, user } = useApp();
+  const { cart, createOrder, user, setGlobalLoading } = useApp();
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -75,12 +76,14 @@ export default function CheckoutPage() {
 
   const handleFinalConfirm = () => {
     setIsProcessing(true);
+    setGlobalLoading(true); // Trigger global loader for final verification
     
     setTimeout(() => {
       createOrder(paymentMethod, gameDetails);
       setIsProcessing(false);
       setIsSuccess(true);
       setStep(4);
+      setGlobalLoading(false);
       
       toast({
         title: "Order Confirmed!",
@@ -335,13 +338,6 @@ export default function CheckoutPage() {
       </main>
 
       <BottomNav />
-
-      {isProcessing && (
-        <div className="fixed inset-0 bg-white/60 backdrop-blur-sm z-50 flex flex-col items-center justify-center animate-in fade-in duration-300">
-          <div className="w-16 h-16 md:w-20 md:h-20 border-4 border-primary/20 border-t-primary rounded-full animate-spin mb-4" />
-          <p className="font-headline font-bold text-lg md:text-xl text-primary animate-pulse">Securing your order...</p>
-        </div>
-      )}
 
       <style jsx global>{`
         @keyframes scale-up {

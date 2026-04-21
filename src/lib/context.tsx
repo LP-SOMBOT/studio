@@ -1,6 +1,8 @@
+
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import { usePathname } from 'next/navigation';
 import { 
   useUser, 
   useAuth, 
@@ -71,6 +73,8 @@ type UserProfile = {
 type AppContextType = {
   user: any;
   loading: boolean;
+  isGlobalLoading: boolean;
+  setGlobalLoading: (loading: boolean) => void;
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, name: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
@@ -99,7 +103,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const { user, loading } = useUser();
   const auth = useAuth();
   const rtdb = useDatabase();
+  const pathname = usePathname();
   
+  const [isGlobalLoading, setIsGlobalLoading] = useState(false);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [allOrders, setAllOrders] = useState<Order[]>([]);
@@ -111,6 +117,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     onboardingImages: [],
     sliderImages: []
   });
+
+  // Handle route change loading
+  useEffect(() => {
+    setIsGlobalLoading(false);
+  }, [pathname]);
+
+  // Handle initial refresh loading
+  useEffect(() => {
+    setIsGlobalLoading(true);
+    const timer = setTimeout(() => setIsGlobalLoading(false), 800);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     if (!rtdb || !user) {
@@ -234,44 +252,64 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string) => {
     if (!auth) return;
-    await signInWithEmailAndPassword(auth, email, password);
+    setIsGlobalLoading(true);
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+    } finally {
+      setIsGlobalLoading(false);
+    }
   };
 
   const signup = async (email: string, password: string, name: string) => {
     if (!auth || !rtdb) return;
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    const newUser = userCredential.user;
-    
-    await updateProfile(newUser, { displayName: name });
-    
-    await set(ref(rtdb, `users/${newUser.uid}`), {
-      uid: newUser.uid,
-      email,
-      name,
-      isAdmin: email === 'admin@lp.com',
-      createdAt: serverTimestamp()
-    });
+    setIsGlobalLoading(true);
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const newUser = userCredential.user;
+      
+      await updateProfile(newUser, { displayName: name });
+      
+      await set(ref(rtdb, `users/${newUser.uid}`), {
+        uid: newUser.uid,
+        email,
+        name,
+        isAdmin: email === 'admin@lp.com',
+        createdAt: serverTimestamp()
+      });
+    } finally {
+      setIsGlobalLoading(false);
+    }
   };
 
   const loginWithGoogle = async () => {
     if (!auth || !rtdb) return;
-    const provider = new GoogleAuthProvider();
-    const result = await signInWithPopup(auth, provider);
-    const user = result.user;
-    
-    const userRef = ref(rtdb, `users/${user.uid}`);
-    await update(userRef, {
-      uid: user.uid,
-      email: user.email,
-      name: user.displayName,
-      isAdmin: user.email === 'admin@lp.com',
-      lastLogin: serverTimestamp()
-    });
+    setIsGlobalLoading(true);
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      
+      const userRef = ref(rtdb, `users/${user.uid}`);
+      await update(userRef, {
+        uid: user.uid,
+        email: user.email,
+        name: user.displayName,
+        isAdmin: user.email === 'admin@lp.com',
+        lastLogin: serverTimestamp()
+      });
+    } finally {
+      setIsGlobalLoading(false);
+    }
   };
 
   const logout = async () => {
     if (!auth) return;
-    await signOut(auth);
+    setIsGlobalLoading(true);
+    try {
+      await signOut(auth);
+    } finally {
+      setIsGlobalLoading(false);
+    }
   };
 
   const addToCart = (item: Omit<CartItem, 'quantity'>) => {
@@ -357,6 +395,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     <AppContext.Provider value={{ 
       user: enhancedUser, 
       loading,
+      isGlobalLoading,
+      setGlobalLoading: setIsGlobalLoading,
       login, 
       signup,
       loginWithGoogle,

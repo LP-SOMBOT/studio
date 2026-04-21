@@ -6,6 +6,7 @@ import { AppProvider } from "@/lib/context";
 import PWAInstaller from "@/components/layout/PWAInstaller";
 import { FirebaseClientProvider } from "@/firebase";
 import OnboardingGuard from "@/components/layout/OnboardingGuard";
+import GlobalLoading from "@/components/layout/GlobalLoading";
 
 export const metadata: Metadata = {
   title: 'Oskar Shop - Game Top-Up & Accounts',
@@ -42,6 +43,7 @@ export default function RootLayout({
       <body className="font-body antialiased">
         <FirebaseClientProvider>
           <AppProvider>
+            <GlobalLoading />
             <PWAInstaller />
             <OnboardingGuard>
               {children}
