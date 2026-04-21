@@ -1,13 +1,32 @@
+
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-
-type User = {
-  id: string;
-  name: string;
-  email: string;
-  isAdmin: boolean;
-};
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import { 
+  useUser, 
+  useAuth, 
+  useFirestore, 
+  useCollection,
+  useDoc 
+} from '@/firebase';
+import { 
+  signInWithEmailAndPassword, 
+  signOut,
+  GoogleAuthProvider,
+  signInWithPopup
+} from 'firebase/auth';
+import { 
+  collection, 
+  addDoc, 
+  query, 
+  where, 
+  orderBy,
+  doc,
+  setDoc,
+  serverTimestamp
+} from 'firebase/firestore';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 type CartItem = {
   id: string;
@@ -24,49 +43,83 @@ type Order = {
   items: CartItem[];
   total: number;
   status: 'pending' | 'processing' | 'successful' | 'cancelled';
-  createdAt: string;
+  createdAt: any;
+  paymentMethod: string;
+  gameDetails?: any;
 };
 
 type AppContextType = {
-  user: User | null;
-  login: (email: string) => void;
-  logout: () => void;
+  user: any;
+  loading: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
+  logout: () => Promise<void>;
   cart: CartItem[];
   addToCart: (item: Omit<CartItem, 'quantity'>) => void;
   removeFromCart: (id: string) => void;
   clearCart: () => void;
   orders: Order[];
-  createOrder: (paymentMethod: string, details?: Record<string, string>) => void;
+  createOrder: (paymentMethod: string, gameDetails: any) => void;
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const { user, loading } = useUser();
+  const auth = useAuth();
+  const db = useFirestore();
+  
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [orders, setOrders] = useState<Order[]>([]);
+
+  // Real-time Orders
+  const ordersQuery = useMemo(() => {
+    if (!db || !user) return null;
+    return query(
+      collection(db, 'orders'),
+      where('userId', '==', user.uid),
+      orderBy('createdAt', 'desc')
+    );
+  }, [db, user]);
+
+  const { data: ordersData } = useCollection(ordersQuery);
+  const orders = (ordersData || []) as Order[];
+
+  // Fetch extra user info (like isAdmin) from Firestore
+  const userDocRef = useMemo(() => {
+    if (!db || !user) return null;
+    return doc(db, 'users', user.uid);
+  }, [db, user]);
+  
+  const { data: userProfile } = useDoc(userDocRef);
+
+  const enhancedUser = useMemo(() => {
+    if (!user) return null;
+    return {
+      ...user,
+      isAdmin: userProfile?.isAdmin || user.email?.includes('admin'),
+      name: userProfile?.name || user.displayName || user.email?.split('@')[0],
+    };
+  }, [user, userProfile]);
 
   useEffect(() => {
-    // Load from local storage on mount
-    const savedUser = localStorage.getItem('oskar_user');
-    if (savedUser) setUser(JSON.parse(savedUser));
-
     const savedCart = localStorage.getItem('oskar_cart');
     if (savedCart) setCart(JSON.parse(savedCart));
-
-    const savedOrders = localStorage.getItem('oskar_orders');
-    if (savedOrders) setOrders(JSON.parse(savedOrders));
   }, []);
 
-  const login = (email: string) => {
-    const newUser = { id: 'u1', name: email.split('@')[0], email, isAdmin: email.includes('admin') };
-    setUser(newUser);
-    localStorage.setItem('oskar_user', JSON.stringify(newUser));
+  const login = async (email: string, password: string) => {
+    if (!auth) return;
+    await signInWithEmailAndPassword(auth, email, password);
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('oskar_user');
+  const loginWithGoogle = async () => {
+    if (!auth) return;
+    const provider = new GoogleAuthProvider();
+    await signInWithPopup(auth, provider);
+  };
+
+  const logout = async () => {
+    if (!auth) return;
+    await signOut(auth);
   };
 
   const addToCart = (item: Omit<CartItem, 'quantity'>) => {
@@ -96,24 +149,47 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('oskar_cart');
   };
 
-  const createOrder = (paymentMethod: string, details?: Record<string, string>) => {
-    if (!user) return;
-    const newOrder: Order = {
-      id: 'ORD-' + Math.random().toString(36).substr(2, 9).toUpperCase(),
-      userId: user.id,
-      items: cart.map(i => ({...i, details})),
+  const createOrder = (paymentMethod: string, gameDetails: any) => {
+    if (!db || !user) return;
+
+    const orderData = {
+      userId: user.uid,
+      items: cart,
       total: cart.reduce((acc, i) => acc + (i.price * i.quantity), 0),
       status: 'pending',
-      createdAt: new Date().toISOString(),
+      createdAt: serverTimestamp(),
+      paymentMethod,
+      gameDetails,
     };
-    const updatedOrders = [newOrder, ...orders];
-    setOrders(updatedOrders);
-    localStorage.setItem('oskar_orders', JSON.stringify(updatedOrders));
-    clearCart();
+
+    addDoc(collection(db, 'orders'), orderData)
+      .then(() => {
+        clearCart();
+      })
+      .catch(async (error) => {
+        const permissionError = new FirestorePermissionError({
+          path: 'orders',
+          operation: 'create',
+          requestResourceData: orderData,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      });
   };
 
   return (
-    <AppContext.Provider value={{ user, login, logout, cart, addToCart, removeFromCart, clearCart, orders, createOrder }}>
+    <AppContext.Provider value={{ 
+      user: enhancedUser, 
+      loading,
+      login, 
+      loginWithGoogle,
+      logout, 
+      cart, 
+      addToCart, 
+      removeFromCart, 
+      clearCart, 
+      orders, 
+      createOrder 
+    }}>
       {children}
     </AppContext.Provider>
   );

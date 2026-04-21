@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -7,17 +8,44 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
-import { User, Lock, EyeOff } from "lucide-react";
+import { User, Lock, EyeOff, Loader2 } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
-  const { login } = useApp();
+  const [password, setPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { login, loginWithGoogle } = useApp();
   const router = useRouter();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    login(email);
-    router.push('/');
+    setIsSubmitting(true);
+    try {
+      await login(email, password);
+      router.push('/');
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Login Failed",
+        description: error.message || "Please check your credentials.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      await loginWithGoogle();
+      router.push('/');
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Google Login Failed",
+        description: error.message,
+      });
+    }
   };
 
   return (
@@ -46,8 +74,8 @@ export default function LoginPage() {
               </div>
               <Input 
                 id="email" 
-                type="text" 
-                placeholder="Email & Phone number" 
+                type="email" 
+                placeholder="Email address" 
                 required 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -64,6 +92,8 @@ export default function LoginPage() {
                 type="password" 
                 placeholder="Enter Password" 
                 required 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 className="h-14 pl-12 pr-12 rounded-full border-gray-100 bg-gray-50/50 focus-visible:ring-secondary text-base"
               />
               <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">
@@ -79,9 +109,10 @@ export default function LoginPage() {
 
             <Button 
               type="submit" 
+              disabled={isSubmitting}
               className="w-full h-14 rounded-full text-lg font-bold bg-secondary hover:bg-secondary/90 shadow-lg shadow-secondary/20 transition-all active:scale-95"
             >
-              LOG IN
+              {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : "LOG IN"}
             </Button>
 
             <div className="relative py-2">
@@ -96,6 +127,7 @@ export default function LoginPage() {
             <Button 
               type="button" 
               variant="outline" 
+              onClick={handleGoogleLogin}
               className="w-full h-14 rounded-full text-base font-medium border-gray-100 hover:bg-gray-50 gap-3"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">

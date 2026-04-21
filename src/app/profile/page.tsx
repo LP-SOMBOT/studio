@@ -1,10 +1,11 @@
+
 "use client";
 
 import { useEffect } from "react";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
 import { useApp } from "@/lib/context";
-import { User, LogOut, Package, Clock, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { User, LogOut, Package, Clock, CheckCircle, XCircle, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -12,17 +13,17 @@ import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 
 export default function ProfilePage() {
-  const { user, logout, orders } = useApp();
+  const { user, loading, logout, orders } = useApp();
   const router = useRouter();
 
   useEffect(() => {
-    if (!user) {
+    if (!loading && !user) {
       router.push('/login');
     }
-  }, [user, router]);
+  }, [user, loading, router]);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     router.push('/');
   };
 
@@ -44,9 +45,15 @@ export default function ProfilePage() {
     }
   };
 
-  if (!user) {
-    return null;
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
   }
+
+  if (!user) return null;
 
   return (
     <div className="min-h-screen bg-background pb-24 md:pb-10">
@@ -65,8 +72,8 @@ export default function ProfilePage() {
                   </div>
                 </div>
                 <div className="mt-4 text-center">
-                  <h2 className="text-2xl font-headline font-bold">{user.name}</h2>
-                  <p className="text-sm text-muted-foreground">{user.email}</p>
+                  <h2 className="text-2xl font-headline font-bold line-clamp-1 px-4">{user.name}</h2>
+                  <p className="text-sm text-muted-foreground truncate max-w-full px-4">{user.email}</p>
                   {user.isAdmin && (
                     <Badge className="mt-2 bg-primary/20 text-primary border-none">Administrator</Badge>
                   )}
@@ -103,8 +110,12 @@ export default function ProfilePage() {
                   <Card key={order.id} className="rounded-2xl border-gray-100 shadow-sm hover:shadow-md transition-shadow">
                     <CardHeader className="p-4 pb-0 flex flex-row items-center justify-between">
                       <div className="space-y-1">
-                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{order.id}</p>
-                        <p className="text-sm font-medium">{format(new Date(order.createdAt), 'PPpp')}</p>
+                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{order.id.substring(0, 12)}...</p>
+                        <p className="text-sm font-medium">
+                          {order.createdAt?.seconds 
+                            ? format(new Date(order.createdAt.seconds * 1000), 'PPpp')
+                            : 'Just now'}
+                        </p>
                       </div>
                       <Badge className={`flex items-center gap-1.5 px-3 py-1 border rounded-full capitalize ${getStatusColor(order.status)}`}>
                         {getStatusIcon(order.status)} {order.status}
@@ -122,6 +133,12 @@ export default function ProfilePage() {
                           <span className="font-headline font-bold text-lg">Total Paid</span>
                           <span className="text-xl font-headline font-bold text-primary">${order.total.toFixed(2)}</span>
                         </div>
+                        {order.gameDetails && (
+                          <div className="mt-2 text-xs text-muted-foreground bg-gray-50 p-2 rounded-lg">
+                            <p><strong>Game ID:</strong> {order.gameDetails.playerID}</p>
+                            <p><strong>Method:</strong> {order.paymentMethod}</p>
+                          </div>
+                        )}
                       </div>
                     </CardContent>
                   </Card>

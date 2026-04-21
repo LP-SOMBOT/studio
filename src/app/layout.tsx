@@ -1,8 +1,10 @@
+
 import type {Metadata, Viewport} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { AppProvider } from "@/lib/context";
 import PWAInstaller from "@/components/layout/PWAInstaller";
+import { FirebaseClientProvider } from "@/firebase";
 
 export const metadata: Metadata = {
   title: 'Oskar Shop - Game Top-Up & Accounts',
@@ -37,11 +39,13 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="https://picsum.photos/seed/oskar-apple/180/180" />
       </head>
       <body className="font-body antialiased">
-        <AppProvider>
-          <PWAInstaller />
-          {children}
-          <Toaster />
-        </AppProvider>
+        <FirebaseClientProvider>
+          <AppProvider>
+            <PWAInstaller />
+            {children}
+            <Toaster />
+          </AppProvider>
+        </FirebaseClientProvider>
       </body>
     </html>
   );
