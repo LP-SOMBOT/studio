@@ -1,6 +1,12 @@
 {
   "placeholderImages": [
     {
+      "id": "app-logo",
+      "description": "Oskar Shop Official Logo",
+      "imageUrl": "https://picsum.photos/seed/oskar-logo/512/512",
+      "imageHint": "app logo"
+    },
+    {
       "id": "hero-1",
       "description": "Free Fire Promo Banner",
       "imageUrl": "https://picsum.photos/seed/oskar1/1200/600",
