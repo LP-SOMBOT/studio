@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -129,7 +128,7 @@ export default function OnboardingFlow({ onComplete }: { onComplete: () => void 
       image: PlaceHolderImages.find(img => img.id === 'onboarding-3')?.imageUrl || '',
       imageHint: 'order tracking',
       headline: "Track Every Order Live",
-      subtitle: "Get instant delivery updates. Your diamonds arrive right after payment",
+      subtitle: "Get instant delivery updates. Your diamonds arrive right after payment.",
       buttonLabel: "Get Started"
     }
   ];
