@@ -35,6 +35,7 @@ type CartItem = {
   price: number;
   quantity: number;
   gameId: string;
+  thumbnail?: string;
   details?: Record<string, string>;
 };
 
@@ -111,7 +112,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     sliderImages: []
   });
 
-  // Sync user profile from RTDB
   useEffect(() => {
     if (!rtdb || !user) {
       setUserProfile(null);
@@ -123,7 +123,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     });
   }, [rtdb, user]);
 
-  // Sync global store settings
   useEffect(() => {
     if (!rtdb) return;
     const settingsRef = ref(rtdb, 'settings');
@@ -135,14 +134,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     });
   }, [rtdb]);
 
-  // Sync products from RTDB or fallback to initial data
   useEffect(() => {
     if (!rtdb) return;
     const productsRef = ref(rtdb, 'products');
     return onValue(productsRef, (snapshot) => {
       const data = snapshot.val();
       if (!data) {
-        // Bootstrap if empty
         GAMES_DATA.forEach(p => {
           set(ref(rtdb, `products/${p.id}`), p);
         });
@@ -168,7 +165,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     };
   }, [user, userProfile]);
 
-  // Sync user's own orders
   useEffect(() => {
     if (!rtdb || !user) {
       setOrders([]);
@@ -191,7 +187,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     });
   }, [rtdb, user]);
 
-  // Sync ALL orders for Admin
   useEffect(() => {
     if (!rtdb || !enhancedUser?.isAdmin) {
       setAllOrders([]);
@@ -212,7 +207,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     });
   }, [rtdb, enhancedUser]);
 
-  // Sync ALL users for Admin
   useEffect(() => {
     if (!rtdb || !enhancedUser?.isAdmin) {
       setAllUsers([]);

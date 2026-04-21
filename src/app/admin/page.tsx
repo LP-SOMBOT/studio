@@ -26,7 +26,8 @@ import {
   ShoppingBag,
   Image as ImageIcon,
   LogOut,
-  Upload
+  Upload,
+  X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -56,6 +57,7 @@ import { generatePromotionalContent, type GeneratePromotionalContentOutput } fro
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { format, isToday, isYesterday, startOfToday } from "date-fns";
+import Image from "next/image";
 
 export default function AdminPage() {
   const { 
@@ -85,7 +87,6 @@ export default function AdminPage() {
   });
   const [promoOutput, setPromoOutput] = useState<GeneratePromotionalContentOutput | null>(null);
 
-  // Dashboard Calculations
   const metrics = useMemo(() => {
     const today = startOfToday();
     const successful = allOrders.filter(o => o.status === 'successful');
@@ -120,6 +121,11 @@ export default function AdminPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (file.size > 2 * 1024 * 1024) {
+      toast({ title: "File too large", description: "Keep it under 2MB.", variant: "destructive" });
+      return;
+    }
+
     const reader = new FileReader();
     reader.onloadend = () => {
       const base64 = reader.result as string;
@@ -134,9 +140,15 @@ export default function AdminPage() {
         current[index] = base64;
         updateStoreSettings({ sliderImages: current });
       }
-      toast({ title: "Image Uploaded", description: "Saved as Base64 in database." });
+      toast({ title: "Image Uploaded", description: "Saved to database." });
     };
     reader.readAsDataURL(file);
+  };
+
+  const removeSliderImage = (index: number) => {
+    const current = [...(storeSettings.sliderImages || [])];
+    current.splice(index, 1);
+    updateStoreSettings({ sliderImages: current });
   };
 
   const handleGeneratePromo = async () => {
@@ -158,7 +170,6 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground pb-24 md:pb-10 font-body">
-      {/* Top Console Header */}
       <header className="h-20 border-b border-gray-100 px-6 flex items-center justify-between sticky top-0 bg-white/80 backdrop-blur-md z-50">
         <div className="flex items-center gap-4">
           <Gamepad2 className="w-8 h-8 text-primary" />
@@ -326,8 +337,12 @@ export default function AdminPage() {
               {products.map(p => (
                 <Card key={p.id} className="rounded-[2rem] p-6 relative group overflow-hidden border-gray-100 hover:shadow-lg transition-shadow bg-white">
                   <div className="flex justify-between mb-4">
-                    <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center font-bold text-primary border border-gray-100">
-                      {p.gameId?.[0]?.toUpperCase() || 'P'}
+                    <div className="relative w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center font-bold text-primary border border-gray-100 overflow-hidden">
+                      {p.thumbnail ? (
+                        <Image src={p.thumbnail} alt={p.title} fill className="object-cover" />
+                      ) : (
+                        p.gameId?.[0]?.toUpperCase() || 'P'
+                      )}
                     </div>
                     <div className="flex gap-2">
                       <Button variant="ghost" size="icon" onClick={() => setEditingProduct(p)} className="h-9 w-9 rounded-xl hover:text-primary"><Edit className="w-4 h-4" /></Button>
@@ -437,7 +452,7 @@ export default function AdminPage() {
                     <p className="font-bold text-sm">Onboarding Screens (3 Required)</p>
                     <div className="grid grid-cols-3 gap-4">
                       {[0, 1, 2].map(i => (
-                        <label key={i} className="aspect-square rounded-2xl bg-gray-50 border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-gray-100 transition-colors">
+                        <label key={i} className="aspect-square rounded-2xl bg-gray-50 border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-gray-100 transition-colors overflow-hidden">
                           <input type="file" className="hidden" accept="image/*" onChange={(e) => handleImageUpload(e, 'onboarding', i)} />
                           {storeSettings.onboardingImages?.[i] ? (
                             <img src={storeSettings.onboardingImages[i]} className="w-full h-full object-cover rounded-2xl" />
@@ -448,6 +463,33 @@ export default function AdminPage() {
                             </>
                           )}
                         </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-4 pt-4 border-t border-gray-100">
+                    <div className="flex justify-between items-center">
+                      <p className="font-bold text-sm">Hero Slider Images</p>
+                      <label className="cursor-pointer">
+                         <input type="file" className="hidden" accept="image/*" onChange={(e) => handleImageUpload(e, 'slider', storeSettings.sliderImages?.length || 0)} />
+                         <Button variant="outline" size="sm" className="rounded-full gap-2 pointer-events-none">
+                            <Plus className="w-4 h-4" /> Add Slide
+                         </Button>
+                      </label>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      {(storeSettings.sliderImages || []).map((img, idx) => (
+                        <div key={idx} className="relative aspect-video rounded-xl overflow-hidden border border-gray-100 group">
+                           <Image src={img} alt={`Slide ${idx}`} fill className="object-cover" />
+                           <Button 
+                             variant="destructive" 
+                             size="icon" 
+                             className="absolute top-1 right-1 h-6 w-6 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                             onClick={() => removeSliderImage(idx)}
+                           >
+                             <Trash2 className="w-3 h-3" />
+                           </Button>
+                        </div>
                       ))}
                     </div>
                   </div>
@@ -489,7 +531,6 @@ export default function AdminPage() {
 
       </main>
 
-      {/* Persistent Console Bottom Nav */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-100 z-[100] px-4 py-2 flex justify-around items-center shadow-[0_-10px_30px_rgba(0,0,0,0.05)]">
         <NavButton active={activeView === 'dashboard'} onClick={() => setActiveView('dashboard')} icon={LayoutDashboard} label="Desk" />
         <NavButton active={activeView === 'orders'} onClick={() => setActiveView('orders')} icon={ShoppingBag} label="Orders" />
@@ -498,7 +539,6 @@ export default function AdminPage() {
         <NavButton active={activeView === 'settings'} onClick={() => setActiveView('settings')} icon={Settings} label="Console" />
       </nav>
 
-      {/* Editing Dialog */}
       {editingProduct && (
         <Dialog open={!!editingProduct} onOpenChange={() => setEditingProduct(null)}>
           <DialogContent className="rounded-[2.5rem] max-w-xl">
@@ -549,6 +589,16 @@ function ProductForm({ initialData, onSave }: { initialData?: any, onSave: (p: a
     imageHint: "gaming"
   });
 
+  const handleProductImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setData({ ...data, thumbnail: reader.result as string });
+    };
+    reader.readAsDataURL(file);
+  };
+
   return (
     <div className="space-y-5 py-4">
       <div className="grid grid-cols-2 gap-4">
@@ -597,8 +647,29 @@ function ProductForm({ initialData, onSave }: { initialData?: any, onSave: (p: a
       </div>
 
       <div className="space-y-2">
-        <Label className="text-[10px] uppercase font-bold">Thumbnail URL / Base64</Label>
-        <Input className="rounded-xl h-12 bg-gray-50 border-none" value={data.thumbnail} onChange={e => setData({...data, thumbnail: e.target.value})} />
+        <Label className="text-[10px] uppercase font-bold">Package Image</Label>
+        <div className="flex items-center gap-4">
+          <label className="flex-1 cursor-pointer">
+            <input type="file" className="hidden" accept="image/*" onChange={handleProductImage} />
+            <div className="h-24 rounded-2xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center text-muted-foreground hover:bg-gray-50 transition-colors">
+               <Upload className="w-6 h-6 mb-1" />
+               <span className="text-[10px] font-bold uppercase">Upload Photo</span>
+            </div>
+          </label>
+          {data.thumbnail && (
+            <div className="w-24 h-24 relative rounded-2xl overflow-hidden border border-gray-100">
+               <Image src={data.thumbnail} alt="Preview" fill className="object-cover" />
+               <Button 
+                variant="destructive" 
+                size="icon" 
+                className="absolute top-1 right-1 h-6 w-6 rounded-full"
+                onClick={() => setData({...data, thumbnail: ""})}
+               >
+                 <X className="w-3 h-3" />
+               </Button>
+            </div>
+          )}
+        </div>
       </div>
 
       <Button className="w-full h-14 rounded-2xl bg-primary text-white font-bold" onClick={() => onSave(data)}>

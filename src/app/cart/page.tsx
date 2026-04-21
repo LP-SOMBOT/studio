@@ -7,6 +7,7 @@ import { Trash2, ShoppingBag, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function CartPage() {
   const { cart, removeFromCart, user } = useApp();
@@ -41,8 +42,12 @@ export default function CartPage() {
                 <Card key={item.id} className="rounded-2xl border-gray-100 shadow-sm overflow-hidden">
                   <CardContent className="p-4 flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                      <div className="w-16 h-16 bg-primary/5 rounded-xl flex items-center justify-center text-primary font-bold text-xs">
-                        {item.gameId.substring(0, 2).toUpperCase()}
+                      <div className="relative w-16 h-16 bg-primary/5 rounded-xl flex items-center justify-center text-primary font-bold text-xs overflow-hidden">
+                        {item.thumbnail ? (
+                          <Image src={item.thumbnail} alt={item.title} fill className="object-cover" />
+                        ) : (
+                          item.gameId.substring(0, 2).toUpperCase()
+                        )}
                       </div>
                       <div>
                         <h3 className="font-bold text-lg">{item.title}</h3>
