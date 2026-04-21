@@ -121,8 +121,8 @@ export default function OnboardingFlow({ onComplete }: { onComplete: () => void 
     {
       image: PlaceHolderImages.find(img => img.id === 'onboarding-2')?.imageUrl || '',
       imageHint: 'secure payment',
-      headline: "Safe and Secure Payments",
-      subtitle: "Every transaction is encrypted and verified. Pay your way with confidence",
+      headline: "Safe & Secure Payments",
+      subtitle: "Every transaction is encrypted and verified. Pay your way with confidence.",
       buttonLabel: "Next"
     },
     {
