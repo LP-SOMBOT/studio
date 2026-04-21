@@ -1,3 +1,4 @@
+
 "use client";
 
 import Image from "next/image";
@@ -24,7 +25,7 @@ export default function GameCard({ id, title, description, thumbnail, price, dis
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
-    addToCart({ id, title, price: discountedPrice || price, gameId });
+    addToCart({ id, title, price: discountedPrice || price, gameId, thumbnail });
     toast({
       title: "Added to cart!",
       description: `${title} has been added to your shopping cart.`,
@@ -35,38 +36,38 @@ export default function GameCard({ id, title, description, thumbnail, price, dis
   const discountPercent = hasDiscount ? Math.round(((price - discountedPrice!) / price) * 100) : 0;
 
   return (
-    <Card className="group overflow-hidden bg-white border-gray-100 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 rounded-2xl">
-      <div className="relative h-48 w-full overflow-hidden">
+    <Card className="group overflow-hidden bg-white border-gray-100 hover:shadow-xl hover:shadow-primary/10 transition-all duration-500 rounded-[2rem] flex flex-col h-full">
+      <div className="relative aspect-square w-full overflow-hidden">
         <Image
           src={thumbnail}
           alt={title}
           fill
-          className="object-cover group-hover:scale-110 transition-transform duration-500"
+          className="object-cover group-hover:scale-110 transition-transform duration-700"
           data-ai-hint={imageHint || "gaming"}
         />
         {hasDiscount && (
-          <Badge className="absolute top-3 left-3 bg-red-500 text-white border-none font-bold">
+          <Badge className="absolute top-4 left-4 bg-red-500 text-white border-none font-bold px-3 py-1 rounded-full shadow-lg">
             -{discountPercent}%
           </Badge>
         )}
       </div>
-      <CardContent className="p-4">
+      <CardContent className="p-5 flex flex-col flex-grow">
         <h3 className="font-headline font-bold text-lg mb-1 line-clamp-1">{title}</h3>
-        <p className="text-xs text-muted-foreground mb-4 line-clamp-2">{description}</p>
-        <div className="flex items-center gap-2">
+        <p className="text-xs text-muted-foreground mb-4 line-clamp-2 leading-relaxed flex-grow">{description}</p>
+        <div className="flex items-center gap-2 mt-auto">
           {hasDiscount ? (
             <>
-              <span className="text-xl font-bold text-primary">${discountedPrice}</span>
+              <span className="text-2xl font-headline font-bold text-primary">${discountedPrice}</span>
               <span className="text-sm text-gray-400 line-through">${price}</span>
             </>
           ) : (
-            <span className="text-xl font-bold text-primary">${price}</span>
+            <span className="text-2xl font-headline font-bold text-primary">${price}</span>
           )}
         </div>
       </CardContent>
-      <CardFooter className="p-4 pt-0 flex gap-2">
-        <Button onClick={handleAddToCart} className="flex-1 rounded-xl h-10 gap-2 font-semibold">
-          <ShoppingCart className="w-4 h-4" /> Add to Cart
+      <CardFooter className="p-5 pt-0">
+        <Button onClick={handleAddToCart} className="w-full rounded-2xl h-12 gap-2 font-bold shadow-lg shadow-primary/10 hover:shadow-primary/20 transition-all">
+          <ShoppingCart className="w-5 h-5" /> Add
         </Button>
       </CardFooter>
     </Card>

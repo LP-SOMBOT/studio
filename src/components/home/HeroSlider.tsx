@@ -1,10 +1,9 @@
+
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
 import Image from "next/image";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { useApp } from "@/lib/context";
 
 export default function HeroSlider() {
@@ -12,16 +11,14 @@ export default function HeroSlider() {
   const [current, setCurrent] = useState(0);
 
   const slides = useMemo(() => {
-    // If we have custom slider images in store settings, use them
     if (storeSettings.sliderImages && storeSettings.sliderImages.length > 0) {
       return storeSettings.sliderImages.map((url, i) => ({
         id: `custom-${i}`,
         imageUrl: url,
-        description: "Special Promotion",
+        description: "Promotion",
         imageHint: "gaming"
       }));
     }
-    // Fallback to placeholder hero images
     return PlaceHolderImages.filter(img => img.id.startsWith('hero'));
   }, [storeSettings.sliderImages]);
 
@@ -36,7 +33,7 @@ export default function HeroSlider() {
   if (slides.length === 0) return null;
 
   return (
-    <div className="relative w-full h-[200px] md:h-[400px] overflow-hidden rounded-2xl group">
+    <div className="relative w-full aspect-[21/9] md:aspect-[3/1] overflow-hidden rounded-[2rem] group shadow-xl">
       {slides.map((slide, index) => (
         <div
           key={slide.id}
@@ -52,35 +49,17 @@ export default function HeroSlider() {
             priority={index === 0}
             data-ai-hint={slide.imageHint}
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent flex flex-col justify-center px-8 md:px-16 text-white">
-            <h2 className="text-2xl md:text-5xl font-headline font-bold mb-2 md:mb-4 max-w-lg">
-              {slide.description}
-            </h2>
-            <p className="text-sm md:text-lg mb-4 md:mb-8 text-white/80 max-w-md hidden sm:block">
-              Experience the fastest top-up service in the country with real-time delivery and 24/7 support.
-            </p>
-            <div className="flex gap-4">
-              <Link href="/games">
-                <Button size="lg" className="bg-primary hover:bg-primary/90 rounded-full h-10 md:h-12 px-6 md:px-8 text-sm md:text-base">
-                  Shop Now
-                </Button>
-              </Link>
-              <Button size="lg" variant="outline" className="text-white border-white hover:bg-white/10 rounded-full h-10 md:h-12 px-6 md:px-8 text-sm md:text-base">
-                Learn More
-              </Button>
-            </div>
-          </div>
         </div>
       ))}
       
       {slides.length > 1 && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-10">
           {slides.map((_, i) => (
             <button
               key={i}
               onClick={() => setCurrent(i)}
-              className={`w-2 md:w-3 h-2 md:h-3 rounded-full transition-colors ${
-                i === current ? "bg-white" : "bg-white/40"
+              className={`w-2 md:w-8 h-2 rounded-full transition-all duration-300 ${
+                i === current ? "bg-white w-8 md:w-12" : "bg-white/40"
               }`}
             />
           ))}
@@ -89,5 +68,3 @@ export default function HeroSlider() {
     </div>
   );
 }
-
-import Link from "next/link";

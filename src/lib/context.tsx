@@ -66,6 +66,7 @@ type UserProfile = {
   name: string;
   isAdmin: boolean;
   isBanned?: boolean;
+  phoneNumber?: string;
   createdAt: number;
   lastLogin?: number;
 };
@@ -76,7 +77,7 @@ type AppContextType = {
   isGlobalLoading: boolean;
   setGlobalLoading: (loading: boolean) => void;
   login: (email: string, password: string) => Promise<void>;
-  signup: (email: string, password: string, name: string) => Promise<void>;
+  signup: (email: string, password: string, name: string, phone: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   cart: CartItem[];
@@ -118,26 +119,49 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     sliderImages: []
   });
 
+  // Hydrate from LocalStorage for speed
+  useEffect(() => {
+    const cachedCart = localStorage.getItem('oskar_cart');
+    if (cachedCart) setCart(JSON.parse(cachedCart));
+
+    const cachedSettings = localStorage.getItem('oskar_settings');
+    if (cachedSettings) setStoreSettings(JSON.parse(cachedSettings));
+
+    const cachedProducts = localStorage.getItem('oskar_products');
+    if (cachedProducts) setProducts(JSON.parse(cachedProducts));
+
+    const cachedProfile = localStorage.getItem('oskar_user_profile');
+    if (cachedProfile) setUserProfile(JSON.parse(cachedProfile));
+  }, []);
+
+  // Sync RTDB state to LocalStorage
+  useEffect(() => {
+    if (storeSettings) localStorage.setItem('oskar_settings', JSON.stringify(storeSettings));
+  }, [storeSettings]);
+
+  useEffect(() => {
+    if (products.length > 0) localStorage.setItem('oskar_products', JSON.stringify(products));
+  }, [products]);
+
+  useEffect(() => {
+    if (userProfile) localStorage.setItem('oskar_user_profile', JSON.stringify(userProfile));
+  }, [userProfile]);
+
   // Handle route change loading
   useEffect(() => {
     setIsGlobalLoading(false);
   }, [pathname]);
 
-  // Handle initial refresh loading
-  useEffect(() => {
-    setIsGlobalLoading(true);
-    const timer = setTimeout(() => setIsGlobalLoading(false), 800);
-    return () => clearTimeout(timer);
-  }, []);
-
   useEffect(() => {
     if (!rtdb || !user) {
       setUserProfile(null);
+      localStorage.removeItem('oskar_user_profile');
       return;
     }
     const userRef = ref(rtdb, `users/${user.uid}`);
     return onValue(userRef, (snapshot) => {
-      setUserProfile(snapshot.val());
+      const data = snapshot.val();
+      setUserProfile(data);
     });
   }, [rtdb, user]);
 
@@ -146,9 +170,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const settingsRef = ref(rtdb, 'settings');
     return onValue(settingsRef, (snapshot) => {
       const data = snapshot.val();
-      if (data) {
-        setStoreSettings(prev => ({ ...prev, ...data }));
-      }
+      if (data) setStoreSettings(prev => ({ ...prev, ...data }));
     });
   }, [rtdb]);
 
@@ -158,15 +180,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return onValue(productsRef, (snapshot) => {
       const data = snapshot.val();
       if (!data) {
-        GAMES_DATA.forEach(p => {
-          set(ref(rtdb, `products/${p.id}`), p);
-        });
+        GAMES_DATA.forEach(p => set(ref(rtdb, `products/${p.id}`), p));
         setProducts(GAMES_DATA);
       } else {
-        const productList = Object.entries(data).map(([id, val]: [string, any]) => ({
-          ...val,
-          id
-        }));
+        const productList = Object.entries(data).map(([id, val]: [string, any]) => ({ ...val, id }));
         setProducts(productList);
       }
     });
@@ -179,6 +196,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       ...user,
       isAdmin,
       isBanned: userProfile?.isBanned,
+      phoneNumber: userProfile?.phoneNumber,
       name: user.displayName || userProfile?.name || user.email?.split('@')[0],
     };
   }, [user, userProfile]);
@@ -197,10 +215,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setOrders([]);
         return;
       }
-      const orderList = Object.entries(data).map(([id, val]: [string, any]) => ({
-        id,
-        ...val
-      })).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      const orderList = Object.entries(data).map(([id, val]: [string, any]) => ({ id, ...val }))
+        .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
       setOrders(orderList);
     });
   }, [rtdb, user]);
@@ -217,10 +233,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setAllOrders([]);
         return;
       }
-      const orderList = Object.entries(data).map(([id, val]: [string, any]) => ({
-        id,
-        ...val
-      })).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      const orderList = Object.entries(data).map(([id, val]: [string, any]) => ({ id, ...val }))
+        .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
       setAllOrders(orderList);
     });
   }, [rtdb, enhancedUser]);
@@ -237,18 +251,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setAllUsers([]);
         return;
       }
-      const userList = Object.entries(data).map(([id, val]: [string, any]) => ({
-        uid: id,
-        ...val
-      })).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      const userList = Object.entries(data).map(([id, val]: [string, any]) => ({ uid: id, ...val }))
+        .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
       setAllUsers(userList);
     });
   }, [rtdb, enhancedUser]);
-
-  useEffect(() => {
-    const savedCart = localStorage.getItem('oskar_cart');
-    if (savedCart) setCart(JSON.parse(savedCart));
-  }, []);
 
   const login = async (email: string, password: string) => {
     if (!auth) return;
@@ -260,19 +267,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const signup = async (email: string, password: string, name: string) => {
+  const signup = async (email: string, password: string, name: string, phone: string) => {
     if (!auth || !rtdb) return;
     setIsGlobalLoading(true);
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const newUser = userCredential.user;
-      
       await updateProfile(newUser, { displayName: name });
-      
       await set(ref(rtdb, `users/${newUser.uid}`), {
         uid: newUser.uid,
         email,
         name,
+        phoneNumber: phone,
         isAdmin: email === 'admin@lp.com',
         createdAt: serverTimestamp()
       });
@@ -288,7 +294,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
-      
       const userRef = ref(rtdb, `users/${user.uid}`);
       await update(userRef, {
         uid: user.uid,
@@ -341,7 +346,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const createOrder = (paymentMethod: string, gameDetails: any) => {
     if (!rtdb || !user) return;
-
     const orderData = {
       userId: user.uid,
       items: cart,
@@ -351,7 +355,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       paymentMethod,
       gameDetails,
     };
-
     const ordersRef = ref(rtdb, 'orders');
     push(ordersRef, orderData).then(() => clearCart());
   };

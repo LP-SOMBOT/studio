@@ -8,12 +8,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
-import { User, Lock, Mail, Loader2, ArrowLeft } from "lucide-react";
+import { User, Lock, Mail, Phone, Loader2, ArrowLeft } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 export default function SignupPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { signup } = useApp();
@@ -23,7 +24,7 @@ export default function SignupPage() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await signup(email, password, name);
+      await signup(email, password, name, phone);
       toast({
         title: "Account Created!",
         description: "Welcome to Oskar Shop.",
@@ -41,8 +42,7 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-primary overflow-x-hidden">
-      {/* Header Section */}
+    <div className="min-h-screen flex flex-col bg-primary overflow-x-hidden page-transition">
       <div className="pt-12 pb-10 px-8 md:px-12 shrink-0">
         <Link href="/login" className="inline-flex items-center gap-2 text-white/80 hover:text-white mb-6 transition-colors">
           <ArrowLeft className="w-4 h-4" /> Back to Login
@@ -55,7 +55,6 @@ export default function SignupPage() {
         </p>
       </div>
 
-      {/* Signup Card */}
       <div className="flex-1 bg-white rounded-t-[3rem] p-8 md:p-12 shadow-2xl">
         <div className="max-w-md mx-auto h-full flex flex-col">
           <h2 className="text-3xl font-headline font-bold mb-8 text-gray-900">
@@ -89,6 +88,21 @@ export default function SignupPage() {
                 required 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                className="h-14 pl-12 rounded-full border-gray-100 bg-gray-50/50 focus-visible:ring-primary text-base"
+              />
+            </div>
+
+            <div className="relative group">
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-primary">
+                <Phone className="w-5 h-5" />
+              </div>
+              <Input 
+                id="phone" 
+                type="tel" 
+                placeholder="Phone Number" 
+                required 
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
                 className="h-14 pl-12 rounded-full border-gray-100 bg-gray-50/50 focus-visible:ring-primary text-base"
               />
             </div>

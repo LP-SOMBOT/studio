@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo } from "react";
@@ -12,22 +13,14 @@ import {
   Package, 
   Sparkles,
   RefreshCcw,
-  Search,
-  Filter,
-  ArrowUpDown,
-  AlertCircle,
-  Menu,
   Gamepad2,
-  Bell,
-  CheckCircle,
-  XCircle,
-  Clock,
-  LayoutDashboard,
   ShoppingBag,
   Image as ImageIcon,
   LogOut,
   Upload,
-  X
+  X,
+  LayoutDashboard,
+  ArrowLeft
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -49,14 +42,23 @@ import {
   DialogContent, 
   DialogHeader, 
   DialogTitle, 
-  DialogTrigger,
-  DialogFooter
+  DialogTrigger
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { generatePromotionalContent, type GeneratePromotionalContentOutput } from "@/ai/flows/generate-promotional-content-flow";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { format, isToday, isYesterday, startOfToday } from "date-fns";
+import { format, isYesterday, startOfToday } from "date-fns";
 import Image from "next/image";
 
 export default function AdminPage() {
@@ -78,6 +80,7 @@ export default function AdminPage() {
   const [activeView, setActiveView] = useState<'dashboard' | 'orders' | 'products' | 'users' | 'settings'>('dashboard');
   const [isGenerating, setIsGenerating] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
+  const [userToDelete, setUserToDelete] = useState<string | null>(null);
   
   const [promoInput, setPromoInput] = useState({
     promotionType: 'discount' as any,
@@ -85,7 +88,6 @@ export default function AdminPage() {
     promotionDetails: '',
     callToAction: 'Shop now!',
   });
-  const [promoOutput, setPromoOutput] = useState<GeneratePromotionalContentOutput | null>(null);
 
   const metrics = useMemo(() => {
     const today = startOfToday();
@@ -159,8 +161,8 @@ export default function AdminPage() {
     setIsGenerating(true);
     try {
       const result = await generatePromotionalContent(promoInput);
-      setPromoOutput(result);
-      toast({ title: "AI Generated Successfully!" });
+      updateStoreSettings({ announcementTicker: result.announcementText });
+      toast({ title: "AI Generated & Applied!" });
     } catch (error) {
       toast({ title: "AI Generation Failed", variant: "destructive" });
     } finally {
@@ -168,8 +170,16 @@ export default function AdminPage() {
     }
   };
 
+  const confirmDeleteUser = () => {
+    if (userToDelete) {
+      deleteUser(userToDelete);
+      setUserToDelete(null);
+      toast({ title: "User Deleted" });
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-background text-foreground pb-24 md:pb-10 font-body">
+    <div className="min-h-screen bg-background text-foreground pb-24 md:pb-10 font-body page-transition">
       <header className="h-20 border-b border-gray-100 px-6 flex items-center justify-between sticky top-0 bg-white/80 backdrop-blur-md z-50">
         <div className="flex items-center gap-4">
           <Gamepad2 className="w-8 h-8 text-primary" />
@@ -177,11 +187,10 @@ export default function AdminPage() {
             Oskar<span className="text-secondary">Admin</span>
           </h1>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="text-right hidden md:block">
-            <p className="text-sm font-bold leading-none">{user.name}</p>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Master Console</p>
-          </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" asChild className="rounded-xl hidden sm:flex gap-2 font-bold h-10 px-4">
+            <Link href="/"><ArrowLeft className="w-4 h-4" /> Back to App</Link>
+          </Button>
           <Button variant="ghost" size="icon" onClick={logout} className="rounded-xl text-muted-foreground hover:text-destructive">
             <LogOut className="w-5 h-5" />
           </Button>
@@ -201,7 +210,7 @@ export default function AdminPage() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <Card className="rounded-[2rem] p-6 border-gray-100 shadow-sm">
+              <Card className="rounded-[2.5rem] p-6 border-gray-100 shadow-sm">
                 <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
                   <ShoppingBag className="w-5 h-5 text-primary" /> Recent Activity
                 </h3>
@@ -223,9 +232,9 @@ export default function AdminPage() {
                 </div>
               </Card>
 
-              <Card className="rounded-[2rem] p-6 border-gray-100 shadow-sm bg-gradient-to-br from-primary/5 to-secondary/5">
+              <Card className="rounded-[2.5rem] p-6 border-gray-100 shadow-sm bg-gradient-to-br from-primary/5 to-secondary/5">
                 <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-secondary" /> Quick Marketing
+                  <Sparkles className="w-5 h-5 text-secondary" /> Quick Marketing (AI)
                 </h3>
                 <div className="space-y-4">
                    <Input 
@@ -335,9 +344,9 @@ export default function AdminPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {products.map(p => (
-                <Card key={p.id} className="rounded-[2rem] p-6 relative group overflow-hidden border-gray-100 hover:shadow-lg transition-shadow bg-white">
+                <Card key={p.id} className="rounded-[2.5rem] p-6 relative group overflow-hidden border-gray-100 hover:shadow-lg transition-shadow bg-white flex flex-col">
                   <div className="flex justify-between mb-4">
-                    <div className="relative w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center font-bold text-primary border border-gray-100 overflow-hidden">
+                    <div className="relative w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center font-bold text-primary border border-gray-100 overflow-hidden">
                       {p.thumbnail ? (
                         <Image src={p.thumbnail} alt={p.title} fill className="object-cover" />
                       ) : (
@@ -350,10 +359,10 @@ export default function AdminPage() {
                     </div>
                   </div>
                   <h4 className="font-bold text-lg mb-1">{p.title}</h4>
-                  <p className="text-xs text-muted-foreground mb-4 line-clamp-1">{p.description}</p>
-                  <div className="flex justify-between items-end">
+                  <p className="text-xs text-muted-foreground mb-4 line-clamp-2 leading-relaxed flex-grow">{p.description}</p>
+                  <div className="flex justify-between items-end mt-4">
                     <div>
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Price</p>
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Base Price</p>
                       <p className="text-2xl font-headline font-bold text-primary">${p.price.toFixed(2)}</p>
                     </div>
                     <Badge variant="secondary" className="rounded-full text-[9px] uppercase px-3">{p.category}</Badge>
@@ -371,7 +380,7 @@ export default function AdminPage() {
                 <TableHeader className="bg-gray-50">
                   <TableRow className="border-none">
                     <TableHead className="font-bold text-[10px] uppercase">User Profile</TableHead>
-                    <TableHead className="font-bold text-[10px] uppercase">Account Created</TableHead>
+                    <TableHead className="font-bold text-[10px] uppercase">Contact</TableHead>
                     <TableHead className="font-bold text-[10px] uppercase">Status</TableHead>
                     <TableHead className="text-right font-bold text-[10px] uppercase">Control</TableHead>
                   </TableRow>
@@ -390,8 +399,8 @@ export default function AdminPage() {
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
-                        {u.createdAt ? format(new Date(u.createdAt), 'PP') : 'N/A'}
+                      <TableCell className="text-xs">
+                        <span className="font-medium">{u.phoneNumber || 'No Phone'}</span>
                       </TableCell>
                       <TableCell>
                          <Badge className={cn(
@@ -415,7 +424,7 @@ export default function AdminPage() {
                             variant="ghost" 
                             size="icon" 
                             className="h-8 w-8 text-destructive hover:bg-red-50"
-                            onClick={() => deleteUser(u.uid)}
+                            onClick={() => setUserToDelete(u.uid)}
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </Button>
@@ -440,11 +449,11 @@ export default function AdminPage() {
                   <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
                     <div>
                       <p className="font-bold text-sm">App Logo</p>
-                      <p className="text-[10px] text-muted-foreground">Current logo: {storeSettings.logo ? 'Active' : 'Default'}</p>
+                      <p className="text-[10px] text-muted-foreground">Appears in header and loading states</p>
                     </div>
                     <label className="cursor-pointer">
                       <input type="file" className="hidden" accept="image/*" onChange={(e) => handleImageUpload(e, 'logo')} />
-                      <div className="w-10 h-10 bg-primary text-white rounded-xl flex items-center justify-center"><Upload className="w-5 h-5" /></div>
+                      <div className="w-10 h-10 bg-primary text-white rounded-xl flex items-center justify-center shadow-lg shadow-primary/20"><Upload className="w-5 h-5" /></div>
                     </label>
                   </div>
 
@@ -452,7 +461,7 @@ export default function AdminPage() {
                     <p className="font-bold text-sm">Onboarding Screens (3 Required)</p>
                     <div className="grid grid-cols-3 gap-4">
                       {[0, 1, 2].map(i => (
-                        <label key={i} className="aspect-square rounded-2xl bg-gray-50 border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-gray-100 transition-colors overflow-hidden">
+                        <label key={i} className="aspect-square rounded-2xl bg-gray-50 border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-gray-100 transition-colors overflow-hidden relative">
                           <input type="file" className="hidden" accept="image/*" onChange={(e) => handleImageUpload(e, 'onboarding', i)} />
                           {storeSettings.onboardingImages?.[i] ? (
                             <img src={storeSettings.onboardingImages[i]} className="w-full h-full object-cover rounded-2xl" />
@@ -501,11 +510,11 @@ export default function AdminPage() {
                    <div className="flex items-center justify-between mb-8">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-primary border border-gray-100">
-                        <AlertCircle className="w-6 h-6" />
+                        <RefreshCcw className="w-6 h-6" />
                       </div>
                       <div>
-                        <h3 className="font-bold text-lg">System Visibility</h3>
-                        <p className="text-xs text-muted-foreground">Control overall store status</p>
+                        <h3 className="font-bold text-lg">Store Status</h3>
+                        <p className="text-xs text-muted-foreground">Toggle store visibility</p>
                       </div>
                     </div>
                     <Switch 
@@ -515,10 +524,10 @@ export default function AdminPage() {
                   </div>
                   
                   <div className="space-y-4 pt-6 border-t border-gray-100">
-                    <Label className="text-[10px] font-bold uppercase text-muted-foreground">Announcement Ticker</Label>
+                    <Label className="text-[10px] font-bold uppercase text-muted-foreground">Ticker Text</Label>
                     <Textarea 
                       className="rounded-xl bg-gray-50 border-none min-h-[100px]" 
-                      placeholder="Enter global announcements separated by new lines..." 
+                      placeholder="Enter global announcements..." 
                       value={storeSettings.announcementTicker}
                       onChange={(e) => updateStoreSettings({ announcementTicker: e.target.value })}
                     />
@@ -549,6 +558,23 @@ export default function AdminPage() {
           </DialogContent>
         </Dialog>
       )}
+
+      <AlertDialog open={!!userToDelete} onOpenChange={() => setUserToDelete(null)}>
+        <AlertDialogContent className="rounded-[2rem]">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the user account and remove their data from our servers.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteUser} className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete User
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
@@ -643,7 +669,7 @@ function ProductForm({ initialData, onSave }: { initialData?: any, onSave: (p: a
 
       <div className="space-y-2">
         <Label className="text-[10px] uppercase font-bold">Description</Label>
-        <Textarea className="rounded-xl bg-gray-50 border-none" value={data.description} onChange={e => setData({...data, description: e.target.value})} />
+        <Textarea className="rounded-xl bg-gray-50 border-none min-h-[80px]" value={data.description} onChange={e => setData({...data, description: e.target.value})} />
       </div>
 
       <div className="space-y-2">

@@ -19,8 +19,6 @@ import {
   Clock, 
   Calendar, 
   Zap, 
-  CheckCircle2, 
-  Moon,
   X 
 } from "lucide-react";
 
@@ -31,7 +29,7 @@ export default function Home() {
   const isVisible = storeSettings.isLive && !localDismiss;
 
   return (
-    <div className="min-h-screen bg-background pb-20 md:pb-10">
+    <div className="min-h-screen bg-background pb-20 md:pb-10 page-transition">
       <Header />
       <AnnouncementTicker />
       
@@ -112,10 +110,10 @@ export default function Home() {
           <div className="relative">
             <div className="flex flex-col items-center text-center mb-10">
               <Badge variant="outline" className="mb-4 bg-white/50 backdrop-blur-sm border-primary/20 text-primary px-4 py-1 rounded-full flex gap-2 items-center">
-                <Clock className="w-3.5 h-3.5" /> Service Availability
+                <Clock className="w-3.5 h-3.5" /> Adeegga Oskar
               </Badge>
-              <h2 className="text-3xl md:text-4xl font-headline font-bold mb-3 tracking-tight">Operation Hours</h2>
-              <p className="text-muted-foreground max-w-md">We ensure fast processing during our online shifts.</p>
+              <h2 className="text-3xl md:text-4xl font-headline font-bold mb-3 tracking-tight">Waqtiga Shaqada 🗓️</h2>
+              <p className="text-muted-foreground max-w-md">Waxaan hubinnaa in si degdeg ah loo farsameeyo dalabaadkaaga waqtiyada aan online-ka nahay.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
@@ -125,8 +123,8 @@ export default function Home() {
                     <Calendar className="w-6 h-6" />
                   </div>
                   <div>
-                    <h3 className="font-headline font-bold text-xl leading-none">Saturday – Wednesday</h3>
-                    <p className="text-xs text-muted-foreground mt-1">Split Shifts Availability</p>
+                    <h3 className="font-headline font-bold text-xl leading-none">Sabti – Arbaco</h3>
+                    <p className="text-xs text-muted-foreground mt-1">Waqtiyada shaqada (Split Shifts)</p>
                   </div>
                 </div>
 
@@ -134,17 +132,25 @@ export default function Home() {
                   <div className="flex items-center justify-between p-4 bg-green-50/50 rounded-2xl border border-green-100/50">
                     <div className="flex items-center gap-3">
                       <Zap className="w-4 h-4 text-green-500" />
-                      <span className="text-sm font-semibold">Morning Shift</span>
+                      <span className="text-sm font-semibold">Subaxnimo</span>
                     </div>
-                    <span className="text-sm font-bold text-green-700 bg-white px-3 py-1 rounded-full shadow-sm">5:40 AM – 8:00 AM</span>
+                    <span className="text-sm font-bold text-green-700 bg-white px-3 py-1 rounded-full shadow-sm">5:40 Subax – 8:00 Duhur ✅</span>
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-200">
+                    <div className="flex items-center gap-3 opacity-50">
+                      <Clock className="w-4 h-4" />
+                      <span className="text-sm font-semibold">Nasasho</span>
+                    </div>
+                    <span className="text-xs font-bold text-muted-foreground">8:00 Duhur – 5:10 Galab ⛔</span>
                   </div>
 
                   <div className="flex items-center justify-between p-4 bg-green-50/50 rounded-2xl border border-green-100/50">
                     <div className="flex items-center gap-3">
                       <Zap className="w-4 h-4 text-green-500" />
-                      <span className="text-sm font-semibold">Evening Shift</span>
+                      <span className="text-sm font-semibold">Habeenimo</span>
                     </div>
-                    <span className="text-sm font-bold text-green-700 bg-white px-3 py-1 rounded-full shadow-sm">5:10 PM – 9:30 PM</span>
+                    <span className="text-sm font-bold text-green-700 bg-white px-3 py-1 rounded-full shadow-sm">5:10 Galab – 9:30 Habeen ✅</span>
                   </div>
                 </div>
               </div>
@@ -158,8 +164,8 @@ export default function Home() {
                       <Calendar className="w-6 h-6" />
                     </div>
                     <div>
-                      <h3 className="font-headline font-bold text-xl leading-none">Thursday & Friday</h3>
-                      <p className="text-xs text-white/60 mt-1">Full Service Access</p>
+                      <h3 className="font-headline font-bold text-xl leading-none">Khamiis & Jimco</h3>
+                      <p className="text-xs text-white/60 mt-1">Adeeg Buuxa (Full Access)</p>
                     </div>
                   </div>
 
@@ -168,8 +174,8 @@ export default function Home() {
                       <Zap className="w-10 h-10 text-white" />
                     </div>
                     <div>
-                      <h4 className="text-3xl font-headline font-bold">24/7 Online</h4>
-                      <p className="text-white/80 text-sm mt-2 max-w-[200px] mx-auto">Uninterrupted weekend service.</p>
+                      <h4 className="text-3xl font-headline font-bold">24 Saac Online</h4>
+                      <p className="text-white/80 text-sm mt-2 max-w-[200px] mx-auto">Adeeg aan kala go' lahayn dhamaadka usbuuca. ✅</p>
                     </div>
                   </div>
                 </div>

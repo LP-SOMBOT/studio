@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -23,34 +24,12 @@
     --border: 260 10% 90%;
     --input: 260 10% 90%;
     --ring: 274 69% 47%;
-    --radius: 0.75rem;
+    --radius: 1.25rem;
     --chart-1: 274 69% 47%;
     --chart-2: 228 89% 52%;
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
-  }
-
-  .dark {
-    --background: 260 20% 5%;
-    --foreground: 0 0% 98%;
-    --card: 260 20% 8%;
-    --card-foreground: 0 0% 98%;
-    --popover: 260 20% 8%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 274 69% 60%;
-    --primary-foreground: 0 0% 10%;
-    --secondary: 228 89% 60%;
-    --secondary-foreground: 0 0% 100%;
-    --muted: 260 10% 15%;
-    --muted-foreground: 260 5% 65%;
-    --accent: 228 89% 60%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 260 10% 15%;
-    --input: 260 10% 15%;
-    --ring: 274 69% 60%;
   }
 }
 
@@ -61,4 +40,30 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+.page-transition {
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ticker {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
+.animate-ticker {
+  animation: ticker 30s linear infinite;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
