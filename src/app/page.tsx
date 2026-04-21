@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
 import AnnouncementTicker from "@/components/home/AnnouncementTicker";
@@ -17,10 +18,13 @@ import {
   Calendar, 
   Zap, 
   CheckCircle2, 
-  Moon 
+  Moon,
+  X 
 } from "lucide-react";
 
 export default function Home() {
+  const [showLiveBanner, setShowLiveBanner] = useState(true);
+
   const gamesData = [
     {
       id: "ff-110",
@@ -91,25 +95,36 @@ export default function Home() {
         </section>
 
         {/* Live Status Section */}
-        <section className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-4">
-            <div className="relative">
-              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
-                <Radio className="w-8 h-8 text-red-500 animate-pulse" />
+        {showLiveBanner && (
+          <section className="relative bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="absolute top-2 right-2 h-8 w-8 rounded-full text-muted-foreground hover:bg-red-50 hover:text-red-500 transition-colors"
+              onClick={() => setShowLiveBanner(false)}
+            >
+              <X className="w-4 h-4" />
+            </Button>
+            
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+                  <Radio className="w-8 h-8 text-red-500 animate-pulse" />
+                </div>
+                <div className="absolute -bottom-1 -right-1 bg-red-500 text-white text-[8px] px-1.5 py-0.5 rounded-full font-bold uppercase border-2 border-white">
+                  Live
+                </div>
               </div>
-              <div className="absolute -bottom-1 -right-1 bg-red-500 text-white text-[8px] px-1.5 py-0.5 rounded-full font-bold uppercase border-2 border-white">
-                Live
+              <div>
+                <h3 className="font-headline font-bold text-xl">Oskar Shop is LIVE on TikTok</h3>
+                <p className="text-sm text-muted-foreground">Join the challenge now and win exclusive diamonds & rewards!</p>
               </div>
             </div>
-            <div>
-              <h3 className="font-headline font-bold text-xl">Oskar Shop is LIVE on TikTok</h3>
-              <p className="text-sm text-muted-foreground">Join the challenge now and win exclusive diamonds & rewards!</p>
-            </div>
-          </div>
-          <Button className="bg-[#FE2C55] hover:bg-[#FE2C55]/90 rounded-full px-8 gap-2 font-bold w-full md:w-auto">
-            <ExternalLink className="w-4 h-4" /> Watch Now
-          </Button>
-        </section>
+            <Button className="bg-[#FE2C55] hover:bg-[#FE2C55]/90 rounded-full px-8 gap-2 font-bold w-full md:w-auto">
+              <ExternalLink className="w-4 h-4" /> Watch Now
+            </Button>
+          </section>
+        )}
 
         {/* Top Up Section */}
         <section>
