@@ -549,7 +549,7 @@ export default function AdminPage() {
         <NavButton active={activeView === 'dashboard'} onClick={() => setActiveView('dashboard')} icon={LayoutDashboard} label="Desk" />
         <NavButton active={activeView === 'orders'} onClick={() => setActiveView('orders')} icon={ShoppingBag} label="Orders" />
         <NavButton active={activeView === 'products'} onClick={() => setActiveView('products')} icon={Package} label="Stock" />
-        <NavButton active={activeView === 'users'} onClick={() => setActiveView('users'} icon={Users} label="Users" />
+        <NavButton active={activeView === 'users'} onClick={() => setActiveView('users')} icon={Users} label="Users" />
         <NavButton active={activeView === 'settings'} onClick={() => setActiveView('settings')} icon={Settings} label="Console" />
       </nav>
 
