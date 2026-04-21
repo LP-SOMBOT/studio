@@ -1,3 +1,52 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "hero-1",
+      "description": "Free Fire Promo Banner",
+      "imageUrl": "https://picsum.photos/seed/oskar1/1200/600",
+      "imageHint": "gaming fire"
+    },
+    {
+      "id": "hero-2",
+      "description": "Blood Strike Event",
+      "imageUrl": "https://picsum.photos/seed/oskar2/1200/600",
+      "imageHint": "shooting game"
+    },
+    {
+      "id": "hero-3",
+      "description": "Spin to Win Challenge",
+      "imageUrl": "https://picsum.photos/seed/oskar3/1200/600",
+      "imageHint": "lucky wheel"
+    },
+    {
+      "id": "freefire-logo",
+      "description": "Free Fire Logo",
+      "imageUrl": "https://picsum.photos/seed/ff/400/400",
+      "imageHint": "free fire"
+    },
+    {
+      "id": "efootball-logo",
+      "description": "eFootball Logo",
+      "imageUrl": "https://picsum.photos/seed/ef/400/400",
+      "imageHint": "football game"
+    },
+    {
+      "id": "bloodstrike-logo",
+      "description": "Blood Strike Logo",
+      "imageUrl": "https://picsum.photos/seed/bs/400/400",
+      "imageHint": "war game"
+    },
+    {
+      "id": "acc-1",
+      "description": "Premium Account Screenshot 1",
+      "imageUrl": "https://picsum.photos/seed/acc1/800/450",
+      "imageHint": "game profile"
+    },
+    {
+      "id": "acc-2",
+      "description": "Premium Account Screenshot 2",
+      "imageUrl": "https://picsum.photos/seed/acc2/800/450",
+      "imageHint": "rare items"
+    }
+  ]
 }
