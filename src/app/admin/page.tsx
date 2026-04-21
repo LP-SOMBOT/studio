@@ -106,11 +106,11 @@ export default function AdminPage() {
           <Button variant="ghost" size="icon" className="text-white/60 hover:text-white">
             <Menu className="w-6 h-6" />
           </Button>
-          <h1 className="text-xl md:text-2xl font-headline font-bold text-[#00E5FF] drop-shadow-[0_0_8px_rgba(0,229,255,0.4)]">
+          <h1 className="text-xl md:text-2xl font-headline font-bold text-primary drop-shadow-[0_0_8px_rgba(133,38,204,0.4)]">
             Top-Up Console
           </h1>
         </div>
-        <div className="w-10 h-10 rounded-full border-2 border-[#00E5FF]/20 overflow-hidden shadow-[0_0_15px_rgba(0,229,255,0.1)]">
+        <div className="w-10 h-10 rounded-full border-2 border-primary/20 overflow-hidden shadow-[0_0_15px_rgba(133,38,204,0.1)]">
            <img src={`https://picsum.photos/seed/${user.uid}/100/100`} alt="Avatar" className="w-full h-full object-cover" />
         </div>
       </header>
@@ -118,7 +118,7 @@ export default function AdminPage() {
       <main className="container mx-auto px-6 py-8 max-w-4xl space-y-10">
         {/* Section Label */}
         <div className="space-y-1">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#00E5FF]/60">Inventory Management</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary/60">Inventory Management</p>
           <h2 className="text-lg font-bold">Active Stock</h2>
         </div>
 
@@ -126,20 +126,20 @@ export default function AdminPage() {
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-[#14161F] border border-white/5 rounded-2xl p-6 shadow-sm">
             <p className="text-[10px] font-bold uppercase tracking-wider text-white/40 mb-2">Total Value</p>
-            <h3 className="text-2xl md:text-3xl font-headline font-bold text-[#4D7CFF]">$24,590</h3>
+            <h3 className="text-2xl md:text-3xl font-headline font-bold text-secondary">$24,590</h3>
           </div>
           <div className="bg-[#14161F] border border-white/5 rounded-2xl p-6 shadow-sm">
             <p className="text-[10px] font-bold uppercase tracking-wider text-white/40 mb-2">Low Stock</p>
-            <h3 className="text-2xl md:text-3xl font-headline font-bold text-[#FF4D4D]">3 Items</h3>
+            <h3 className="text-2xl md:text-3xl font-headline font-bold text-destructive">3 Items</h3>
           </div>
         </div>
 
         {/* Console Search Bar */}
         <div className="space-y-4">
           <div className="relative group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-[#00E5FF] transition-colors" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-primary transition-colors" />
             <Input 
-              className="pl-12 h-14 rounded-2xl bg-[#000000] border-none text-white text-sm focus-visible:ring-1 focus-visible:ring-[#00E5FF]/30 placeholder:text-white/10" 
+              className="pl-12 h-14 rounded-2xl bg-[#000000] border-none text-white text-sm focus-visible:ring-1 focus-visible:ring-primary/30 placeholder:text-white/10" 
               placeholder="Search product ID or name..." 
             />
           </div>
@@ -172,7 +172,7 @@ export default function AdminPage() {
                 <div key={item.id} className="bg-[#14161F] border border-white/5 rounded-[2rem] p-6 relative overflow-hidden group">
                   <div className="flex items-start justify-between mb-8">
                     <div className="flex items-center gap-5">
-                      <div className="w-14 h-14 rounded-2xl bg-black flex items-center justify-center font-headline font-bold text-xl text-[#FF4D4D] shadow-[inset_0_0_15px_rgba(0,0,0,0.5)]">
+                      <div className="w-14 h-14 rounded-2xl bg-black flex items-center justify-center font-headline font-bold text-xl text-primary shadow-[inset_0_0_15px_rgba(0,0,0,0.5)]">
                         {item.title[0]}
                       </div>
                       <div>
@@ -180,7 +180,7 @@ export default function AdminPage() {
                         <p className="text-[10px] font-bold text-white/20 uppercase tracking-widest mt-1">ID: {item.id.toUpperCase()}</p>
                       </div>
                     </div>
-                    <Button size="icon" variant="ghost" className="w-10 h-10 rounded-xl bg-black/40 text-white/40 hover:text-[#00E5FF] transition-colors">
+                    <Button size="icon" variant="ghost" className="w-10 h-10 rounded-xl bg-black/40 text-white/40 hover:text-primary transition-colors">
                       <Edit className="w-4 h-4" />
                     </Button>
                   </div>
@@ -192,7 +192,7 @@ export default function AdminPage() {
                     </div>
                     <div className="bg-black/40 p-5 rounded-2xl border border-white/5">
                       <p className="text-[10px] font-bold text-white/20 uppercase mb-2">Denomination</p>
-                      <p className="font-headline font-bold text-sm truncate uppercase">
+                      <p className="font-headline font-bold text-sm truncate uppercase text-secondary">
                         {item.gameId === 'freefire' ? '5350 VP' : '8080 GC'}
                       </p>
                     </div>
@@ -202,11 +202,11 @@ export default function AdminPage() {
                     <div className="flex items-center gap-3">
                       <div className={cn(
                         "w-2 h-2 rounded-full",
-                        item.price > 100 ? "bg-[#FF4D4D] shadow-[0_0_10px_rgba(255,77,77,0.4)]" : "bg-[#00E5FF] shadow-[0_0_10px_rgba(0,229,255,0.4)]"
+                        item.price > 100 ? "bg-destructive shadow-[0_0_10px_rgba(239,68,68,0.4)]" : "bg-primary shadow-[0_0_10px_rgba(133,38,204,0.4)]"
                       )} />
                       <span className={cn(
                         "text-[11px] font-bold uppercase tracking-wider",
-                        item.price > 100 ? "text-[#FF4D4D]" : "text-[#00E5FF]"
+                        item.price > 100 ? "text-destructive" : "text-primary"
                       )}>
                         {item.price > 100 ? `Low Stock (12)` : `In Stock (1,204)`}
                       </span>
@@ -221,7 +221,7 @@ export default function AdminPage() {
               ))}
             </div>
 
-            <Button className="w-16 h-16 rounded-full bg-[#00E5FF] hover:bg-[#00E5FF]/90 text-black shadow-[0_0_30px_rgba(0,229,255,0.4)] fixed bottom-24 right-6 z-50 md:bottom-10">
+            <Button className="w-16 h-16 rounded-full bg-primary hover:bg-primary/90 text-white shadow-[0_0_30px_rgba(133,38,204,0.4)] fixed bottom-24 right-6 z-50 md:bottom-10">
               <Plus className="w-8 h-8" />
             </Button>
           </TabsContent>
@@ -248,7 +248,7 @@ export default function AdminPage() {
                       <TableCell>
                         <Badge variant="outline" className={cn(
                           "text-[9px] uppercase font-bold rounded-full border-white/10",
-                          u.isAdmin ? 'text-[#00E5FF] border-[#00E5FF]/20 bg-[#00E5FF]/5' : 'text-white/40'
+                          u.isAdmin ? 'text-primary border-primary/20 bg-primary/5' : 'text-white/40'
                         )}>
                           {u.isAdmin ? 'Admin' : 'Member'}
                         </Badge>
@@ -267,7 +267,7 @@ export default function AdminPage() {
             <Card className="rounded-[2rem] bg-[#14161F] border-white/5 border p-6">
               <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-black rounded-2xl flex items-center justify-center text-[#FF4D4D]">
+                  <div className="w-12 h-12 bg-black rounded-2xl flex items-center justify-center text-primary">
                     <AlertCircle className="w-6 h-6" />
                   </div>
                   <div>
@@ -278,13 +278,13 @@ export default function AdminPage() {
                 <Switch 
                   checked={storeSettings.isLive} 
                   onCheckedChange={toggleLiveStatus}
-                  className="data-[state=checked]:bg-[#FF4D4D]"
+                  className="data-[state=checked]:bg-primary"
                 />
               </div>
 
               <div className="space-y-6 pt-6 border-t border-white/5">
                  <div className="flex items-center gap-4 mb-4">
-                  <div className="w-12 h-12 bg-black rounded-2xl flex items-center justify-center text-primary">
+                  <div className="w-12 h-12 bg-black rounded-2xl flex items-center justify-center text-secondary">
                     <Sparkles className="w-6 h-6" />
                   </div>
                   <div>
@@ -297,7 +297,7 @@ export default function AdminPage() {
                   <div className="space-y-2">
                     <Label className="text-[10px] font-bold uppercase text-white/40">Promotion Title</Label>
                     <Input 
-                      className="rounded-xl h-12 bg-black border-white/5 text-white" 
+                      className="rounded-xl h-12 bg-black border-white/5 text-white focus-visible:ring-secondary" 
                       placeholder="e.g. Weekend Flash Sale" 
                       value={promoInput.title}
                       onChange={(e) => setPromoInput({...promoInput, title: e.target.value})}
@@ -306,7 +306,7 @@ export default function AdminPage() {
                   <div className="space-y-2">
                     <Label className="text-[10px] font-bold uppercase text-white/40">Offer Details</Label>
                     <Textarea 
-                      className="rounded-xl bg-black border-white/5 text-white min-h-[100px]" 
+                      className="rounded-xl bg-black border-white/5 text-white min-h-[100px] focus-visible:ring-secondary" 
                       placeholder="Enter promotion details..." 
                       value={promoInput.promotionDetails}
                       onChange={(e) => setPromoInput({...promoInput, promotionDetails: e.target.value})}
@@ -314,7 +314,7 @@ export default function AdminPage() {
                   </div>
                   <Button 
                     onClick={handleGeneratePromo} 
-                    className="w-full h-14 rounded-xl gap-2 font-bold bg-primary hover:bg-primary/90 text-white"
+                    className="w-full h-14 rounded-xl gap-2 font-bold bg-secondary hover:bg-secondary/90 text-white"
                     disabled={isGenerating}
                   >
                     {isGenerating ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
@@ -331,7 +331,7 @@ export default function AdminPage() {
                   <Button variant="ghost" size="sm" onClick={() => setPromoOutput(null)} className="text-white/40">Clear</Button>
                 </div>
                 <div className="bg-black/60 p-5 rounded-2xl border border-white/5">
-                   <p className="text-[10px] font-bold uppercase text-[#00E5FF] mb-2 tracking-widest">Ticker Copy</p>
+                   <p className="text-[10px] font-bold uppercase text-secondary mb-2 tracking-widest">Ticker Copy</p>
                    <p className="text-sm font-medium text-white/80">{promoOutput.announcementText}</p>
                 </div>
                 <Button className="w-full h-12 rounded-xl bg-secondary hover:bg-secondary/90 text-white font-bold">
@@ -348,10 +348,10 @@ export default function AdminPage() {
           <Gamepad2 className="w-6 h-6" />
           <span className="text-[10px] font-bold uppercase">Home</span>
         </div>
-        <div className="flex flex-col items-center gap-1 p-2 text-[#00E5FF] transition-colors relative">
+        <div className="flex flex-col items-center gap-1 p-2 text-primary transition-colors relative">
           <Package className="w-6 h-6" />
           <span className="text-[10px] font-bold uppercase">Stock</span>
-          <div className="absolute -bottom-1 w-1 h-1 bg-[#00E5FF] rounded-full shadow-[0_0_5px_#00E5FF]" />
+          <div className="absolute -bottom-1 w-1 h-1 bg-primary rounded-full shadow-[0_0_5px_#8526CC]" />
         </div>
         <div className="flex flex-col items-center gap-1 p-2 text-white/40 hover:text-white transition-colors">
           <Users className="w-6 h-6" />
