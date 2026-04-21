@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Plus, ShoppingCart, Info } from "lucide-react";
+import { ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -67,9 +67,6 @@ export default function GameCard({ id, title, description, thumbnail, price, dis
       <CardFooter className="p-4 pt-0 flex gap-2">
         <Button onClick={handleAddToCart} className="flex-1 rounded-xl h-10 gap-2 font-semibold">
           <ShoppingCart className="w-4 h-4" /> Add to Cart
-        </Button>
-        <Button variant="outline" size="icon" className="rounded-xl h-10 w-10 border-gray-100">
-          <Info className="w-4 h-4 text-gray-400" />
         </Button>
       </CardFooter>
     </Card>
