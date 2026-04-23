@@ -7,6 +7,7 @@ import PWAInstaller from "@/components/layout/PWAInstaller";
 import { FirebaseClientProvider } from "@/firebase";
 import OnboardingGuard from "@/components/layout/OnboardingGuard";
 import GlobalLoading from "@/components/layout/GlobalLoading";
+import SplashScreen from "@/components/layout/SplashScreen";
 import DynamicHead from "@/components/layout/DynamicHead";
 import SWRegistration from "@/components/layout/SWRegistration";
 
@@ -46,6 +47,7 @@ export default function RootLayout({
           <AppProvider>
             <SWRegistration />
             <DynamicHead />
+            <SplashScreen />
             <GlobalLoading />
             <PWAInstaller />
             <OnboardingGuard>

@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
@@ -74,6 +75,7 @@ type AppContextType = {
   user: any;
   loading: boolean;
   isGlobalLoading: boolean;
+  isInitialLoading: boolean;
   setGlobalLoading: (loading: boolean) => void;
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, name: string, phone: string) => Promise<void>;
@@ -106,6 +108,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   
   const [isGlobalLoading, setIsGlobalLoading] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [allOrders, setAllOrders] = useState<Order[]>([]);
@@ -118,19 +121,34 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     sliderImages: []
   });
 
+  // Data fetching status trackers for splash screen
+  const [settingsFetched, setSettingsFetched] = useState(false);
+  const [productsFetched, setProductsFetched] = useState(false);
+
   useEffect(() => {
     const cachedCart = localStorage.getItem('oskar_cart');
     if (cachedCart) setCart(JSON.parse(cachedCart));
 
     const cachedSettings = localStorage.getItem('oskar_settings');
-    if (cachedSettings) setStoreSettings(JSON.parse(cachedSettings));
+    if (cachedSettings) {
+      setStoreSettings(JSON.parse(cachedSettings));
+    }
 
     const cachedProducts = localStorage.getItem('oskar_products');
     if (cachedProducts) setProducts(JSON.parse(cachedProducts));
 
     const cachedProfile = localStorage.getItem('oskar_user_profile');
     if (cachedProfile) setUserProfile(JSON.parse(cachedProfile));
-  }, []);
+
+    // Minimum splash duration for smooth feel
+    const timer = setTimeout(() => {
+      if (settingsFetched && productsFetched) {
+        setIsInitialLoading(false);
+      }
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, [settingsFetched, productsFetched]);
 
   useEffect(() => {
     if (storeSettings) localStorage.setItem('oskar_settings', JSON.stringify(storeSettings));
@@ -166,7 +184,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const settingsRef = ref(rtdb, 'settings');
     return onValue(settingsRef, (snapshot) => {
       const data = snapshot.val();
-      if (data) setStoreSettings(prev => ({ ...prev, ...data }));
+      if (data) {
+        setStoreSettings(prev => ({ ...prev, ...data }));
+      }
+      setSettingsFetched(true);
     });
   }, [rtdb]);
 
@@ -181,6 +202,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         const productList = Object.entries(data).map(([id, val]: [string, any]) => ({ ...val, id }));
         setProducts(productList);
       }
+      setProductsFetched(true);
     });
   }, [rtdb]);
 
@@ -394,6 +416,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       user: enhancedUser, 
       loading,
       isGlobalLoading,
+      isInitialLoading,
       setGlobalLoading: setIsGlobalLoading,
       login, 
       signup,
