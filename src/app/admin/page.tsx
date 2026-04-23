@@ -632,7 +632,7 @@ export default function AdminPage() {
                 </div>
               </Card>
 
-              <Card className="rounded-[2rem] p-6 border-none shadow-sm bg-gradient-to-br from-primary/5 to-secondary/5 space-y-4">
+              <Card className="rounded-[2rem] p-6 bg-gradient-to-br from-primary/5 to-secondary/5 space-y-4">
                 <h3 className="font-bold text-sm flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-secondary" /> AI Marketing Generator
                 </h3>
@@ -744,6 +744,11 @@ function ProductForm({ initialData, onSave }: { initialData?: any, onSave: (p: a
     setData({ ...data, thumbnail: thumbUrlInput });
   };
 
+  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = parseFloat(e.target.value);
+    setData({ ...data, price: isNaN(val) ? 0 : val });
+  };
+
   return (
     <div className="space-y-5 py-4 overflow-y-auto max-h-[70vh] px-1">
       <div className="grid grid-cols-2 gap-4">
@@ -753,7 +758,12 @@ function ProductForm({ initialData, onSave }: { initialData?: any, onSave: (p: a
         </div>
         <div className="space-y-2">
           <Label className="text-[10px] uppercase font-bold">Price</Label>
-          <Input type="number" className="rounded-xl h-12 bg-gray-50 border-none" value={data.price} onChange={e => setData({...data, price: parseFloat(e.target.value)})} />
+          <Input 
+            type="number" 
+            className="rounded-xl h-12 bg-gray-50 border-none" 
+            value={isNaN(data.price) ? "" : data.price} 
+            onChange={handlePriceChange} 
+          />
         </div>
       </div>
       
