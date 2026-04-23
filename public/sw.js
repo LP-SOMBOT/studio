@@ -1,64 +1,49 @@
 
-const CACHE_NAME = 'oskar-shop-cache-v1';
-const ASSETS_TO_CACHE = [
-  '/',
-  '/manifest.json',
-  'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap'
-];
+/**
+ * Oskar Shop - Service Worker
+ * Handles PWA installability and background notifications.
+ */
+
+const CACHE_NAME = 'oskar-shop-v1';
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
-    })
-  );
+  self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
-  );
+  event.waitUntil(clients.claim());
 });
 
 self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request);
-    })
-  );
+  // standard fetch handler for PWA installability
+  event.respondWith(fetch(event.request).catch(() => caches.match(event.request)));
 });
 
-// BACKGROUND PUSH NOTIFICATIONS
+/**
+ * Background Notification Handling
+ * This allows the browser to show notifications even when the app is in the background.
+ */
 self.addEventListener('push', (event) => {
-  if (event.data) {
-    const data = event.data.json();
-    const options = {
-      body: data.body,
-      icon: data.icon || '/icons/icon-192x192.png',
-      badge: data.badge || '/icons/icon-192x192.png',
-      vibrate: [100, 50, 100],
-      data: {
-        url: data.url || '/'
-      }
-    };
+  const data = event.data ? event.data.json() : {};
+  const title = data.title || 'Oskar Shop Update';
+  const options = {
+    body: data.body || 'Something new is happening!',
+    icon: '/icons/icon-192x192.png',
+    badge: '/icons/icon-192x192.png',
+    data: data.url || '/',
+  };
 
-    event.waitUntil(
-      self.registration.showNotification(data.title, options)
-    );
-  }
+  event.waitUntil(self.registration.showNotification(title, options));
 });
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   event.waitUntil(
-    clients.openWindow(event.notification.data.url)
+    clients.matchAll({ type: 'window' }).then((clientList) => {
+      if (clientList.length > 0) {
+        return clientList[0].focus();
+      }
+      return clients.openWindow(event.notification.data || '/');
+    })
   );
 });

@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Bell, ShieldAlert, Loader2 } from 'lucide-react';
+import { Bell, ShieldAlert, Loader2, Smartphone } from 'lucide-react';
 
 /**
  * NotificationGuard Component
@@ -20,7 +20,7 @@ export default function NotificationGuard({ children }: { children: React.ReactN
     // Check initial permission state
     if (typeof window !== 'undefined') {
       if (!('Notification' in window)) {
-        // Fallback for browsers without notification support
+        // Fallback for browsers without notification support (rare on modern mobile)
         setPermission('granted');
       } else {
         setPermission(Notification.permission);
@@ -33,6 +33,14 @@ export default function NotificationGuard({ children }: { children: React.ReactN
       try {
         const result = await Notification.requestPermission();
         setPermission(result);
+        
+        if (result === 'granted') {
+          // Show a test notification to confirm
+          new Notification("Notifications Enabled!", {
+            body: "You'll now receive live updates from Oskar Shop.",
+            icon: "https://placehold.co/192x192/7C3AED/FFFFFF/png?text=O"
+          });
+        }
       } catch (error) {
         console.error("Error requesting notification permission:", error);
       }
@@ -42,51 +50,55 @@ export default function NotificationGuard({ children }: { children: React.ReactN
   if (permission === 'loading') {
     return (
       <div className="fixed inset-0 z-[100001] bg-white flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary opacity-20" />
+        <Loader2 className="w-10 h-10 animate-spin text-primary opacity-20" />
       </div>
     );
   }
 
   if (permission !== 'granted') {
     return (
-      <div className="fixed inset-0 z-[100001] bg-white flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-500">
-        <div className="relative mb-8">
+      <div className="fixed inset-0 z-[100001] bg-white flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-500 overflow-y-auto">
+        <div className="relative mb-10">
           <div className="absolute inset-0 bg-primary/20 rounded-full blur-3xl animate-pulse" />
-          <div className="relative w-28 h-28 bg-primary/10 rounded-full flex items-center justify-center text-primary shadow-inner">
-            <Bell className="w-14 h-14" />
+          <div className="relative w-32 h-32 bg-white rounded-full flex items-center justify-center text-primary shadow-2xl border border-primary/5">
+            <Bell className="w-16 h-16 animate-bounce" />
           </div>
         </div>
         
-        <h2 className="text-3xl font-headline font-bold mb-4 text-gray-900 leading-tight">
-          Notifications <br /> Required
+        <h2 className="text-4xl font-headline font-bold mb-4 text-gray-900 leading-tight">
+          Stay in <br /> the Game
         </h2>
         
-        <p className="text-muted-foreground max-w-xs mb-10 text-[15px] leading-relaxed">
-          Oskar Shop uses notifications to alert you about live rewards, flash sales, and instant top-up deliveries. Permission is mandatory to continue.
+        <p className="text-muted-foreground max-w-xs mb-12 text-[16px] leading-relaxed">
+          Enable notifications to receive instant diamond deliveries, flash sale alerts, and <strong>Live Rewards</strong> when we are online.
         </p>
         
         <Button 
           onClick={requestPermission} 
-          className="w-full max-w-[280px] h-[60px] rounded-2xl font-bold text-lg shadow-xl shadow-primary/20 transition-all active:scale-95 bg-primary hover:bg-primary/90 text-white"
+          className="w-full max-w-[300px] h-16 rounded-[2rem] font-bold text-xl shadow-2xl shadow-primary/30 transition-all active:scale-95 bg-primary hover:bg-primary/90 text-white gap-3"
         >
-          Enable Notifications
+          <Bell className="w-6 h-6" /> Allow Notifications
         </Button>
 
+        <p className="mt-8 text-[11px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+           <Smartphone className="w-3 h-3" /> Mandatory for Oskar Shop PWA
+        </p>
+
         {permission === 'denied' && (
-          <div className="mt-10 p-5 bg-red-50 rounded-[2rem] border border-red-100 flex flex-col items-start gap-3 text-red-600 max-w-sm animate-in slide-in-from-bottom-2">
-            <div className="flex items-center gap-2">
-              <ShieldAlert className="w-5 h-5" />
-              <span className="font-bold text-sm">Action Required</span>
+          <div className="mt-12 p-6 bg-red-50 rounded-[2.5rem] border border-red-100 flex flex-col items-center gap-4 text-red-600 max-w-sm animate-in slide-in-from-bottom-4">
+            <div className="flex items-center gap-3">
+              <ShieldAlert className="w-6 h-6" />
+              <span className="font-bold text-base">Action Required</span>
             </div>
-            <p className="text-xs text-left leading-relaxed">
-              Notifications are currently blocked by your browser. Please go to your browser settings, allow notifications for <strong>Oskar Shop</strong>, and then refresh this page.
+            <p className="text-xs text-center leading-relaxed font-medium">
+              Notifications are currently blocked. To continue using the app, please go to your browser settings, allow notifications for this site, and refresh.
             </p>
             <Button 
               variant="outline" 
-              className="w-full h-10 rounded-xl border-red-200 text-red-600 hover:bg-red-100/50 mt-1 font-bold text-xs"
+              className="w-full h-12 rounded-2xl border-red-200 text-red-600 hover:bg-red-100/50 mt-2 font-bold text-sm"
               onClick={() => window.location.reload()}
             >
-              I've enabled them, Refresh
+              I've enabled them, Refresh Now
             </Button>
           </div>
         )}
