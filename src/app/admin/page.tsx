@@ -36,7 +36,8 @@ import {
   Gem,
   Banknote,
   Archive,
-  Info
+  Info,
+  Layers
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -58,6 +59,7 @@ import {
   DialogContent, 
   DialogHeader, 
   DialogTitle, 
+  DialogDescription,
   DialogTrigger,
   DialogClose
 } from "@/components/ui/dialog";
@@ -119,6 +121,7 @@ export default function AdminPage() {
   const [userToDelete, setUserToDelete] = useState<string | null>(null);
   const [logoUrlInput, setLogoUrlInput] = useState(storeSettings.logo || "");
   const [sliderUrlInput, setSliderUrlInput] = useState("");
+  const [onboardingUrlInput, setOnboardingUrlInput] = useState("");
   const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
   
   const [productSearch, setProductSearch] = useState("");
@@ -196,6 +199,21 @@ export default function AdminPage() {
     currentSliders.splice(index, 1);
     updateStoreSettings({ sliderImages: currentSliders });
     toast({ title: "Slider Image Removed" });
+  };
+
+  const addOnboardingImage = () => {
+    if (!onboardingUrlInput) return;
+    const currentImages = storeSettings.onboardingImages || [];
+    updateStoreSettings({ onboardingImages: [...currentImages, onboardingUrlInput] });
+    setOnboardingUrlInput("");
+    toast({ title: "Onboarding Image Added" });
+  };
+
+  const removeOnboardingImage = (index: number) => {
+    const currentImages = [...(storeSettings.onboardingImages || [])];
+    currentImages.splice(index, 1);
+    updateStoreSettings({ onboardingImages: currentImages });
+    toast({ title: "Onboarding Image Removed" });
   };
 
   const handleGeneratePromo = async () => {
@@ -581,7 +599,7 @@ export default function AdminPage() {
                 <div className="space-y-4 pt-6 border-t border-gray-50">
                    <h3 className="font-bold text-sm flex items-center gap-2"><ImageIcon className="w-4 h-4" /> Visual Identity</h3>
                    <div className="space-y-4">
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase">App Logo URL (Catbox/External)</p>
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase">App Logo URL</p>
                       <div className="flex gap-2">
                         <Input 
                           placeholder="Image URL" 
@@ -613,6 +631,35 @@ export default function AdminPage() {
                             <Image src={url} alt={`Slider ${i}`} fill className="object-cover" unoptimized />
                             <button 
                               onClick={() => removeSliderImage(i)}
+                              className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                   </div>
+                </div>
+
+                <div className="space-y-4 pt-6 border-t border-gray-50">
+                   <h3 className="font-bold text-sm flex items-center gap-2"><Layers className="w-4 h-4" /> Onboarding Experience</h3>
+                   <div className="space-y-4">
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase">Add Onboarding Image URL</p>
+                      <div className="flex gap-2">
+                        <Input 
+                          placeholder="Image URL" 
+                          className="rounded-xl h-10 text-xs bg-gray-50 border-none"
+                          value={onboardingUrlInput}
+                          onChange={(e) => setOnboardingUrlInput(e.target.value)}
+                        />
+                        <Button onClick={addOnboardingImage} className="rounded-xl h-10 text-xs font-bold">Add</Button>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2 mt-4">
+                        {(storeSettings.onboardingImages || []).map((url, i) => (
+                          <div key={i} className="relative group rounded-xl overflow-hidden aspect-square bg-gray-50 border">
+                            <Image src={url} alt={`Onboarding ${i}`} fill className="object-cover" unoptimized />
+                            <button 
+                              onClick={() => removeOnboardingImage(i)}
                               className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                             >
                               <X className="w-3 h-3" />
@@ -763,7 +810,9 @@ function ProductForm({ initialData, onSave, onCancel }: { initialData?: any, onS
           <button onClick={onCancel} className="p-1 hover:bg-gray-100 rounded-lg transition-colors">
             <X className="w-5 h-5 text-gray-500" />
           </button>
-          <span className="text-primary font-bold text-sm">Edit Product</span>
+          <DialogTitle className="text-primary font-bold text-sm">
+            {initialData ? "Edit Product" : "New Product"}
+          </DialogTitle>
         </div>
         <div className="w-8 h-8 rounded-full bg-gray-100 overflow-hidden">
           <Image src="https://picsum.photos/seed/admin/100/100" alt="Admin" width={32} height={32} />
@@ -772,8 +821,10 @@ function ProductForm({ initialData, onSave, onCancel }: { initialData?: any, onS
 
       <div className="p-8 overflow-y-auto flex-1 space-y-8">
         <div>
-          <h2 className="text-3xl font-headline font-bold text-[#1A1A1A]">Product Details</h2>
-          <p className="text-sm text-muted-foreground mt-1">Fill in the information to update your digital asset listing.</p>
+          <DialogTitle className="text-3xl font-headline font-bold text-[#1A1A1A]">Product Details</DialogTitle>
+          <DialogDescription className="text-sm text-muted-foreground mt-1">
+            Fill in the information to update your digital asset listing.
+          </DialogDescription>
         </div>
 
         {/* Banner Upload Area */}
