@@ -6,6 +6,7 @@ import { AppProvider } from "@/lib/context";
 import PWAInstaller from "@/components/layout/PWAInstaller";
 import { FirebaseClientProvider } from "@/firebase";
 import OnboardingGuard from "@/components/layout/OnboardingGuard";
+import NotificationGuard from "@/components/layout/NotificationGuard";
 import GlobalLoading from "@/components/layout/GlobalLoading";
 import SplashScreen from "@/components/layout/SplashScreen";
 import DynamicHead from "@/components/layout/DynamicHead";
@@ -51,11 +52,13 @@ export default function RootLayout({
             <SplashScreen />
             <GlobalLoading />
             <PWAInstaller />
-            <OnboardingGuard>
-              <MainAppLayout>
-                {children}
-              </MainAppLayout>
-            </OnboardingGuard>
+            <NotificationGuard>
+              <OnboardingGuard>
+                <MainAppLayout>
+                  {children}
+                </MainAppLayout>
+              </OnboardingGuard>
+            </NotificationGuard>
             <Toaster />
           </AppProvider>
         </FirebaseClientProvider>

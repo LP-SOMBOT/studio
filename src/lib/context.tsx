@@ -119,13 +119,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [storeSettings, setStoreSettings] = useState<StoreSettings>({ 
-    isLive: true,
+    isLive: false,
     onboardingImages: [],
     sliderImages: []
   });
 
   const [settingsFetched, setSettingsFetched] = useState(false);
   const [productsFetched, setProductsFetched] = useState(false);
+  const [prevIsLive, setPrevIsLive] = useState<boolean | null>(null);
 
   useEffect(() => {
     // Sync hash to active tab on mount
@@ -167,7 +168,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (storeSettings) localStorage.setItem('oskar_settings', JSON.stringify(storeSettings));
-  }, [storeSettings]);
+    
+    // NOTIFICATION LOGIC: Trigger when admin toggles isLive to true
+    if (prevIsLive === false && storeSettings.isLive === true) {
+      if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+        new Notification("Oskar Shop is LIVE! 🔴", {
+          body: "Join our challenge now and win exclusive diamonds & rewards!",
+          icon: storeSettings.logo || "https://placehold.co/192x192/7C3AED/FFFFFF/png?text=O",
+          badge: "https://placehold.co/96x96/7C3AED/FFFFFF/png?text=O"
+        });
+      }
+    }
+    setPrevIsLive(storeSettings.isLive);
+  }, [storeSettings.isLive, storeSettings.logo, prevIsLive]);
 
   useEffect(() => {
     if (products.length > 0) localStorage.setItem('oskar_products', JSON.stringify(products));
