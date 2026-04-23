@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -49,8 +48,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-primary overflow-x-hidden">
-      {/* Header Section */}
+    <div className="min-h-screen flex flex-col bg-primary overflow-x-hidden page-transition">
       <div className="pt-12 pb-10 px-8 md:px-12 shrink-0">
         <h1 className="text-4xl md:text-5xl font-headline font-bold text-white leading-tight">
           Welcome to <br /> Oskar Shop
@@ -60,7 +58,6 @@ export default function LoginPage() {
         </p>
       </div>
 
-      {/* Login Card */}
       <div className="flex-1 bg-white rounded-t-[3rem] p-8 md:p-12 shadow-2xl">
         <div className="max-w-md mx-auto h-full flex flex-col">
           <h2 className="text-3xl font-headline font-bold mb-8 text-gray-900">

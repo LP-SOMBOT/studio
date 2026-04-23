@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
@@ -121,7 +120,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     sliderImages: []
   });
 
-  // Data fetching status trackers for splash screen
   const [settingsFetched, setSettingsFetched] = useState(false);
   const [productsFetched, setProductsFetched] = useState(false);
 
@@ -130,24 +128,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (cachedCart) setCart(JSON.parse(cachedCart));
 
     const cachedSettings = localStorage.getItem('oskar_settings');
-    if (cachedSettings) {
-      setStoreSettings(JSON.parse(cachedSettings));
-    }
+    if (cachedSettings) setStoreSettings(JSON.parse(cachedSettings));
 
     const cachedProducts = localStorage.getItem('oskar_products');
     if (cachedProducts) setProducts(JSON.parse(cachedProducts));
 
     const cachedProfile = localStorage.getItem('oskar_user_profile');
     if (cachedProfile) setUserProfile(JSON.parse(cachedProfile));
+  }, []);
 
-    // Minimum splash duration for smooth feel
-    const timer = setTimeout(() => {
-      if (settingsFetched && productsFetched) {
-        setIsInitialLoading(false);
-      }
-    }, 1500);
-
-    return () => clearTimeout(timer);
+  // End splash as soon as data arrives, no artificial cooldown
+  useEffect(() => {
+    if (settingsFetched && productsFetched) {
+      setIsInitialLoading(false);
+    }
   }, [settingsFetched, productsFetched]);
 
   useEffect(() => {
@@ -184,9 +178,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const settingsRef = ref(rtdb, 'settings');
     return onValue(settingsRef, (snapshot) => {
       const data = snapshot.val();
-      if (data) {
-        setStoreSettings(prev => ({ ...prev, ...data }));
-      }
+      if (data) setStoreSettings(prev => ({ ...prev, ...data }));
       setSettingsFetched(true);
     });
   }, [rtdb]);
@@ -379,7 +371,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const updateOrderStatus = async (orderId: string, status: string) => {
     if (!rtdb || !enhancedUser?.isAdmin) return;
     await update(ref(rtdb, `orders/${orderId}`), { status });
-    toast({ title: "Order Status Updated", description: `Order is now ${status}` });
   };
 
   const updateUserStatus = async (uid: string, updates: Partial<UserProfile>) => {
@@ -396,13 +387,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (!rtdb || !enhancedUser?.isAdmin) return;
     const id = product.id || `prod_${Date.now()}`;
     await set(ref(rtdb, `products/${id}`), { ...product, id });
-    toast({ title: "Product Saved" });
   };
 
   const deleteProduct = async (id: string) => {
     if (!rtdb || !enhancedUser?.isAdmin) return;
     await remove(ref(rtdb, `products/${id}`));
-    toast({ title: "Product Removed" });
   };
 
   const updateStoreSettings = async (settings: Partial<StoreSettings>) => {

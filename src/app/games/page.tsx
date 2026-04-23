@@ -4,18 +4,19 @@ import { useState, useMemo } from "react";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
 import GameCard from "@/components/games/GameCard";
-import { GAMES_DATA } from "@/lib/games-data";
+import { useApp } from "@/lib/context";
 import { Input } from "@/components/ui/input";
 import { Search, Filter, Gamepad2, LayoutGrid, ListFilter } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 
 export default function GamesPage() {
+  const { products } = useApp();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
 
   const filteredGames = useMemo(() => {
-    return GAMES_DATA.filter(game => {
+    return products.filter(game => {
       const matchesSearch = 
         game.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         game.gameId.toLowerCase().includes(searchQuery.toLowerCase());
@@ -27,7 +28,7 @@ export default function GamesPage() {
 
       return matchesSearch && matchesTab;
     });
-  }, [searchQuery, activeTab]);
+  }, [products, searchQuery, activeTab]);
 
   const categories = [
     { id: "all", label: "All Packages", icon: LayoutGrid },
@@ -35,16 +36,16 @@ export default function GamesPage() {
     { id: "accounts", label: "Accounts", icon: Filter },
   ];
 
-  const games = Array.from(new Set(GAMES_DATA.map(g => g.gameId)));
+  const games = Array.from(new Set(products.map(g => g.gameId)));
 
   return (
-    <div className="min-h-screen bg-background pb-24 md:pb-10">
+    <div className="min-h-screen bg-background pb-24 md:pb-10 page-transition">
       <Header />
       
       <main className="container mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
           <div>
-            <h1 className="text-3xl font-headline font-bold mb-2">Game Store</h1>
+            <h1 className="text-3xl font-headline font-bold mb-2 text-[#1A1A1A]">Game Store</h1>
             <p className="text-muted-foreground">Find the best deals for your favorite games.</p>
           </div>
           
@@ -75,21 +76,23 @@ export default function GamesPage() {
               </TabsList>
             </div>
 
-            <div className="flex flex-wrap gap-2">
-              <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest py-1 mr-2 flex items-center gap-1">
-                <ListFilter className="w-3 h-3" /> Filter by Game:
-              </span>
-              {games.map(gameId => (
-                <Badge 
-                  key={gameId}
-                  variant={activeTab === gameId ? "default" : "secondary"}
-                  className="cursor-pointer px-4 py-1.5 rounded-full capitalize hover:scale-105 transition-transform"
-                  onClick={() => setActiveTab(gameId)}
-                >
-                  {gameId.replace('-', ' ')}
-                </Badge>
-              ))}
-            </div>
+            {games.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest py-1 mr-2 flex items-center gap-1">
+                  <ListFilter className="w-3 h-3" /> Filter by Game:
+                </span>
+                {games.map(gameId => (
+                  <Badge 
+                    key={gameId}
+                    variant={activeTab === gameId ? "default" : "secondary"}
+                    className="cursor-pointer px-4 py-1.5 rounded-full capitalize hover:scale-105 transition-transform"
+                    onClick={() => setActiveTab(gameId)}
+                  >
+                    {gameId.replace('-', ' ')}
+                  </Badge>
+                ))}
+              </div>
+            )}
           </div>
 
           <TabsContent value={activeTab} className="mt-0">
