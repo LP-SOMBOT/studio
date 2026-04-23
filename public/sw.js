@@ -1,10 +1,8 @@
 
 /**
- * Oskar Shop - Service Worker
- * Handles PWA installability and background notifications.
+ * Oskar Shop PWA Service Worker
+ * Handles background push notifications and PWA installability.
  */
-
-const CACHE_NAME = 'oskar-shop-v1';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
@@ -14,23 +12,21 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(clients.claim());
 });
 
-self.addEventListener('fetch', (event) => {
-  // standard fetch handler for PWA installability
-  event.respondWith(fetch(event.request).catch(() => caches.match(event.request)));
-});
-
-/**
- * Background Notification Handling
- * This allows the browser to show notifications even when the app is in the background.
- */
 self.addEventListener('push', (event) => {
-  const data = event.data ? event.data.json() : {};
-  const title = data.title || 'Oskar Shop Update';
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch (e) {
+    data = { body: event.data ? event.data.text() : 'New update from Oskar Shop' };
+  }
+
+  const title = data.title || 'Oskar Shop';
   const options = {
     body: data.body || 'Something new is happening!',
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/icon-192x192.png',
+    icon: 'https://placehold.co/192x192/7C3AED/FFFFFF/png?text=O',
+    badge: 'https://placehold.co/96x96/7C3AED/FFFFFF/png?text=O',
     data: data.url || '/',
+    vibrate: [100, 50, 100],
   };
 
   event.waitUntil(self.registration.showNotification(title, options));
@@ -38,12 +34,19 @@ self.addEventListener('push', (event) => {
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
+  const urlToOpen = event.notification.data || '/';
+
   event.waitUntil(
-    clients.matchAll({ type: 'window' }).then((clientList) => {
-      if (clientList.length > 0) {
-        return clientList[0].focus();
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+      for (let i = 0; i < windowClients.length; i++) {
+        const client = windowClients[i];
+        if (client.url === urlToOpen && 'focus' in client) {
+          return client.focus();
+        }
       }
-      return clients.openWindow(event.notification.data || '/');
+      if (clients.openWindow) {
+        return clients.openWindow(urlToOpen);
+      }
     })
   );
 });
