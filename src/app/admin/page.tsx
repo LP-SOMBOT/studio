@@ -29,7 +29,10 @@ import {
   TrendingUp,
   Menu,
   ChevronRight,
-  Database
+  Database,
+  Search,
+  MoreVertical,
+  Filter
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -113,6 +116,10 @@ export default function AdminPage() {
   const [logoUrlInput, setLogoUrlInput] = useState(storeSettings.logo || "");
   const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
   
+  // Search & Filter state for Products view
+  const [productSearch, setProductSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("All Games");
+
   const [promoInput, setPromoInput] = useState({
     promotionType: 'discount' as any,
     title: '',
@@ -145,6 +152,14 @@ export default function AdminPage() {
       registeredUsers: allUsers.length
     };
   }, [allOrders, products, allUsers]);
+
+  const filteredProducts = useMemo(() => {
+    return products.filter(p => {
+      const matchesSearch = p.title.toLowerCase().includes(productSearch.toLowerCase());
+      const matchesCategory = categoryFilter === "All Games" || p.gameId === categoryFilter.toLowerCase().replace(/\s/g, '');
+      return matchesSearch && matchesCategory;
+    });
+  }, [products, productSearch, categoryFilter]);
 
   if (!user?.isAdmin) {
     return (
@@ -193,12 +208,6 @@ export default function AdminPage() {
     toast({ title: "Logo URL Applied" });
   };
 
-  const removeSliderImage = (index: number) => {
-    const current = [...(storeSettings.sliderImages || [])];
-    current.splice(index, 1);
-    updateStoreSettings({ sliderImages: current });
-  };
-
   const handleGeneratePromo = async () => {
     if (!promoInput.title || !promoInput.promotionDetails) {
       toast({ title: "Validation Error", description: "Please fill in title and details." });
@@ -224,21 +233,19 @@ export default function AdminPage() {
     }
   };
 
+  const productCategories = ["All Games", "Free Fire", "PUBG Mobile", "Mobile Legends", "NBA 2K24"];
+
   return (
     <div className="min-h-screen bg-[#FDFCFE] text-foreground pb-24 md:pb-10 font-body page-transition">
       {/* Top Header */}
       <header className="h-16 px-4 flex items-center justify-between sticky top-0 bg-[#FDFCFE]/80 backdrop-blur-md z-50">
         <div className="flex items-center gap-3">
-          <Menu className="w-6 h-6 text-primary" />
-          <h1 className="text-lg font-headline font-bold text-[#1A1A1A]">OskarShop</h1>
+          <Menu className="w-6 h-6 text-[#1A1A1A]" />
+          <h1 className="text-xl font-headline font-bold text-[#1A1A1A]">OskarShop</h1>
         </div>
         <div className="flex items-center gap-4">
-          <div className="relative">
-            <Bell className="w-5 h-5 text-gray-500" />
-            <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full border border-white" />
-          </div>
-          <div className="w-8 h-8 rounded-full overflow-hidden border border-gray-100">
-            <Image src="https://picsum.photos/seed/admin/100/100" alt="Admin" width={32} height={32} />
+          <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-primary/20 bg-gray-100 flex items-center justify-center">
+             <Image src="https://picsum.photos/seed/admin-avatar/100/100" alt="Admin" width={36} height={36} />
           </div>
         </div>
       </header>
@@ -248,7 +255,7 @@ export default function AdminPage() {
         {activeView === 'dashboard' && (
           <div className="space-y-6 animate-in fade-in duration-500">
             <div>
-              <h2 className="text-2xl font-headline font-bold text-[#1A1A1A]">Dashboard</h2>
+              <h2 className="text-3xl font-headline font-bold text-[#1A1A1A]">Dashboard</h2>
               <p className="text-xs text-muted-foreground">Overview of your store's performance</p>
             </div>
 
@@ -366,7 +373,7 @@ export default function AdminPage() {
 
         {activeView === 'orders' && (
           <div className="animate-in slide-in-from-bottom-4 duration-500 space-y-6">
-            <h2 className="text-2xl font-headline font-bold text-[#1A1A1A]">Order Management</h2>
+            <h2 className="text-3xl font-headline font-bold text-[#1A1A1A]">Orders</h2>
             <Card className="rounded-[2rem] bg-white border-none shadow-sm overflow-hidden">
               <Table>
                 <TableHeader className="bg-gray-50">
@@ -419,46 +426,111 @@ export default function AdminPage() {
 
         {activeView === 'products' && (
           <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500 pb-20">
-            <h2 className="text-2xl font-headline font-bold text-[#1A1A1A]">Asset Library</h2>
-            <div className="grid grid-cols-2 gap-4">
-              {products.map(p => (
-                <Card key={p.id} className="rounded-3xl p-4 relative group overflow-hidden border-none shadow-sm bg-white flex flex-col">
-                  <div className="relative aspect-square rounded-2xl bg-gray-50 flex items-center justify-center mb-3 overflow-hidden">
+            <div>
+              <h2 className="text-3xl font-headline font-bold text-[#1A1A1A]">Inventory</h2>
+            </div>
+            
+            {/* Search Input */}
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Input 
+                className="pl-11 h-12 rounded-xl bg-white border-gray-100 shadow-sm text-sm" 
+                placeholder="Search digital assets..." 
+                value={productSearch}
+                onChange={(e) => setProductSearch(e.target.value)}
+              />
+            </div>
+
+            {/* Category Filter Chips */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
+              {productCategories.map(cat => (
+                <button
+                  key={cat}
+                  onClick={() => setCategoryFilter(cat)}
+                  className={cn(
+                    "px-6 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all border",
+                    categoryFilter === cat 
+                      ? "bg-primary text-white border-primary shadow-md shadow-primary/20" 
+                      : "bg-white text-gray-500 border-gray-100"
+                  )}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+
+            {/* Inventory List Layout */}
+            <div className="space-y-3">
+              {filteredProducts.map(p => (
+                <Card key={p.id} className="rounded-2xl p-3 border-none shadow-sm bg-white flex items-center gap-4 relative">
+                  {/* Thumbnail */}
+                  <div className="w-20 h-20 rounded-xl overflow-hidden bg-gray-50 shrink-0 relative">
                     {p.thumbnail ? (
                       <Image src={p.thumbnail} alt={p.title} fill className="object-cover" unoptimized />
                     ) : (
-                      <Package className="w-8 h-8 text-gray-200" />
+                      <Package className="w-8 h-8 text-gray-200 absolute inset-0 m-auto" />
                     )}
-                    <div className="absolute top-2 right-2 flex flex-col gap-1">
-                      <Button variant="secondary" size="icon" onClick={() => setEditingProduct(p)} className="h-7 w-7 rounded-full bg-white/90 backdrop-blur shadow-sm"><Edit className="w-3 h-3" /></Button>
-                      <Button variant="destructive" size="icon" onClick={() => deleteProduct(p.id)} className="h-7 w-7 rounded-full shadow-sm"><Trash2 className="w-3 h-3" /></Button>
+                  </div>
+
+                  {/* Info */}
+                  <div className="flex-1 flex flex-col justify-center gap-0.5">
+                    <h4 className="font-bold text-sm text-[#1A1A1A] line-clamp-1">{p.title}</h4>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase">{p.gameId}</p>
+                    <div className="flex items-center justify-between mt-1">
+                      <p className="text-sm font-bold text-primary">${p.price.toFixed(2)}</p>
+                      <Badge className={cn(
+                        "text-[8px] font-bold uppercase rounded-md px-2 py-0.5 border-none",
+                        p.category === 'top-up' ? "bg-purple-100 text-purple-600" : "bg-orange-100 text-orange-600"
+                      )}>
+                        {p.category === 'top-up' ? "IN STOCK" : "LOW STOCK"}
+                      </Badge>
                     </div>
                   </div>
-                  <h4 className="font-bold text-xs mb-1 line-clamp-1">{p.title}</h4>
-                  <p className="text-[10px] font-bold text-primary">${p.price.toFixed(2)}</p>
+
+                  {/* Actions Dropdown/Menu Trigger */}
+                  <div className="absolute top-3 right-3 flex flex-col gap-2">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={() => setEditingProduct(p)} 
+                      className="h-8 w-8 text-gray-400"
+                    >
+                      <MoreVertical className="w-5 h-5" />
+                    </Button>
+                  </div>
                 </Card>
               ))}
-              <Dialog open={isProductDialogOpen} onOpenChange={setIsProductDialogOpen}>
-                <DialogTrigger asChild>
-                   <Card className="rounded-3xl p-4 border-2 border-dashed border-gray-200 flex flex-col items-center justify-center text-center aspect-[2/3] cursor-pointer hover:bg-gray-50 transition-colors">
-                      <Plus className="w-8 h-8 text-gray-300 mb-2" />
-                      <p className="text-[10px] font-bold text-gray-400">Add New<br/>Asset</p>
-                   </Card>
-                </DialogTrigger>
-                <DialogContent className="rounded-[2.5rem] max-w-xl">
-                  <DialogHeader>
-                    <DialogTitle className="text-2xl font-headline font-bold">New Game Package</DialogTitle>
-                  </DialogHeader>
-                  <ProductForm onSave={(p) => { saveProduct(p); setIsProductDialogOpen(false); }} />
-                </DialogContent>
-              </Dialog>
+
+              {filteredProducts.length === 0 && (
+                <div className="py-20 text-center space-y-2 opacity-40">
+                  <Database className="w-12 h-12 mx-auto" />
+                  <p className="text-sm font-bold">No assets found</p>
+                </div>
+              )}
             </div>
+
+            {/* FAB - Add Product */}
+            <button 
+              onClick={() => setIsProductDialogOpen(true)}
+              className="fixed bottom-24 right-6 w-14 h-14 bg-primary text-white rounded-2xl flex items-center justify-center shadow-xl shadow-primary/30 z-[110] active:scale-90 transition-transform"
+            >
+              <Plus className="w-8 h-8" />
+            </button>
+
+            <Dialog open={isProductDialogOpen} onOpenChange={setIsProductDialogOpen}>
+              <DialogContent className="rounded-[2.5rem] max-w-xl">
+                <DialogHeader>
+                  <DialogTitle className="text-2xl font-headline font-bold">New Asset</DialogTitle>
+                </DialogHeader>
+                <ProductForm onSave={(p) => { saveProduct(p); setIsProductDialogOpen(false); }} />
+              </DialogContent>
+            </Dialog>
           </div>
         )}
 
         {activeView === 'users' && (
           <div className="animate-in slide-in-from-bottom-4 duration-500 space-y-6">
-            <h2 className="text-2xl font-headline font-bold text-[#1A1A1A]">User Management</h2>
+            <h2 className="text-3xl font-headline font-bold text-[#1A1A1A]">Users</h2>
             <Card className="rounded-[2rem] bg-white border-none shadow-sm overflow-hidden">
               <Table>
                 <TableHeader className="bg-gray-50">
@@ -520,7 +592,7 @@ export default function AdminPage() {
 
         {activeView === 'settings' && (
           <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500 pb-20">
-            <h2 className="text-2xl font-headline font-bold text-[#1A1A1A]">Store Console</h2>
+            <h2 className="text-3xl font-headline font-bold text-[#1A1A1A]">Settings</h2>
             <div className="grid grid-cols-1 gap-6">
               <Card className="rounded-[2rem] p-6 border-none shadow-sm bg-white space-y-6">
                  <div className="flex items-center justify-between">
@@ -564,15 +636,6 @@ export default function AdminPage() {
                         />
                         <Button onClick={applyLogoUrl} className="rounded-xl h-10 text-xs font-bold">Apply</Button>
                       </div>
-                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-2xl">
-                        <div className="w-10 h-10 relative rounded-xl overflow-hidden border bg-white">
-                          {storeSettings.logo && <Image src={storeSettings.logo} alt="Logo" fill className="object-cover" unoptimized />}
-                        </div>
-                        <label className="flex-1 cursor-pointer">
-                          <input type="file" className="hidden" accept="image/*" onChange={(e) => handleImageUpload(e, 'logo')} />
-                          <div className="text-[10px] font-bold text-primary">Upload from file</div>
-                        </label>
-                      </div>
                    </div>
                 </div>
 
@@ -613,29 +676,19 @@ export default function AdminPage() {
 
       </main>
 
-      {/* FAB - Create Product */}
-      {activeView === 'dashboard' && (
-        <button 
-          onClick={() => { setActiveView('products'); setIsProductDialogOpen(true); }}
-          className="fixed bottom-24 right-6 w-14 h-14 bg-primary text-white rounded-full flex items-center justify-center shadow-xl shadow-primary/30 z-[110] active:scale-90 transition-transform"
-        >
-          <Plus className="w-8 h-8" />
-        </button>
-      )}
-
       {/* Bottom Navigation */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-100 z-[100] px-4 py-3 flex justify-around items-center">
         <NavButton active={activeView === 'dashboard'} onClick={() => setActiveView('dashboard')} icon={LayoutDashboard} label="DASHBOARD" />
         <NavButton active={activeView === 'orders'} onClick={() => setActiveView('orders')} icon={ShoppingBag} label="ORDERS" />
         <NavButton active={activeView === 'products'} onClick={() => setActiveView('products')} icon={Database} label="ASSETS" />
-        <NavButton active={activeView === 'settings'} onClick={() => setActiveView('settings')} icon={SettingsIcon} label="CONSOLE" />
+        <NavButton active={activeView === 'settings'} onClick={() => setActiveView('settings')} icon={SettingsIcon} label="SETTINGS" />
       </nav>
 
       {editingProduct && (
         <Dialog open={!!editingProduct} onOpenChange={() => setEditingProduct(null)}>
           <DialogContent className="rounded-[2.5rem] max-w-xl">
             <DialogHeader>
-              <DialogTitle className="text-2xl font-headline font-bold">Edit Package</DialogTitle>
+              <DialogTitle className="text-2xl font-headline font-bold">Edit Asset</DialogTitle>
             </DialogHeader>
             <ProductForm initialData={editingProduct} onSave={(p) => { saveProduct(p); setEditingProduct(null); }} />
           </DialogContent>
@@ -690,7 +743,7 @@ function NavButton({ active, onClick, icon: Icon, label }: { active: boolean, on
       )}
     >
       <Icon className={cn("w-6 h-6", active && "animate-pulse")} />
-      <span className="text-[9px] font-bold tracking-tighter">{label}</span>
+      <span className="text-[9px] font-bold tracking-tighter uppercase">{label}</span>
     </button>
   );
 }
@@ -748,7 +801,9 @@ function ProductForm({ initialData, onSave }: { initialData?: any, onSave: (p: a
               <SelectItem value="freefire">Free Fire</SelectItem>
               <SelectItem value="bloodstrike">Blood Strike</SelectItem>
               <SelectItem value="efootball">eFootball</SelectItem>
-              <SelectItem value="pubg">PUBG Mobile</SelectItem>
+              <SelectItem value="pubgmobile">PUBG Mobile</SelectItem>
+              <SelectItem value="mobilelegends">Mobile Legends</SelectItem>
+              <SelectItem value="nba2k24">NBA 2K24</SelectItem>
             </SelectContent>
           </Select>
         </div>
