@@ -81,7 +81,6 @@ import {
   Tooltip, 
   ResponsiveContainer 
 } from 'recharts';
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 
 const chartData = [
   { day: 'MON', value: 400 },
@@ -114,9 +113,9 @@ export default function AdminPage() {
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [userToDelete, setUserToDelete] = useState<string | null>(null);
   const [logoUrlInput, setLogoUrlInput] = useState(storeSettings.logo || "");
+  const [sliderUrlInput, setSliderUrlInput] = useState("");
   const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
   
-  // Search & Filter state for Products view
   const [productSearch, setProductSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All Games");
 
@@ -173,39 +172,25 @@ export default function AdminPage() {
     );
   }
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'onboarding' | 'slider', index?: number) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (file.size > 2 * 1024 * 1024) {
-      toast({ title: "File too large", description: "Keep it under 2MB.", variant: "destructive" });
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64 = reader.result as string;
-      if (type === 'logo') {
-        updateStoreSettings({ logo: base64 });
-        setLogoUrlInput(base64);
-      } else if (type === 'onboarding' && typeof index === 'number') {
-        const current = [...(storeSettings.onboardingImages || [])];
-        current[index] = base64;
-        updateStoreSettings({ onboardingImages: current });
-      } else if (type === 'slider' && typeof index === 'number') {
-        const current = [...(storeSettings.sliderImages || [])];
-        current[index] = base64;
-        updateStoreSettings({ sliderImages: current });
-      }
-      toast({ title: "Image Uploaded", description: "Saved to database." });
-    };
-    reader.readAsDataURL(file);
-  };
-
   const applyLogoUrl = () => {
     if (!logoUrlInput) return;
     updateStoreSettings({ logo: logoUrlInput });
     toast({ title: "Logo URL Applied" });
+  };
+
+  const addSliderImage = () => {
+    if (!sliderUrlInput) return;
+    const currentSliders = storeSettings.sliderImages || [];
+    updateStoreSettings({ sliderImages: [...currentSliders, sliderUrlInput] });
+    setSliderUrlInput("");
+    toast({ title: "Slider Image Added" });
+  };
+
+  const removeSliderImage = (index: number) => {
+    const currentSliders = [...(storeSettings.sliderImages || [])];
+    currentSliders.splice(index, 1);
+    updateStoreSettings({ sliderImages: currentSliders });
+    toast({ title: "Slider Image Removed" });
   };
 
   const handleGeneratePromo = async () => {
@@ -237,16 +222,10 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-[#FDFCFE] text-foreground pb-24 md:pb-10 font-body page-transition">
-      {/* Top Header */}
       <header className="h-16 px-4 flex items-center justify-between sticky top-0 bg-[#FDFCFE]/80 backdrop-blur-md z-50">
         <div className="flex items-center gap-3">
           <Menu className="w-6 h-6 text-[#1A1A1A]" />
-          <h1 className="text-xl font-headline font-bold text-[#1A1A1A]">OskarShop</h1>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-primary/20 bg-gray-100 flex items-center justify-center">
-             <Image src="https://picsum.photos/seed/admin-avatar/100/100" alt="Admin" width={36} height={36} />
-          </div>
+          <h1 className="text-xl font-headline font-bold text-[#1A1A1A]">OskarShop Admin</h1>
         </div>
       </header>
       
@@ -259,7 +238,6 @@ export default function AdminPage() {
               <p className="text-xs text-muted-foreground">Overview of your store's performance</p>
             </div>
 
-            {/* Stat Cards */}
             <div className="grid grid-cols-1 gap-4">
               <SummaryCard 
                 label="TOTAL REVENUE" 
@@ -295,7 +273,6 @@ export default function AdminPage() {
               />
             </div>
 
-            {/* Growth Chart */}
             <Card className="rounded-[2rem] p-6 border-none shadow-sm bg-white overflow-hidden">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="font-bold text-sm text-[#1A1A1A]">Revenue Growth</h3>
@@ -330,7 +307,6 @@ export default function AdminPage() {
               </div>
             </Card>
 
-            {/* Recent Orders List */}
             <div className="space-y-4 pb-20">
               <div className="flex justify-between items-center">
                 <h3 className="font-bold text-sm text-[#1A1A1A]">Recent Orders</h3>
@@ -350,7 +326,7 @@ export default function AdminPage() {
                       </div>
                       <div>
                         <p className="text-xs font-bold text-[#1A1A1A]">{order.items[0]?.title || "Game Package"}</p>
-                        <p className="text-[10px] text-muted-foreground">#ORD-{order.id.substring(0,4)} • 2m ago</p>
+                        <p className="text-[10px] text-muted-foreground">#ORD-{order.id.substring(0,4)}</p>
                       </div>
                     </div>
                     <div className="text-right">
@@ -361,7 +337,7 @@ export default function AdminPage() {
                         order.status === 'cancelled' ? 'bg-red-100 text-red-700' :
                         'bg-orange-100 text-orange-700'
                       )}>
-                        {order.status === 'successful' ? 'Completed' : order.status}
+                        {order.status}
                       </Badge>
                     </div>
                   </Card>
@@ -378,10 +354,10 @@ export default function AdminPage() {
               <Table>
                 <TableHeader className="bg-gray-50">
                   <TableRow className="hover:bg-transparent border-none">
-                    <TableHead className="font-bold text-[10px] uppercase tracking-wider">Order</TableHead>
-                    <TableHead className="font-bold text-[10px] uppercase tracking-wider">Total</TableHead>
-                    <TableHead className="font-bold text-[10px] uppercase tracking-wider">Status</TableHead>
-                    <TableHead className="text-right font-bold text-[10px] uppercase tracking-wider">Update</TableHead>
+                    <TableHead className="font-bold text-[10px] uppercase">Order</TableHead>
+                    <TableHead className="font-bold text-[10px] uppercase">Total</TableHead>
+                    <TableHead className="font-bold text-[10px] uppercase">Status</TableHead>
+                    <TableHead className="text-right font-bold text-[10px] uppercase">Update</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -390,7 +366,7 @@ export default function AdminPage() {
                       <TableCell>
                         <div className="flex flex-col">
                           <span className="font-bold text-xs">#{order.id.substring(0,8)}</span>
-                          <span className="text-[10px] text-muted-foreground">{order.gameDetails?.playerName || "No Name"}</span>
+                          <span className="text-[10px] text-muted-foreground">{order.gameDetails?.playerName || "User"}</span>
                         </div>
                       </TableCell>
                       <TableCell className="font-bold text-primary text-xs">${order.total.toFixed(2)}</TableCell>
@@ -430,18 +406,16 @@ export default function AdminPage() {
               <h2 className="text-3xl font-headline font-bold text-[#1A1A1A]">Inventory</h2>
             </div>
             
-            {/* Search Input */}
             <div className="relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <Input 
                 className="pl-11 h-12 rounded-xl bg-white border-gray-100 shadow-sm text-sm" 
-                placeholder="Search digital assets..." 
+                placeholder="Search assets..." 
                 value={productSearch}
                 onChange={(e) => setProductSearch(e.target.value)}
               />
             </div>
 
-            {/* Category Filter Chips */}
             <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
               {productCategories.map(cat => (
                 <button
@@ -459,11 +433,9 @@ export default function AdminPage() {
               ))}
             </div>
 
-            {/* Inventory List Layout */}
             <div className="space-y-3">
               {filteredProducts.map(p => (
                 <Card key={p.id} className="rounded-2xl p-3 border-none shadow-sm bg-white flex items-center gap-4 relative">
-                  {/* Thumbnail */}
                   <div className="w-20 h-20 rounded-xl overflow-hidden bg-gray-50 shrink-0 relative">
                     {p.thumbnail ? (
                       <Image src={p.thumbnail} alt={p.title} fill className="object-cover" unoptimized />
@@ -472,47 +444,28 @@ export default function AdminPage() {
                     )}
                   </div>
 
-                  {/* Info */}
                   <div className="flex-1 flex flex-col justify-center gap-0.5">
                     <h4 className="font-bold text-sm text-[#1A1A1A] line-clamp-1">{p.title}</h4>
                     <p className="text-[10px] font-bold text-gray-400 uppercase">{p.gameId}</p>
                     <div className="flex items-center justify-between mt-1">
                       <p className="text-sm font-bold text-primary">${p.price.toFixed(2)}</p>
-                      <Badge className={cn(
-                        "text-[8px] font-bold uppercase rounded-md px-2 py-0.5 border-none",
-                        p.category === 'top-up' ? "bg-purple-100 text-purple-600" : "bg-orange-100 text-orange-600"
-                      )}>
-                        {p.category === 'top-up' ? "IN STOCK" : "LOW STOCK"}
-                      </Badge>
+                      <div className="flex gap-2">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => setEditingProduct(p)}>
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => deleteProduct(p.id)}>
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-
-                  {/* Actions Dropdown/Menu Trigger */}
-                  <div className="absolute top-3 right-3 flex flex-col gap-2">
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      onClick={() => setEditingProduct(p)} 
-                      className="h-8 w-8 text-gray-400"
-                    >
-                      <MoreVertical className="w-5 h-5" />
-                    </Button>
                   </div>
                 </Card>
               ))}
-
-              {filteredProducts.length === 0 && (
-                <div className="py-20 text-center space-y-2 opacity-40">
-                  <Database className="w-12 h-12 mx-auto" />
-                  <p className="text-sm font-bold">No assets found</p>
-                </div>
-              )}
             </div>
 
-            {/* FAB - Add Product */}
             <button 
               onClick={() => setIsProductDialogOpen(true)}
-              className="fixed bottom-24 right-6 w-14 h-14 bg-primary text-white rounded-2xl flex items-center justify-center shadow-xl shadow-primary/30 z-[110] active:scale-90 transition-transform"
+              className="fixed bottom-24 right-6 w-14 h-14 bg-primary text-white rounded-2xl flex items-center justify-center shadow-xl shadow-primary/30 z-[110]"
             >
               <Plus className="w-8 h-8" />
             </button>
@@ -550,7 +503,7 @@ export default function AdminPage() {
                           </div>
                           <div className="flex flex-col">
                             <span className="font-bold text-[11px]">{u.name}</span>
-                            <span className="text-[8px] text-muted-foreground truncate max-w-[80px]">{u.email}</span>
+                            <span className="text-[8px] text-muted-foreground">{u.email}</span>
                           </div>
                         </div>
                       </TableCell>
@@ -567,7 +520,7 @@ export default function AdminPage() {
                            <Button 
                             variant="outline" 
                             size="sm" 
-                            className="h-6 text-[8px] font-bold rounded-md px-2"
+                            className="h-6 text-[8px] font-bold"
                             onClick={() => updateUserStatus(u.uid, { isBanned: !u.isBanned })}
                           >
                             {u.isBanned ? 'Unban' : 'Ban'}
@@ -626,7 +579,7 @@ export default function AdminPage() {
                 <div className="space-y-4 pt-6 border-t border-gray-50">
                    <h3 className="font-bold text-sm flex items-center gap-2"><ImageIcon className="w-4 h-4" /> Visual Identity</h3>
                    <div className="space-y-4">
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase">App Logo URL</p>
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase">App Logo URL (Catbox/External)</p>
                       <div className="flex gap-2">
                         <Input 
                           placeholder="Image URL" 
@@ -635,6 +588,35 @@ export default function AdminPage() {
                           onChange={(e) => setLogoUrlInput(e.target.value)}
                         />
                         <Button onClick={applyLogoUrl} className="rounded-xl h-10 text-xs font-bold">Apply</Button>
+                      </div>
+                   </div>
+                </div>
+
+                <div className="space-y-4 pt-6 border-t border-gray-50">
+                   <h3 className="font-bold text-sm flex items-center gap-2"><ImageIcon className="w-4 h-4" /> Promotion Sliders</h3>
+                   <div className="space-y-4">
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase">Add New Slider URL</p>
+                      <div className="flex gap-2">
+                        <Input 
+                          placeholder="Slider Image URL" 
+                          className="rounded-xl h-10 text-xs bg-gray-50 border-none"
+                          value={sliderUrlInput}
+                          onChange={(e) => setSliderUrlInput(e.target.value)}
+                        />
+                        <Button onClick={addSliderImage} className="rounded-xl h-10 text-xs font-bold">Add</Button>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 mt-4">
+                        {(storeSettings.sliderImages || []).map((url, i) => (
+                          <div key={i} className="relative group rounded-xl overflow-hidden aspect-video bg-gray-50 border">
+                            <Image src={url} alt={`Slider ${i}`} fill className="object-cover" unoptimized />
+                            <button 
+                              onClick={() => removeSliderImage(i)}
+                              className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ))}
                       </div>
                    </div>
                 </div>
@@ -650,7 +632,6 @@ export default function AdminPage() {
                 </div>
               </Card>
 
-              {/* AI Marketing Section */}
               <Card className="rounded-[2rem] p-6 border-none shadow-sm bg-gradient-to-br from-primary/5 to-secondary/5 space-y-4">
                 <h3 className="font-bold text-sm flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-secondary" /> AI Marketing Generator
@@ -676,12 +657,11 @@ export default function AdminPage() {
 
       </main>
 
-      {/* Bottom Navigation */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-100 z-[100] px-4 py-3 flex justify-around items-center">
         <NavButton active={activeView === 'dashboard'} onClick={() => setActiveView('dashboard')} icon={LayoutDashboard} label="DASHBOARD" />
         <NavButton active={activeView === 'orders'} onClick={() => setActiveView('orders')} icon={ShoppingBag} label="ORDERS" />
         <NavButton active={activeView === 'products'} onClick={() => setActiveView('products')} icon={Database} label="ASSETS" />
-        <NavButton active={activeView === 'settings'} onClick={() => setActiveView('settings')} icon={SettingsIcon} label="SETTINGS" />
+        <NavButton active={activeView === 'settings'} onClick={() => setActiveView('settings')} icon={SettingsIcon} label="CONSOLE" />
       </nav>
 
       {editingProduct && (
@@ -755,23 +735,10 @@ function ProductForm({ initialData, onSave }: { initialData?: any, onSave: (p: a
     price: 0,
     category: "top-up",
     gameId: "freefire",
-    thumbnail: "",
-    imageHint: "gaming"
+    thumbnail: ""
   });
 
   const [thumbUrlInput, setThumbUrlInput] = useState(data.thumbnail || "");
-
-  const handleProductImage = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64 = reader.result as string;
-      setData({ ...data, thumbnail: base64 });
-      setThumbUrlInput(base64);
-    };
-    reader.readAsDataURL(file);
-  };
 
   const applyThumbUrl = () => {
     setData({ ...data, thumbnail: thumbUrlInput });
@@ -837,29 +804,6 @@ function ProductForm({ initialData, onSave }: { initialData?: any, onSave: (p: a
       <div className="space-y-2">
         <Label className="text-[10px] uppercase font-bold">Description</Label>
         <Textarea className="rounded-xl bg-gray-50 border-none min-h-[60px] text-xs" value={data.description} onChange={e => setData({...data, description: e.target.value})} />
-      </div>
-
-      <div className="flex items-center gap-4">
-        <label className="flex-1 cursor-pointer">
-          <input type="file" className="hidden" accept="image/*" onChange={handleProductImage} />
-          <div className="h-20 rounded-2xl border-2 border-dashed border-gray-100 flex flex-col items-center justify-center text-muted-foreground hover:bg-gray-50 transition-colors">
-              <Upload className="w-5 h-5 mb-1" />
-              <span className="text-[9px] font-bold uppercase">Or Upload File</span>
-          </div>
-        </label>
-        {data.thumbnail && (
-          <div className="w-20 h-20 relative rounded-2xl overflow-hidden border border-gray-100">
-              <Image src={data.thumbnail} alt="Preview" fill className="object-cover" unoptimized />
-              <Button 
-              variant="destructive" 
-              size="icon" 
-              className="absolute top-1 right-1 h-5 w-5 rounded-full"
-              onClick={() => { setData({...data, thumbnail: ""}); setThumbUrlInput(""); }}
-              >
-                <X className="w-2.5 h-2.5" />
-              </Button>
-          </div>
-        )}
       </div>
 
       <Button className="w-full h-14 rounded-2xl bg-primary text-white font-bold" onClick={() => onSave(data)}>

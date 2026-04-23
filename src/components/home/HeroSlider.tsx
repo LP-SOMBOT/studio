@@ -18,7 +18,6 @@ export default function HeroSlider() {
         imageHint: "gaming"
       }));
     }
-    // No fallback to demo images in production
     return [];
   }, [storeSettings.sliderImages]);
 
@@ -54,6 +53,7 @@ export default function HeroSlider() {
             className="object-cover"
             priority={index === 0}
             data-ai-hint={slide.imageHint}
+            unoptimized
           />
         </div>
       ))}
