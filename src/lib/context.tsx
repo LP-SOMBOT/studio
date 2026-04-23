@@ -127,8 +127,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [settingsFetched, setSettingsFetched] = useState(false);
   const [productsFetched, setProductsFetched] = useState(false);
   
-  // Use a ref for prevIsLive to avoid re-render loops in useEffect
   const prevIsLiveRef = useRef<boolean | null>(null);
+  const [hasNotifiedThisSession, setHasNotifiedThisSession] = useState(false);
 
   useEffect(() => {
     const handleHash = () => {
@@ -170,9 +170,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (storeSettings) localStorage.setItem('oskar_settings', JSON.stringify(storeSettings));
     
-    // PUSH NOTIFICATION LOGIC
-    // Trigger when admin toggles isLive to true in the RTDB
-    if (prevIsLiveRef.current === false && storeSettings.isLive === true) {
+    // Reset notification trigger when store goes offline
+    if (storeSettings.isLive === false) {
+      setHasNotifiedThisSession(false);
+    }
+
+    // PUSH NOTIFICATION TRIGGER LOGIC
+    // Only fire if: 1. It's a false -> true transition OR first load transition
+    // AND 2. We haven't already notified for this specific "Live" period.
+    if (storeSettings.isLive === true && !hasNotifiedThisSession && prevIsLiveRef.current === false) {
       if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
         try {
           const showNotification = (reg: ServiceWorkerRegistration) => {
@@ -180,31 +186,30 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
               body: "Join our TikTok challenge now and win exclusive diamonds & rewards!",
               icon: storeSettings.logo || "https://placehold.co/192x192/7C3AED/FFFFFF/png?text=O",
               badge: "https://placehold.co/96x96/7C3AED/FFFFFF/png?text=O",
-              tag: 'store-live',
-              renotify: true
+              tag: 'store-live', // Tag ensures existing notification is replaced, not duplicated
+              renotify: true,
+              data: { url: '/#home' }
             });
+            setHasNotifiedThisSession(true);
           };
 
           if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.ready.then(showNotification).catch(() => {
-              new Notification("Oskar Shop is LIVE! 🔴", {
-                body: "Join our TikTok challenge now and win exclusive diamonds & rewards!",
-                icon: storeSettings.logo || "https://placehold.co/192x192/7C3AED/FFFFFF/png?text=O",
-              });
-            });
+            navigator.serviceWorker.ready.then(showNotification);
           } else {
             new Notification("Oskar Shop is LIVE! 🔴", {
               body: "Join our TikTok challenge now and win exclusive diamonds & rewards!",
               icon: storeSettings.logo || "https://placehold.co/192x192/7C3AED/FFFFFF/png?text=O",
+              tag: 'store-live'
             });
+            setHasNotifiedThisSession(true);
           }
         } catch (e) {
-          console.error("Notification failed", e);
+          console.error("Notification trigger failed", e);
         }
       }
     }
     prevIsLiveRef.current = storeSettings.isLive;
-  }, [storeSettings.isLive, storeSettings.logo]);
+  }, [storeSettings.isLive, storeSettings.logo, hasNotifiedThisSession]);
 
   useEffect(() => {
     if (products.length > 0) localStorage.setItem('oskar_products', JSON.stringify(products));

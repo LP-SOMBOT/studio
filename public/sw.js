@@ -1,7 +1,7 @@
 
 /**
- * OskarShop PWA Service Worker
- * Handles background notifications and offline capabilities.
+ * OskarShop Service Worker
+ * Handles PWA lifecycle, caching (future), and background notifications.
  */
 
 self.addEventListener('install', (event) => {
@@ -12,46 +12,50 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(clients.claim());
 });
 
-self.addEventListener('push', (event) => {
-  let data = {};
-  if (event.data) {
-    try {
-      data = event.data.json();
-    } catch (e) {
-      data = { title: "Oskar Shop", body: event.data.text() };
-    }
-  }
-
-  const title = data.title || "Oskar Shop Update";
-  const options = {
-    body: data.body || "New update from Oskar Shop!",
-    icon: data.icon || "https://placehold.co/192x192/7C3AED/FFFFFF/png?text=O",
-    badge: "https://placehold.co/96x96/7C3AED/FFFFFF/png?text=O",
-    tag: data.tag || 'general-notification',
-    renotify: true,
-    data: {
-      url: data.url || '/'
-    }
-  };
-
-  event.waitUntil(self.registration.showNotification(title, options));
-});
-
+/**
+ * Handle Notification Click
+ * When a user clicks the "Live" alert, we focus their existing app window or open a new one.
+ */
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
+
   const urlToOpen = event.notification.data?.url || '/';
-  
+
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+      // Check if there is already a window/tab open with our app
       for (var i = 0; i < windowClients.length; i++) {
         var client = windowClients[i];
-        if (client.url === urlToOpen && 'focus' in client) {
+        if (client.url.includes(urlToOpen) && 'focus' in client) {
           return client.focus();
         }
       }
+      // If no window found, open a new one
       if (clients.openWindow) {
         return clients.openWindow(urlToOpen);
       }
     })
+  );
+});
+
+/**
+ * Background Push Event (Experimental)
+ * Future implementation for cloud-triggered notifications.
+ */
+self.addEventListener('push', (event) => {
+  if (!event.data) return;
+
+  const data = event.data.json();
+  const options = {
+    body: data.body,
+    icon: data.icon || '/icon.png',
+    badge: data.badge || '/badge.png',
+    tag: data.tag || 'oskar-shop-default',
+    renotify: true,
+    data: { url: data.url || '/' }
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(data.title, options)
   );
 });
