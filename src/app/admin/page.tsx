@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import Link from "next/link";
 import { useApp } from "@/lib/context";
 import { 
@@ -473,7 +473,7 @@ export default function AdminPage() {
                     <div className="flex items-center justify-between mt-1">
                       <p className="text-sm font-bold text-primary">${p.price.toFixed(2)}</p>
                       <div className="flex gap-2">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => setEditingProduct(p)}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => { setEditingProduct(p); setIsProductDialogOpen(true); }}>
                           <Edit className="w-4 h-4" />
                         </Button>
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => deleteProduct(p.id)}>
@@ -492,12 +492,6 @@ export default function AdminPage() {
             >
               <Plus className="w-8 h-8" />
             </button>
-
-            <Dialog open={isProductDialogOpen} onOpenChange={setIsProductDialogOpen}>
-              <DialogContent className="rounded-[2.5rem] max-w-xl p-0 overflow-hidden border-none bg-white">
-                <ProductForm onSave={(p) => { saveProduct(p); setIsProductDialogOpen(false); }} onCancel={() => setIsProductDialogOpen(false)} />
-              </DialogContent>
-            </Dialog>
           </div>
         )}
 
@@ -713,17 +707,15 @@ export default function AdminPage() {
         <NavButton active={activeView === 'settings'} onClick={() => setActiveView('settings')} icon={SettingsIcon} label="CONSOLE" />
       </nav>
 
-      {editingProduct && (
-        <Dialog open={!!editingProduct} onOpenChange={() => setEditingProduct(null)}>
-          <DialogContent className="rounded-[2.5rem] max-w-xl p-0 overflow-hidden border-none bg-white">
-            <ProductForm 
-              initialData={editingProduct} 
-              onSave={(p) => { saveProduct(p); setEditingProduct(null); }} 
-              onCancel={() => setEditingProduct(null)}
-            />
-          </DialogContent>
-        </Dialog>
-      )}
+      <Dialog open={isProductDialogOpen} onOpenChange={setIsProductDialogOpen}>
+        <DialogContent className="rounded-[2.5rem] max-w-xl p-0 overflow-hidden border-none bg-white h-[90vh] md:h-auto md:max-h-[95vh] flex flex-col">
+          <ProductForm 
+            initialData={editingProduct} 
+            onSave={(p) => { saveProduct(p); setIsProductDialogOpen(false); setEditingProduct(null); }} 
+            onCancel={() => { setIsProductDialogOpen(false); setEditingProduct(null); }} 
+          />
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={!!userToDelete} onOpenChange={() => setUserToDelete(null)}>
         <AlertDialogContent className="rounded-[2rem]">
@@ -790,6 +782,7 @@ function ProductForm({ initialData, onSave, onCancel }: { initialData?: any, onS
     diamondAmount: ""
   });
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [thumbUrlInput, setThumbUrlInput] = useState(data.thumbnail || "");
 
   const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -802,10 +795,23 @@ function ProductForm({ initialData, onSave, onCancel }: { initialData?: any, onS
     setData({ ...data, stock: isNaN(val) ? 0 : val });
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setThumbUrlInput(base64String);
+        setData({ ...data, thumbnail: base64String });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   return (
-    <div className="flex flex-col h-full bg-white max-h-[90vh]">
+    <div className="flex flex-col h-full bg-white max-h-full">
       {/* Header */}
-      <div className="px-6 py-4 flex items-center justify-between border-b border-gray-100">
+      <div className="px-6 py-4 flex items-center justify-between border-b border-gray-100 shrink-0">
         <div className="flex items-center gap-2">
           <button onClick={onCancel} className="p-1 hover:bg-gray-100 rounded-lg transition-colors">
             <X className="w-5 h-5 text-gray-500" />
@@ -819,7 +825,7 @@ function ProductForm({ initialData, onSave, onCancel }: { initialData?: any, onS
         </div>
       </div>
 
-      <div className="p-8 overflow-y-auto flex-1 space-y-8">
+      <div className="p-8 overflow-y-auto flex-1 space-y-8 scrollbar-hide">
         <div>
           <DialogTitle className="text-3xl font-headline font-bold text-[#1A1A1A]">Product Details</DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground mt-1">
@@ -832,7 +838,10 @@ function ProductForm({ initialData, onSave, onCancel }: { initialData?: any, onS
           <Label className="text-[11px] font-bold text-gray-500 uppercase flex items-center gap-2">
             Product Banner <Info className="w-3 h-3" />
           </Label>
-          <div className="relative h-48 rounded-[2rem] border-2 border-dashed border-gray-200 bg-gray-50/50 flex flex-col items-center justify-center group overflow-hidden transition-all hover:border-primary/50">
+          <div 
+            onClick={() => fileInputRef.current?.click()}
+            className="relative h-48 rounded-[2rem] border-2 border-dashed border-gray-200 bg-gray-50/50 flex flex-col items-center justify-center group overflow-hidden transition-all hover:border-primary/50 cursor-pointer"
+          >
             {thumbUrlInput ? (
               <div className="absolute inset-0">
                 <Image src={thumbUrlInput} alt="Banner Preview" fill className="object-cover opacity-60" unoptimized />
@@ -844,17 +853,28 @@ function ProductForm({ initialData, onSave, onCancel }: { initialData?: any, onS
                 <ImageIcon className="w-6 h-6" />
               </div>
               <p className="text-xs font-bold text-gray-600">Tap to upload or drag & drop</p>
-              <p className="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-tighter">MAX 5MB • PNG, JPG</p>
+              <p className="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-tighter">MAX 5MB • PNG, JPG, GIF</p>
               
-              <Input 
-                className="mt-4 h-9 bg-white border-gray-200 text-[11px] font-medium max-w-[240px] rounded-xl text-center"
-                placeholder="Paste Image URL here..."
-                value={thumbUrlInput}
-                onChange={(e) => {
-                  setThumbUrlInput(e.target.value);
-                  setData({ ...data, thumbnail: e.target.value });
-                }}
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                onChange={handleFileChange} 
+                className="hidden" 
+                accept="image/*" 
               />
+              
+              <div className="mt-4 flex flex-col gap-2 w-full max-w-[240px]">
+                <Input 
+                  className="h-9 bg-white border-gray-200 text-[11px] font-medium rounded-xl text-center"
+                  placeholder="Or paste Image URL here..."
+                  value={thumbUrlInput.startsWith('data:') ? '' : thumbUrlInput}
+                  onClick={(e) => e.stopPropagation()}
+                  onChange={(e) => {
+                    setThumbUrlInput(e.target.value);
+                    setData({ ...data, thumbnail: e.target.value });
+                  }}
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -942,7 +962,7 @@ function ProductForm({ initialData, onSave, onCancel }: { initialData?: any, onS
       </div>
 
       {/* Footer Actions */}
-      <div className="p-6 bg-gray-50/50 border-t border-gray-100 flex items-center gap-4 mt-auto">
+      <div className="p-6 bg-gray-50/50 border-t border-gray-100 flex items-center gap-4 mt-auto shrink-0">
         <Button 
           variant="outline" 
           onClick={onCancel}
