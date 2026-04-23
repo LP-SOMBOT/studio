@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import { 
   useUser, 
@@ -126,10 +126,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const [settingsFetched, setSettingsFetched] = useState(false);
   const [productsFetched, setProductsFetched] = useState(false);
-  const [prevIsLive, setPrevIsLive] = useState<boolean | null>(null);
+  
+  // Use a ref for prevIsLive to avoid re-render loops in useEffect
+  const prevIsLiveRef = useRef<boolean | null>(null);
 
   useEffect(() => {
-    // Sync hash to active tab on mount
     const handleHash = () => {
       const hash = window.location.hash.replace('#', '');
       if (['home', 'games', 'cart', 'profile'].includes(hash)) {
@@ -171,19 +172,39 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     
     // PUSH NOTIFICATION LOGIC
     // Trigger when admin toggles isLive to true in the RTDB
-    if (prevIsLive === false && storeSettings.isLive === true) {
+    if (prevIsLiveRef.current === false && storeSettings.isLive === true) {
       if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
-        new Notification("Oskar Shop is LIVE! 🔴", {
-          body: "Join our TikTok challenge now and win exclusive diamonds & rewards!",
-          icon: storeSettings.logo || "https://placehold.co/192x192/7C3AED/FFFFFF/png?text=O",
-          badge: "https://placehold.co/96x96/7C3AED/FFFFFF/png?text=O",
-          tag: 'store-live',
-          renotify: true
-        });
+        try {
+          const showNotification = (reg: ServiceWorkerRegistration) => {
+            reg.showNotification("Oskar Shop is LIVE! 🔴", {
+              body: "Join our TikTok challenge now and win exclusive diamonds & rewards!",
+              icon: storeSettings.logo || "https://placehold.co/192x192/7C3AED/FFFFFF/png?text=O",
+              badge: "https://placehold.co/96x96/7C3AED/FFFFFF/png?text=O",
+              tag: 'store-live',
+              renotify: true
+            });
+          };
+
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.ready.then(showNotification).catch(() => {
+              new Notification("Oskar Shop is LIVE! 🔴", {
+                body: "Join our TikTok challenge now and win exclusive diamonds & rewards!",
+                icon: storeSettings.logo || "https://placehold.co/192x192/7C3AED/FFFFFF/png?text=O",
+              });
+            });
+          } else {
+            new Notification("Oskar Shop is LIVE! 🔴", {
+              body: "Join our TikTok challenge now and win exclusive diamonds & rewards!",
+              icon: storeSettings.logo || "https://placehold.co/192x192/7C3AED/FFFFFF/png?text=O",
+            });
+          }
+        } catch (e) {
+          console.error("Notification failed", e);
+        }
       }
     }
-    setPrevIsLive(storeSettings.isLive);
-  }, [storeSettings.isLive, storeSettings.logo, prevIsLive]);
+    prevIsLiveRef.current = storeSettings.isLive;
+  }, [storeSettings.isLive, storeSettings.logo]);
 
   useEffect(() => {
     if (products.length > 0) localStorage.setItem('oskar_products', JSON.stringify(products));
