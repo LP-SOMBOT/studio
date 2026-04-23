@@ -15,10 +15,10 @@ export default function SWRegistration() {
         navigator.serviceWorker
           .register('/sw.js')
           .then((registration) => {
-            console.log('SW registered with scope:', registration.scope);
+            console.log('OskarShop SW registered:', registration.scope);
           })
           .catch((error) => {
-            console.error('SW registration failed:', error);
+            console.error('OskarShop SW registration failed:', error);
           });
       });
     }

@@ -1,42 +1,30 @@
 
+/**
+ * Service Worker for Oskar Shop
+ * Required for PWA installability and offline support.
+ */
+
 const CACHE_NAME = 'oskar-shop-v1';
-const urlsToCache = [
-  '/',
-  '/manifest.json',
-  '/icon-192x192.png',
-  '/icon-512x512.png'
-];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(urlsToCache))
-  );
-});
-
-self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        if (response) {
-          return response;
-        }
-        return fetch(event.request);
-      })
-  );
+  // Force the waiting service worker to become the active service worker.
+  self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
-  const cacheWhitelist = [CACHE_NAME];
-  event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheWhitelist.indexOf(cacheName) === -1) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
+  // Claim any clients immediately, so the page doesn't need to be reloaded.
+  event.waitUntil(clients.claim());
+});
+
+self.addEventListener('fetch', (event) => {
+  /**
+   * Basic fetch handler. 
+   * A 'fetch' event listener is mandatory for the browser to consider the app a PWA.
+   */
+  event.respondWith(
+    fetch(event.request).catch(() => {
+      // Fallback or offline logic could go here
+      return caches.match(event.request);
     })
   );
 });

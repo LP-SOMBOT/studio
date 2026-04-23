@@ -3,13 +3,13 @@ import { MetadataRoute } from 'next';
 
 /**
  * PWA Manifest Configuration
- * Note: For the home screen icon to update to the admin's logo,
- * we provide standard paths here as fallbacks. The 'DynamicHead' component
- * handles the runtime update of the favicon and apple-touch-icon.
+ * We use external placeholder URLs for manifest icons to ensure the browser 
+ * validates the PWA as installable even if local icons aren't present.
+ * The 'DynamicHead' component updates the UI icons in real-time.
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'OskarShop',
+    name: 'Oskar Shop',
     short_name: 'OskarShop',
     description: 'The best gaming top-up service and accounts store.',
     start_url: '/',
@@ -18,13 +18,13 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: '#7C3AED',
     icons: [
       {
-        src: '/icon-192x192.png',
+        src: 'https://placehold.co/192x192/7C3AED/FFFFFF/png?text=O',
         sizes: '192x192',
         type: 'image/png',
         purpose: 'maskable',
       },
       {
-        src: '/icon-512x512.png',
+        src: 'https://placehold.co/512x512/7C3AED/FFFFFF/png?text=Oskar',
         sizes: '512x512',
         type: 'image/png',
         purpose: 'any',

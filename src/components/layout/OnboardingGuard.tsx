@@ -8,18 +8,21 @@ import OnboardingFlow from '../onboarding/OnboardingFlow';
 /**
  * OnboardingGuard Component
  * 
- * Conditionally shows the onboarding flow based on PWA status and view history.
- * Only appears when: App is Standalone PWA AND User hasn't seen onboarding.
+ * CRITICAL RULE:
+ * 1. Only appears when the app is running as a Standalone PWA (Added to Home Screen).
+ * 2. Only appears for the very first launch (checked via localStorage).
+ * 3. Never shows on standard browser visits.
  */
 export default function OnboardingGuard({ children }: { children: React.ReactNode }) {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    // Check conditions on mount to avoid hydration mismatches
+    // We check this after mounting to avoid hydration mismatches
     const standalone = isStandalone();
     const seen = hasSeenOnboarding();
 
+    // STRICT CONDITION: Must be standalone AND not yet seen.
     if (standalone && !seen) {
       setShowOnboarding(true);
     }

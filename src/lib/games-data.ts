@@ -1,5 +1,8 @@
-// This file defines the GamePackage type. 
-// Demo data has been removed for production readiness.
+
+/**
+ * GamePackage Type Definition
+ * This file is now purely for types. All data is fetched from Firebase RTDB.
+ */
 
 export type GamePackage = {
   id: string;
@@ -14,5 +17,5 @@ export type GamePackage = {
   tags?: string[];
 };
 
-// Always empty. Real data is loaded from Firebase Realtime Database.
+// Always empty in code. Real data is loaded from Firebase Realtime Database.
 export const GAMES_DATA: GamePackage[] = [];

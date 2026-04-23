@@ -45,6 +45,7 @@ export default function RootLayout({
       <body className="font-body antialiased">
         <FirebaseClientProvider>
           <AppProvider>
+            {/* Service Worker Registration is required for PWA installability */}
             <SWRegistration />
             <DynamicHead />
             <SplashScreen />
