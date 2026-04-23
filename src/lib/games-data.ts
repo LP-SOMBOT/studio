@@ -14,5 +14,5 @@ export type GamePackage = {
   tags?: string[];
 };
 
-// Start with an empty library. Admin will add products via the dashboard.
+// Always empty. Real data is loaded from Firebase Realtime Database.
 export const GAMES_DATA: GamePackage[] = [];

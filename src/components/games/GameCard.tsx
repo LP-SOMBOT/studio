@@ -37,14 +37,21 @@ export default function GameCard({ id, title, description, thumbnail, price, dis
 
   return (
     <Card className="group overflow-hidden bg-white border-gray-100 hover:shadow-xl hover:shadow-primary/10 transition-all duration-500 rounded-[2rem] flex flex-col h-full">
-      <div className="relative aspect-square w-full overflow-hidden">
-        <Image
-          src={thumbnail}
-          alt={title}
-          fill
-          className="object-cover group-hover:scale-110 transition-transform duration-700"
-          data-ai-hint={imageHint || "gaming"}
-        />
+      <div className="relative aspect-square w-full overflow-hidden bg-gray-50">
+        {thumbnail ? (
+          <Image
+            src={thumbnail}
+            alt={title}
+            fill
+            className="object-cover group-hover:scale-110 transition-transform duration-700"
+            data-ai-hint={imageHint || "gaming"}
+            unoptimized
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-primary font-bold opacity-20">
+            {gameId.substring(0,2).toUpperCase()}
+          </div>
+        )}
         {hasDiscount && (
           <Badge className="absolute top-4 left-4 bg-red-500 text-white border-none font-bold px-3 py-1 rounded-full shadow-lg">
             -{discountPercent}%

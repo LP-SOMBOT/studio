@@ -3,7 +3,6 @@
 
 import { useEffect, useState, useMemo } from "react";
 import Image from "next/image";
-import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { useApp } from "@/lib/context";
 
 export default function HeroSlider() {
@@ -19,7 +18,8 @@ export default function HeroSlider() {
         imageHint: "gaming"
       }));
     }
-    return PlaceHolderImages.filter(img => img.id.startsWith('hero'));
+    // No fallback to demo images in production
+    return [];
   }, [storeSettings.sliderImages]);
 
   useEffect(() => {
@@ -30,7 +30,13 @@ export default function HeroSlider() {
     return () => clearInterval(timer);
   }, [slides.length]);
 
-  if (slides.length === 0) return null;
+  if (slides.length === 0) {
+    return (
+      <div className="w-full aspect-[21/9] md:aspect-[3/1] bg-gray-100 rounded-[2rem] flex items-center justify-center text-muted-foreground italic text-sm">
+        No active promotions.
+      </div>
+    );
+  }
 
   return (
     <div className="relative w-full aspect-[21/9] md:aspect-[3/1] overflow-hidden rounded-[2rem] group shadow-xl">

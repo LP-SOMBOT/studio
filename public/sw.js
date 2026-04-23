@@ -1,9 +1,7 @@
-
 /**
- * Oskar Shop - PWA Service Worker
- * This service worker is required for the app to be installable on mobile and desktop.
- * It provides the minimum requirements for the PWA 'Install' prompt to be triggered.
+ * Standard Service Worker for PWA Installability
  */
+const CACHE_NAME = 'oskar-shop-v1';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
@@ -14,6 +12,6 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Basic fetch listener to satisfy PWA criteria
+  // Simple pass-through fetch to satisfy PWA requirements
   event.respondWith(fetch(event.request));
 });

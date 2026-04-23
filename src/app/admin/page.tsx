@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo } from "react";
@@ -20,7 +21,8 @@ import {
   X,
   LayoutDashboard,
   ArrowLeft,
-  Megaphone
+  Megaphone,
+  Link as LinkIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -81,6 +83,7 @@ export default function AdminPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [userToDelete, setUserToDelete] = useState<string | null>(null);
+  const [logoUrlInput, setLogoUrlInput] = useState(storeSettings.logo || "");
   
   const [promoInput, setPromoInput] = useState({
     promotionType: 'discount' as any,
@@ -133,6 +136,7 @@ export default function AdminPage() {
       const base64 = reader.result as string;
       if (type === 'logo') {
         updateStoreSettings({ logo: base64 });
+        setLogoUrlInput(base64);
       } else if (type === 'onboarding' && typeof index === 'number') {
         const current = [...(storeSettings.onboardingImages || [])];
         current[index] = base64;
@@ -145,6 +149,12 @@ export default function AdminPage() {
       toast({ title: "Image Uploaded", description: "Saved to database." });
     };
     reader.readAsDataURL(file);
+  };
+
+  const applyLogoUrl = () => {
+    if (!logoUrlInput) return;
+    updateStoreSettings({ logo: logoUrlInput });
+    toast({ title: "Logo URL Applied" });
   };
 
   const removeSliderImage = (index: number) => {
@@ -215,20 +225,24 @@ export default function AdminPage() {
                   <ShoppingBag className="w-5 h-5 text-primary" /> Recent Activity
                 </h3>
                 <div className="space-y-4">
-                  {allOrders.slice(0, 5).map(o => (
-                    <div key={o.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-2xl">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center font-bold text-xs shadow-sm">
-                          {o.items[0]?.gameId.substring(0,2).toUpperCase() || 'GS'}
+                  {allOrders.length === 0 ? (
+                    <p className="text-center text-muted-foreground py-8 italic">No orders yet.</p>
+                  ) : (
+                    allOrders.slice(0, 5).map(o => (
+                      <div key={o.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-2xl">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center font-bold text-xs shadow-sm">
+                            {o.items[0]?.gameId.substring(0,2).toUpperCase() || 'GS'}
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold">{o.items[0]?.title}</p>
+                            <p className="text-[10px] text-muted-foreground">ID: {o.id.substring(0,8)}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-sm font-bold">{o.items[0]?.title}</p>
-                          <p className="text-[10px] text-muted-foreground">ID: {o.id.substring(0,8)}</p>
-                        </div>
+                        <Badge variant="outline" className="text-[10px] uppercase">{o.status}</Badge>
                       </div>
-                      <Badge variant="outline" className="text-[10px] uppercase">{o.status}</Badge>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </Card>
 
@@ -317,6 +331,11 @@ export default function AdminPage() {
                       </TableCell>
                     </TableRow>
                   ))}
+                  {allOrders.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center py-20 text-muted-foreground">No orders yet.</TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </Card>
@@ -342,13 +361,13 @@ export default function AdminPage() {
               </Dialog>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
               {products.map(p => (
                 <Card key={p.id} className="rounded-[2.5rem] p-6 relative group overflow-hidden border-gray-100 hover:shadow-lg transition-shadow bg-white flex flex-col">
                   <div className="flex justify-between mb-4">
                     <div className="relative w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center font-bold text-primary border border-gray-100 overflow-hidden">
                       {p.thumbnail ? (
-                        <Image src={p.thumbnail} alt={p.title} fill className="object-cover" />
+                        <Image src={p.thumbnail} alt={p.title} fill className="object-cover" unoptimized />
                       ) : (
                         p.gameId?.[0]?.toUpperCase() || 'P'
                       )}
@@ -369,6 +388,12 @@ export default function AdminPage() {
                   </div>
                 </Card>
               ))}
+              {products.length === 0 && (
+                <div className="col-span-full py-20 text-center border-2 border-dashed rounded-[2.5rem] border-gray-200">
+                  <Package className="w-12 h-12 text-gray-200 mx-auto mb-4" />
+                  <p className="text-muted-foreground">Product library is empty.</p>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -432,6 +457,11 @@ export default function AdminPage() {
                       </TableCell>
                     </TableRow>
                   ))}
+                  {allUsers.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center py-20 text-muted-foreground">No users registered.</TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </Card>
@@ -446,15 +476,36 @@ export default function AdminPage() {
                   <ImageIcon className="w-6 h-6 text-primary" /> Visual Identity
                 </h3>
                 <div className="space-y-8">
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
-                    <div>
-                      <p className="font-bold text-sm">App Logo</p>
-                      <p className="text-[10px] text-muted-foreground">Appears in header and loading states</p>
+                  <div className="space-y-4">
+                    <p className="font-bold text-sm">App Logo (URL or Upload)</p>
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input 
+                          placeholder="Insert image URL (e.g. Catbox)" 
+                          className="pl-10 rounded-xl h-12"
+                          value={logoUrlInput}
+                          onChange={(e) => setLogoUrlInput(e.target.value)}
+                        />
+                      </div>
+                      <Button onClick={applyLogoUrl} className="rounded-xl h-12 font-bold">Apply URL</Button>
                     </div>
-                    <label className="cursor-pointer">
-                      <input type="file" className="hidden" accept="image/*" onChange={(e) => handleImageUpload(e, 'logo')} />
-                      <div className="w-10 h-10 bg-primary text-white rounded-xl flex items-center justify-center shadow-lg shadow-primary/20"><Upload className="w-5 h-5" /></div>
-                    </label>
+                    
+                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 relative rounded-xl overflow-hidden border bg-white">
+                          {storeSettings.logo && <Image src={storeSettings.logo} alt="Logo" fill className="object-cover" unoptimized />}
+                        </div>
+                        <div>
+                          <p className="font-bold text-xs">Upload Local File</p>
+                          <p className="text-[10px] text-muted-foreground">Replaces current URL</p>
+                        </div>
+                      </div>
+                      <label className="cursor-pointer">
+                        <input type="file" className="hidden" accept="image/*" onChange={(e) => handleImageUpload(e, 'logo')} />
+                        <div className="w-10 h-10 bg-primary text-white rounded-xl flex items-center justify-center shadow-lg shadow-primary/20"><Upload className="w-5 h-5" /></div>
+                      </label>
+                    </div>
                   </div>
 
                   <div className="space-y-4">
@@ -481,7 +532,7 @@ export default function AdminPage() {
                       <p className="font-bold text-sm">Hero Slider Images</p>
                       <label className="cursor-pointer">
                          <input type="file" className="hidden" accept="image/*" onChange={(e) => handleImageUpload(e, 'slider', storeSettings.sliderImages?.length || 0)} />
-                         <Button variant="outline" size="sm" className="rounded-full gap-2 pointer-events-none">
+                         <Button variant="outline" size="sm" className="rounded-full gap-2 pointer-events-none h-10 px-6 font-bold">
                             <Plus className="w-4 h-4" /> Add Slide
                          </Button>
                       </label>
@@ -489,7 +540,7 @@ export default function AdminPage() {
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                       {(storeSettings.sliderImages || []).map((img, idx) => (
                         <div key={idx} className="relative aspect-video rounded-xl overflow-hidden border border-gray-100 group">
-                           <Image src={img} alt={`Slide ${idx}`} fill className="object-cover" />
+                           <Image src={img} alt={`Slide ${idx}`} fill className="object-cover" unoptimized />
                            <Button 
                              variant="destructive" 
                              size="icon" 
@@ -620,14 +671,22 @@ function ProductForm({ initialData, onSave }: { initialData?: any, onSave: (p: a
     imageHint: "gaming"
   });
 
+  const [thumbUrlInput, setThumbUrlInput] = useState(data.thumbnail || "");
+
   const handleProductImage = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onloadend = () => {
-      setData({ ...data, thumbnail: reader.result as string });
+      const base64 = reader.result as string;
+      setData({ ...data, thumbnail: base64 });
+      setThumbUrlInput(base64);
     };
     reader.readAsDataURL(file);
+  };
+
+  const applyThumbUrl = () => {
+    setData({ ...data, thumbnail: thumbUrlInput });
   };
 
   return (
@@ -677,8 +736,17 @@ function ProductForm({ initialData, onSave }: { initialData?: any, onSave: (p: a
         <Textarea className="rounded-xl bg-gray-50 border-none min-h-[80px]" value={data.description} onChange={e => setData({...data, description: e.target.value})} />
       </div>
 
-      <div className="space-y-2">
-        <Label className="text-[10px] uppercase font-bold">Package Image</Label>
+      <div className="space-y-4">
+        <Label className="text-[10px] uppercase font-bold">Package Image (URL or Upload)</Label>
+        <div className="flex gap-2">
+           <Input 
+             placeholder="Insert image URL" 
+             className="rounded-xl bg-gray-50 border-none"
+             value={thumbUrlInput}
+             onChange={(e) => setThumbUrlInput(e.target.value)}
+           />
+           <Button variant="secondary" onClick={applyThumbUrl}>Apply</Button>
+        </div>
         <div className="flex items-center gap-4">
           <label className="flex-1 cursor-pointer">
             <input type="file" className="hidden" accept="image/*" onChange={handleProductImage} />
@@ -689,12 +757,12 @@ function ProductForm({ initialData, onSave }: { initialData?: any, onSave: (p: a
           </label>
           {data.thumbnail && (
             <div className="w-24 h-24 relative rounded-2xl overflow-hidden border border-gray-100">
-               <Image src={data.thumbnail} alt="Preview" fill className="object-cover" />
+               <Image src={data.thumbnail} alt="Preview" fill className="object-cover" unoptimized />
                <Button 
                 variant="destructive" 
                 size="icon" 
                 className="absolute top-1 right-1 h-6 w-6 rounded-full"
-                onClick={() => setData({...data, thumbnail: ""})}
+                onClick={() => { setData({...data, thumbnail: ""}); setThumbUrlInput(""); }}
                >
                  <X className="w-3 h-3" />
                </Button>
