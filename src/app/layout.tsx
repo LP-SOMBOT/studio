@@ -10,6 +10,7 @@ import GlobalLoading from "@/components/layout/GlobalLoading";
 import SplashScreen from "@/components/layout/SplashScreen";
 import DynamicHead from "@/components/layout/DynamicHead";
 import SWRegistration from "@/components/layout/SWRegistration";
+import MainAppLayout from "@/components/layout/MainAppLayout";
 
 export const metadata: Metadata = {
   title: 'Oskar Shop - Game Top-Up & Accounts',
@@ -45,14 +46,15 @@ export default function RootLayout({
       <body className="font-body antialiased">
         <FirebaseClientProvider>
           <AppProvider>
-            {/* Service Worker Registration is required for PWA installability */}
             <SWRegistration />
             <DynamicHead />
             <SplashScreen />
             <GlobalLoading />
             <PWAInstaller />
             <OnboardingGuard>
-              {children}
+              <MainAppLayout>
+                {children}
+              </MainAppLayout>
             </OnboardingGuard>
             <Toaster />
           </AppProvider>

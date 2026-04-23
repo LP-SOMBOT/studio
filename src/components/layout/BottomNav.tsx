@@ -1,41 +1,32 @@
 
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { House, Gamepad2, ShoppingCart, CircleUser } from "lucide-react";
 import { useApp } from "@/lib/context";
 import { cn } from "@/lib/utils";
 
 export default function BottomNav() {
-  const pathname = usePathname();
-  const { cart, user } = useApp();
+  const { cart, activeTab, setActiveTab } = useApp();
   const cartCount = cart.reduce((acc, i) => acc + i.quantity, 0);
 
   const navItems = [
-    { label: "Home", icon: House, href: "/" },
-    { label: "Games", icon: Gamepad2, href: "/games" },
-    { label: "Cart", icon: ShoppingCart, href: "/cart", badge: cartCount },
-    { label: "Profile", icon: CircleUser, href: user ? "/profile" : "/login" },
+    { id: "home", label: "Home", icon: House },
+    { id: "games", label: "Games", icon: Gamepad2 },
+    { id: "cart", label: "Cart", icon: ShoppingCart, badge: cartCount },
+    { id: "profile", label: "Profile", icon: CircleUser },
   ];
-
-  // Logic to determine if a route is active
-  const isTabActive = (href: string) => {
-    if (href === "/" && pathname !== "/") return false;
-    return pathname.startsWith(href);
-  };
 
   return (
     <div className="fixed bottom-5 left-0 right-0 z-[100] flex justify-center px-4 pointer-events-none">
       <nav className="w-full max-w-[400px] h-16 bg-white rounded-[40px] shadow-[0_8px_30px_rgba(0,0,0,0.12)] flex items-center justify-around px-2 py-2 pointer-events-auto border border-gray-50/50">
         {navItems.map((item) => {
-          const isActive = isTabActive(item.href);
+          const isActive = activeTab === item.id;
           const Icon = item.icon;
 
           return (
-            <Link
-              key={item.href}
-              href={item.href}
+            <button
+              key={item.id}
+              onClick={() => setActiveTab(item.id)}
               className="relative flex items-center justify-center transition-all duration-300"
             >
               <div
@@ -66,7 +57,7 @@ export default function BottomNav() {
                   </span>
                 )}
               </div>
-            </Link>
+            </button>
           );
         })}
       </nav>

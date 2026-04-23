@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
@@ -75,6 +76,8 @@ type AppContextType = {
   loading: boolean;
   isGlobalLoading: boolean;
   isInitialLoading: boolean;
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
   setGlobalLoading: (loading: boolean) => void;
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, name: string, phone: string) => Promise<void>;
@@ -106,6 +109,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const rtdb = useDatabase();
   const pathname = usePathname();
   
+  const [activeTab, setActiveTabState] = useState('home');
   const [isGlobalLoading, setIsGlobalLoading] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -124,6 +128,24 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [productsFetched, setProductsFetched] = useState(false);
 
   useEffect(() => {
+    // Sync hash to active tab on mount
+    const handleHash = () => {
+      const hash = window.location.hash.replace('#', '');
+      if (['home', 'games', 'cart', 'profile'].includes(hash)) {
+        setActiveTabState(hash);
+      }
+    };
+    handleHash();
+    window.addEventListener('hashchange', handleHash);
+    return () => window.removeEventListener('hashchange', handleHash);
+  }, []);
+
+  const setActiveTab = (tab: string) => {
+    setActiveTabState(tab);
+    window.location.hash = tab === 'home' ? '' : tab;
+  };
+
+  useEffect(() => {
     const cachedCart = localStorage.getItem('oskar_cart');
     if (cachedCart) setCart(JSON.parse(cachedCart));
 
@@ -137,7 +159,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (cachedProfile) setUserProfile(JSON.parse(cachedProfile));
   }, []);
 
-  // End splash as soon as data arrives, no artificial cooldown
   useEffect(() => {
     if (settingsFetched && productsFetched) {
       setIsInitialLoading(false);
@@ -365,7 +386,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       gameDetails,
     };
     const ordersRef = ref(rtdb, 'orders');
-    push(ordersRef, orderData).then(() => clearCart());
+    push(ordersRef, orderData).then(() => {
+      clearCart();
+      setActiveTab('profile'); // Switch to profile to see order
+    });
   };
 
   const updateOrderStatus = async (orderId: string, status: string) => {
@@ -406,6 +430,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       loading,
       isGlobalLoading,
       isInitialLoading,
+      activeTab,
+      setActiveTab,
       setGlobalLoading: setIsGlobalLoading,
       login, 
       signup,
