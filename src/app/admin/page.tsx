@@ -32,7 +32,11 @@ import {
   Database,
   Search,
   MoreVertical,
-  Filter
+  Filter,
+  Gem,
+  Banknote,
+  Archive,
+  Info
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -54,7 +58,8 @@ import {
   DialogContent, 
   DialogHeader, 
   DialogTitle, 
-  DialogTrigger
+  DialogTrigger,
+  DialogClose
 } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -464,18 +469,15 @@ export default function AdminPage() {
             </div>
 
             <button 
-              onClick={() => setIsProductDialogOpen(true)}
+              onClick={() => { setEditingProduct(null); setIsProductDialogOpen(true); }}
               className="fixed bottom-24 right-6 w-14 h-14 bg-primary text-white rounded-2xl flex items-center justify-center shadow-xl shadow-primary/30 z-[110]"
             >
               <Plus className="w-8 h-8" />
             </button>
 
             <Dialog open={isProductDialogOpen} onOpenChange={setIsProductDialogOpen}>
-              <DialogContent className="rounded-[2.5rem] max-w-xl">
-                <DialogHeader>
-                  <DialogTitle className="text-2xl font-headline font-bold">New Asset</DialogTitle>
-                </DialogHeader>
-                <ProductForm onSave={(p) => { saveProduct(p); setIsProductDialogOpen(false); }} />
+              <DialogContent className="rounded-[2.5rem] max-w-xl p-0 overflow-hidden border-none bg-white">
+                <ProductForm onSave={(p) => { saveProduct(p); setIsProductDialogOpen(false); }} onCancel={() => setIsProductDialogOpen(false)} />
               </DialogContent>
             </Dialog>
           </div>
@@ -666,11 +668,12 @@ export default function AdminPage() {
 
       {editingProduct && (
         <Dialog open={!!editingProduct} onOpenChange={() => setEditingProduct(null)}>
-          <DialogContent className="rounded-[2.5rem] max-w-xl">
-            <DialogHeader>
-              <DialogTitle className="text-2xl font-headline font-bold">Edit Asset</DialogTitle>
-            </DialogHeader>
-            <ProductForm initialData={editingProduct} onSave={(p) => { saveProduct(p); setEditingProduct(null); }} />
+          <DialogContent className="rounded-[2.5rem] max-w-xl p-0 overflow-hidden border-none bg-white">
+            <ProductForm 
+              initialData={editingProduct} 
+              onSave={(p) => { saveProduct(p); setEditingProduct(null); }} 
+              onCancel={() => setEditingProduct(null)}
+            />
           </DialogContent>
         </Dialog>
       )}
@@ -728,97 +731,181 @@ function NavButton({ active, onClick, icon: Icon, label }: { active: boolean, on
   );
 }
 
-function ProductForm({ initialData, onSave }: { initialData?: any, onSave: (p: any) => void }) {
+function ProductForm({ initialData, onSave, onCancel }: { initialData?: any, onSave: (p: any) => void, onCancel: () => void }) {
   const [data, setData] = useState(initialData || {
     title: "",
     description: "",
     price: 0,
     category: "top-up",
     gameId: "freefire",
-    thumbnail: ""
+    thumbnail: "",
+    stock: 842,
+    diamondAmount: ""
   });
 
   const [thumbUrlInput, setThumbUrlInput] = useState(data.thumbnail || "");
-
-  const applyThumbUrl = () => {
-    setData({ ...data, thumbnail: thumbUrlInput });
-  };
 
   const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = parseFloat(e.target.value);
     setData({ ...data, price: isNaN(val) ? 0 : val });
   };
 
+  const handleStockChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = parseInt(e.target.value);
+    setData({ ...data, stock: isNaN(val) ? 0 : val });
+  };
+
   return (
-    <div className="space-y-5 py-4 overflow-y-auto max-h-[70vh] px-1">
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label className="text-[10px] uppercase font-bold">Title</Label>
-          <Input className="rounded-xl h-12 bg-gray-50 border-none" value={data.title} onChange={e => setData({...data, title: e.target.value})} />
+    <div className="flex flex-col h-full bg-white max-h-[90vh]">
+      {/* Header */}
+      <div className="px-6 py-4 flex items-center justify-between border-b border-gray-100">
+        <div className="flex items-center gap-2">
+          <button onClick={onCancel} className="p-1 hover:bg-gray-100 rounded-lg transition-colors">
+            <X className="w-5 h-5 text-gray-500" />
+          </button>
+          <span className="text-primary font-bold text-sm">Edit Product</span>
         </div>
-        <div className="space-y-2">
-          <Label className="text-[10px] uppercase font-bold">Price</Label>
-          <Input 
-            type="number" 
-            className="rounded-xl h-12 bg-gray-50 border-none" 
-            value={isNaN(data.price) ? "" : data.price} 
-            onChange={handlePriceChange} 
-          />
+        <div className="w-8 h-8 rounded-full bg-gray-100 overflow-hidden">
+          <Image src="https://picsum.photos/seed/admin/100/100" alt="Admin" width={32} height={32} />
         </div>
       </div>
-      
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label className="text-[10px] uppercase font-bold">Game</Label>
-          <Select value={data.gameId} onValueChange={v => setData({...data, gameId: v})}>
-            <SelectTrigger className="h-12 rounded-xl bg-gray-50 border-none text-xs">
-              <SelectValue />
+
+      <div className="p-8 overflow-y-auto flex-1 space-y-8">
+        <div>
+          <h2 className="text-3xl font-headline font-bold text-[#1A1A1A]">Product Details</h2>
+          <p className="text-sm text-muted-foreground mt-1">Fill in the information to update your digital asset listing.</p>
+        </div>
+
+        {/* Banner Upload Area */}
+        <div className="space-y-3">
+          <Label className="text-[11px] font-bold text-gray-500 uppercase flex items-center gap-2">
+            Product Banner <Info className="w-3 h-3" />
+          </Label>
+          <div className="relative h-48 rounded-[2rem] border-2 border-dashed border-gray-200 bg-gray-50/50 flex flex-col items-center justify-center group overflow-hidden transition-all hover:border-primary/50">
+            {thumbUrlInput ? (
+              <div className="absolute inset-0">
+                <Image src={thumbUrlInput} alt="Banner Preview" fill className="object-cover opacity-60" unoptimized />
+                <div className="absolute inset-0 bg-white/20 backdrop-blur-[2px]" />
+              </div>
+            ) : null}
+            <div className="relative z-10 flex flex-col items-center text-center px-4">
+              <div className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center text-gray-400 mb-3 group-hover:scale-110 transition-transform">
+                <ImageIcon className="w-6 h-6" />
+              </div>
+              <p className="text-xs font-bold text-gray-600">Tap to upload or drag & drop</p>
+              <p className="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-tighter">MAX 5MB • PNG, JPG</p>
+              
+              <Input 
+                className="mt-4 h-9 bg-white border-gray-200 text-[11px] font-medium max-w-[240px] rounded-xl text-center"
+                placeholder="Paste Image URL here..."
+                value={thumbUrlInput}
+                onChange={(e) => {
+                  setThumbUrlInput(e.target.value);
+                  setData({ ...data, thumbnail: e.target.value });
+                }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Product Name */}
+        <div className="space-y-3">
+          <Label className="text-[11px] font-bold text-gray-500 uppercase">Product Name</Label>
+          <Input 
+            className="h-14 rounded-2xl bg-white border-gray-200 shadow-sm focus-visible:ring-primary px-5 text-sm font-medium"
+            placeholder="e.g. Premium Diamond Pack"
+            value={data.title}
+            onChange={(e) => setData({ ...data, title: e.target.value })}
+          />
+        </div>
+
+        {/* Game Category */}
+        <div className="space-y-3">
+          <Label className="text-[11px] font-bold text-gray-500 uppercase">Game Category</Label>
+          <Select value={data.gameId} onValueChange={(v) => setData({ ...data, gameId: v })}>
+            <SelectTrigger className="h-14 rounded-2xl bg-white border-gray-200 shadow-sm focus-visible:ring-primary px-5 text-sm font-medium">
+              <SelectValue placeholder="Select Game" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="freefire">Free Fire</SelectItem>
-              <SelectItem value="bloodstrike">Blood Strike</SelectItem>
-              <SelectItem value="efootball">eFootball</SelectItem>
+              <SelectItem value="mobilelegends">Mobile Legends: Bang Bang</SelectItem>
               <SelectItem value="pubgmobile">PUBG Mobile</SelectItem>
-              <SelectItem value="mobilelegends">Mobile Legends</SelectItem>
-              <SelectItem value="nba2k24">NBA 2K24</SelectItem>
+              <SelectItem value="efootball">eFootball</SelectItem>
+              <SelectItem value="bloodstrike">Blood Strike</SelectItem>
             </SelectContent>
           </Select>
         </div>
-        <div className="space-y-2">
-          <Label className="text-[10px] uppercase font-bold">Type</Label>
-          <Select value={data.category} onValueChange={v => setData({...data, category: v})}>
-            <SelectTrigger className="h-12 rounded-xl bg-gray-50 border-none text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="top-up">Top-Up</SelectItem>
-              <SelectItem value="accounts">Account</SelectItem>
-            </SelectContent>
-          </Select>
+
+        {/* Amount & Price Grid */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-3">
+            <Label className="text-[11px] font-bold text-gray-500 uppercase">Diamond Amount</Label>
+            <div className="relative">
+              <div className="absolute left-4 top-1/2 -translate-y-1/2">
+                <Gem className="w-4 h-4 text-orange-500" />
+              </div>
+              <Input 
+                className="h-14 rounded-2xl bg-white border-gray-200 shadow-sm focus-visible:ring-primary pl-10 pr-4 text-sm font-medium"
+                placeholder="1050"
+                value={data.diamondAmount}
+                onChange={(e) => setData({ ...data, diamondAmount: e.target.value })}
+              />
+            </div>
+          </div>
+          <div className="space-y-3">
+            <Label className="text-[11px] font-bold text-gray-500 uppercase">Price (USD)</Label>
+            <div className="relative">
+              <div className="absolute left-4 top-1/2 -translate-y-1/2">
+                <Banknote className="w-4 h-4 text-gray-500" />
+              </div>
+              <Input 
+                type="number"
+                step="0.01"
+                className="h-14 rounded-2xl bg-white border-gray-200 shadow-sm focus-visible:ring-primary pl-10 pr-4 text-sm font-medium"
+                placeholder="19.99"
+                value={isNaN(data.price) ? "" : data.price}
+                onChange={handlePriceChange}
+              />
+            </div>
+          </div>
         </div>
+
+        {/* Available Stock Card */}
+        <Card className="rounded-[1.5rem] p-4 bg-purple-50/50 border-none flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center text-white shadow-lg shadow-primary/20">
+              <Archive className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-gray-700">Available Stock</p>
+              <p className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter">Automatic delivery enabled</p>
+            </div>
+          </div>
+          <Input 
+            type="number"
+            className="w-24 h-12 bg-white border-none rounded-xl text-right font-headline font-bold text-lg focus-visible:ring-0 shadow-sm"
+            value={isNaN(data.stock) ? "" : data.stock}
+            onChange={handleStockChange}
+          />
+        </Card>
       </div>
 
-      <div className="space-y-2">
-        <Label className="text-[10px] uppercase font-bold">Asset Image URL</Label>
-        <div className="flex gap-2">
-           <Input 
-             placeholder="Catbox URL..." 
-             className="rounded-xl h-12 bg-gray-50 border-none text-xs"
-             value={thumbUrlInput}
-             onChange={(e) => setThumbUrlInput(e.target.value)}
-           />
-           <Button variant="secondary" className="h-12" onClick={applyThumbUrl}>Apply</Button>
-        </div>
+      {/* Footer Actions */}
+      <div className="p-6 bg-gray-50/50 border-t border-gray-100 flex items-center gap-4 mt-auto">
+        <Button 
+          variant="outline" 
+          onClick={onCancel}
+          className="flex-1 h-14 rounded-2xl border-gray-200 bg-white font-bold text-gray-600 hover:bg-gray-50 shadow-sm"
+        >
+          Cancel
+        </Button>
+        <Button 
+          onClick={() => onSave(data)}
+          className="flex-[2] h-14 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold shadow-xl shadow-primary/20 flex items-center justify-center gap-2"
+        >
+          <Archive className="w-5 h-5" /> Save Product
+        </Button>
       </div>
-
-      <div className="space-y-2">
-        <Label className="text-[10px] uppercase font-bold">Description</Label>
-        <Textarea className="rounded-xl bg-gray-50 border-none min-h-[60px] text-xs" value={data.description} onChange={e => setData({...data, description: e.target.value})} />
-      </div>
-
-      <Button className="w-full h-14 rounded-2xl bg-primary text-white font-bold" onClick={() => onSave(data)}>
-        {initialData ? "Update Package" : "Add to Library"}
-      </Button>
     </div>
   );
 }
