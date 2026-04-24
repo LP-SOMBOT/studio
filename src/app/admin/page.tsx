@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useRef } from "react";
@@ -171,7 +170,7 @@ export default function AdminPage() {
 
   if (!user?.isAdmin) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-[#F0F9FF]">
+      <div className="min-h-screen flex items-center justify-center p-4">
         <Card className="max-w-md w-full p-8 text-center rounded-3xl border-none shadow-xl bg-white/90 backdrop-blur-xl border border-blue-100">
           <h2 className="text-2xl font-headline font-bold mb-4 text-blue-900">Access Denied</h2>
           <p className="text-blue-900/60 mb-6">You do not have administrative privileges.</p>
@@ -245,14 +244,7 @@ export default function AdminPage() {
   const productCategories = ["All Games", "Free Fire", "PUBG Mobile", "Mobile Legends", "NBA 2K24"];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#F0F9FF] to-[#E0F2FE] text-slate-900 pb-24 md:pb-10 font-body page-transition relative overflow-hidden">
-      {/* Deep Neon Blue Background Accents */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
-        <div className="absolute top-[-10%] left-[-5%] w-[60%] h-[60%] bg-[#7DD3FC]/30 blur-[140px] rounded-full" />
-        <div className="absolute top-[20%] right-[-10%] w-[50%] h-[50%] bg-[#0EA5E9]/20 blur-[140px] rounded-full" />
-        <div className="absolute bottom-[-10%] left-[20%] w-[45%] h-[45%] bg-[#00D1FF]/15 blur-[140px] rounded-full" />
-      </div>
-
+    <div className="min-h-screen pb-24 md:pb-10 font-body page-transition relative">
       <header className="h-16 px-4 flex items-center justify-between sticky top-0 bg-white/40 backdrop-blur-xl border-b border-blue-200/50 z-50">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-[#00D1FF] rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-400/20">
