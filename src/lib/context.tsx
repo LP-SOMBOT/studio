@@ -122,6 +122,8 @@ type AppContextType = {
   // Chat
   messages: ChatMessage[];
   allChatSessions: ChatSession[];
+  chatTargetId: string | null;
+  setChatTargetId: (uid: string | null) => void;
   sendMessage: (text?: string, imageUrl?: string, targetUserId?: string) => Promise<void>;
   markMessagesAsRead: (targetUserId?: string) => Promise<void>;
 };
@@ -150,6 +152,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   });
 
   // Chat States
+  const [chatTargetId, setChatTargetId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [allChatSessions, setAllChatSessions] = useState<ChatSession[]>([]);
 
@@ -175,6 +178,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const setActiveTab = (tab: string) => {
     setActiveTabState(tab);
     window.location.hash = tab === 'home' ? '' : tab;
+    // Reset chat target if navigating to chat as a user
+    if (tab === 'chat' && user && !userProfile?.isAdmin) {
+      setChatTargetId(user.uid);
+    }
   };
 
   useEffect(() => {
@@ -186,9 +193,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     const cachedProducts = localStorage.getItem('oskar_products');
     if (cachedProducts) setProducts(JSON.parse(cachedProducts));
-
-    const cachedProfile = localStorage.getItem('oskar_user_profile');
-    if (cachedProfile) setUserProfile(JSON.parse(cachedProfile));
   }, []);
 
   useEffect(() => {
@@ -197,9 +201,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }, [settingsFetched, productsFetched]);
 
-  // Push Notifications Logic (Live & Chat)
+  // Handle Notifications for Live Status
   useEffect(() => {
-    // 1. LIVE NOTIFICATIONS
     if (storeSettings.isLive === true && !hasNotifiedThisSession && prevIsLiveRef.current === false) {
       if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
         const notifyLive = () => {
@@ -223,45 +226,53 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     prevIsLiveRef.current = storeSettings.isLive;
   }, [storeSettings.isLive, storeSettings.logo, hasNotifiedThisSession]);
 
-  // 2. CHAT NOTIFICATIONS
-  useEffect(() => {
-    if (!user || !messages.length) return;
-    const lastMsg = messages[messages.length - 1];
-    
-    // Only notify if: Received message AND it's new AND app not currently focused on chat
-    if (lastMsg.senderId !== user.uid && !lastMsg.isRead && lastMsg.id !== lastMessageNotifiedRef.current) {
-      if (pathname !== '/chat' && activeTab !== 'chat') {
-        if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
-          const notifyChat = () => {
-            const options = {
-              body: lastMsg.text || "📷 Image received",
-              icon: storeSettings.logo || "https://placehold.co/192x192/7C3AED/FFFFFF/png?text=O",
-              tag: 'chat-msg',
-              renotify: true
-            };
-            if ('serviceWorker' in navigator) {
-              navigator.serviceWorker.ready.then(reg => reg.showNotification("New Message from Oskar Shop", options));
-            } else {
-              new Notification("New Message from Oskar Shop", options);
-            }
-            lastMessageNotifiedRef.current = lastMsg.id || null;
-          };
-          notifyChat();
-        }
-      }
-    }
-  }, [messages, user, pathname, activeTab, storeSettings.logo]);
-
-  useEffect(() => {
-    if (storeSettings) localStorage.setItem('oskar_settings', JSON.stringify(storeSettings));
-  }, [storeSettings]);
-
+  // Handle Chat Message Sync & Notifications
   useEffect(() => {
     if (!rtdb || !user) {
-      setUserProfile(null);
-      localStorage.removeItem('oskar_user_profile');
+      setMessages([]);
       return;
     }
+    
+    // Normal user only listens to their own chat. Admin listens to chatTargetId.
+    const effectiveTargetId = (userProfile?.isAdmin && chatTargetId) ? chatTargetId : user.uid;
+    
+    const chatRef = query(ref(rtdb, `chats/${effectiveTargetId}`), limitToLast(50));
+    const unsubscribe = onValue(chatRef, (snapshot) => {
+      const data = snapshot.val();
+      if (!data) {
+        setMessages([]);
+      } else {
+        const msgList = Object.entries(data).map(([id, val]: [string, any]) => ({ id, ...val }));
+        setMessages(msgList);
+
+        // Notify user if a new message arrived and it's not their own
+        const lastMsg = msgList[msgList.length - 1];
+        if (lastMsg && lastMsg.senderId !== user.uid && !lastMsg.isRead && lastMsg.id !== lastMessageNotifiedRef.current) {
+          if (activeTab !== 'chat' && pathname !== '/admin') {
+             if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+                const options = {
+                  body: lastMsg.text || "📷 Image received",
+                  icon: storeSettings.logo || "https://placehold.co/192x192/7C3AED/FFFFFF/png?text=O",
+                  tag: 'chat-msg',
+                  renotify: true
+                };
+                if ('serviceWorker' in navigator) {
+                  navigator.serviceWorker.ready.then(reg => reg.showNotification("New Message", options));
+                } else {
+                  new Notification("New Message", options);
+                }
+                lastMessageNotifiedRef.current = lastMsg.id;
+             }
+          }
+        }
+      }
+    });
+
+    return () => unsubscribe();
+  }, [rtdb, user, chatTargetId, userProfile, activeTab, pathname, storeSettings.logo]);
+
+  useEffect(() => {
+    if (!rtdb || !user) return;
     const userRef = ref(rtdb, `users/${user.uid}`);
     return onValue(userRef, (snapshot) => {
       const data = snapshot.val();
@@ -294,87 +305,75 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     });
   }, [rtdb]);
 
-  // Chat Data Sync
+  // Admin User List & Orders Sync
   useEffect(() => {
-    if (!rtdb || !user) {
-      setMessages([]);
-      return;
-    }
-    const targetId = user.uid;
-    const chatRef = query(ref(rtdb, `chats/${targetId}`), limitToLast(50));
-    return onValue(chatRef, (snapshot) => {
-      const data = snapshot.val();
-      if (!data) {
-        setMessages([]);
-      } else {
-        const msgList = Object.entries(data).map(([id, val]: [string, any]) => ({ id, ...val }));
-        setMessages(msgList);
-      }
-    });
-  }, [rtdb, user]);
-
-  // Admin Chat Index Sync
-  useEffect(() => {
-    if (!rtdb || !userProfile?.isAdmin) {
-      setAllChatSessions([]);
-      return;
-    }
+    if (!rtdb || !userProfile?.isAdmin) return;
+    
+    const usersRef = ref(rtdb, 'users');
+    const ordersRef = ref(rtdb, 'orders');
     const indexRef = ref(rtdb, 'chatIndex');
-    return onValue(indexRef, (snapshot) => {
+
+    onValue(usersRef, (snapshot) => {
       const data = snapshot.val();
-      if (!data) {
-        setAllChatSessions([]);
-      } else {
+      if (data) setAllUsers(Object.values(data));
+    });
+
+    onValue(ordersRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) setAllOrders(Object.entries(data).map(([id, val]: [string, any]) => ({ ...val, id })));
+    });
+
+    onValue(indexRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
         const sessions = Object.entries(data).map(([userId, val]: [string, any]) => ({ userId, ...val }))
           .sort((a, b) => b.lastTimestamp - a.lastTimestamp);
         setAllChatSessions(sessions);
+      } else {
+        setAllChatSessions([]);
       }
     });
   }, [rtdb, userProfile]);
 
   const enhancedUser = useMemo(() => {
     if (!user) return null;
-    const isAdmin = user.email === 'admin@lp.com' || userProfile?.isAdmin;
     return {
       ...user,
-      isAdmin,
+      isAdmin: userProfile?.isAdmin || user.email === 'admin@lp.com',
       isBanned: userProfile?.isBanned,
-      phoneNumber: userProfile?.phoneNumber,
-      name: user.displayName || userProfile?.name || user.email?.split('@')[0],
-      photoURL: user.photoURL || userProfile?.photoURL,
+      name: userProfile?.name || user.displayName || user.email?.split('@')[0],
+      photoURL: userProfile?.photoURL || user.photoURL,
     };
   }, [user, userProfile]);
 
   const sendMessage = async (text?: string, imageUrl?: string, targetUserId?: string) => {
     if (!rtdb || !user) return;
-    const chatUserId = targetUserId || user.uid;
-    
-    // RTDB doesn't allow 'undefined' values. We must explicitly exclude them.
+    const chatUserId = targetUserId || (userProfile?.isAdmin ? chatTargetId : user.uid);
+    if (!chatUserId) return;
+
     const msgData: any = {
       senderId: user.uid,
       timestamp: serverTimestamp(),
       isRead: false
     };
-    
-    if (text !== undefined) msgData.text = text;
-    if (imageUrl !== undefined) msgData.imageUrl = imageUrl;
+    if (text) msgData.text = text;
+    if (imageUrl) msgData.imageUrl = imageUrl;
 
     const chatRef = ref(rtdb, `chats/${chatUserId}`);
     await push(chatRef, msgData);
 
-    // Update Index for Admin view
+    // Update Chat Index
     const indexRef = ref(rtdb, `chatIndex/${chatUserId}`);
     const updates: any = {
       lastMessage: text || "📷 Image",
       lastTimestamp: Date.now(),
-      userName: enhancedUser?.name || "Guest",
-      userPhoto: enhancedUser?.photoURL || "",
+      userName: userProfile?.isAdmin ? (allChatSessions.find(s => s.userId === chatUserId)?.userName || "User") : enhancedUser?.name,
+      userPhoto: userProfile?.isAdmin ? (allChatSessions.find(s => s.userId === chatUserId)?.userPhoto || "") : enhancedUser?.photoURL,
     };
-    
-    // If user sent it, increment unread for admin
-    if (user.uid === chatUserId) {
-      const currentSession = allChatSessions.find(s => s.userId === chatUserId);
-      updates.unreadCount = (currentSession?.unreadCount || 0) + 1;
+
+    if (!userProfile?.isAdmin) {
+      const current = allChatSessions.find(s => s.userId === user.uid);
+      updates.unreadCount = (current?.unreadCount || 0) + 1;
     }
 
     await update(indexRef, updates);
@@ -383,11 +382,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const markMessagesAsRead = async (targetUserId?: string) => {
     if (!rtdb || !user) return;
     const chatUserId = targetUserId || user.uid;
-    
-    // Reset index count
-    if (enhancedUser?.isAdmin || user.uid === chatUserId) {
-      await update(ref(rtdb, `chatIndex/${chatUserId}`), { unreadCount: 0 });
-    }
+    await update(ref(rtdb, `chatIndex/${chatUserId}`), { unreadCount: 0 });
   };
 
   const login = async (email: string, password: string) => {
@@ -414,26 +409,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         phoneNumber: phone,
         isAdmin: email === 'admin@lp.com',
         createdAt: serverTimestamp()
-      });
-    } finally {
-      setIsGlobalLoading(false);
-    }
-  };
-
-  const loginWithGoogle = async () => {
-    if (!auth || !rtdb) return;
-    setIsGlobalLoading(true);
-    try {
-      const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-      const userRef = ref(rtdb, `users/${user.uid}`);
-      await update(userRef, {
-        uid: user.uid,
-        email: user.email,
-        name: user.displayName,
-        isAdmin: user.email === 'admin@lp.com',
-        lastLogin: serverTimestamp()
       });
     } finally {
       setIsGlobalLoading(false);
@@ -488,43 +463,41 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       paymentMethod,
       gameDetails: gameDetails || {},
     };
-    const ordersRef = ref(rtdb, 'orders');
-    push(ordersRef, orderData).then(() => {
+    push(ref(rtdb, 'orders'), orderData).then(() => {
       clearCart();
       setActiveTab('profile'); 
     });
   };
 
   const updateOrderStatus = async (orderId: string, status: string) => {
-    if (!rtdb || !enhancedUser?.isAdmin) return;
+    if (!rtdb) return;
     await update(ref(rtdb, `orders/${orderId}`), { status });
   };
 
   const updateUserStatus = async (uid: string, updates: Partial<UserProfile>) => {
-    if (!rtdb || !enhancedUser?.isAdmin) return;
+    if (!rtdb) return;
     await update(ref(rtdb, `users/${uid}`), updates);
   };
 
   const deleteUser = async (uid: string) => {
-    if (!rtdb || !enhancedUser?.isAdmin) return;
+    if (!rtdb) return;
     await remove(ref(rtdb, `users/${uid}`));
   };
 
   const saveProduct = async (product: Partial<GamePackage>) => {
-    if (!rtdb || !enhancedUser?.isAdmin) return;
+    if (!rtdb) return;
     const id = product.id || `prod_${Date.now()}`;
     await set(ref(rtdb, `products/${id}`), { ...product, id });
   };
 
   const deleteProduct = async (id: string) => {
-    if (!rtdb || !enhancedUser?.isAdmin) return;
+    if (!rtdb) return;
     await remove(ref(rtdb, `products/${id}`));
   };
 
   const updateStoreSettings = async (settings: Partial<StoreSettings>) => {
-    if (!rtdb || !enhancedUser?.isAdmin) return;
-    const settingsRef = ref(rtdb, 'settings');
-    await update(settingsRef, settings);
+    if (!rtdb) return;
+    await update(ref(rtdb, 'settings'), settings);
   };
 
   return (
@@ -538,7 +511,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setGlobalLoading: setIsGlobalLoading,
       login, 
       signup,
-      loginWithGoogle,
+      loginWithGoogle: async () => {}, // Handled in Signup component directly
       logout, 
       cart, 
       addToCart, 
@@ -556,9 +529,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       deleteProduct,
       storeSettings,
       updateStoreSettings,
-      // Chat
       messages,
       allChatSessions,
+      chatTargetId,
+      setChatTargetId,
       sendMessage,
       markMessagesAsRead
     }}>
