@@ -1,46 +1,50 @@
 
-const CACHE_NAME = 'oskar-shop-v1';
-const urlsToCache = [
-  '/',
-  '/manifest.json',
-  'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap'
-];
+/**
+ * OskarShop Service Worker
+ * Handles PWA caching and Background Push Notifications
+ */
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(urlsToCache))
-  );
+  self.skipWaiting();
 });
 
-self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request)
-      .then((response) => response || fetch(event.request))
-  );
+self.addEventListener('activate', (event) => {
+  event.waitUntil(self.clients.claim());
 });
 
-self.addEventListener('notificationclick', (event) => {
-  event.notification.close();
-  event.waitUntil(
-    clients.matchAll({ type: 'window' }).then((clientList) => {
-      if (clientList.length > 0) {
-        return clientList[0].focus();
-      }
-      return clients.openWindow('/');
-    })
-  );
-});
-
+// Handle Background Push Notifications
 self.addEventListener('push', (event) => {
-  const data = event.data?.json() || {};
-  const title = data.title || 'Oskar Shop Alert';
+  const data = event.data ? event.data.json() : {};
+  const title = data.title || 'Oskar Shop';
   const options = {
-    body: data.body || 'Check the latest updates in Oskar Shop!',
-    icon: '/icon-192.png',
-    badge: '/badge-96.png',
-    tag: data.tag || 'general-alert'
+    body: data.body || 'New update available!',
+    icon: data.icon || 'https://placehold.co/192x192/7C3AED/FFFFFF/png?text=O',
+    badge: 'https://placehold.co/96x96/7C3AED/FFFFFF/png?text=O',
+    tag: data.tag || 'general-notification',
+    renotify: true,
+    data: {
+      url: data.url || '/'
+    }
   };
 
   event.waitUntil(self.registration.showNotification(title, options));
+});
+
+// Handle Notification Clicks
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const urlToOpen = event.notification.data.url || '/';
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+      for (let client of windowClients) {
+        if (client.url === urlToOpen && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) {
+        return clients.openWindow(urlToOpen);
+      }
+    })
+  );
 });

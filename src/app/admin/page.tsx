@@ -27,27 +27,21 @@ import {
   Wallet,
   ArrowUpRight,
   TrendingUp,
-  Menu,
-  ChevronRight,
-  Database,
-  Search,
-  MoreVertical,
-  Filter,
-  Gem,
-  Banknote,
-  Archive,
-  Info,
-  Layers,
-  Monitor,
-  Loader2,
   MessageCircle,
   Clock,
   Send,
-  User
+  User,
+  Database,
+  Search,
+  Filter,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -66,24 +60,11 @@ import {
   DialogHeader, 
   DialogTitle, 
   DialogDescription,
-  DialogTrigger,
-  DialogClose
+  DialogFooter
 } from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { generatePromotionalContent } from "@/ai/flows/generate-promotional-content-flow";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { startOfToday, isYesterday } from "date-fns";
 import Image from "next/image";
 import { format } from "date-fns";
 import { 
@@ -130,28 +111,17 @@ export default function AdminPage() {
 
   const [activeView, setActiveView] = useState<'dashboard' | 'orders' | 'products' | 'users' | 'settings' | 'chats'>('dashboard');
   const [selectedChatUser, setSelectedChatUser] = useState<string | null>(null);
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
-  const [userToDelete, setUserToDelete] = useState<string | null>(null);
-  const [logoUrlInput, setLogoUrlInput] = useState(storeSettings.logo || "");
   const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
   const [chatInput, setChatInput] = useState("");
   const chatScrollRef = useRef<HTMLDivElement>(null);
 
   const [productSearch, setProductSearch] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("All Games");
-
-  const [promoInput, setPromoInput] = useState({
-    promotionType: 'discount' as any,
-    title: '',
-    promotionDetails: '',
-    callToAction: 'Shop now!',
-  });
+  const [isUploading, setIsUploading] = useState(false);
 
   const metrics = useMemo(() => {
-    const today = startOfToday();
     const successful = allOrders.filter(o => o.status === 'successful');
-    
     const totalRevenue = successful.reduce((acc, o) => acc + (o.total || 0), 0);
     const pendingCount = allOrders.filter(o => o.status === 'pending').length;
     
@@ -165,12 +135,8 @@ export default function AdminPage() {
   }, [allOrders, products, allUsers]);
 
   const filteredProducts = useMemo(() => {
-    return products.filter(p => {
-      const matchesSearch = p.title.toLowerCase().includes(productSearch.toLowerCase());
-      const matchesCategory = categoryFilter === "All Games" || p.gameId === categoryFilter.toLowerCase().replace(/\s/g, '');
-      return matchesSearch && matchesCategory;
-    });
-  }, [products, productSearch, categoryFilter]);
+    return products.filter(p => p.title.toLowerCase().includes(productSearch.toLowerCase()));
+  }, [products, productSearch]);
 
   useEffect(() => {
     if (chatScrollRef.current) {
@@ -181,10 +147,10 @@ export default function AdminPage() {
   if (!user?.isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
-        <Card className="max-w-md w-full p-8 text-center rounded-3xl border-none shadow-xl bg-white/90 backdrop-blur-xl">
+        <Card className="max-w-md w-full p-8 text-center rounded-[2.5rem] border-none shadow-xl bg-white/90 backdrop-blur-xl">
           <h2 className="text-2xl font-headline font-bold mb-4 text-blue-900">Access Denied</h2>
           <p className="text-blue-900/60 mb-6">You do not have administrative privileges.</p>
-          <Button className="bg-[#00D1FF] text-white hover:bg-[#00D1FF]/90 font-bold" asChild><Link href="/">Return Home</Link></Button>
+          <Button className="bg-[#00D1FF] text-white hover:bg-[#00D1FF]/90 font-bold rounded-full h-12 px-8" asChild><Link href="/">Return Home</Link></Button>
         </Card>
       </div>
     );
@@ -203,6 +169,55 @@ export default function AdminPage() {
     await sendMessage(text, undefined, selectedChatUser);
   };
 
+  const handleImageUpload = async (file: File) => {
+    setIsUploading(true);
+    const formData = new FormData();
+    formData.append('image', file);
+    try {
+      const response = await fetch(`https://api.imgbb.com/1/upload?key=4437fb9ba157b8fc7ddef1e251718f66`, {
+        method: 'POST',
+        body: formData,
+      });
+      const result = await response.json();
+      if (result.success) return result.data.url;
+      throw new Error("Upload failed");
+    } catch (e) {
+      toast({ title: "Upload Failed", variant: "destructive" });
+      return null;
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleSaveProduct = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSaving(true);
+    const formData = new FormData(e.currentTarget);
+    const thumbnailInput = (e.currentTarget.querySelector('input[type="file"]') as HTMLInputElement)?.files?.[0];
+    
+    let thumbnailUrl = editingProduct?.thumbnail;
+    if (thumbnailInput) {
+      const uploadedUrl = await handleImageUpload(thumbnailInput);
+      if (uploadedUrl) thumbnailUrl = uploadedUrl;
+    }
+
+    const productData = {
+      ...editingProduct,
+      title: formData.get('title') as string,
+      description: formData.get('description') as string,
+      price: parseFloat(formData.get('price') as string),
+      gameId: formData.get('gameId') as string,
+      category: formData.get('category') as any,
+      thumbnail: thumbnailUrl
+    };
+
+    await saveProduct(productData);
+    setIsProductDialogOpen(false);
+    setEditingProduct(null);
+    setIsSaving(false);
+    toast({ title: "Product Saved Successfully" });
+  };
+
   const unreadCountTotal = allChatSessions.reduce((acc, s) => acc + (s.unreadCount || 0), 0);
 
   return (
@@ -212,7 +227,7 @@ export default function AdminPage() {
           <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg">
             <LayoutDashboard className="w-6 h-6" />
           </div>
-          <h1 className="text-xl font-headline font-bold tracking-tight text-slate-900">OskarShop Console</h1>
+          <h1 className="text-xl font-headline font-bold tracking-tight text-slate-900">Console</h1>
         </div>
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" className="rounded-full relative" onClick={() => setActiveView('chats')}>
@@ -225,24 +240,24 @@ export default function AdminPage() {
         </div>
       </header>
       
-      <main className="px-4 py-8 space-y-8 max-w-7xl mx-auto">
+      <main className="px-4 py-8 space-y-8 max-w-7xl mx-auto md:pl-24">
         
         {activeView === 'dashboard' && (
           <div className="space-y-8 animate-in fade-in duration-500">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <SummaryCard label="TOTAL REVENUE" value={`$${metrics.allRevenue.toLocaleString()}`} change="+14.2%" icon={Wallet} color="blue" />
-              <SummaryCard label="TOTAL ORDERS" value={metrics.totalCount.toLocaleString()} change="+8.4%" icon={ShoppingBag} color="cyan" />
-              <SummaryCard label="ACTIVE PRODUCTS" value={metrics.activeProducts.toLocaleString()} change="0.0%" icon={Package} color="sky" />
-              <SummaryCard label="MESSAGES" value={unreadCountTotal.toString()} change="Real-time" icon={MessageCircle} color="orange" />
+              <SummaryCard label="REVENUE" value={`$${metrics.allRevenue.toFixed(2)}`} change="+14.2%" icon={Wallet} color="blue" />
+              <SummaryCard label="TOTAL SALES" value={metrics.totalCount.toString()} change="+8.4%" icon={ShoppingBag} color="cyan" />
+              <SummaryCard label="INVENTORY" value={metrics.activeProducts.toString()} change="0.0%" icon={Package} color="sky" />
+              <SummaryCard label="CLIENTS" value={metrics.registeredUsers.toString()} change="+2.1%" icon={Users} color="orange" />
             </div>
 
-            <Card className="rounded-[2.5rem] p-8 border-none shadow-xl bg-white/80 backdrop-blur-sm border border-white/50">
+            <Card className="rounded-[2.5rem] p-8 border-none shadow-xl bg-white/80 backdrop-blur-sm">
               <div className="flex justify-between items-center mb-8">
                 <div>
-                  <h3 className="font-headline font-bold text-xl text-slate-900">Revenue Growth</h3>
-                  <p className="text-xs text-muted-foreground mt-1">Weekly performance overview</p>
+                  <h3 className="font-headline font-bold text-xl text-slate-900">Market Performance</h3>
+                  <p className="text-xs text-muted-foreground mt-1">Weekly sales overview</p>
                 </div>
-                <Badge variant="secondary" className="bg-blue-50 text-blue-600 border-none font-bold text-[10px] px-4 py-1.5 rounded-full">LIVE ANALYTICS</Badge>
+                <Badge className="bg-blue-50 text-blue-600 border-none font-bold text-[10px] px-4 py-1.5 rounded-full">LIVE DATA</Badge>
               </div>
               <div className="h-[300px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
@@ -260,6 +275,171 @@ export default function AdminPage() {
                     <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: 'none', borderRadius: '16px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }} />
                   </AreaChart>
                 </ResponsiveContainer>
+              </div>
+            </Card>
+          </div>
+        )}
+
+        {activeView === 'orders' && (
+          <Card className="rounded-[2.5rem] border-none shadow-xl bg-white/80 backdrop-blur-sm overflow-hidden">
+            <div className="p-8 border-b border-gray-100 flex justify-between items-center">
+              <h2 className="text-2xl font-headline font-bold">Sales History</h2>
+              <Badge variant="secondary" className="rounded-full">{allOrders.length} Total</Badge>
+            </div>
+            <Table>
+              <TableHeader className="bg-gray-50/50">
+                <TableRow>
+                  <TableHead className="font-bold">Order ID</TableHead>
+                  <TableHead className="font-bold">Client</TableHead>
+                  <TableHead className="font-bold">Amount</TableHead>
+                  <TableHead className="font-bold">Method</TableHead>
+                  <TableHead className="font-bold">Status</TableHead>
+                  <TableHead className="font-bold text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {allOrders.map((order) => (
+                  <TableRow key={order.id} className="hover:bg-blue-50/30 transition-colors">
+                    <TableCell className="font-mono text-[10px] text-muted-foreground">#{order.id.substring(0, 8)}</TableCell>
+                    <TableCell className="font-bold">{allUsers.find(u => u.uid === order.userId)?.name || "Guest"}</TableCell>
+                    <TableCell className="font-bold text-primary">${order.total.toFixed(2)}</TableCell>
+                    <TableCell className="uppercase text-[10px] font-bold">{order.paymentMethod}</TableCell>
+                    <TableCell>
+                      <Select defaultValue={order.status} onValueChange={(val) => updateOrderStatus(order.id, val)}>
+                        <SelectTrigger className="h-8 rounded-full text-[10px] font-bold w-32 border-none bg-blue-50 text-blue-600">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="pending">Pending</SelectItem>
+                          <SelectItem value="processing">Processing</SelectItem>
+                          <SelectItem value="successful">Successful</SelectItem>
+                          <SelectItem value="cancelled">Cancelled</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                    <TableCell className="text-right">
+                       <Button variant="ghost" size="icon" className="rounded-full"><AlertCircle className="w-4 h-4" /></Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </Card>
+        )}
+
+        {activeView === 'products' && (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-headline font-bold">Stock Management</h2>
+              <Button onClick={() => { setEditingProduct(null); setIsProductDialogOpen(true); }} className="rounded-full bg-blue-600 h-12 px-6 gap-2">
+                <Plus className="w-5 h-5" /> Add Package
+              </Button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {products.map((p) => (
+                <Card key={p.id} className="rounded-[2rem] border-none shadow-lg bg-white overflow-hidden group">
+                  <div className="aspect-video relative bg-gray-100">
+                    {p.thumbnail && <Image src={p.thumbnail} alt="" fill className="object-cover group-hover:scale-105 transition-transform duration-500" unoptimized />}
+                  </div>
+                  <div className="p-6">
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="font-bold text-lg">{p.title}</h3>
+                      <Badge className="bg-blue-50 text-blue-600 border-none rounded-full text-[10px]">{p.gameId}</Badge>
+                    </div>
+                    <p className="text-2xl font-headline font-bold text-primary mb-4">${p.price}</p>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" className="flex-1 rounded-xl" onClick={() => { setEditingProduct(p); setIsProductDialogOpen(true); }}><Edit className="w-4 h-4 mr-2" /> Edit</Button>
+                      <Button variant="ghost" size="sm" className="rounded-xl text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => deleteProduct(p.id)}><Trash2 className="w-4 h-4" /></Button>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {activeView === 'users' && (
+          <Card className="rounded-[2.5rem] border-none shadow-xl bg-white/80 backdrop-blur-sm overflow-hidden">
+             <div className="p-8 border-b border-gray-100 flex justify-between items-center">
+              <h2 className="text-2xl font-headline font-bold">Client Directory</h2>
+              <div className="relative w-64">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input placeholder="Search users..." className="pl-10 h-10 rounded-full bg-gray-50 border-none" />
+              </div>
+            </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>User</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {allUsers.map((u) => (
+                  <TableRow key={u.uid}>
+                    <TableCell className="font-bold">{u.name}</TableCell>
+                    <TableCell>{u.email}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className={cn("rounded-full", u.isAdmin ? "border-blue-200 text-blue-600" : "border-gray-200")}>
+                        {u.isAdmin ? "Admin" : "Customer"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                       <Button variant="ghost" size="icon" className="text-red-500" onClick={() => deleteUser(u.uid)}><Trash2 className="w-4 h-4" /></Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </Card>
+        )}
+
+        {activeView === 'settings' && (
+          <div className="max-w-2xl mx-auto space-y-8 animate-in slide-in-from-bottom-4">
+            <Card className="rounded-[2.5rem] p-8 border-none shadow-xl bg-white/90">
+              <h2 className="text-2xl font-headline font-bold mb-8 flex items-center gap-3">
+                <SettingsIcon className="w-7 h-7 text-primary" /> Store Settings
+              </h2>
+              <div className="space-y-8">
+                <div className="flex items-center justify-between p-6 bg-blue-50/50 rounded-[2rem] border border-blue-100/50">
+                  <div>
+                    <p className="font-bold text-lg">Store Status</p>
+                    <p className="text-xs text-muted-foreground">Toggle visibility for live events</p>
+                  </div>
+                  <Switch 
+                    checked={storeSettings.isLive} 
+                    onCheckedChange={(val) => updateStoreSettings({ isLive: val })} 
+                  />
+                </div>
+
+                <div className="space-y-4">
+                  <Label className="font-bold text-sm">Announcement Ticker Text</Label>
+                  <Textarea 
+                    value={storeSettings.announcementTicker}
+                    onChange={(e) => updateStoreSettings({ announcementTicker: e.target.value })}
+                    placeholder="Enter looping news text..."
+                    className="rounded-3xl border-gray-100 h-24 bg-gray-50/50"
+                  />
+                </div>
+
+                <div className="space-y-4">
+                  <Label className="font-bold text-sm">Logo URL</Label>
+                  <div className="flex gap-4">
+                    <Input 
+                      value={storeSettings.logo}
+                      onChange={(e) => updateStoreSettings({ logo: e.target.value })}
+                      placeholder="https://..."
+                      className="rounded-full border-gray-100 h-12 bg-gray-50/50"
+                    />
+                    {storeSettings.logo && (
+                      <div className="w-12 h-12 relative rounded-xl overflow-hidden border">
+                        <Image src={storeSettings.logo} alt="" fill className="object-cover" unoptimized />
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             </Card>
           </div>
@@ -374,13 +554,62 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* Existing views logic... */}
-        {activeView === 'orders' && <div className="space-y-4"><h2 className="text-3xl font-headline font-bold">Sales History</h2></div>}
-        {activeView === 'products' && <div className="space-y-4"><h2 className="text-3xl font-headline font-bold">Stock Inventory</h2></div>}
-        {activeView === 'users' && <div className="space-y-4"><h2 className="text-3xl font-headline font-bold">Client Directory</h2></div>}
-        {activeView === 'settings' && <div className="space-y-4"><h2 className="text-3xl font-headline font-bold">Core Configuration</h2></div>}
-
       </main>
+
+      <Dialog open={isProductDialogOpen} onOpenChange={setIsProductDialogOpen}>
+        <DialogContent className="rounded-[2.5rem] max-w-xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-headline font-bold">{editingProduct ? 'Edit Package' : 'New Package'}</DialogTitle>
+            <DialogDescription>Fill in the details for your game package.</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSaveProduct} className="space-y-6 pt-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Title</Label>
+                <Input name="title" defaultValue={editingProduct?.title} required className="rounded-xl" />
+              </div>
+              <div className="space-y-2">
+                <Label>Price ($)</Label>
+                <Input name="price" type="number" step="0.01" defaultValue={editingProduct?.price} required className="rounded-xl" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Game ID</Label>
+                <Input name="gameId" defaultValue={editingProduct?.gameId} placeholder="e.g. freefire" required className="rounded-xl" />
+              </div>
+              <div className="space-y-2">
+                <Label>Category</Label>
+                <Select name="category" defaultValue={editingProduct?.category || 'top-up'}>
+                  <SelectTrigger className="rounded-xl">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="top-up">Top Up</SelectItem>
+                    <SelectItem value="accounts">Account</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Description</Label>
+              <Textarea name="description" defaultValue={editingProduct?.description} required className="rounded-xl h-24" />
+            </div>
+            <div className="space-y-2">
+              <Label>Thumbnail</Label>
+              <div className="flex items-center gap-4">
+                <Input type="file" accept="image/*" className="rounded-xl cursor-pointer" />
+                {isUploading && <Loader2 className="w-5 h-5 animate-spin" />}
+              </div>
+            </div>
+            <DialogFooter className="pt-4">
+              <Button type="submit" disabled={isSaving || isUploading} className="w-full rounded-2xl h-14 font-bold text-lg">
+                {isSaving ? "Saving..." : "Save Asset"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <nav className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-2xl border-t border-blue-100 z-[100] px-6 py-4 flex justify-around items-center md:hidden">
         <NavButton active={activeView === 'dashboard'} onClick={() => setActiveView('dashboard')} icon={LayoutDashboard} label="HOME" />

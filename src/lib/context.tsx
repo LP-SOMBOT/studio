@@ -151,7 +151,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     sliderImages: []
   });
 
-  // Chat States
   const [chatTargetId, setChatTargetId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [allChatSessions, setAllChatSessions] = useState<ChatSession[]>([]);
@@ -178,7 +177,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const setActiveTab = (tab: string) => {
     setActiveTabState(tab);
     window.location.hash = tab === 'home' ? '' : tab;
-    // Reset chat target if navigating to chat as a user
     if (tab === 'chat' && user && !userProfile?.isAdmin) {
       setChatTargetId(user.uid);
     }
@@ -187,12 +185,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const cachedCart = localStorage.getItem('oskar_cart');
     if (cachedCart) setCart(JSON.parse(cachedCart));
-
-    const cachedSettings = localStorage.getItem('oskar_settings');
-    if (cachedSettings) setStoreSettings(JSON.parse(cachedSettings));
-
-    const cachedProducts = localStorage.getItem('oskar_products');
-    if (cachedProducts) setProducts(JSON.parse(cachedProducts));
   }, []);
 
   useEffect(() => {
@@ -233,7 +225,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     
-    // Normal user only listens to their own chat. Admin listens to chatTargetId.
     const effectiveTargetId = (userProfile?.isAdmin && chatTargetId) ? chatTargetId : user.uid;
     
     const chatRef = query(ref(rtdb, `chats/${effectiveTargetId}`), limitToLast(50));
@@ -245,7 +236,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         const msgList = Object.entries(data).map(([id, val]: [string, any]) => ({ id, ...val }));
         setMessages(msgList);
 
-        // Notify user if a new message arrived and it's not their own
         const lastMsg = msgList[msgList.length - 1];
         if (lastMsg && lastMsg.senderId !== user.uid && !lastMsg.isRead && lastMsg.id !== lastMessageNotifiedRef.current) {
           if (activeTab !== 'chat' && pathname !== '/admin') {
@@ -283,7 +273,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!rtdb) return;
     const settingsRef = ref(rtdb, 'settings');
-    return onValue(settingsRef, (snapshot) => {
+    onValue(settingsRef, (snapshot) => {
       const data = snapshot.val();
       if (data) setStoreSettings(prev => ({ ...prev, ...data }));
       setSettingsFetched(true);
@@ -293,7 +283,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!rtdb) return;
     const productsRef = ref(rtdb, 'products');
-    return onValue(productsRef, (snapshot) => {
+    onValue(productsRef, (snapshot) => {
       const data = snapshot.val();
       if (!data) {
         setProducts([]);
@@ -305,7 +295,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     });
   }, [rtdb]);
 
-  // Admin User List & Orders Sync
   useEffect(() => {
     if (!rtdb || !userProfile?.isAdmin) return;
     
@@ -316,11 +305,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     onValue(usersRef, (snapshot) => {
       const data = snapshot.val();
       if (data) setAllUsers(Object.values(data));
+      else setAllUsers([]);
     });
 
     onValue(ordersRef, (snapshot) => {
       const data = snapshot.val();
       if (data) setAllOrders(Object.entries(data).map(([id, val]: [string, any]) => ({ ...val, id })));
+      else setAllOrders([]);
     });
 
     onValue(indexRef, (snapshot) => {
@@ -334,6 +325,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
     });
   }, [rtdb, userProfile]);
+
+  useEffect(() => {
+    if (!rtdb || !user) return;
+    const userOrdersRef = query(ref(rtdb, 'orders'), orderByChild('userId'), equalTo(user.uid));
+    onValue(userOrdersRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) setOrders(Object.entries(data).map(([id, val]: [string, any]) => ({ ...val, id })));
+      else setOrders([]);
+    });
+  }, [rtdb, user]);
 
   const enhancedUser = useMemo(() => {
     if (!user) return null;
@@ -362,7 +363,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const chatRef = ref(rtdb, `chats/${chatUserId}`);
     await push(chatRef, msgData);
 
-    // Update Chat Index
     const indexRef = ref(rtdb, `chatIndex/${chatUserId}`);
     const updates: any = {
       lastMessage: text || "📷 Image",
@@ -511,7 +511,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setGlobalLoading: setIsGlobalLoading,
       login, 
       signup,
-      loginWithGoogle: async () => {}, // Handled in Signup component directly
+      loginWithGoogle: async () => {}, 
       logout, 
       cart, 
       addToCart, 
