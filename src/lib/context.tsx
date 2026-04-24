@@ -348,13 +348,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const sendMessage = async (text?: string, imageUrl?: string, targetUserId?: string) => {
     if (!rtdb || !user) return;
     const chatUserId = targetUserId || user.uid;
-    const msgData: ChatMessage = {
-      text,
-      imageUrl,
+    
+    // RTDB doesn't allow 'undefined' values. We must explicitly exclude them.
+    const msgData: any = {
       senderId: user.uid,
       timestamp: serverTimestamp(),
       isRead: false
     };
+    
+    if (text !== undefined) msgData.text = text;
+    if (imageUrl !== undefined) msgData.imageUrl = imageUrl;
 
     const chatRef = ref(rtdb, `chats/${chatUserId}`);
     await push(chatRef, msgData);
@@ -385,9 +388,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (enhancedUser?.isAdmin || user.uid === chatUserId) {
       await update(ref(rtdb, `chatIndex/${chatUserId}`), { unreadCount: 0 });
     }
-
-    // Mark last 10 messages as read locally/remote
-    // (In a real app, we'd iterate all unread, here we just do simple index reset)
   };
 
   const login = async (email: string, password: string) => {
@@ -486,7 +486,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       status: 'pending',
       createdAt: serverTimestamp(),
       paymentMethod,
-      gameDetails,
+      gameDetails: gameDetails || {},
     };
     const ordersRef = ref(rtdb, 'orders');
     push(ordersRef, orderData).then(() => {
