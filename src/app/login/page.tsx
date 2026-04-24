@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
-import { User, Lock, EyeOff, Loader2 } from "lucide-react";
+import { Mail, Lock, EyeOff, Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 export default function LoginPage() {
@@ -48,26 +48,28 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col overflow-x-hidden page-transition">
-      <div className="pt-16 pb-12 px-8 md:px-12 shrink-0">
-        <h1 className="text-4xl md:text-5xl font-headline font-bold text-blue-900 leading-tight">
-          Welcome back to <br /> Oskar Shop
+    <div className="min-h-screen flex flex-col bg-[#7C3AED] overflow-x-hidden page-transition">
+      {/* Header Section */}
+      <div className="pt-20 pb-16 px-10 shrink-0">
+        <h1 className="text-4xl font-headline font-bold text-white leading-tight">
+          Welcome to <br /> Oskar Shop
         </h1>
-        <p className="text-xl font-headline text-blue-700/60 mt-4 font-medium uppercase tracking-widest">
-          Login Portal
+        <p className="text-2xl font-headline text-white/80 mt-2 font-medium">
+          Login?
         </p>
       </div>
 
-      <div className="flex-1 glass rounded-t-[3rem] p-8 md:p-12 shadow-2xl">
+      {/* Form Card Section */}
+      <div className="flex-1 bg-white rounded-t-[3.5rem] p-10 shadow-2xl">
         <div className="max-w-md mx-auto h-full flex flex-col">
-          <h2 className="text-3xl font-headline font-bold mb-8 text-blue-950">
+          <h2 className="text-3xl font-headline font-bold mb-10 text-gray-900">
             Login
           </h2>
 
-          <form onSubmit={handleLogin} className="space-y-5">
+          <form onSubmit={handleLogin} className="space-y-6">
             <div className="relative group">
-              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-500">
-                <User className="w-5 h-5" />
+              <div className="absolute left-5 top-1/2 -translate-y-1/2 text-[#7C3AED]">
+                <Mail className="w-5 h-5" />
               </div>
               <Input 
                 id="email" 
@@ -76,12 +78,12 @@ export default function LoginPage() {
                 required 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="h-16 pl-12 rounded-3xl border-blue-100 bg-white/80 focus-visible:ring-blue-500 text-base font-medium"
+                className="h-16 pl-14 rounded-full border-gray-100 bg-gray-50/50 focus-visible:ring-[#7C3AED] text-base font-medium placeholder:text-gray-400"
               />
             </div>
 
             <div className="relative group">
-              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-500">
+              <div className="absolute left-5 top-1/2 -translate-y-1/2 text-[#7C3AED]">
                 <Lock className="w-5 h-5" />
               </div>
               <Input 
@@ -91,9 +93,9 @@ export default function LoginPage() {
                 required 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="h-16 pl-12 pr-12 rounded-3xl border-blue-100 bg-white/80 focus-visible:ring-blue-500 text-base font-medium"
+                className="h-16 pl-14 pr-14 rounded-full border-gray-100 bg-gray-50/50 focus-visible:ring-[#7C3AED] text-base font-medium placeholder:text-gray-400"
               />
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 text-blue-300">
+              <div className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-300">
                 <EyeOff className="w-5 h-5" />
               </div>
             </div>
@@ -107,17 +109,17 @@ export default function LoginPage() {
             <Button 
               type="submit" 
               disabled={isSubmitting}
-              className="w-full h-16 rounded-3xl text-lg font-bold bg-blue-600 hover:bg-blue-700 shadow-xl shadow-blue-400/20 transition-all active:scale-95 text-white"
+              className="w-full h-16 rounded-full text-lg font-bold bg-[#7C3AED] hover:bg-[#6D28D9] shadow-xl shadow-[#7C3AED]/20 transition-all active:scale-95 text-white"
             >
               {isSubmitting ? <Loader2 className="w-6 h-6 animate-spin" /> : "LOG IN"}
             </Button>
 
             <div className="relative py-4">
               <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-blue-100"></span>
+                <span className="w-full border-t border-gray-100"></span>
               </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white/40 px-4 text-blue-400 font-bold tracking-widest">or Login with</span>
+              <div className="relative flex justify-center text-[10px] uppercase font-bold tracking-widest text-gray-400">
+                <span className="bg-white px-4">OR LOGIN</span>
               </div>
             </div>
 
@@ -125,7 +127,7 @@ export default function LoginPage() {
               type="button" 
               variant="outline" 
               onClick={handleGoogleLogin}
-              className="w-full h-16 rounded-3xl text-base font-bold border-blue-100 bg-white/80 hover:bg-white gap-3 text-blue-900 shadow-sm"
+              className="w-full h-16 rounded-full text-base font-bold border-none bg-gray-50 hover:bg-gray-100 gap-3 text-gray-900 shadow-sm"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path
@@ -145,12 +147,12 @@ export default function LoginPage() {
                   fill="#EA4335"
                 />
               </svg>
-              Google Account
+              Sign in with Google
             </Button>
 
             <div className="text-center pt-8">
-              <p className="text-sm text-blue-900/60 font-bold">
-                Don't have an account? <Link href="/signup" className="text-blue-600 font-bold hover:underline ml-1">Join Oskar Shop</Link>
+              <p className="text-sm text-gray-500 font-medium">
+                Don't have an account? <Link href="/signup" className="text-[#7C3AED] font-bold hover:underline ml-1">Sign Up</Link>
               </p>
             </div>
           </form>
