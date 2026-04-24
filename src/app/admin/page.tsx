@@ -171,11 +171,11 @@ export default function AdminPage() {
 
   if (!user?.isAdmin) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-[#020617]">
-        <Card className="max-w-md w-full p-8 text-center rounded-3xl border-none shadow-xl bg-white/5 backdrop-blur-xl border border-white/10">
-          <h2 className="text-2xl font-headline font-bold mb-4 text-white">Access Denied</h2>
-          <p className="text-white/60 mb-6">You do not have administrative privileges.</p>
-          <Button className="bg-[#00D1FF] text-[#020617] hover:bg-[#00D1FF]/90 font-bold" asChild><Link href="/">Return Home</Link></Button>
+      <div className="min-h-screen flex items-center justify-center p-4 bg-[#F0F9FF]">
+        <Card className="max-w-md w-full p-8 text-center rounded-3xl border-none shadow-xl bg-white/90 backdrop-blur-xl border border-blue-100">
+          <h2 className="text-2xl font-headline font-bold mb-4 text-blue-900">Access Denied</h2>
+          <p className="text-blue-900/60 mb-6">You do not have administrative privileges.</p>
+          <Button className="bg-[#00D1FF] text-white hover:bg-[#00D1FF]/90 font-bold" asChild><Link href="/">Return Home</Link></Button>
         </Card>
       </div>
     );
@@ -245,20 +245,23 @@ export default function AdminPage() {
   const productCategories = ["All Games", "Free Fire", "PUBG Mobile", "Mobile Legends", "NBA 2K24"];
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white pb-24 md:pb-10 font-body page-transition relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-[#F0F9FF] to-[#E0F2FE] text-slate-900 pb-24 md:pb-10 font-body page-transition relative overflow-hidden">
       {/* Deep Neon Blue Background Accents */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
-        <div className="absolute top-[-10%] left-[-5%] w-[60%] h-[60%] bg-[#1E3A8A]/20 blur-[140px] rounded-full" />
-        <div className="absolute top-[20%] right-[-10%] w-[50%] h-[50%] bg-[#0EA5E9]/15 blur-[140px] rounded-full" />
-        <div className="absolute bottom-[-10%] left-[20%] w-[45%] h-[45%] bg-[#00D1FF]/10 blur-[140px] rounded-full" />
+        <div className="absolute top-[-10%] left-[-5%] w-[60%] h-[60%] bg-[#7DD3FC]/30 blur-[140px] rounded-full" />
+        <div className="absolute top-[20%] right-[-10%] w-[50%] h-[50%] bg-[#0EA5E9]/20 blur-[140px] rounded-full" />
+        <div className="absolute bottom-[-10%] left-[20%] w-[45%] h-[45%] bg-[#00D1FF]/15 blur-[140px] rounded-full" />
       </div>
 
-      <header className="h-16 px-4 flex items-center justify-between sticky top-0 bg-[#020617]/60 backdrop-blur-xl border-b border-white/5 z-50">
+      <header className="h-16 px-4 flex items-center justify-between sticky top-0 bg-white/40 backdrop-blur-xl border-b border-blue-200/50 z-50">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-[#00D1FF] rounded-xl flex items-center justify-center text-[#020617] shadow-lg shadow-[#00D1FF]/20">
+          <div className="w-10 h-10 bg-[#00D1FF] rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-400/20">
             <LayoutDashboard className="w-6 h-6" />
           </div>
-          <h1 className="text-xl font-headline font-bold tracking-tight">OskarShop Admin</h1>
+          <h1 className="text-xl font-headline font-bold tracking-tight text-blue-900">OskarShop Admin</h1>
+        </div>
+        <div className="flex items-center gap-3">
+          <Badge variant="outline" className="hidden sm:flex rounded-full px-4 py-1 border-blue-200 text-blue-600 bg-white/50 font-bold uppercase tracking-widest text-[10px]">Production Mode</Badge>
         </div>
       </header>
       
@@ -267,8 +270,8 @@ export default function AdminPage() {
         {activeView === 'dashboard' && (
           <div className="space-y-6 animate-in fade-in duration-500">
             <div>
-              <h2 className="text-4xl font-headline font-bold text-white">Dashboard</h2>
-              <p className="text-sm text-white/50 font-medium">Real-time performance analytics</p>
+              <h2 className="text-4xl font-headline font-bold text-blue-950">Dashboard</h2>
+              <p className="text-sm text-blue-900/60 font-medium">Real-time performance analytics</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -278,7 +281,7 @@ export default function AdminPage() {
                 change="+14.2%" 
                 icon={Wallet}
                 iconBg="bg-blue-500/10"
-                iconColor="text-blue-400"
+                iconColor="text-blue-600"
               />
               <SummaryCard 
                 label="TOTAL ORDERS" 
@@ -286,7 +289,7 @@ export default function AdminPage() {
                 change="+8.4%" 
                 icon={ShoppingBag}
                 iconBg="bg-cyan-500/10"
-                iconColor="text-cyan-400"
+                iconColor="text-cyan-600"
               />
               <SummaryCard 
                 label="ACTIVE PRODUCTS" 
@@ -294,7 +297,7 @@ export default function AdminPage() {
                 change="0.0%" 
                 icon={Package}
                 iconBg="bg-sky-500/10"
-                iconColor="text-sky-400"
+                iconColor="text-sky-600"
               />
               <SummaryCard 
                 label="REGISTERED USERS" 
@@ -302,13 +305,13 @@ export default function AdminPage() {
                 change="+22.1%" 
                 icon={Users}
                 iconBg="bg-indigo-500/10"
-                iconColor="text-indigo-400"
+                iconColor="text-indigo-600"
               />
             </div>
 
-            <Card className="rounded-[2.5rem] p-8 border-none shadow-xl bg-white/5 backdrop-blur-sm overflow-hidden border border-white/10">
+            <Card className="rounded-[2.5rem] p-8 border-none shadow-xl bg-white/80 backdrop-blur-sm overflow-hidden border border-white/50">
               <div className="flex justify-between items-center mb-8">
-                <h3 className="font-headline font-bold text-xl text-white">Revenue Growth</h3>
+                <h3 className="font-headline font-bold text-xl text-blue-900">Revenue Growth</h3>
                 <Badge variant="secondary" className="bg-[#00D1FF]/20 text-[#00D1FF] border-none font-bold text-[10px] px-4 py-1.5 rounded-full">LIVE DATA</Badge>
               </div>
               <div className="h-[250px] w-full">
@@ -332,10 +335,10 @@ export default function AdminPage() {
                       dataKey="day" 
                       axisLine={false} 
                       tickLine={false} 
-                      tick={{fontSize: 10, fontWeight: 'bold', fill: '#A3A3A3'}} 
+                      tick={{fontSize: 10, fontWeight: 'bold', fill: '#64748b'}} 
                       dy={10}
                     />
-                    <Tooltip contentStyle={{ backgroundColor: '#020617', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }} />
+                    <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid rgba(0,0,0,0.05)', borderRadius: '12px' }} />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
@@ -343,7 +346,7 @@ export default function AdminPage() {
 
             <div className="space-y-4 pb-20">
               <div className="flex justify-between items-center">
-                <h3 className="font-headline font-bold text-xl text-white">Recent Activity</h3>
+                <h3 className="font-headline font-bold text-xl text-blue-900">Recent Activity</h3>
                 <button 
                   onClick={() => setActiveView('orders')}
                   className="text-xs font-bold text-[#00D1FF] uppercase tracking-widest hover:underline"
@@ -353,23 +356,23 @@ export default function AdminPage() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {allOrders.slice(0, 6).map(order => (
-                  <Card key={order.id} className="rounded-3xl p-4 border-none shadow-md bg-white/5 hover:bg-white/10 transition-all border border-white/10 flex items-center justify-between group">
+                  <Card key={order.id} className="rounded-3xl p-4 border-none shadow-md bg-white hover:bg-white/90 transition-all border border-blue-50 flex items-center justify-between group">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-white/40 group-hover:bg-[#00D1FF]/20 group-hover:text-[#00D1FF] transition-colors">
+                      <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-400 group-hover:bg-[#00D1FF]/20 group-hover:text-[#00D1FF] transition-colors">
                         <Gamepad2 className="w-6 h-6" />
                       </div>
                       <div>
-                        <p className="text-sm font-bold text-white">{order.items[0]?.title || "Game Package"}</p>
-                        <p className="text-[10px] text-white/40 uppercase font-bold">#ORD-{order.id.substring(0,6)}</p>
+                        <p className="text-sm font-bold text-slate-900">{order.items[0]?.title || "Game Package"}</p>
+                        <p className="text-[10px] text-slate-400 uppercase font-bold">#ORD-{order.id.substring(0,6)}</p>
                       </div>
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-bold text-[#00D1FF]">${order.total.toFixed(2)}</p>
                       <Badge className={cn(
                         "text-[9px] px-2.5 py-0.5 h-5 uppercase font-bold rounded-full border-none",
-                        order.status === 'successful' ? 'bg-green-500/20 text-green-400' :
-                        order.status === 'cancelled' ? 'bg-red-500/20 text-red-400' :
-                        'bg-blue-500/20 text-blue-400'
+                        order.status === 'successful' ? 'bg-green-500/20 text-green-600' :
+                        order.status === 'cancelled' ? 'bg-red-500/20 text-red-600' :
+                        'bg-blue-500/20 text-blue-600'
                       )}>
                         {order.status}
                       </Badge>
@@ -383,43 +386,43 @@ export default function AdminPage() {
 
         {activeView === 'orders' && (
           <div className="animate-in slide-in-from-bottom-4 duration-500 space-y-6">
-            <h2 className="text-4xl font-headline font-bold text-white">Orders</h2>
-            <Card className="rounded-[2.5rem] bg-white/5 border-none shadow-xl overflow-hidden backdrop-blur-sm border border-white/10">
+            <h2 className="text-4xl font-headline font-bold text-blue-950">Orders</h2>
+            <Card className="rounded-[2.5rem] bg-white border-none shadow-xl overflow-hidden border border-blue-50">
               <Table>
-                <TableHeader className="bg-white/5">
+                <TableHeader className="bg-slate-50">
                   <TableRow className="hover:bg-transparent border-none">
-                    <TableHead className="font-bold text-[10px] uppercase tracking-widest text-white/40">Order Details</TableHead>
-                    <TableHead className="font-bold text-[10px] uppercase tracking-widest text-white/40">Total</TableHead>
-                    <TableHead className="font-bold text-[10px] uppercase tracking-widest text-white/40">Status</TableHead>
-                    <TableHead className="text-right font-bold text-[10px] uppercase tracking-widest text-white/40">Update</TableHead>
+                    <TableHead className="font-bold text-[10px] uppercase tracking-widest text-slate-400">Order Details</TableHead>
+                    <TableHead className="font-bold text-[10px] uppercase tracking-widest text-slate-400">Total</TableHead>
+                    <TableHead className="font-bold text-[10px] uppercase tracking-widest text-slate-400">Status</TableHead>
+                    <TableHead className="text-right font-bold text-[10px] uppercase tracking-widest text-slate-400">Update</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {allOrders.map(order => (
-                    <TableRow key={order.id} className="hover:bg-white/5 transition-colors border-white/5">
+                    <TableRow key={order.id} className="hover:bg-slate-50 transition-colors border-slate-50">
                       <TableCell>
                         <div className="flex flex-col">
-                          <span className="font-bold text-sm">#{order.id.substring(0,8)}</span>
-                          <span className="text-[10px] text-white/40 font-bold uppercase">{order.gameDetails?.playerName || "Unknown User"}</span>
+                          <span className="font-bold text-sm text-slate-900">#{order.id.substring(0,8)}</span>
+                          <span className="text-[10px] text-slate-400 font-bold uppercase">{order.gameDetails?.playerName || "Unknown User"}</span>
                         </div>
                       </TableCell>
-                      <TableCell className="font-bold text-[#00D1FF] text-sm">${order.total.toFixed(2)}</TableCell>
+                      <TableCell className="font-bold text-blue-600 text-sm">${order.total.toFixed(2)}</TableCell>
                       <TableCell>
                         <Badge className={cn(
                           "text-[9px] uppercase font-bold rounded-full px-3 h-5 border-none",
-                          order.status === 'successful' ? 'bg-green-500/20 text-green-400' :
-                          order.status === 'cancelled' ? 'bg-red-500/20 text-red-400' :
-                          'bg-blue-500/20 text-blue-400'
+                          order.status === 'successful' ? 'bg-green-500/20 text-green-600' :
+                          order.status === 'cancelled' ? 'bg-red-500/20 text-red-600' :
+                          'bg-blue-500/20 text-blue-600'
                         )}>
                           {order.status}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
                         <Select onValueChange={(v) => updateOrderStatus(order.id, v)}>
-                          <SelectTrigger className="w-[100px] h-8 rounded-xl text-[10px] font-bold bg-white/5 border-white/10 text-white">
+                          <SelectTrigger className="w-[100px] h-8 rounded-xl text-[10px] font-bold bg-slate-100 border-none text-slate-900">
                             <SelectValue placeholder="Action" />
                           </SelectTrigger>
-                          <SelectContent className="bg-[#020617] border-white/10 text-white">
+                          <SelectContent className="bg-white border-slate-100 text-slate-900">
                             <SelectItem value="pending">Pending</SelectItem>
                             <SelectItem value="successful">Complete</SelectItem>
                             <SelectItem value="cancelled">Cancel</SelectItem>
@@ -437,14 +440,14 @@ export default function AdminPage() {
         {activeView === 'products' && (
           <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500 pb-20">
             <div>
-              <h2 className="text-4xl font-headline font-bold text-white">Inventory</h2>
-              <p className="text-sm text-white/50 font-medium">Manage your digital assets and packages</p>
+              <h2 className="text-4xl font-headline font-bold text-blue-950">Inventory</h2>
+              <p className="text-sm text-blue-900/60 font-medium">Manage your digital assets and packages</p>
             </div>
             
             <div className="relative">
-              <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+              <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
               <Input 
-                className="pl-14 h-16 rounded-2xl bg-white/5 border border-white/10 text-sm font-medium focus-visible:ring-[#00D1FF]" 
+                className="pl-14 h-16 rounded-2xl bg-white border border-blue-100 text-sm font-medium focus-visible:ring-[#00D1FF]" 
                 placeholder="Search inventory..." 
                 value={productSearch}
                 onChange={(e) => setProductSearch(e.target.value)}
@@ -459,8 +462,8 @@ export default function AdminPage() {
                   className={cn(
                     "px-8 py-3 rounded-full text-xs font-bold whitespace-nowrap transition-all border",
                     categoryFilter === cat 
-                      ? "bg-[#00D1FF] text-[#020617] border-[#00D1FF] shadow-xl shadow-[#00D1FF]/20 scale-105" 
-                      : "bg-white/5 text-white/40 border-white/10 hover:border-[#00D1FF]/50"
+                      ? "bg-[#00D1FF] text-white border-[#00D1FF] shadow-xl shadow-blue-400/20 scale-105" 
+                      : "bg-white text-slate-400 border-blue-50 hover:border-[#00D1FF]/50"
                   )}
                 >
                   {cat}
@@ -470,18 +473,18 @@ export default function AdminPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredProducts.map(p => (
-                <Card key={p.id} className="rounded-[2.5rem] p-4 border-none shadow-lg bg-white/5 backdrop-blur-sm flex flex-col gap-4 relative group hover:shadow-2xl transition-all border border-white/10">
-                  <div className="w-full aspect-video rounded-[2rem] overflow-hidden bg-white/5 shrink-0 relative">
+                <Card key={p.id} className="rounded-[2.5rem] p-4 border-none shadow-lg bg-white/90 backdrop-blur-sm flex flex-col gap-4 relative group hover:shadow-2xl transition-all border border-blue-50">
+                  <div className="w-full aspect-video rounded-[2rem] overflow-hidden bg-slate-100 shrink-0 relative">
                     {p.thumbnail ? (
                       <Image src={p.thumbnail} alt={p.title} fill className="object-cover group-hover:scale-110 transition-transform duration-700" unoptimized />
                     ) : (
-                      <Package className="w-12 h-12 text-white/10 absolute inset-0 m-auto" />
+                      <Package className="w-12 h-12 text-slate-200 absolute inset-0 m-auto" />
                     )}
                     <div className="absolute top-4 right-4 flex gap-2">
-                       <Button variant="ghost" size="icon" className="h-10 w-10 rounded-2xl shadow-xl bg-[#020617]/80 backdrop-blur-md text-[#00D1FF]" onClick={() => { setEditingProduct(p); setIsProductDialogOpen(true); }}>
+                       <Button variant="ghost" size="icon" className="h-10 w-10 rounded-2xl shadow-xl bg-white/90 backdrop-blur-md text-[#00D1FF]" onClick={() => { setEditingProduct(p); setIsProductDialogOpen(true); }}>
                           <Edit className="w-5 h-5" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-10 w-10 rounded-2xl shadow-xl bg-[#020617]/80 backdrop-blur-md text-red-400" onClick={() => deleteProduct(p.id)}>
+                        <Button variant="ghost" size="icon" className="h-10 w-10 rounded-2xl shadow-xl bg-white/90 backdrop-blur-md text-red-400" onClick={() => deleteProduct(p.id)}>
                           <Trash2 className="w-5 h-5" />
                         </Button>
                     </div>
@@ -490,18 +493,18 @@ export default function AdminPage() {
                   <div className="flex-1 px-2 flex flex-col gap-1">
                     <div className="flex justify-between items-start">
                        <div>
-                          <h4 className="font-headline font-bold text-lg text-white line-clamp-1">{p.title}</h4>
-                          <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">{p.gameId}</p>
+                          <h4 className="font-headline font-bold text-lg text-slate-900 line-clamp-1">{p.title}</h4>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{p.gameId}</p>
                        </div>
-                       <p className="text-xl font-headline font-bold text-[#00D1FF]">${p.price.toFixed(2)}</p>
+                       <p className="text-xl font-headline font-bold text-blue-600">${p.price.toFixed(2)}</p>
                     </div>
                     
-                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/5">
+                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-50">
                        <div className="flex items-center gap-2">
                           <Archive className="w-4 h-4 text-[#00D1FF]" />
-                          <span className="text-xs font-bold text-white/60">{p.stock} units</span>
+                          <span className="text-xs font-bold text-slate-600">{p.stock} units</span>
                        </div>
-                       <Badge variant="outline" className="border-green-500/20 text-green-400 text-[9px] uppercase font-bold px-3">In Stock</Badge>
+                       <Badge variant="outline" className="border-green-500/20 text-green-600 text-[9px] uppercase font-bold px-3">In Stock</Badge>
                     </div>
                   </div>
                 </Card>
@@ -510,7 +513,7 @@ export default function AdminPage() {
 
             <button 
               onClick={() => { setEditingProduct(null); setIsProductDialogOpen(true); }}
-              className="fixed bottom-24 right-8 w-16 h-16 bg-[#00D1FF] text-[#020617] rounded-2xl flex items-center justify-center shadow-2xl shadow-[#00D1FF]/40 z-[110] hover:scale-110 active:scale-95 transition-all"
+              className="fixed bottom-24 right-8 w-16 h-16 bg-[#00D1FF] text-white rounded-2xl flex items-center justify-center shadow-2xl shadow-blue-400/40 z-[110] hover:scale-110 active:scale-95 transition-all"
             >
               <Plus className="w-10 h-10" />
             </button>
@@ -519,34 +522,34 @@ export default function AdminPage() {
 
         {activeView === 'users' && (
           <div className="animate-in slide-in-from-bottom-4 duration-500 space-y-6">
-            <h2 className="text-4xl font-headline font-bold text-white">User Registry</h2>
-            <Card className="rounded-[2.5rem] bg-white/5 backdrop-blur-sm border-none shadow-xl overflow-hidden border border-white/10">
+            <h2 className="text-4xl font-headline font-bold text-blue-950">User Registry</h2>
+            <Card className="rounded-[2.5rem] bg-white border-none shadow-xl overflow-hidden border border-blue-50">
               <Table>
-                <TableHeader className="bg-white/5">
+                <TableHeader className="bg-slate-50">
                   <TableRow className="border-none">
-                    <TableHead className="font-bold text-[10px] uppercase tracking-widest text-white/40">Identity</TableHead>
-                    <TableHead className="font-bold text-[10px] uppercase tracking-widest text-white/40">Status</TableHead>
-                    <TableHead className="text-right font-bold text-[10px] uppercase tracking-widest text-white/40">Moderation</TableHead>
+                    <TableHead className="font-bold text-[10px] uppercase tracking-widest text-slate-400">Identity</TableHead>
+                    <TableHead className="font-bold text-[10px] uppercase tracking-widest text-slate-400">Status</TableHead>
+                    <TableHead className="text-right font-bold text-[10px] uppercase tracking-widest text-slate-400">Moderation</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {allUsers.map(u => (
-                    <TableRow key={u.uid} className="hover:bg-white/5 transition-colors border-white/5">
+                    <TableRow key={u.uid} className="hover:bg-slate-50 transition-colors border-slate-50">
                       <TableCell>
                         <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-[#00D1FF] font-bold text-lg border border-white/10">
+                          <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 font-bold text-lg border border-blue-100">
                             {u.name?.[0] || 'U'}
                           </div>
                           <div className="flex flex-col">
-                            <span className="font-bold text-sm text-white">{u.name}</span>
-                            <span className="text-[10px] text-white/40 font-bold tracking-tight">{u.email}</span>
+                            <span className="font-bold text-sm text-slate-900">{u.name}</span>
+                            <span className="text-[10px] text-slate-400 font-bold tracking-tight">{u.email}</span>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell>
                          <Badge className={cn(
                           "text-[9px] uppercase font-bold rounded-full h-5 border-none",
-                          u.isBanned ? 'bg-red-500/20 text-red-400' : 'bg-blue-500/20 text-blue-400'
+                          u.isBanned ? 'bg-red-500/20 text-red-600' : 'bg-blue-500/20 text-blue-600'
                         )}>
                           {u.isBanned ? 'Restricted' : 'Standard'}
                         </Badge>
@@ -556,7 +559,7 @@ export default function AdminPage() {
                            <Button 
                             variant="outline" 
                             size="sm" 
-                            className="h-8 text-[9px] font-bold rounded-xl border-white/10 hover:bg-red-500/20 hover:text-red-400 transition-colors bg-white/5"
+                            className="h-8 text-[9px] font-bold rounded-xl border-slate-100 hover:bg-red-50 hover:text-red-600 transition-colors bg-white"
                             onClick={() => updateUserStatus(u.uid, { isBanned: !u.isBanned })}
                           >
                             {u.isBanned ? 'Restore' : 'Restrict'}
@@ -564,7 +567,7 @@ export default function AdminPage() {
                           <Button 
                             variant="ghost" 
                             size="icon" 
-                            className="h-8 w-8 text-red-400 rounded-xl hover:bg-red-500/10"
+                            className="h-8 w-8 text-red-400 rounded-xl hover:bg-red-50"
                             onClick={() => setUserToDelete(u.uid)}
                           >
                             <Trash2 className="w-4 h-4" />
@@ -581,18 +584,18 @@ export default function AdminPage() {
 
         {activeView === 'settings' && (
           <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500 pb-20">
-            <h2 className="text-4xl font-headline font-bold text-white">System Console</h2>
+            <h2 className="text-4xl font-headline font-bold text-blue-950">System Console</h2>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="lg:col-span-2 space-y-6">
-                <Card className="rounded-[2.5rem] p-8 border-none shadow-xl bg-white/5 backdrop-blur-sm space-y-8 border border-white/10">
+                <Card className="rounded-[2.5rem] p-8 border-none shadow-xl bg-white/90 backdrop-blur-sm space-y-8 border border-blue-50">
                    <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                      <div className="w-14 h-14 bg-[#00D1FF]/10 rounded-[1.5rem] flex items-center justify-center text-[#00D1FF] shadow-sm">
+                      <div className="w-14 h-14 bg-blue-50 rounded-[1.5rem] flex items-center justify-center text-blue-600 shadow-sm">
                         <RefreshCcw className="w-7 h-7" />
                       </div>
                       <div>
-                        <h3 className="font-headline font-bold text-xl text-white">Store Pulse</h3>
-                        <p className="text-xs text-white/40 font-medium">Toggle production environment visibility</p>
+                        <h3 className="font-headline font-bold text-xl text-blue-900">Store Pulse</h3>
+                        <p className="text-xs text-slate-400 font-medium">Toggle production environment visibility</p>
                       </div>
                     </div>
                     <Switch 
@@ -602,57 +605,57 @@ export default function AdminPage() {
                     />
                   </div>
 
-                  <div className="space-y-4 pt-8 border-t border-white/5">
-                    <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/40 flex items-center gap-2">
-                      <Megaphone className="w-3.5 h-3.5 text-[#00D1FF]" /> Broadcast Announcement
+                  <div className="space-y-4 pt-8 border-t border-slate-100">
+                    <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
+                      <Megaphone className="w-3.5 h-3.5 text-blue-500" /> Broadcast Announcement
                     </Label>
                     <Textarea 
-                      className="rounded-2xl bg-white/5 border-white/10 min-h-[100px] text-sm font-medium focus-visible:ring-[#00D1FF] text-white placeholder:text-white/20" 
+                      className="rounded-2xl bg-slate-50 border-slate-100 min-h-[100px] text-sm font-medium focus-visible:ring-[#00D1FF] text-slate-900 placeholder:text-slate-300" 
                       placeholder="Enter the scrolling message for the top bar..." 
                       value={storeSettings.announcementTicker}
                       onChange={(e) => updateStoreSettings({ announcementTicker: e.target.value })}
                     />
                   </div>
 
-                  <div className="space-y-6 pt-8 border-t border-white/5">
-                     <h3 className="font-headline font-bold text-xl flex items-center gap-3 text-white"><ImageIcon className="w-5 h-5 text-[#00D1FF]" /> Visual Identity</h3>
+                  <div className="space-y-6 pt-8 border-t border-slate-100">
+                     <h3 className="font-headline font-bold text-xl flex items-center gap-3 text-blue-900"><ImageIcon className="w-5 h-5 text-blue-500" /> Visual Identity</h3>
                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-4">
-                          <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Global Logo URL</p>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Global Logo URL</p>
                           <div className="flex gap-2">
                             <Input 
                               placeholder="https://..." 
-                              className="rounded-xl h-12 text-xs bg-white/5 border-white/10 text-white"
+                              className="rounded-xl h-12 text-xs bg-slate-50 border-slate-100 text-slate-900"
                               value={logoUrlInput}
                               onChange={(e) => setLogoUrlInput(e.target.value)}
                             />
-                            <Button onClick={applyLogoUrl} className="rounded-xl h-12 font-bold px-6 bg-[#00D1FF] text-[#020617]">Set</Button>
+                            <Button onClick={applyLogoUrl} className="rounded-xl h-12 font-bold px-6 bg-blue-600 text-white">Set</Button>
                           </div>
                         </div>
-                        <div className="w-full aspect-square md:aspect-auto h-24 bg-white/5 rounded-2xl flex items-center justify-center overflow-hidden border border-white/10">
+                        <div className="w-full aspect-square md:aspect-auto h-24 bg-slate-50 rounded-2xl flex items-center justify-center overflow-hidden border border-slate-100">
                            {storeSettings.logo && <Image src={storeSettings.logo} alt="Logo" width={48} height={48} className="object-contain" unoptimized />}
                         </div>
                      </div>
                   </div>
 
-                  <div className="space-y-6 pt-8 border-t border-white/5">
+                  <div className="space-y-6 pt-8 border-t border-slate-100">
                      <div className="flex items-center justify-between">
-                        <h3 className="font-headline font-bold text-xl flex items-center gap-3 text-white"><ImageIcon className="w-5 h-5 text-sky-400" /> Hero Sliders</h3>
-                        <Badge variant="outline" className="rounded-full px-4 text-[10px] font-bold uppercase border-white/10 text-white/60">{(storeSettings.sliderImages || []).length} Active</Badge>
+                        <h3 className="font-headline font-bold text-xl flex items-center gap-3 text-blue-900"><ImageIcon className="w-5 h-5 text-sky-500" /> Hero Sliders</h3>
+                        <Badge variant="outline" className="rounded-full px-4 text-[10px] font-bold uppercase border-slate-100 text-slate-400">{(storeSettings.sliderImages || []).length} Active</Badge>
                      </div>
                      <div className="space-y-4">
                         <div className="flex gap-2">
                           <Input 
                             placeholder="Add Slider URL..." 
-                            className="rounded-xl h-14 bg-white/5 border-white/10 text-white text-sm"
+                            className="rounded-xl h-14 bg-slate-50 border-slate-100 text-slate-900 text-sm"
                             value={sliderUrlInput}
                             onChange={(e) => setSliderUrlInput(e.target.value)}
                           />
-                          <Button onClick={addSliderImage} className="rounded-xl h-14 font-bold px-8 bg-[#00D1FF] text-[#020617] shadow-xl shadow-[#00D1FF]/10">Add</Button>
+                          <Button onClick={addSliderImage} className="rounded-xl h-14 font-bold px-8 bg-[#00D1FF] text-white shadow-xl shadow-blue-400/10">Add</Button>
                         </div>
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-4">
                           {(storeSettings.sliderImages || []).map((url, i) => (
-                            <div key={i} className="relative group rounded-[1.5rem] overflow-hidden aspect-video bg-white/5 border border-white/10 shadow-md">
+                            <div key={i} className="relative group rounded-[1.5rem] overflow-hidden aspect-video bg-slate-50 border border-slate-100 shadow-md">
                               <Image src={url} alt={`Slider ${i}`} fill className="object-cover group-hover:scale-110 transition-transform duration-500" unoptimized />
                               <button 
                                 onClick={() => removeSliderImage(i)}
@@ -666,24 +669,24 @@ export default function AdminPage() {
                      </div>
                   </div>
 
-                  <div className="space-y-6 pt-8 border-t border-white/5">
+                  <div className="space-y-6 pt-8 border-t border-slate-100">
                      <div className="flex items-center justify-between">
-                        <h3 className="font-headline font-bold text-xl flex items-center gap-3 text-white"><Layers className="w-5 h-5 text-cyan-400" /> Onboarding Flow</h3>
-                        <Badge variant="outline" className="rounded-full px-4 text-[10px] font-bold uppercase border-white/10 text-white/60">{(storeSettings.onboardingImages || []).length} Slides</Badge>
+                        <h3 className="font-headline font-bold text-xl flex items-center gap-3 text-blue-900"><Layers className="w-5 h-5 text-cyan-500" /> Onboarding Flow</h3>
+                        <Badge variant="outline" className="rounded-full px-4 text-[10px] font-bold uppercase border-slate-100 text-slate-400">{(storeSettings.onboardingImages || []).length} Slides</Badge>
                      </div>
                      <div className="space-y-4">
                         <div className="flex gap-2">
                           <Input 
                             placeholder="Add Onboarding Slide URL..." 
-                            className="rounded-xl h-14 bg-white/5 border-white/10 text-white text-sm"
+                            className="rounded-xl h-14 bg-slate-50 border-slate-100 text-slate-900 text-sm"
                             value={onboardingUrlInput}
                             onChange={(e) => setOnboardingUrlInput(e.target.value)}
                           />
-                          <Button onClick={addOnboardingImage} className="rounded-xl h-14 font-bold px-8 bg-[#00D1FF] text-[#020617] shadow-xl shadow-[#00D1FF]/10">Add</Button>
+                          <Button onClick={addOnboardingImage} className="rounded-xl h-14 font-bold px-8 bg-[#00D1FF] text-white shadow-xl shadow-blue-400/10">Add</Button>
                         </div>
                         <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mt-4">
                           {(storeSettings.onboardingImages || []).map((url, i) => (
-                            <div key={i} className="relative group rounded-2xl overflow-hidden aspect-square bg-white/5 border border-white/10 shadow-md">
+                            <div key={i} className="relative group rounded-2xl overflow-hidden aspect-square bg-slate-50 border border-slate-100 shadow-md">
                               <Image src={url} alt={`Onboarding ${i}`} fill className="object-cover group-hover:scale-110 transition-transform duration-500" unoptimized />
                               <button 
                                 onClick={() => removeOnboardingImage(i)}
@@ -700,11 +703,11 @@ export default function AdminPage() {
               </div>
 
               <div className="space-y-6">
-                <Card className="rounded-[2.5rem] p-8 bg-gradient-to-br from-[#075985] to-[#0EA5E9] text-white space-y-6 shadow-2xl border-none relative overflow-hidden">
+                <Card className="rounded-[2.5rem] p-8 bg-gradient-to-br from-blue-600 to-sky-500 text-white space-y-6 shadow-2xl border-none relative overflow-hidden">
                   <div className="absolute top-[-20%] right-[-20%] w-48 h-48 bg-white/10 rounded-full blur-3xl" />
                   <div className="relative z-10">
                     <h3 className="font-headline font-bold text-2xl flex items-center gap-3 mb-6">
-                      <Sparkles className="w-7 h-7 text-[#00D1FF]" /> AI Agent
+                      <Sparkles className="w-7 h-7 text-white" /> AI Agent
                     </h3>
                     <p className="text-sm text-white/80 font-medium mb-6">Let AI generate your next marketing blast text instantly.</p>
                     <Textarea 
@@ -714,7 +717,7 @@ export default function AdminPage() {
                       className="rounded-2xl border-none bg-white/10 backdrop-blur-md text-white placeholder:text-white/40 shadow-inner text-sm min-h-[120px] mb-6 focus-visible:ring-white/20"
                     />
                     <Button 
-                      className="w-full h-16 rounded-2xl bg-[#00D1FF] text-[#020617] font-bold text-lg shadow-xl shadow-[#00D1FF]/20 hover:scale-105 transition-all" 
+                      className="w-full h-16 rounded-2xl bg-white text-blue-600 hover:bg-white/90 font-bold text-lg shadow-xl shadow-blue-400/20 hover:scale-105 transition-all" 
                       onClick={handleGeneratePromo}
                       disabled={isGenerating}
                     >
@@ -724,13 +727,13 @@ export default function AdminPage() {
                   </div>
                 </Card>
 
-                <Card className="rounded-[2.5rem] p-8 border-none shadow-xl bg-white/5 backdrop-blur-sm border border-white/10">
-                   <h3 className="font-headline font-bold text-xl mb-4 text-white">Admin Session</h3>
-                   <p className="text-xs text-white/40 mb-8">Terminate your current administrative session safely.</p>
+                <Card className="rounded-[2.5rem] p-8 border-none shadow-xl bg-white/90 backdrop-blur-sm border border-blue-50">
+                   <h3 className="font-headline font-bold text-xl mb-4 text-blue-900">Admin Session</h3>
+                   <p className="text-xs text-slate-400 mb-8">Terminate your current administrative session safely.</p>
                    <Button 
                     variant="ghost" 
                     onClick={logout}
-                    className="w-full rounded-[1.5rem] text-red-400 hover:bg-red-500/10 h-14 text-sm font-bold gap-3 border border-red-500/20"
+                    className="w-full rounded-[1.5rem] text-red-500 hover:bg-red-50 h-14 text-sm font-bold gap-3 border border-red-100"
                   >
                     <LogOut className="w-5 h-5" /> Sign Out Session
                   </Button>
@@ -742,7 +745,7 @@ export default function AdminPage() {
 
       </main>
 
-      <nav className="fixed bottom-0 left-0 right-0 bg-[#020617]/80 backdrop-blur-xl border-t border-white/5 z-[100] px-6 py-4 flex justify-around items-center">
+      <nav className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-blue-100 z-[100] px-6 py-4 flex justify-around items-center">
         <NavButton active={activeView === 'dashboard'} onClick={() => setActiveView('dashboard')} icon={LayoutDashboard} label="HOME" />
         <NavButton active={activeView === 'orders'} onClick={() => setActiveView('orders')} icon={ShoppingBag} label="SALES" />
         <NavButton active={activeView === 'products'} onClick={() => setActiveView('products')} icon={Database} label="STOCK" />
@@ -751,7 +754,7 @@ export default function AdminPage() {
       </nav>
 
       <Dialog open={isProductDialogOpen} onOpenChange={setIsProductDialogOpen}>
-        <DialogContent className="rounded-[2.5rem] max-w-xl p-0 overflow-hidden border border-white/10 bg-[#020617] h-[90vh] md:h-auto md:max-h-[95vh] flex flex-col">
+        <DialogContent className="rounded-[2.5rem] max-w-xl p-0 overflow-hidden border border-blue-100 bg-white h-[90vh] md:h-auto md:max-h-[95vh] flex flex-col">
           <ProductForm 
             initialData={editingProduct} 
             onSave={(p) => { saveProduct(p); setIsProductDialogOpen(false); setEditingProduct(null); }} 
@@ -761,15 +764,15 @@ export default function AdminPage() {
       </Dialog>
 
       <AlertDialog open={!!userToDelete} onOpenChange={() => setUserToDelete(null)}>
-        <AlertDialogContent className="rounded-[2.5rem] bg-[#020617] border-white/10 text-white">
+        <AlertDialogContent className="rounded-[2.5rem] bg-white border-blue-100 text-slate-900">
           <AlertDialogHeader>
-            <AlertDialogTitle className="font-headline font-bold text-2xl">Confirm Deletion</AlertDialogTitle>
-            <AlertDialogDescription className="text-base text-white/60">
+            <AlertDialogTitle className="font-headline font-bold text-2xl text-blue-900">Confirm Deletion</AlertDialogTitle>
+            <AlertDialogDescription className="text-base text-slate-500">
               This action is permanent and will completely remove the user account from the registry.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="mt-6">
-            <AlertDialogCancel className="rounded-2xl h-14 font-bold bg-white/5 border-white/10 hover:bg-white/10">Cancel</AlertDialogCancel>
+            <AlertDialogCancel className="rounded-2xl h-14 font-bold bg-slate-50 border-slate-100 hover:bg-slate-100">Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={confirmDeleteUser} className="rounded-2xl h-14 bg-red-600 text-white font-bold hover:bg-red-700">
               Permanently Delete
             </AlertDialogAction>
@@ -782,15 +785,15 @@ export default function AdminPage() {
 
 function SummaryCard({ label, value, change, icon: Icon, iconBg, iconColor }: { label: string, value: string, change: string, icon: any, iconBg: string, iconColor: string }) {
   return (
-    <Card className="rounded-[2.5rem] p-6 border-none shadow-xl bg-white/5 backdrop-blur-sm flex items-center justify-between group hover:bg-white/10 transition-all border border-white/10">
+    <Card className="rounded-[2.5rem] p-6 border-none shadow-xl bg-white/90 backdrop-blur-sm flex items-center justify-between group hover:bg-white transition-all border border-white/50">
       <div>
-        <p className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] mb-3">{label}</p>
-        <h3 className="text-3xl font-headline font-bold text-white mb-1">{value}</h3>
+        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-3">{label}</p>
+        <h3 className="text-3xl font-headline font-bold text-slate-900 mb-1">{value}</h3>
         <div className="flex items-center gap-1.5">
-          <div className="w-5 h-5 rounded-full bg-green-500/20 flex items-center justify-center">
-            <TrendingUp className="w-3 h-3 text-green-400" />
+          <div className="w-5 h-5 rounded-full bg-green-500/10 flex items-center justify-center">
+            <TrendingUp className="w-3 h-3 text-green-600" />
           </div>
-          <span className="text-[10px] font-bold text-green-400">{change}</span>
+          <span className="text-[10px] font-bold text-green-600">{change}</span>
         </div>
       </div>
       <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center transition-transform group-hover:rotate-12", iconBg, iconColor)}>
@@ -806,12 +809,12 @@ function NavButton({ active, onClick, icon: Icon, label }: { active: boolean, on
       onClick={onClick}
       className={cn(
         "flex flex-col items-center gap-1.5 p-1 transition-all",
-        active ? "text-[#00D1FF] scale-110" : "text-white/20 hover:text-white/40"
+        active ? "text-blue-600 scale-110" : "text-slate-300 hover:text-slate-400"
       )}
     >
       <Icon className={cn("w-6 h-6", active && "animate-pulse")} />
       <span className="text-[9px] font-bold tracking-widest uppercase">{label}</span>
-      {active && <div className="w-1 h-1 bg-[#00D1FF] rounded-full" />}
+      {active && <div className="w-1 h-1 bg-blue-600 rounded-full" />}
     </button>
   );
 }
@@ -855,51 +858,51 @@ function ProductForm({ initialData, onSave, onCancel }: { initialData?: any, onS
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#020617] max-h-full">
+    <div className="flex flex-col h-full bg-white max-h-full">
       {/* Header */}
-      <div className="px-6 py-4 flex items-center justify-between border-b border-white/5 shrink-0">
+      <div className="px-6 py-4 flex items-center justify-between border-b border-slate-100 shrink-0">
         <div className="flex items-center gap-4">
-          <button onClick={onCancel} className="w-10 h-10 hover:bg-white/5 rounded-xl flex items-center justify-center transition-colors">
-            <ArrowLeft className="w-6 h-6 text-white/40" />
+          <button onClick={onCancel} className="w-10 h-10 hover:bg-slate-50 rounded-xl flex items-center justify-center transition-colors">
+            <ArrowLeft className="w-6 h-6 text-slate-400" />
           </button>
-          <DialogTitle className="text-[#00D1FF] font-headline font-bold text-lg uppercase tracking-widest">
+          <DialogTitle className="text-blue-600 font-headline font-bold text-lg uppercase tracking-widest">
             {initialData ? "Update Asset" : "Register Asset"}
           </DialogTitle>
         </div>
-        <div className="w-10 h-10 rounded-full bg-[#00D1FF]/10 flex items-center justify-center text-[#00D1FF]">
+        <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
           <SettingsIcon className="w-6 h-6" />
         </div>
       </div>
 
       <div className="p-8 overflow-y-auto flex-1 space-y-8 scrollbar-hide pb-24">
         <div>
-          <h2 className="text-4xl font-headline font-bold text-white">Asset Specs</h2>
-          <DialogDescription className="text-sm font-medium text-white/40 mt-2">
+          <h2 className="text-4xl font-headline font-bold text-slate-900">Asset Specs</h2>
+          <DialogDescription className="text-sm font-medium text-slate-400 mt-2">
             Configure the properties for this digital gaming package.
           </DialogDescription>
         </div>
 
         {/* Banner Upload Area */}
         <div className="space-y-4">
-          <Label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] flex items-center gap-2">
-            Asset Visual <Info className="w-3.5 h-3.5 text-[#00D1FF]" />
+          <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+            Asset Visual <Info className="w-3.5 h-3.5 text-blue-500" />
           </Label>
           <div 
             onClick={() => fileInputRef.current?.click()}
-            className="relative h-56 rounded-[2.5rem] border-2 border-dashed border-white/10 bg-white/5 flex flex-col items-center justify-center group overflow-hidden transition-all hover:border-[#00D1FF]/50 cursor-pointer shadow-inner"
+            className="relative h-56 rounded-[2.5rem] border-2 border-dashed border-slate-200 bg-slate-50 flex flex-col items-center justify-center group overflow-hidden transition-all hover:border-blue-400 cursor-pointer shadow-inner"
           >
             {thumbUrlInput ? (
               <div className="absolute inset-0">
                 <Image src={thumbUrlInput} alt="Banner Preview" fill className="object-cover opacity-60" unoptimized />
-                <div className="absolute inset-0 bg-[#020617]/40 backdrop-blur-[4px]" />
+                <div className="absolute inset-0 bg-white/40 backdrop-blur-[4px]" />
               </div>
             ) : null}
             <div className="relative z-10 flex flex-col items-center text-center px-6">
-              <div className="w-16 h-16 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-[#00D1FF] mb-4 group-hover:scale-110 transition-all shadow-xl">
+              <div className="w-16 h-16 bg-white border border-slate-100 rounded-2xl flex items-center justify-center text-blue-500 mb-4 group-hover:scale-110 transition-all shadow-xl">
                 <Upload className="w-8 h-8" />
               </div>
-              <p className="text-sm font-bold text-white">Import Visual Media</p>
-              <p className="text-[10px] text-white/20 mt-2 uppercase font-bold tracking-widest">SVG, PNG, JPG (MAX 5MB)</p>
+              <p className="text-sm font-bold text-slate-900">Import Visual Media</p>
+              <p className="text-[10px] text-slate-400 mt-2 uppercase font-bold tracking-widest">SVG, PNG, JPG (MAX 5MB)</p>
               
               <input 
                 type="file" 
@@ -911,7 +914,7 @@ function ProductForm({ initialData, onSave, onCancel }: { initialData?: any, onS
               
               <div className="mt-6 flex flex-col gap-2 w-full max-w-[300px]">
                 <Input 
-                  className="h-10 bg-[#020617] border-white/10 text-[10px] font-bold rounded-xl text-center shadow-sm uppercase tracking-widest text-white"
+                  className="h-10 bg-white border-slate-200 text-[10px] font-bold rounded-xl text-center shadow-sm uppercase tracking-widest text-slate-900"
                   placeholder="Or paste remote URL..."
                   value={thumbUrlInput.startsWith('data:') ? '' : thumbUrlInput}
                   onClick={(e) => e.stopPropagation()}
@@ -927,9 +930,9 @@ function ProductForm({ initialData, onSave, onCancel }: { initialData?: any, onS
 
         {/* Product Name */}
         <div className="space-y-4">
-          <Label className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Listing Title</Label>
+          <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Listing Title</Label>
           <Input 
-            className="h-16 rounded-[1.5rem] bg-white/5 border-white/10 px-6 text-base font-bold focus-visible:ring-[#00D1FF] text-white"
+            className="h-16 rounded-[1.5rem] bg-slate-50 border-slate-200 px-6 text-base font-bold focus-visible:ring-blue-500 text-slate-900"
             placeholder="e.g. MEGA DIAMOND PACK"
             value={data.title}
             onChange={(e) => setData({ ...data, title: e.target.value })}
@@ -938,12 +941,12 @@ function ProductForm({ initialData, onSave, onCancel }: { initialData?: any, onS
 
         {/* Game Category */}
         <div className="space-y-4">
-          <Label className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Platform / Game</Label>
+          <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Platform / Game</Label>
           <Select value={data.gameId} onValueChange={(v) => setData({ ...data, gameId: v })}>
-            <SelectTrigger className="h-16 rounded-[1.5rem] bg-white/5 border-white/10 px-6 text-base font-bold text-white">
+            <SelectTrigger className="h-16 rounded-[1.5rem] bg-slate-50 border-slate-200 px-6 text-base font-bold text-slate-900">
               <SelectValue placeholder="Select Platform" />
             </SelectTrigger>
-            <SelectContent className="bg-[#020617] border-white/10 text-white">
+            <SelectContent className="bg-white border-slate-200 text-slate-900">
               <SelectItem value="freefire">Free Fire</SelectItem>
               <SelectItem value="mobilelegends">Mobile Legends</SelectItem>
               <SelectItem value="pubgmobile">PUBG Mobile</SelectItem>
@@ -956,13 +959,13 @@ function ProductForm({ initialData, onSave, onCancel }: { initialData?: any, onS
         {/* Amount & Price Grid */}
         <div className="grid grid-cols-2 gap-6">
           <div className="space-y-4">
-            <Label className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Currency Unit</Label>
+            <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Currency Unit</Label>
             <div className="relative">
               <div className="absolute left-5 top-1/2 -translate-y-1/2">
-                <Gem className="w-5 h-5 text-cyan-400" />
+                <Gem className="w-5 h-5 text-cyan-500" />
               </div>
               <Input 
-                className="h-16 rounded-[1.5rem] bg-white/5 border-white/10 pl-14 pr-6 text-base font-bold text-white"
+                className="h-16 rounded-[1.5rem] bg-slate-50 border-slate-200 pl-14 pr-6 text-base font-bold text-slate-900"
                 placeholder="Quantity"
                 value={data.diamondAmount}
                 onChange={(e) => setData({ ...data, diamondAmount: e.target.value })}
@@ -970,15 +973,15 @@ function ProductForm({ initialData, onSave, onCancel }: { initialData?: any, onS
             </div>
           </div>
           <div className="space-y-4">
-            <Label className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Unit Price (USD)</Label>
+            <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Unit Price (USD)</Label>
             <div className="relative">
               <div className="absolute left-5 top-1/2 -translate-y-1/2">
-                <Banknote className="w-5 h-5 text-blue-400" />
+                <Banknote className="w-5 h-5 text-blue-500" />
               </div>
               <Input 
                 type="number"
                 step="0.01"
-                className="h-16 rounded-[1.5rem] bg-white/5 border-white/10 pl-14 pr-6 text-base font-bold text-white"
+                className="h-16 rounded-[1.5rem] bg-slate-50 border-slate-200 pl-14 pr-6 text-base font-bold text-slate-900"
                 placeholder="0.00"
                 value={isNaN(data.price) ? "" : data.price}
                 onChange={handlePriceChange}
@@ -988,19 +991,19 @@ function ProductForm({ initialData, onSave, onCancel }: { initialData?: any, onS
         </div>
 
         {/* Available Stock Card */}
-        <Card className="rounded-[2rem] p-6 bg-gradient-to-br from-[#00D1FF]/5 to-sky-500/5 border border-white/5 flex items-center justify-between shadow-xl">
+        <Card className="rounded-[2rem] p-6 bg-gradient-to-br from-blue-50 to-sky-50 border border-blue-100 flex items-center justify-between shadow-xl">
           <div className="flex items-center gap-5">
-            <div className="w-16 h-16 bg-[#00D1FF] rounded-[1.5rem] flex items-center justify-center text-[#020617] shadow-2xl shadow-[#00D1FF]/30">
+            <div className="w-16 h-16 bg-blue-600 rounded-[1.5rem] flex items-center justify-center text-white shadow-2xl shadow-blue-400/30">
               <Archive className="w-8 h-8" />
             </div>
             <div>
-              <p className="text-sm font-headline font-bold text-white">Current Stock</p>
-              <p className="text-[9px] font-bold text-[#00D1FF] uppercase tracking-[0.2em] mt-1">Ready for fulfillment</p>
+              <p className="text-sm font-headline font-bold text-slate-900">Current Stock</p>
+              <p className="text-[9px] font-bold text-blue-600 uppercase tracking-[0.2em] mt-1">Ready for fulfillment</p>
             </div>
           </div>
           <Input 
             type="number"
-            className="w-28 h-16 bg-white/5 border-white/10 rounded-[1.25rem] text-center font-headline font-bold text-2xl focus-visible:ring-0 shadow-lg text-white"
+            className="w-28 h-16 bg-white border-slate-200 rounded-[1.25rem] text-center font-headline font-bold text-2xl focus-visible:ring-0 shadow-lg text-slate-900"
             value={isNaN(data.stock) ? "" : data.stock}
             onChange={handleStockChange}
           />
@@ -1008,17 +1011,17 @@ function ProductForm({ initialData, onSave, onCancel }: { initialData?: any, onS
       </div>
 
       {/* Footer Actions */}
-      <div className="p-8 bg-[#020617]/60 backdrop-blur-xl border-t border-white/5 flex items-center gap-6 mt-auto shrink-0 z-50">
+      <div className="p-8 bg-white/60 backdrop-blur-xl border-t border-slate-100 flex items-center gap-6 mt-auto shrink-0 z-50">
         <Button 
           variant="outline" 
           onClick={onCancel}
-          className="flex-1 h-16 rounded-[1.5rem] border-white/10 bg-white/5 font-bold text-white/60 hover:bg-white/10"
+          className="flex-1 h-16 rounded-[1.5rem] border-slate-200 bg-white font-bold text-slate-400 hover:bg-slate-50"
         >
           Discard
         </Button>
         <Button 
           onClick={() => onSave(data)}
-          className="flex-[2] h-16 rounded-[1.5rem] bg-[#00D1FF] hover:bg-[#00D1FF]/90 text-[#020617] font-bold shadow-2xl shadow-[#00D1FF]/30 flex items-center justify-center gap-3 active:scale-95 transition-all"
+          className="flex-[2] h-16 rounded-[1.5rem] bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-2xl shadow-blue-400/30 flex items-center justify-center gap-3 active:scale-95 transition-all"
         >
           <Archive className="w-6 h-6" /> Deploy Asset
         </Button>
@@ -1026,4 +1029,3 @@ function ProductForm({ initialData, onSave, onCancel }: { initialData?: any, onS
     </div>
   );
 }
-
