@@ -1,7 +1,7 @@
 
 /**
  * OskarShop Service Worker
- * Handles PWA caching and Background Push Notifications
+ * Handles PWA background notifications for LIVE events and Chat messages.
  */
 
 self.addEventListener('install', (event) => {
@@ -9,35 +9,33 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(clients.claim());
 });
 
-// Handle Background Push Notifications
 self.addEventListener('push', (event) => {
-  const data = event.data ? event.data.json() : {};
-  const title = data.title || 'Oskar Shop';
-  const options = {
-    body: data.body || 'New update available!',
-    icon: data.icon || 'https://placehold.co/192x192/7C3AED/FFFFFF/png?text=O',
-    badge: 'https://placehold.co/96x96/7C3AED/FFFFFF/png?text=O',
-    tag: data.tag || 'general-notification',
-    renotify: true,
-    data: {
-      url: data.url || '/'
-    }
-  };
-
-  event.waitUntil(self.registration.showNotification(title, options));
+  if (event.data) {
+    const data = event.data.json();
+    const options = {
+      body: data.body,
+      icon: data.icon || '/icon-192.png',
+      badge: '/badge.png',
+      tag: data.tag || 'oskar-shop-alert',
+      renotify: true,
+      vibrate: [200, 100, 200],
+      data: { url: data.url }
+    };
+    event.waitUntil(self.registration.showNotification(data.title, options));
+  }
 });
 
-// Handle Notification Clicks
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const urlToOpen = event.notification.data.url || '/';
+  const urlToOpen = event.notification.data?.url || '/';
 
   event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
-      for (let client of windowClients) {
+    clients.matchAll({ type: 'window' }).then((windowClients) => {
+      for (let i = 0; i < windowClients.length; i++) {
+        const client = windowClients[i];
         if (client.url === urlToOpen && 'focus' in client) {
           return client.focus();
         }

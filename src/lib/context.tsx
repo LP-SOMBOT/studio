@@ -12,8 +12,6 @@ import {
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword,
   signOut,
-  GoogleAuthProvider,
-  signInWithPopup,
   updateProfile
 } from 'firebase/auth';
 import { 
@@ -162,6 +160,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [hasNotifiedThisSession, setHasNotifiedThisSession] = useState(false);
   const lastMessageNotifiedRef = useRef<string | null>(null);
 
+  // Sync Hash with Tabs
   useEffect(() => {
     const handleHash = () => {
       const hash = window.location.hash.replace('#', '');
@@ -182,20 +181,24 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Persistent Cart
   useEffect(() => {
     const cachedCart = localStorage.getItem('oskar_cart');
     if (cachedCart) setCart(JSON.parse(cachedCart));
   }, []);
 
+  // Check if initial data is ready
   useEffect(() => {
     if (settingsFetched && productsFetched) {
       setIsInitialLoading(false);
+      console.log("[OskarShop] Initial data load complete.");
     }
   }, [settingsFetched, productsFetched]);
 
-  // Handle Notifications for Live Status
+  // LIVE TRIGGER NOTIFICATIONS
   useEffect(() => {
     if (storeSettings.isLive === true && !hasNotifiedThisSession && prevIsLiveRef.current === false) {
+      console.log("[OskarShop] Store went LIVE. Triggering notification.");
       if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
         const notifyLive = () => {
           const options = {
@@ -214,18 +217,71 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         notifyLive();
       }
     }
-    if (storeSettings.isLive === false) setHasNotifiedThisSession(false);
+    if (storeSettings.isLive === false) {
+      setHasNotifiedThisSession(false);
+    }
     prevIsLiveRef.current = storeSettings.isLive;
   }, [storeSettings.isLive, storeSettings.logo, hasNotifiedThisSession]);
 
-  // Handle Chat Message Sync & Notifications
+  // SETTINGS LISTENER
+  useEffect(() => {
+    if (!rtdb) return;
+    console.log("[OskarShop] Connecting to settings...");
+    const settingsRef = ref(rtdb, 'settings');
+    const unsubscribe = onValue(settingsRef, (snapshot) => {
+      const data = snapshot.val();
+      console.log("[OskarShop] Settings updated:", data);
+      if (data) setStoreSettings(prev => ({ ...prev, ...data }));
+      setSettingsFetched(true);
+    }, (err) => console.error("[OskarShop] Settings error:", err));
+    return () => unsubscribe();
+  }, [rtdb]);
+
+  // PRODUCTS LISTENER
+  useEffect(() => {
+    if (!rtdb) return;
+    console.log("[OskarShop] Connecting to products...");
+    const productsRef = ref(rtdb, 'products');
+    const unsubscribe = onValue(productsRef, (snapshot) => {
+      const data = snapshot.val();
+      console.log("[OskarShop] Products updated:", data ? Object.keys(data).length : 0, "items");
+      if (!data) {
+        setProducts([]);
+      } else {
+        const productList = Object.entries(data).map(([id, val]: [string, any]) => ({ ...val, id }));
+        setProducts(productList);
+      }
+      setProductsFetched(true);
+    }, (err) => console.error("[OskarShop] Products error:", err));
+    return () => unsubscribe();
+  }, [rtdb]);
+
+  // USER PROFILE LISTENER
+  useEffect(() => {
+    if (!rtdb || !user) {
+      setUserProfile(null);
+      return;
+    }
+    console.log("[OskarShop] Connecting to user profile:", user.uid);
+    const userRef = ref(rtdb, `users/${user.uid}`);
+    const unsubscribe = onValue(userRef, (snapshot) => {
+      const data = snapshot.val();
+      console.log("[OskarShop] User profile updated:", data);
+      setUserProfile(data);
+    }, (err) => console.error("[OskarShop] User profile error:", err));
+    return () => unsubscribe();
+  }, [rtdb, user]);
+
+  // CHAT LISTENER (Real-time)
   useEffect(() => {
     if (!rtdb || !user) {
       setMessages([]);
       return;
     }
     
+    // Admin listens to chatTargetId, User listens to themselves
     const effectiveTargetId = (userProfile?.isAdmin && chatTargetId) ? chatTargetId : user.uid;
+    console.log("[OskarShop] Connecting to chat for:", effectiveTargetId);
     
     const chatRef = query(ref(rtdb, `chats/${effectiveTargetId}`), limitToLast(50));
     const unsubscribe = onValue(chatRef, (snapshot) => {
@@ -236,8 +292,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         const msgList = Object.entries(data).map(([id, val]: [string, any]) => ({ id, ...val }));
         setMessages(msgList);
 
+        // Notify of new message
         const lastMsg = msgList[msgList.length - 1];
         if (lastMsg && lastMsg.senderId !== user.uid && !lastMsg.isRead && lastMsg.id !== lastMessageNotifiedRef.current) {
+          console.log("[OskarShop] New message detected. Sending notification.");
           if (activeTab !== 'chat' && pathname !== '/admin') {
              if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
                 const options = {
@@ -256,65 +314,37 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           }
         }
       }
-    });
+    }, (err) => console.error("[OskarShop] Chat error:", err));
 
     return () => unsubscribe();
   }, [rtdb, user, chatTargetId, userProfile, activeTab, pathname, storeSettings.logo]);
 
+  // ADMIN DATA LISTENERS
   useEffect(() => {
-    if (!rtdb || !user) return;
-    const userRef = ref(rtdb, `users/${user.uid}`);
-    return onValue(userRef, (snapshot) => {
-      const data = snapshot.val();
-      setUserProfile(data);
-    });
-  }, [rtdb, user]);
-
-  useEffect(() => {
-    if (!rtdb) return;
-    const settingsRef = ref(rtdb, 'settings');
-    onValue(settingsRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data) setStoreSettings(prev => ({ ...prev, ...data }));
-      setSettingsFetched(true);
-    });
-  }, [rtdb]);
-
-  useEffect(() => {
-    if (!rtdb) return;
-    const productsRef = ref(rtdb, 'products');
-    onValue(productsRef, (snapshot) => {
-      const data = snapshot.val();
-      if (!data) {
-        setProducts([]);
-      } else {
-        const productList = Object.entries(data).map(([id, val]: [string, any]) => ({ ...val, id }));
-        setProducts(productList);
-      }
-      setProductsFetched(true);
-    });
-  }, [rtdb]);
-
-  useEffect(() => {
-    if (!rtdb || !userProfile?.isAdmin) return;
+    if (!rtdb || !userProfile?.isAdmin) {
+      setAllUsers([]);
+      setAllOrders([]);
+      setAllChatSessions([]);
+      return;
+    }
+    
+    console.log("[OskarShop] ADMIN MODE: Connecting to management nodes...");
     
     const usersRef = ref(rtdb, 'users');
     const ordersRef = ref(rtdb, 'orders');
     const indexRef = ref(rtdb, 'chatIndex');
 
-    onValue(usersRef, (snapshot) => {
+    const unsubUsers = onValue(usersRef, (snapshot) => {
       const data = snapshot.val();
-      if (data) setAllUsers(Object.values(data));
-      else setAllUsers([]);
+      setAllUsers(data ? Object.values(data) : []);
     });
 
-    onValue(ordersRef, (snapshot) => {
+    const unsubOrders = onValue(ordersRef, (snapshot) => {
       const data = snapshot.val();
-      if (data) setAllOrders(Object.entries(data).map(([id, val]: [string, any]) => ({ ...val, id })));
-      else setAllOrders([]);
+      setAllOrders(data ? Object.entries(data).map(([id, val]: [string, any]) => ({ ...val, id })) : []);
     });
 
-    onValue(indexRef, (snapshot) => {
+    const unsubChatIndex = onValue(indexRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
         const sessions = Object.entries(data).map(([userId, val]: [string, any]) => ({ userId, ...val }))
@@ -324,16 +354,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setAllChatSessions([]);
       }
     });
+
+    return () => {
+      unsubUsers();
+      unsubOrders();
+      unsubChatIndex();
+    };
   }, [rtdb, userProfile]);
 
+  // CUSTOMER ORDERS LISTENER
   useEffect(() => {
     if (!rtdb || !user) return;
     const userOrdersRef = query(ref(rtdb, 'orders'), orderByChild('userId'), equalTo(user.uid));
-    onValue(userOrdersRef, (snapshot) => {
+    const unsubscribe = onValue(userOrdersRef, (snapshot) => {
       const data = snapshot.val();
-      if (data) setOrders(Object.entries(data).map(([id, val]: [string, any]) => ({ ...val, id })));
-      else setOrders([]);
+      setOrders(data ? Object.entries(data).map(([id, val]: [string, any]) => ({ ...val, id })) : []);
     });
+    return () => unsubscribe();
   }, [rtdb, user]);
 
   const enhancedUser = useMemo(() => {
@@ -347,6 +384,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     };
   }, [user, userProfile]);
 
+  // ACTIONS
   const sendMessage = async (text?: string, imageUrl?: string, targetUserId?: string) => {
     if (!rtdb || !user) return;
     const chatUserId = targetUserId || (userProfile?.isAdmin ? chatTargetId : user.uid);
