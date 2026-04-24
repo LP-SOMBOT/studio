@@ -37,7 +37,8 @@ import {
   Archive,
   Info,
   Layers,
-  Monitor
+  Monitor,
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -170,7 +171,7 @@ export default function AdminPage() {
 
   if (!user?.isAdmin) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="min-h-screen flex items-center justify-center p-4 bg-white/40 backdrop-blur-3xl">
         <Card className="max-w-md w-full p-8 text-center rounded-3xl border-none shadow-xl bg-white/90 backdrop-blur-xl border border-blue-100">
           <h2 className="text-2xl font-headline font-bold mb-4 text-blue-900">Access Denied</h2>
           <p className="text-blue-900/60 mb-6">You do not have administrative privileges.</p>
@@ -244,7 +245,7 @@ export default function AdminPage() {
   const productCategories = ["All Games", "Free Fire", "PUBG Mobile", "Mobile Legends", "NBA 2K24"];
 
   return (
-    <div className="min-h-screen pb-24 md:pb-10 font-body page-transition relative">
+    <div className="min-h-screen pb-24 md:pb-10 font-body page-transition relative bg-transparent">
       <header className="h-16 px-4 flex items-center justify-between sticky top-0 bg-white/40 backdrop-blur-xl border-b border-blue-200/50 z-50">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-[#00D1FF] rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-400/20">
@@ -825,6 +826,7 @@ function ProductForm({ initialData, onSave, onCancel }: { initialData?: any, onS
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [thumbUrlInput, setThumbUrlInput] = useState(data.thumbnail || "");
+  const [isUploading, setIsUploading] = useState(false);
 
   const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = parseFloat(e.target.value);
@@ -836,16 +838,34 @@ function ProductForm({ initialData, onSave, onCancel }: { initialData?: any, onS
     setData({ ...data, stock: isNaN(val) ? 0 : val });
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        setThumbUrlInput(base64String);
-        setData({ ...data, thumbnail: base64String });
-      };
-      reader.readAsDataURL(file);
+      setIsUploading(true);
+      const formData = new FormData();
+      formData.append('image', file);
+      
+      try {
+        // Upload to ImgBB using the provided API key
+        const response = await fetch(`https://api.imgbb.com/1/upload?key=4437fb9ba157b8fc7ddef1e251718f66`, {
+          method: 'POST',
+          body: formData,
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+          const imageUrl = result.data.url;
+          setThumbUrlInput(imageUrl);
+          setData({ ...data, thumbnail: imageUrl });
+          toast({ title: "Image Uploaded Successfully" });
+        } else {
+          toast({ title: "Upload Failed", description: result.error?.message, variant: "destructive" });
+        }
+      } catch (error) {
+        toast({ title: "Upload Error", description: "Could not reach ImgBB", variant: "destructive" });
+      } finally {
+        setIsUploading(false);
+      }
     }
   };
 
@@ -880,8 +900,11 @@ function ProductForm({ initialData, onSave, onCancel }: { initialData?: any, onS
             Asset Visual <Info className="w-3.5 h-3.5 text-blue-500" />
           </Label>
           <div 
-            onClick={() => fileInputRef.current?.click()}
-            className="relative h-56 rounded-[2.5rem] border-2 border-dashed border-slate-200 bg-slate-50 flex flex-col items-center justify-center group overflow-hidden transition-all hover:border-blue-400 cursor-pointer shadow-inner"
+            onClick={() => !isUploading && fileInputRef.current?.click()}
+            className={cn(
+              "relative h-56 rounded-[2.5rem] border-2 border-dashed border-slate-200 bg-slate-50 flex flex-col items-center justify-center group overflow-hidden transition-all hover:border-blue-400 cursor-pointer shadow-inner",
+              isUploading && "opacity-50 cursor-wait"
+            )}
           >
             {thumbUrlInput ? (
               <div className="absolute inset-0">
@@ -891,10 +914,10 @@ function ProductForm({ initialData, onSave, onCancel }: { initialData?: any, onS
             ) : null}
             <div className="relative z-10 flex flex-col items-center text-center px-6">
               <div className="w-16 h-16 bg-white border border-slate-100 rounded-2xl flex items-center justify-center text-blue-500 mb-4 group-hover:scale-110 transition-all shadow-xl">
-                <Upload className="w-8 h-8" />
+                {isUploading ? <Loader2 className="w-8 h-8 animate-spin" /> : <Upload className="w-8 h-8" />}
               </div>
-              <p className="text-sm font-bold text-slate-900">Import Visual Media</p>
-              <p className="text-[10px] text-slate-400 mt-2 uppercase font-bold tracking-widest">SVG, PNG, JPG (MAX 5MB)</p>
+              <p className="text-sm font-bold text-slate-900">{isUploading ? "Uploading to ImgBB..." : "Import Visual Media"}</p>
+              <p className="text-[10px] text-slate-400 mt-2 uppercase font-bold tracking-widest">SVG, PNG, JPG (Hosted via ImgBB)</p>
               
               <input 
                 type="file" 
@@ -902,18 +925,20 @@ function ProductForm({ initialData, onSave, onCancel }: { initialData?: any, onS
                 onChange={handleFileChange} 
                 className="hidden" 
                 accept="image/*" 
+                disabled={isUploading}
               />
               
               <div className="mt-6 flex flex-col gap-2 w-full max-w-[300px]">
                 <Input 
                   className="h-10 bg-white border-slate-200 text-[10px] font-bold rounded-xl text-center shadow-sm uppercase tracking-widest text-slate-900"
                   placeholder="Or paste remote URL..."
-                  value={thumbUrlInput.startsWith('data:') ? '' : thumbUrlInput}
+                  value={thumbUrlInput}
                   onClick={(e) => e.stopPropagation()}
                   onChange={(e) => {
                     setThumbUrlInput(e.target.value);
                     setData({ ...data, thumbnail: e.target.value });
                   }}
+                  disabled={isUploading}
                 />
               </div>
             </div>
@@ -1007,15 +1032,18 @@ function ProductForm({ initialData, onSave, onCancel }: { initialData?: any, onS
         <Button 
           variant="outline" 
           onClick={onCancel}
+          disabled={isUploading}
           className="flex-1 h-16 rounded-[1.5rem] border-slate-200 bg-white font-bold text-slate-400 hover:bg-slate-50"
         >
           Discard
         </Button>
         <Button 
           onClick={() => onSave(data)}
+          disabled={isUploading}
           className="flex-[2] h-16 rounded-[1.5rem] bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-2xl shadow-blue-400/30 flex items-center justify-center gap-3 active:scale-95 transition-all"
         >
-          <Archive className="w-6 h-6" /> Deploy Asset
+          {isUploading ? <Loader2 className="w-6 h-6 animate-spin" /> : <Archive className="w-6 h-6" />}
+          Deploy Asset
         </Button>
       </div>
     </div>
