@@ -11,9 +11,22 @@
         "name": { "type": "string" },
         "isAdmin": { "type": "boolean" },
         "phoneNumber": { "type": "string" },
-        "createdAt": { "type": "number" }
+        "createdAt": { "type": "number" },
+        "photoURL": { "type": "string" }
       },
       "required": ["uid", "email"]
+    },
+    "ChatMessage": {
+      "title": "Chat Message",
+      "description": "A single message in a conversation.",
+      "type": "object",
+      "properties": {
+        "text": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "senderId": { "type": "string" },
+        "timestamp": { "type": "number" },
+        "isRead": { "type": "boolean" }
+      }
     },
     "Order": {
       "title": "Order",
@@ -52,6 +65,12 @@
     },
     "settings": {
       "description": "Global application settings like live status."
+    },
+    "chats": {
+      "description": "Message history keyed by userId."
+    },
+    "chatIndex": {
+      "description": "Metadata about conversations for admin view."
     }
   }
 }
