@@ -1,61 +1,46 @@
 
-/**
- * OskarShop Service Worker
- * Handles PWA lifecycle, caching (future), and background notifications.
- */
+const CACHE_NAME = 'oskar-shop-v1';
+const urlsToCache = [
+  '/',
+  '/manifest.json',
+  'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap'
+];
 
 self.addEventListener('install', (event) => {
-  self.skipWaiting();
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then((cache) => cache.addAll(urlsToCache))
+  );
 });
 
-self.addEventListener('activate', (event) => {
-  event.waitUntil(clients.claim());
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    caches.match(event.request)
+      .then((response) => response || fetch(event.request))
+  );
 });
 
-/**
- * Handle Notification Click
- * When a user clicks the "Live" alert, we focus their existing app window or open a new one.
- */
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-
-  const urlToOpen = event.notification.data?.url || '/';
-
   event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
-      // Check if there is already a window/tab open with our app
-      for (var i = 0; i < windowClients.length; i++) {
-        var client = windowClients[i];
-        if (client.url.includes(urlToOpen) && 'focus' in client) {
-          return client.focus();
-        }
+    clients.matchAll({ type: 'window' }).then((clientList) => {
+      if (clientList.length > 0) {
+        return clientList[0].focus();
       }
-      // If no window found, open a new one
-      if (clients.openWindow) {
-        return clients.openWindow(urlToOpen);
-      }
+      return clients.openWindow('/');
     })
   );
 });
 
-/**
- * Background Push Event (Experimental)
- * Future implementation for cloud-triggered notifications.
- */
 self.addEventListener('push', (event) => {
-  if (!event.data) return;
-
-  const data = event.data.json();
+  const data = event.data?.json() || {};
+  const title = data.title || 'Oskar Shop Alert';
   const options = {
-    body: data.body,
-    icon: data.icon || '/icon.png',
-    badge: data.badge || '/badge.png',
-    tag: data.tag || 'oskar-shop-default',
-    renotify: true,
-    data: { url: data.url || '/' }
+    body: data.body || 'Check the latest updates in Oskar Shop!',
+    icon: '/icon-192.png',
+    badge: '/badge-96.png',
+    tag: data.tag || 'general-alert'
   };
 
-  event.waitUntil(
-    self.registration.showNotification(data.title, options)
-  );
+  event.waitUntil(self.registration.showNotification(title, options));
 });
