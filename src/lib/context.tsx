@@ -225,6 +225,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const productsRef = ref(rtdb, 'products');
     const accPostsRef = ref(rtdb, 'accountPosts');
     const eventsRef = ref(rtdb, 'events');
+    const usersRef = ref(rtdb, 'users');
 
     let settingsLoaded = false;
     let productsLoaded = false;
@@ -251,6 +252,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     onValue(accPostsRef, (s) => setAccountPosts(s.val() ? Object.entries(s.val()).map(([id, v]: any) => ({ ...v, id })) : []));
     onValue(eventsRef, (s) => setEvents(s.val() ? Object.entries(s.val()).map(([id, v]: any) => ({ ...v, id })) : []));
     
+    // Everyone should see all users for ranking purposes
+    onValue(usersRef, (s) => setAllUsers(s.val() ? Object.values(s.val()) : []));
+    
   }, [rtdb]);
 
   useEffect(() => {
@@ -273,7 +277,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!rtdb || !userProfile || (userProfile.role !== 'admin' && userProfile.role !== 'super_admin')) return;
     
-    onValue(ref(rtdb, 'users'), s => setAllUsers(s.val() ? Object.values(s.val()) : []));
     onValue(ref(rtdb, 'orders'), s => setAllOrders(s.val() ? Object.entries(s.val()).map(([id, v]: any) => ({ ...v, id })).sort((a,b) => b.createdAt - a.createdAt) : []));
     onValue(ref(rtdb, 'chatIndex'), s => setAllChatSessions(s.val() ? Object.entries(s.val()).map(([userId, v]: any) => ({ userId, ...v })).sort((a,b) => b.lastTimestamp - a.lastTimestamp) : []));
   }, [rtdb, userProfile]);
@@ -370,7 +373,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (!rtdb) return;
     await update(ref(rtdb, `orders/${oid}`), { status });
     if (status === 'successful') {
-      const orderSnap = await set(ref(rtdb, `orders/${oid}/status`), 'successful');
       const orderData = allOrders.find(o => o.id === oid);
       if (orderData?.userId) {
         await update(ref(rtdb, `users/${orderData.userId}`), {
