@@ -33,7 +33,9 @@ import {
   Smartphone,
   Trophy,
   Bell,
-  Image as ImageIcon
+  Image as ImageIcon,
+  ChevronRight,
+  MonitorOff
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -182,45 +184,17 @@ export default function AdminPage() {
     registeredUsers: allUsers.length
   };
 
-  const handleImageUpload = async (file: File) => {
+  const handleOfflineImageUpload = async (file: File) => {
     setIsUploading(true);
     try {
       const url = await uploadToImgbb(file);
-      return url;
+      await updateStoreSettings({ appStatus: { ...storeSettings.appStatus, offlineImageUrl: url } });
+      toast({ title: "Offline Image Updated" });
     } catch (e) {
       toast({ title: "Upload Failed", variant: "destructive" });
-      return null;
     } finally {
       setIsUploading(false);
     }
-  };
-
-  const handleSaveProduct = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsSaving(true);
-    const formData = new FormData(e.currentTarget);
-    const thumbnailInput = (e.currentTarget.querySelector('input[type="file"]') as HTMLInputElement)?.files?.[0];
-    
-    let thumbnailUrl = editingProduct?.thumbnail;
-    if (thumbnailInput) {
-      const uploadedUrl = await handleImageUpload(thumbnailInput);
-      if (uploadedUrl) thumbnailUrl = uploadedUrl;
-    }
-
-    const productData = {
-      ...editingProduct,
-      title: formData.get('title') as string,
-      description: formData.get('description') as string,
-      price: parseFloat(formData.get('price') as string),
-      gameId: formData.get('gameId') as string,
-      category: formData.get('category') as any,
-      thumbnail: thumbnailUrl
-    };
-
-    await saveProduct(productData);
-    setIsProductDialogOpen(false);
-    setEditingProduct(null);
-    setIsSaving(false);
   };
 
   return (
@@ -326,15 +300,15 @@ export default function AdminPage() {
         {activeView === 'settings' && (
           <div className="max-w-2xl mx-auto space-y-8 animate-in slide-in-from-bottom-8 duration-700">
             <Card className="rounded-[3rem] p-10 border-none shadow-2xl bg-white/90 backdrop-blur-md">
-              <h2 className="text-3xl font-headline font-bold mb-10 flex items-center gap-4">
+              <h2 className="text-3xl font-headline font-bold mb-10 flex items-center gap-4 text-slate-900">
                 <SettingsIcon className="w-8 h-8 text-primary" /> App Parameters
               </h2>
               
               <div className="space-y-8">
-                <div className="flex items-center justify-between p-6 bg-slate-50 rounded-2xl">
+                <div className="flex items-center justify-between p-6 bg-slate-50 rounded-2xl border border-slate-100">
                   <div>
-                    <p className="font-bold">Maintenance Mode</p>
-                    <p className="text-xs text-muted-foreground">Put shop offline for maintenance</p>
+                    <p className="font-bold text-slate-900">Maintenance Mode</p>
+                    <p className="text-xs text-muted-foreground">Put shop offline for all customers</p>
                   </div>
                   <Switch 
                     checked={storeSettings.appStatus?.offline} 
@@ -342,25 +316,82 @@ export default function AdminPage() {
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label>Admin Access PIN (6 digits)</Label>
-                  <Input 
-                    type="password" 
-                    maxLength={6} 
-                    defaultValue={storeSettings.config?.adminSettings?.pin}
-                    onBlur={(e) => updateStoreSettings({ config: { ...storeSettings.config, adminSettings: { ...storeSettings.config?.adminSettings, pin: e.target.value } } })}
-                    className="h-12 rounded-xl" 
-                  />
+                <div className="space-y-6 pt-6 border-t border-slate-100">
+                  <div className="flex items-center gap-2 mb-4">
+                    <MonitorOff className="w-5 h-5 text-primary" />
+                    <h3 className="font-bold text-slate-900">Offline Customization</h3>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Maintenance Title</Label>
+                      <Input 
+                        placeholder="e.g. Oskar Shop is upgrading"
+                        defaultValue={storeSettings.appStatus?.offlineTitle}
+                        onBlur={(e) => updateStoreSettings({ appStatus: { ...storeSettings.appStatus, offlineTitle: e.target.value } })}
+                        className="h-12 rounded-xl"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Maintenance Message</Label>
+                      <Textarea 
+                        placeholder="Tell users why you are offline..."
+                        defaultValue={storeSettings.appStatus?.offlineBody}
+                        onBlur={(e) => updateStoreSettings({ appStatus: { ...storeSettings.appStatus, offlineBody: e.target.value } })}
+                        className="rounded-xl min-h-[100px]"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Maintenance Image</Label>
+                      <div className="relative h-48 w-full group rounded-2xl overflow-hidden bg-slate-50 border-2 border-dashed border-slate-200 flex flex-col items-center justify-center gap-2">
+                        {storeSettings.appStatus?.offlineImageUrl ? (
+                          <Image src={storeSettings.appStatus.offlineImageUrl} alt="Offline" fill className="object-cover opacity-50" />
+                        ) : (
+                          <ImageIcon className="w-10 h-10 text-slate-300" />
+                        )}
+                        <Button 
+                          variant="secondary" 
+                          size="sm" 
+                          disabled={isUploading}
+                          className="relative z-10 rounded-full h-10 px-6 font-bold"
+                        >
+                          {isUploading ? <Loader2 className="animate-spin w-4 h-4 mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
+                          {storeSettings.appStatus?.offlineImageUrl ? "Change Image" : "Upload Image"}
+                          <input 
+                            type="file" 
+                            accept="image/*" 
+                            className="absolute inset-0 opacity-0 cursor-pointer"
+                            onChange={(e) => e.target.files?.[0] && handleOfflineImageUpload(e.target.files[0])}
+                          />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label>Marketplace Fee (%)</Label>
-                  <Input 
-                    type="number" 
-                    defaultValue={storeSettings.config?.shop?.feeValue}
-                    onBlur={(e) => updateStoreSettings({ config: { ...storeSettings.config, shop: { ...storeSettings.config?.shop, feeValue: parseFloat(e.target.value) } } })}
-                    className="h-12 rounded-xl" 
-                  />
+                <div className="space-y-4 pt-6 border-t border-slate-100">
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Admin Access PIN (6 digits)</Label>
+                    <Input 
+                      type="password" 
+                      maxLength={6} 
+                      defaultValue={storeSettings.config?.adminSettings?.pin}
+                      onBlur={(e) => updateStoreSettings({ config: { ...storeSettings.config, adminSettings: { ...storeSettings.config?.adminSettings, pin: e.target.value } } })}
+                      className="h-12 rounded-xl" 
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Marketplace Fee (%)</Label>
+                    <Input 
+                      type="number" 
+                      defaultValue={storeSettings.config?.shop?.feeValue}
+                      onBlur={(e) => updateStoreSettings({ config: { ...storeSettings.config, shop: { ...storeSettings.config?.shop, feeValue: parseFloat(e.target.value) } } })}
+                      className="h-12 rounded-xl" 
+                    />
+                  </div>
                 </div>
               </div>
             </Card>
