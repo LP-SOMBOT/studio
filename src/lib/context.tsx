@@ -470,9 +470,45 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     await update(ref(rtdb, `chatIndex/${id}`), { unreadCount: 0 });
   };
 
-  const saveProduct = async (p: any) => p.id ? update(ref(rtdb, `products/${p.id}`), p) : push(ref(rtdb, 'products'), p);
+  const saveProduct = async (p: any) => {
+    if (!rtdb) return;
+    const { id, ...data } = p;
+    const cleanData: any = {};
+    Object.keys(data).forEach(key => {
+      const val = data[key];
+      // Filter out undefined, null, empty strings and NaN values for Firebase integrity
+      if (val !== undefined && val !== null && val !== "" && !Number.isNaN(val)) {
+        cleanData[key] = val;
+      }
+    });
+
+    if (id) {
+      await update(ref(rtdb, `products/${id}`), cleanData);
+    } else {
+      await push(ref(rtdb, 'products'), cleanData);
+    }
+  };
+
   const deleteProduct = async (id: string) => remove(ref(rtdb, `products/${id}`));
-  const saveEvent = async (e: any) => e.id ? update(ref(rtdb, `events/${e.id}`), e) : push(ref(rtdb, 'events'), e);
+  
+  const saveEvent = async (e: any) => {
+    if (!rtdb) return;
+    const { id, ...data } = e;
+    const cleanData: any = {};
+    Object.keys(data).forEach(key => {
+      const val = data[key];
+      if (val !== undefined && val !== null && val !== "" && !Number.isNaN(val)) {
+        cleanData[key] = val;
+      }
+    });
+
+    if (id) {
+      await update(ref(rtdb, `events/${id}`), cleanData);
+    } else {
+      await push(ref(rtdb, 'events'), cleanData);
+    }
+  };
+
   const deleteEvent = async (id: string) => remove(ref(rtdb, `events/${id}`));
   const deleteUser = async (uid: string) => remove(ref(rtdb, `users/${uid}`));
   const updateStoreSettings = async (s: any) => update(ref(rtdb, 'settings'), s);
