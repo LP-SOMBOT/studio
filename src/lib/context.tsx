@@ -2,7 +2,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useMemo, useRef } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { 
   useUser, 
   useAuth, 
@@ -99,11 +99,9 @@ type AppContextType = {
   setGlobalLoading: (loading: boolean) => void;
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, name: string, phone: string) => Promise<void>;
-  loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   cart: CartItem[];
-  addToCart: (item: Omit<CartItem, 'quantity'>) => void;
-  removeFromCart: (id: string) => void;
+  buyNow: (item: Omit<CartItem, 'quantity'>) => void;
   clearCart: () => void;
   orders: Order[];
   allOrders: Order[];
@@ -117,7 +115,6 @@ type AppContextType = {
   deleteProduct: (id: string) => Promise<void>;
   storeSettings: StoreSettings;
   updateStoreSettings: (settings: Partial<StoreSettings>) => Promise<void>;
-  // Chat
   messages: ChatMessage[];
   allChatSessions: ChatSession[];
   chatTargetId: string | null;
@@ -133,6 +130,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const auth = useAuth();
   const rtdb = useDatabase();
   const pathname = usePathname();
+  const router = useRouter();
   
   const [activeTab, setActiveTabState] = useState('home');
   const [isGlobalLoading, setIsGlobalLoading] = useState(false);
@@ -160,11 +158,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [hasNotifiedThisSession, setHasNotifiedThisSession] = useState(false);
   const lastMessageNotifiedRef = useRef<string | null>(null);
 
-  // Sync Hash with Tabs
   useEffect(() => {
     const handleHash = () => {
       const hash = window.location.hash.replace('#', '');
-      if (['home', 'games', 'cart', 'profile', 'chat'].includes(hash)) {
+      if (['home', 'games', 'profile', 'chat'].includes(hash)) {
         setActiveTabState(hash);
       }
     };
@@ -181,24 +178,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Persistent Cart
   useEffect(() => {
     const cachedCart = localStorage.getItem('oskar_cart');
     if (cachedCart) setCart(JSON.parse(cachedCart));
   }, []);
 
-  // Check if initial data is ready
   useEffect(() => {
     if (settingsFetched && productsFetched) {
       setIsInitialLoading(false);
-      console.log("[OskarShop] Initial data load complete.");
     }
   }, [settingsFetched, productsFetched]);
 
-  // LIVE TRIGGER NOTIFICATIONS
   useEffect(() => {
     if (storeSettings.isLive === true && !hasNotifiedThisSession && prevIsLiveRef.current === false) {
-      console.log("[OskarShop] Store went LIVE. Triggering notification.");
       if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
         const notifyLive = () => {
           const options = {
@@ -223,28 +215,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     prevIsLiveRef.current = storeSettings.isLive;
   }, [storeSettings.isLive, storeSettings.logo, hasNotifiedThisSession]);
 
-  // SETTINGS LISTENER
   useEffect(() => {
     if (!rtdb) return;
-    console.log("[OskarShop] Connecting to settings...");
     const settingsRef = ref(rtdb, 'settings');
     const unsubscribe = onValue(settingsRef, (snapshot) => {
       const data = snapshot.val();
-      console.log("[OskarShop] Settings updated:", data);
       if (data) setStoreSettings(prev => ({ ...prev, ...data }));
       setSettingsFetched(true);
-    }, (err) => console.error("[OskarShop] Settings error:", err));
+    });
     return () => unsubscribe();
   }, [rtdb]);
 
-  // PRODUCTS LISTENER
   useEffect(() => {
     if (!rtdb) return;
-    console.log("[OskarShop] Connecting to products...");
     const productsRef = ref(rtdb, 'products');
     const unsubscribe = onValue(productsRef, (snapshot) => {
       const data = snapshot.val();
-      console.log("[OskarShop] Products updated:", data ? Object.keys(data).length : 0, "items");
       if (!data) {
         setProducts([]);
       } else {
@@ -252,37 +238,29 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setProducts(productList);
       }
       setProductsFetched(true);
-    }, (err) => console.error("[OskarShop] Products error:", err));
+    });
     return () => unsubscribe();
   }, [rtdb]);
 
-  // USER PROFILE LISTENER
   useEffect(() => {
     if (!rtdb || !user) {
       setUserProfile(null);
       return;
     }
-    console.log("[OskarShop] Connecting to user profile:", user.uid);
     const userRef = ref(rtdb, `users/${user.uid}`);
     const unsubscribe = onValue(userRef, (snapshot) => {
       const data = snapshot.val();
-      console.log("[OskarShop] User profile updated:", data);
       setUserProfile(data);
-    }, (err) => console.error("[OskarShop] User profile error:", err));
+    });
     return () => unsubscribe();
   }, [rtdb, user]);
 
-  // CHAT LISTENER (Real-time)
   useEffect(() => {
     if (!rtdb || !user) {
       setMessages([]);
       return;
     }
-    
-    // Admin listens to chatTargetId, User listens to themselves
     const effectiveTargetId = (userProfile?.isAdmin && chatTargetId) ? chatTargetId : user.uid;
-    console.log("[OskarShop] Connecting to chat for:", effectiveTargetId);
-    
     const chatRef = query(ref(rtdb, `chats/${effectiveTargetId}`), limitToLast(50));
     const unsubscribe = onValue(chatRef, (snapshot) => {
       const data = snapshot.val();
@@ -291,11 +269,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       } else {
         const msgList = Object.entries(data).map(([id, val]: [string, any]) => ({ id, ...val }));
         setMessages(msgList);
-
-        // Notify of new message
         const lastMsg = msgList[msgList.length - 1];
         if (lastMsg && lastMsg.senderId !== user.uid && !lastMsg.isRead && lastMsg.id !== lastMessageNotifiedRef.current) {
-          console.log("[OskarShop] New message detected. Sending notification.");
           if (activeTab !== 'chat' && pathname !== '/admin') {
              if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
                 const options = {
@@ -314,12 +289,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           }
         }
       }
-    }, (err) => console.error("[OskarShop] Chat error:", err));
-
+    });
     return () => unsubscribe();
   }, [rtdb, user, chatTargetId, userProfile, activeTab, pathname, storeSettings.logo]);
 
-  // ADMIN DATA LISTENERS
   useEffect(() => {
     if (!rtdb || !userProfile?.isAdmin) {
       setAllUsers([]);
@@ -327,23 +300,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setAllChatSessions([]);
       return;
     }
-    
-    console.log("[OskarShop] ADMIN MODE: Connecting to management nodes...");
-    
     const usersRef = ref(rtdb, 'users');
     const ordersRef = ref(rtdb, 'orders');
     const indexRef = ref(rtdb, 'chatIndex');
-
     const unsubUsers = onValue(usersRef, (snapshot) => {
       const data = snapshot.val();
       setAllUsers(data ? Object.values(data) : []);
     });
-
     const unsubOrders = onValue(ordersRef, (snapshot) => {
       const data = snapshot.val();
       setAllOrders(data ? Object.entries(data).map(([id, val]: [string, any]) => ({ ...val, id })) : []);
     });
-
     const unsubChatIndex = onValue(indexRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
@@ -354,7 +321,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setAllChatSessions([]);
       }
     });
-
     return () => {
       unsubUsers();
       unsubOrders();
@@ -362,7 +328,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     };
   }, [rtdb, userProfile]);
 
-  // CUSTOMER ORDERS LISTENER
   useEffect(() => {
     if (!rtdb || !user) return;
     const userOrdersRef = query(ref(rtdb, 'orders'), orderByChild('userId'), equalTo(user.uid));
@@ -384,12 +349,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     };
   }, [user, userProfile]);
 
-  // ACTIONS
   const sendMessage = async (text?: string, imageUrl?: string, targetUserId?: string) => {
     if (!rtdb || !user) return;
     const chatUserId = targetUserId || (userProfile?.isAdmin ? chatTargetId : user.uid);
     if (!chatUserId) return;
-
     const msgData: any = {
       senderId: user.uid,
       timestamp: serverTimestamp(),
@@ -397,10 +360,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     };
     if (text) msgData.text = text;
     if (imageUrl) msgData.imageUrl = imageUrl;
-
     const chatRef = ref(rtdb, `chats/${chatUserId}`);
     await push(chatRef, msgData);
-
     const indexRef = ref(rtdb, `chatIndex/${chatUserId}`);
     const updates: any = {
       lastMessage: text || "📷 Image",
@@ -408,12 +369,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       userName: userProfile?.isAdmin ? (allChatSessions.find(s => s.userId === chatUserId)?.userName || "User") : enhancedUser?.name,
       userPhoto: userProfile?.isAdmin ? (allChatSessions.find(s => s.userId === chatUserId)?.userPhoto || "") : enhancedUser?.photoURL,
     };
-
     if (!userProfile?.isAdmin) {
       const current = allChatSessions.find(s => s.userId === user.uid);
       updates.unreadCount = (current?.unreadCount || 0) + 1;
     }
-
     await update(indexRef, updates);
   };
 
@@ -463,26 +422,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const addToCart = (item: Omit<CartItem, 'quantity'>) => {
-    setCart(prev => {
-      const existing = prev.find(i => i.id === item.id);
-      let updated;
-      if (existing) {
-        updated = prev.map(i => i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i);
-      } else {
-        updated = [...prev, { ...item, quantity: 1 }];
-      }
-      localStorage.setItem('oskar_cart', JSON.stringify(updated));
-      return updated;
-    });
-  };
-
-  const removeFromCart = (id: string) => {
-    setCart(prev => {
-      const updated = prev.filter(i => i.id !== id);
-      localStorage.setItem('oskar_cart', JSON.stringify(updated));
-      return updated;
-    });
+  const buyNow = (item: Omit<CartItem, 'quantity'>) => {
+    const directItem = { ...item, quantity: 1 };
+    setCart([directItem]);
+    localStorage.setItem('oskar_cart', JSON.stringify([directItem]));
+    router.push('/checkout');
   };
 
   const clearCart = () => {
@@ -549,11 +493,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setGlobalLoading: setIsGlobalLoading,
       login, 
       signup,
-      loginWithGoogle: async () => {}, 
       logout, 
       cart, 
-      addToCart, 
-      removeFromCart, 
+      buyNow,
       clearCart, 
       orders, 
       allOrders,

@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useApp } from "@/lib/context";
-import { toast } from "@/hooks/use-toast";
 
 type GameCardProps = {
   id: string;
@@ -21,15 +20,11 @@ type GameCardProps = {
 };
 
 export default function GameCard({ id, title, description, thumbnail, price, discountedPrice, gameId, imageHint }: GameCardProps) {
-  const { addToCart } = useApp();
+  const { buyNow } = useApp();
 
-  const handleAddToCart = (e: React.MouseEvent) => {
+  const handleBuyNow = (e: React.MouseEvent) => {
     e.preventDefault();
-    addToCart({ id, title, price: discountedPrice || price, gameId, thumbnail });
-    toast({
-      title: "Added to cart!",
-      description: `${title} has been added to your shopping cart.`,
-    });
+    buyNow({ id, title, price: discountedPrice || price, gameId, thumbnail });
   };
 
   const hasDiscount = discountedPrice && discountedPrice < price;
@@ -73,8 +68,8 @@ export default function GameCard({ id, title, description, thumbnail, price, dis
         </div>
       </CardContent>
       <CardFooter className="p-5 pt-0">
-        <Button onClick={handleAddToCart} className="w-full rounded-2xl h-12 gap-2 font-bold shadow-lg shadow-primary/10 hover:shadow-primary/20 transition-all">
-          <ShoppingCart className="w-5 h-5" /> Add
+        <Button onClick={handleBuyNow} className="w-full rounded-2xl h-12 gap-2 font-bold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all">
+          <ShoppingCart className="w-5 h-5" /> Buy Now
         </Button>
       </CardFooter>
     </Card>

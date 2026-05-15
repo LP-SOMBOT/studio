@@ -4,12 +4,11 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useApp } from "@/lib/context";
-import { ShoppingCart, User, Settings, Gamepad2 } from "lucide-react";
+import { User, Settings, Gamepad2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function Header() {
-  const { cart, user, storeSettings } = useApp();
-  const cartCount = cart.reduce((acc, i) => acc + i.quantity, 0);
+  const { user, storeSettings } = useApp();
 
   return (
     <header className="sticky top-0 z-40 w-full bg-white border-b border-gray-100 shadow-sm">
@@ -39,14 +38,6 @@ export default function Header() {
           <Link href="/games" className="text-sm font-medium hover:text-primary transition-colors flex items-center gap-1">
             <Gamepad2 className="w-4 h-4" /> Games
           </Link>
-          <Link href="/cart" className="relative text-sm font-medium hover:text-primary transition-colors flex items-center gap-1">
-            <ShoppingCart className="w-4 h-4" /> Cart
-            {cartCount > 0 && (
-              <span className="absolute -top-2 -right-3 bg-secondary text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">
-                {cartCount}
-              </span>
-            )}
-          </Link>
           {user?.isAdmin && (
             <Link href="/admin" className="text-sm font-medium hover:text-primary transition-colors flex items-center gap-1">
               <Settings className="w-4 h-4" /> Admin
@@ -60,16 +51,11 @@ export default function Header() {
           </Link>
         </nav>
 
-        {/* Mobile Mini Search/Toggle */}
+        {/* Mobile Mini Profile */}
         <div className="md:hidden">
-          <Link href="/cart">
-            <Button variant="ghost" size="icon" className="relative">
-              <ShoppingCart className="w-6 h-6" />
-              {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-secondary text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
-                  {cartCount}
-                </span>
-              )}
+          <Link href={user ? "/profile" : "/login"}>
+            <Button variant="ghost" size="icon">
+              <User className="w-6 h-6" />
             </Button>
           </Link>
         </div>

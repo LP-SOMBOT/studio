@@ -1,16 +1,14 @@
 
 "use client";
 
-import { House, Gamepad2, ShoppingCart, CircleUser, MessageCircle } from "lucide-react";
+import { House, Gamepad2, CircleUser, MessageCircle } from "lucide-react";
 import { useApp } from "@/lib/context";
 import { cn } from "@/lib/utils";
 
 export default function BottomNav() {
-  const { cart, activeTab, setActiveTab, allChatSessions, user } = useApp();
-  const cartCount = cart.reduce((acc, i) => acc + i.quantity, 0);
+  const { activeTab, setActiveTab, allChatSessions, user } = useApp();
 
   // Unread messages logic
-  // For users, we'd check unread in the single session. For admin, we sum all.
   const unreadChat = user?.isAdmin 
     ? allChatSessions.reduce((acc, s) => acc + (s.unreadCount || 0), 0)
     : (allChatSessions.find(s => s.userId === user?.uid)?.unreadCount || 0);
@@ -19,7 +17,6 @@ export default function BottomNav() {
     { id: "home", label: "Home", icon: House },
     { id: "games", label: "Games", icon: Gamepad2 },
     { id: "chat", label: "Chat", icon: MessageCircle, badge: unreadChat },
-    { id: "cart", label: "Cart", icon: ShoppingCart, badge: cartCount },
     { id: "profile", label: "Profile", icon: CircleUser },
   ];
 
