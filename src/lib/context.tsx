@@ -219,7 +219,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const setActiveTab = (tab: string) => {
     setActiveTabState(tab);
     if (typeof window !== 'undefined') {
-      if (pathname !== '/') {
+      const isSpecialFlow = pathname === "/checkout" || pathname === "/checkout-account" || pathname.startsWith("/accounts/");
+      if (isSpecialFlow || pathname !== '/') {
         router.push(tab === 'home' ? '/' : `/#${tab}`);
       } else {
         window.location.hash = tab === 'home' ? '' : tab;
@@ -235,27 +236,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const eventsRef = ref(rtdb, 'events');
     const usersRef = ref(rtdb, 'users');
 
-    let settingsLoaded = false;
-    let productsLoaded = false;
-
-    const checkInitialLoad = () => {
-      if (settingsLoaded && productsLoaded) {
-        setTimeout(() => setIsInitialLoading(false), 500);
-      }
-    };
-
-    onValue(settingsRef, (s) => {
-      setStoreSettings(s.val() || {});
-      settingsLoaded = true;
-      checkInitialLoad();
-    });
-
-    onValue(productsRef, (s) => {
-      setProducts(s.val() ? Object.entries(s.val()).map(([id, v]: any) => ({ ...v, id })) : []);
-      productsLoaded = true;
-      checkInitialLoad();
-    });
-
+    onValue(settingsRef, (s) => setStoreSettings(s.val() || {}));
+    onValue(productsRef, (s) => setProducts(s.val() ? Object.entries(s.val()).map(([id, v]: any) => ({ ...v, id })) : []));
     onValue(accPostsRef, (s) => setAccountPosts(s.val() ? Object.entries(s.val()).map(([id, v]: any) => ({ ...v, id })) : []));
     onValue(eventsRef, (s) => setEvents(s.val() ? Object.entries(s.val()).map(([id, v]: any) => ({ ...v, id })) : []));
     onValue(usersRef, (s) => {
@@ -270,12 +252,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
+    // Initial loading state timer
+    const timer = setTimeout(() => setIsInitialLoading(false), 1500);
+
     return () => {
       off(settingsRef);
       off(productsRef);
       off(accPostsRef);
       off(eventsRef);
       off(usersRef);
+      clearTimeout(timer);
     };
   }, [rtdb]);
 
@@ -301,35 +287,43 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     };
   }, [rtdb, user]);
 
-  useEffect(() => {
-    if (!rtdb || !userProfile) return;
-    
-    // Administrative Real-Time Listeners
-    if (userProfile.role === 'admin' || userProfile.role === 'super_admin') {
-      const ordersRef = ref(rtdb, 'orders');
-      const chatIndexRef = ref(rtdb, 'chatIndex');
-
-      onValue(ordersRef, s => {
-        const val = s.val();
-        setAllOrders(val ? Object.entries(val).map(([id, v]: any) => ({ ...v, id })).sort((a,b) => b.createdAt - a.createdAt) : []);
-      });
-      
-      onValue(chatIndexRef, s => {
-        const val = s.val();
-        setAllChatSessions(val ? Object.entries(val).map(([userId, v]: any) => ({ userId, ...v })).sort((a,b) => b.lastTimestamp - a.lastTimestamp) : []);
-      });
-
-      return () => {
-        off(ordersRef);
-        off(chatIndexRef);
-      };
-    }
-  }, [rtdb, userProfile]);
-
   const enhancedUser = useMemo(() => {
     if (!user) return null;
     return { ...user, ...userProfile, isAdmin: userProfile?.role === 'admin' || userProfile?.role === 'super_admin' };
   }, [user, userProfile]);
+
+  // Persistent Admin Listener for Orders
+  useEffect(() => {
+    if (!rtdb || !enhancedUser?.isAdmin) {
+      setAllOrders([]);
+      return;
+    }
+
+    const allOrdersRef = ref(rtdb, 'orders');
+    const chatIndexRef = ref(rtdb, 'chatIndex');
+
+    onValue(allOrdersRef, (snapshot) => {
+      const val = snapshot.val();
+      if (val) {
+        const sorted = Object.entries(val)
+          .map(([id, v]: any) => ({ ...v, id }))
+          .sort((a, b) => b.createdAt - a.createdAt);
+        setAllOrders(sorted);
+      } else {
+        setAllOrders([]);
+      }
+    });
+
+    onValue(chatIndexRef, (snapshot) => {
+      const val = snapshot.val();
+      setAllChatSessions(val ? Object.entries(val).map(([userId, v]: any) => ({ userId, ...v })).sort((a,b) => b.lastTimestamp - a.lastTimestamp) : []);
+    });
+
+    return () => {
+      off(allOrdersRef);
+      off(chatIndexRef);
+    };
+  }, [rtdb, enhancedUser?.isAdmin]);
 
   const login = async (e: string, p: string) => {
     setIsGlobalLoading(true);

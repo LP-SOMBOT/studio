@@ -31,7 +31,8 @@ import {
   Search,
   Box,
   AlertCircle,
-  RefreshCw
+  RefreshCw,
+  Clock
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -210,7 +211,7 @@ export default function AdminPage() {
     }
   };
 
-  if (isInitialLoading || loading) {
+  if (isInitialLoading || (loading && !isPinAuthenticated)) {
     return (
       <div className="min-h-screen bg-slate-50 p-10 flex flex-col items-center justify-center gap-6">
         <Loader2 className="w-10 h-10 animate-spin text-primary" />
@@ -266,7 +267,7 @@ export default function AdminPage() {
       
       {/* Sidebar */}
       <aside className={cn(
-        "h-screen bg-white border-r border-slate-100 flex flex-col transition-all duration-300 z-40",
+        "h-screen bg-white border-r border-slate-100 flex flex-col transition-all duration-300 z-50",
         isSidebarExpanded ? "w-64" : "w-20"
       )}>
         <div className="h-20 px-6 flex items-center justify-between">
@@ -454,8 +455,9 @@ export default function AdminPage() {
                  <Table>
                   <TableHeader className="bg-slate-50/50">
                     <TableRow className="border-slate-50">
-                      <TableHead className="font-bold text-[10px] uppercase tracking-widest px-8">Order ID</TableHead>
+                      <TableHead className="font-bold text-[10px] uppercase tracking-widest px-8">Date / ID</TableHead>
                       <TableHead className="font-bold text-[10px] uppercase tracking-widest">Customer / Item</TableHead>
+                      <TableHead className="font-bold text-[10px] uppercase tracking-widest">Details</TableHead>
                       <TableHead className="font-bold text-[10px] uppercase tracking-widest">Amount</TableHead>
                       <TableHead className="font-bold text-[10px] uppercase tracking-widest">Status</TableHead>
                       <TableHead className="font-bold text-[10px] uppercase tracking-widest text-right px-8">Actions</TableHead>
@@ -464,7 +466,7 @@ export default function AdminPage() {
                   <TableBody>
                     {allOrders.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={5} className="h-80 text-center">
+                        <TableCell colSpan={6} className="h-80 text-center">
                            <div className="flex flex-col items-center justify-center opacity-20">
                               <ShoppingBag size={64} className="mb-4" />
                               <h3 className="text-xl font-bold">No sales records yet</h3>
@@ -476,13 +478,32 @@ export default function AdminPage() {
                       allOrders.map((o) => (
                         <TableRow key={o.id} className="hover:bg-slate-50/50 transition-colors border-slate-50">
                           <TableCell className="px-8">
-                            <span className="font-mono text-xs font-bold text-slate-400">#{o.id.slice(0, 8).toUpperCase()}</span>
+                            <div className="flex flex-col">
+                               <span className="font-mono text-[10px] font-bold text-slate-400">#{o.id.slice(0, 8).toUpperCase()}</span>
+                               <span className="text-[9px] text-slate-400">{o.createdAt ? new Date(o.createdAt).toLocaleString() : 'N/A'}</span>
+                            </div>
                           </TableCell>
                           <TableCell>
                             <div className="flex flex-col">
                                <span className="font-bold text-slate-900">{o.gameDetails?.playerName || o.gameDetails?.sellerName || "Direct Order"}</span>
                                <span className="text-[10px] text-slate-400 font-bold uppercase">{o.items?.[0]?.title || "Unknown Product"}</span>
                             </div>
+                          </TableCell>
+                          <TableCell>
+                             <div className="flex flex-col gap-1">
+                                {o.gameDetails?.playerID && (
+                                   <div className="flex items-center gap-1.5">
+                                      <Gamepad2 size={10} className="text-slate-400" />
+                                      <span className="text-[10px] font-mono font-bold">{o.gameDetails.playerID}</span>
+                                   </div>
+                                )}
+                                {o.gameDetails?.phoneNumber && (
+                                   <div className="flex items-center gap-1.5">
+                                      <Clock size={10} className="text-slate-400" />
+                                      <span className="text-[10px] font-bold">{o.gameDetails.phoneNumber}</span>
+                                   </div>
+                                )}
+                             </div>
                           </TableCell>
                           <TableCell className="font-bold text-slate-900">${o.total?.toFixed(2)}</TableCell>
                           <TableCell>
@@ -497,7 +518,7 @@ export default function AdminPage() {
                             <Select onValueChange={(val) => updateOrderStatus(o.id, val)} defaultValue={o.status}>
                                <SelectTrigger className="h-10 w-32 rounded-xl text-xs font-bold border-slate-100 ml-auto">
                                   <SelectValue />
-                               </SelectTrigger>
+                                </SelectTrigger>
                                <SelectContent className="rounded-xl">
                                   <SelectItem value="pending">Pending</SelectItem>
                                   <SelectItem value="processing">Processing</SelectItem>
@@ -717,7 +738,7 @@ export default function AdminPage() {
 
       {/* Product CRUD Dialog */}
       <Dialog open={isProductDialogOpen} onOpenChange={setIsProductDialogOpen}>
-        <DialogContent className="max-w-2xl rounded-[3rem] p-0 border-none shadow-2xl bg-white overflow-hidden scrollbar-hide">
+        <DialogContent className="max-w-2xl rounded-[3rem] p-0 border-none shadow-2xl bg-white overflow-hidden scrollbar-hide z-[100]">
           <form onSubmit={handleSaveProduct}>
             <DialogHeader className="p-8 pb-4">
                <DialogTitle className="text-2xl font-headline font-bold">{editingProduct ? "Edit Inventory Item" : "New Inventory Item"}</DialogTitle>
