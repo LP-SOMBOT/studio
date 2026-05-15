@@ -4,15 +4,15 @@
 
 @layer base {
   :root {
-    --background: 210 100% 98%; /* #F0F9FF equivalent */
+    --background: 210 100% 98%;
     --foreground: 222 47% 11%;
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
-    --primary: 199 89% 48%; /* #0EA5E9 - Sky Blue */
+    --primary: 199 89% 48%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 191 100% 50%; /* #00D1FF - Neon Cyan */
+    --secondary: 191 100% 50%;
     --secondary-foreground: 222 47% 11%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
@@ -56,6 +56,18 @@
   }
   .glass {
     @apply bg-white/60 backdrop-blur-xl border border-white/40;
+  }
+
+  /* Shimmer Animation */
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  .animate-shimmer {
+    background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite linear;
   }
 }
 
