@@ -20,8 +20,6 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Image from "next/image";
-import Header from "@/components/layout/Header";
-import BottomNav from "@/components/layout/BottomNav";
 import { toast } from "@/hooks/use-toast";
 
 export default function CheckoutAccountPage() {
@@ -89,8 +87,6 @@ export default function CheckoutAccountPage() {
 
   return (
     <div className="min-h-screen pb-32 bg-slate-50 page-transition">
-      <Header />
-      
       <main className="max-w-xl mx-auto px-6 py-10">
          {step < 4 && (
            <div className="mb-8 flex items-center justify-between">
@@ -224,8 +220,6 @@ export default function CheckoutAccountPage() {
             </div>
          )}
       </main>
-
-      <BottomNav />
     </div>
   );
 }

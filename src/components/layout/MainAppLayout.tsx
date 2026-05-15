@@ -13,7 +13,7 @@ export default function MainAppLayout({ children }: { children: React.ReactNode 
   // Routes where the standard app layout should not be visible
   const isAuthPage = pathname === "/login" || pathname === "/signup";
   const isAdminPage = pathname.startsWith("/admin");
-  const isSpecialFlow = pathname === "/checkout" || pathname.startsWith("/accounts/") || activeTab === 'chat';
+  const isSpecialFlow = pathname === "/checkout" || pathname === "/checkout-account" || pathname.startsWith("/accounts/") || activeTab === 'chat';
 
   // Offline mode check
   const isOffline = storeSettings?.appStatus?.offline;
@@ -30,7 +30,7 @@ export default function MainAppLayout({ children }: { children: React.ReactNode 
       <main className="page-transition">
         {children}
       </main>
-      <BottomNav />
+      {!isSpecialFlow && <BottomNav />}
     </div>
   );
 }

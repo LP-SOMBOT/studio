@@ -26,8 +26,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import Header from "@/components/layout/Header";
-import BottomNav from "@/components/layout/BottomNav";
 
 export default function AccountDetailPage() {
   const { id } = useParams();
@@ -172,8 +170,6 @@ export default function AccountDetailPage() {
             {post.sold ? "Waa la iibiyay" : `IIBSO ACCOUNT-KA — $${post.price.toFixed(2)}`}
          </Button>
       </div>
-
-      <BottomNav />
     </div>
   );
 }

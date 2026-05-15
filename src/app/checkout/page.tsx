@@ -2,8 +2,6 @@
 "use client";
 
 import { useState, useEffect, useMemo, Suspense } from "react";
-import Header from "@/components/layout/Header";
-import BottomNav from "@/components/layout/BottomNav";
 import { useApp } from "@/lib/context";
 import { 
   CheckCircle2, 
@@ -368,13 +366,11 @@ function CheckoutContent() {
 export default function CheckoutPage() {
   return (
     <div className="min-h-screen bg-background pb-24 md:pb-10 page-transition">
-      <Header />
       <main className="container mx-auto px-4 py-8 max-w-2xl">
         <Suspense fallback={<Skeleton className="h-96 w-full rounded-[2.5rem]" />}>
           <CheckoutContent />
         </Suspense>
       </main>
-      <BottomNav />
     </div>
   );
 }
