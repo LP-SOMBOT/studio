@@ -185,6 +185,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const auth = useAuth();
   const rtdb = useDatabase();
   const router = useRouter();
+  const pathname = usePathname();
   
   const [activeTab, setActiveTabState] = useState('home');
   const [isGlobalLoading, setIsGlobalLoading] = useState(false);
@@ -216,7 +217,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const setActiveTab = (tab: string) => {
     setActiveTabState(tab);
     if (typeof window !== 'undefined') {
-      window.location.hash = tab === 'home' ? '' : tab;
+      // If we are on a separate route like /checkout, we must navigate back to /
+      if (pathname !== '/') {
+        router.push(tab === 'home' ? '/' : `/#${tab}`);
+      } else {
+        window.location.hash = tab === 'home' ? '' : tab;
+      }
     }
   };
 

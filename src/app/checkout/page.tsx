@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo, Suspense } from "react";
@@ -117,7 +118,7 @@ function CheckoutContent() {
     <div className="relative min-h-[500px]">
       {step < 4 && (
         <div className="mb-6 flex items-center justify-between">
-          <Button variant="ghost" size="sm" onClick={() => router.back()} className="rounded-full gap-2 text-muted-foreground hover:text-foreground">
+          <Button variant="ghost" size="sm" onClick={() => router.push('/')} className="rounded-full gap-2 text-muted-foreground hover:text-foreground">
             <ArrowLeft className="w-4 h-4" /> Go Back
           </Button>
           <Button variant="ghost" size="icon" onClick={() => router.push('/')} className="rounded-full text-muted-foreground hover:text-red-500">
@@ -346,7 +347,6 @@ function CheckoutContent() {
               className="h-14 rounded-2xl font-bold text-lg"
               onClick={() => {
                 setActiveTab('orders');
-                router.push('/#orders');
               }}
             >
               View My Orders
