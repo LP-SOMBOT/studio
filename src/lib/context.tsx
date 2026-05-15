@@ -50,7 +50,7 @@ type Order = {
   items: CartItem[];
   total: number;
   status: 'pending' | 'processing' | 'successful' | 'cancelled';
-  createdAt: any;
+  createdAt: number;
   paymentMethod: string;
   gameDetails?: any;
 };
@@ -217,7 +217,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const setActiveTab = (tab: string) => {
     setActiveTabState(tab);
     if (typeof window !== 'undefined') {
-      // If we are on a separate route like /checkout, we must navigate back to /
       if (pathname !== '/') {
         router.push(tab === 'home' ? '/' : `/#${tab}`);
       } else {
@@ -287,9 +286,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [rtdb, user]);
 
   useEffect(() => {
-    if (!rtdb || !userProfile || (userProfile.role !== 'admin' && userProfile.role !== 'super_admin')) return;
-    onValue(ref(rtdb, 'orders'), s => setAllOrders(s.val() ? Object.entries(s.val()).map(([id, v]: any) => ({ ...v, id })).sort((a,b) => b.createdAt - a.createdAt) : []));
-    onValue(ref(rtdb, 'chatIndex'), s => setAllChatSessions(s.val() ? Object.entries(s.val()).map(([userId, v]: any) => ({ userId, ...v })).sort((a,b) => b.lastTimestamp - a.lastTimestamp) : []));
+    if (!rtdb || !userProfile) return;
+    
+    // Admins need to see all orders and user lists
+    if (userProfile.role === 'admin' || userProfile.role === 'super_admin') {
+      onValue(ref(rtdb, 'orders'), s => {
+        const val = s.val();
+        setAllOrders(val ? Object.entries(val).map(([id, v]: any) => ({ ...v, id })).sort((a,b) => b.createdAt - a.createdAt) : []);
+      });
+      
+      onValue(ref(rtdb, 'chatIndex'), s => {
+        const val = s.val();
+        setAllChatSessions(val ? Object.entries(val).map(([userId, v]: any) => ({ userId, ...v })).sort((a,b) => b.lastTimestamp - a.lastTimestamp) : []);
+      });
+    }
   }, [rtdb, userProfile]);
 
   const enhancedUser = useMemo(() => {
@@ -395,6 +405,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const updateOrderStatus = async (oid: string, status: string) => {
     if (!rtdb) return;
     await update(ref(rtdb, `orders/${oid}`), { status });
+    
+    // Reward points on success
     if (status === 'successful') {
       const orderData = allOrders.find(o => o.id === oid);
       if (orderData?.userId) {

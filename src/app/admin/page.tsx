@@ -27,7 +27,9 @@ import {
   PlusCircle,
   DollarSign,
   Gamepad2,
-  Search
+  Search,
+  Box,
+  AlertCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -260,7 +262,7 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-slate-50 flex overflow-hidden">
       
-      {/* Sidebar - Changed z-index from 100 to 40 so Modals (z-50) appear on top */}
+      {/* Sidebar */}
       <aside className={cn(
         "h-screen bg-white border-r border-slate-100 flex flex-col transition-all duration-300 z-40",
         isSidebarExpanded ? "w-64" : "w-20"
@@ -315,8 +317,8 @@ export default function AdminPage() {
                 <p className="text-sm font-bold text-slate-900">{user?.name}</p>
                 <p className="text-[10px] font-bold text-primary uppercase">Super Administrator</p>
              </div>
-             <div className="w-10 h-10 rounded-full bg-slate-100 border-2 border-white shadow-sm overflow-hidden">
-                {user?.photoURL && <Image src={user.photoURL} alt="" width={40} height={40} className="object-cover" />}
+             <div className="w-10 h-10 rounded-full bg-slate-100 border-2 border-white shadow-sm overflow-hidden relative">
+                {user?.photoURL ? <Image src={user.photoURL} alt="" fill className="object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-300"><User size={20} /></div>}
              </div>
           </div>
         </header>
@@ -387,42 +389,53 @@ export default function AdminPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredProducts.map((p) => (
-                      <TableRow key={p.id} className="hover:bg-slate-50/50 transition-colors border-slate-50">
-                        <TableCell className="px-8">
-                          <div className="w-14 h-14 relative rounded-xl overflow-hidden bg-slate-100 shadow-inner">
-                            {p.thumbnail ? <Image src={p.thumbnail} alt="" fill className="object-cover" /> : <ImageIcon className="absolute inset-0 m-auto text-slate-300" />}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex flex-col">
-                             <span className="font-bold text-slate-900">{p.title}</span>
-                             <span className="text-[10px] text-slate-400 font-bold uppercase">{p.gameId}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className="rounded-full px-3 py-1 font-bold text-[9px] uppercase border-slate-200">
-                             {p.category}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex flex-col">
-                             <span className="font-bold text-primary">${p.discountedPrice || p.price}</span>
-                             {p.discountedPrice && <span className="text-[10px] text-slate-300 line-through">${p.price}</span>}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right px-8">
-                          <div className="flex justify-end gap-2">
-                             <Button size="icon" variant="ghost" onClick={() => handleOpenProductDialog(p)} className="text-blue-500 hover:bg-blue-50 rounded-xl">
-                                <Edit size={18} />
-                             </Button>
-                             <Button size="icon" variant="ghost" onClick={() => deleteProduct(p.id)} className="text-red-500 hover:bg-red-50 rounded-xl">
-                                <Trash2 size={18} />
-                             </Button>
-                          </div>
+                    {filteredProducts.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="h-64 text-center">
+                           <div className="flex flex-col items-center justify-center opacity-30">
+                              <Box size={48} className="mb-4" />
+                              <p className="font-bold">No products in inventory</p>
+                           </div>
                         </TableCell>
                       </TableRow>
-                    ))}
+                    ) : (
+                      filteredProducts.map((p) => (
+                        <TableRow key={p.id} className="hover:bg-slate-50/50 transition-colors border-slate-50">
+                          <TableCell className="px-8">
+                            <div className="w-14 h-14 relative rounded-xl overflow-hidden bg-slate-100 shadow-inner">
+                              {p.thumbnail ? <Image src={p.thumbnail} alt="" fill className="object-cover" /> : <ImageIcon className="absolute inset-0 m-auto text-slate-300" />}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-col">
+                               <span className="font-bold text-slate-900">{p.title}</span>
+                               <span className="text-[10px] text-slate-400 font-bold uppercase">{p.gameId}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="rounded-full px-3 py-1 font-bold text-[9px] uppercase border-slate-200">
+                               {p.category}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-col">
+                               <span className="font-bold text-primary">${p.discountedPrice || p.price}</span>
+                               {p.discountedPrice && <span className="text-[10px] text-slate-300 line-through">${p.price}</span>}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right px-8">
+                            <div className="flex justify-end gap-2">
+                               <Button size="icon" variant="ghost" onClick={() => handleOpenProductDialog(p)} className="text-blue-500 hover:bg-blue-50 rounded-xl">
+                                  <Edit size={18} />
+                               </Button>
+                               <Button size="icon" variant="ghost" onClick={() => deleteProduct(p.id)} className="text-red-500 hover:bg-red-50 rounded-xl">
+                                  <Trash2 size={18} />
+                               </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
                   </TableBody>
                 </Table>
               </Card>
@@ -430,56 +443,70 @@ export default function AdminPage() {
           )}
 
           {activeView === 'orders' && (
-            <Card className="rounded-[2rem] border-none shadow-xl bg-white overflow-hidden animate-in fade-in">
-               <Table>
-                <TableHeader className="bg-slate-50/50">
-                  <TableRow className="border-slate-50">
-                    <TableHead className="font-bold text-[10px] uppercase tracking-widest px-8">Order ID</TableHead>
-                    <TableHead className="font-bold text-[10px] uppercase tracking-widest">Customer</TableHead>
-                    <TableHead className="font-bold text-[10px] uppercase tracking-widest">Amount</TableHead>
-                    <TableHead className="font-bold text-[10px] uppercase tracking-widest">Status</TableHead>
-                    <TableHead className="font-bold text-[10px] uppercase tracking-widest text-right px-8">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {allOrders.map((o) => (
-                    <TableRow key={o.id} className="hover:bg-slate-50/50 transition-colors border-slate-50">
-                      <TableCell className="px-8">
-                        <span className="font-mono text-xs font-bold text-slate-400">#{o.id.slice(0, 8).toUpperCase()}</span>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-col">
-                           <span className="font-bold text-slate-900">{o.gameDetails?.playerName || "Anonymous"}</span>
-                           <span className="text-[10px] text-slate-400 font-bold uppercase">{o.paymentMethod}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="font-bold text-slate-900">${o.total?.toFixed(2)}</TableCell>
-                      <TableCell>
-                        <Badge className={cn(
-                          "rounded-full px-3 py-1 font-bold text-[9px] uppercase",
-                          o.status === 'successful' ? "bg-green-100 text-green-700" : o.status === 'pending' ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"
-                        )}>
-                          {o.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right px-8">
-                        <Select onValueChange={(val) => updateOrderStatus(o.id, val)} defaultValue={o.status}>
-                           <SelectTrigger className="h-10 w-32 rounded-xl text-xs font-bold border-slate-100">
-                              <SelectValue />
-                           </SelectTrigger>
-                           <SelectContent className="rounded-xl">
-                              <SelectItem value="pending">Pending</SelectItem>
-                              <SelectItem value="processing">Processing</SelectItem>
-                              <SelectItem value="successful">Complete</SelectItem>
-                              <SelectItem value="cancelled">Cancelled</SelectItem>
-                           </SelectContent>
-                        </Select>
-                      </TableCell>
+            <div className="space-y-6 animate-in fade-in">
+              <Card className="rounded-[2rem] border-none shadow-xl bg-white overflow-hidden">
+                 <Table>
+                  <TableHeader className="bg-slate-50/50">
+                    <TableRow className="border-slate-50">
+                      <TableHead className="font-bold text-[10px] uppercase tracking-widest px-8">Order ID</TableHead>
+                      <TableHead className="font-bold text-[10px] uppercase tracking-widest">Customer / Item</TableHead>
+                      <TableHead className="font-bold text-[10px] uppercase tracking-widest">Amount</TableHead>
+                      <TableHead className="font-bold text-[10px] uppercase tracking-widest">Status</TableHead>
+                      <TableHead className="font-bold text-[10px] uppercase tracking-widest text-right px-8">Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </Card>
+                  </TableHeader>
+                  <TableBody>
+                    {allOrders.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="h-80 text-center">
+                           <div className="flex flex-col items-center justify-center opacity-20">
+                              <ShoppingBag size={64} className="mb-4" />
+                              <h3 className="text-xl font-bold">No sales records yet</h3>
+                              <p className="text-sm">Real-time orders will appear here automatically.</p>
+                           </div>
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      allOrders.map((o) => (
+                        <TableRow key={o.id} className="hover:bg-slate-50/50 transition-colors border-slate-50">
+                          <TableCell className="px-8">
+                            <span className="font-mono text-xs font-bold text-slate-400">#{o.id.slice(0, 8).toUpperCase()}</span>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-col">
+                               <span className="font-bold text-slate-900">{o.gameDetails?.playerName || o.gameDetails?.sellerName || "Direct Order"}</span>
+                               <span className="text-[10px] text-slate-400 font-bold uppercase">{o.items?.[0]?.title || "Unknown Product"}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="font-bold text-slate-900">${o.total?.toFixed(2)}</TableCell>
+                          <TableCell>
+                            <Badge className={cn(
+                              "rounded-full px-3 py-1 font-bold text-[9px] uppercase",
+                              o.status === 'successful' ? "bg-green-100 text-green-700" : o.status === 'pending' ? "bg-amber-100 text-amber-700" : o.status === 'processing' ? "bg-blue-100 text-blue-700" : "bg-red-100 text-red-700"
+                            )}>
+                              {o.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right px-8">
+                            <Select onValueChange={(val) => updateOrderStatus(o.id, val)} defaultValue={o.status}>
+                               <SelectTrigger className="h-10 w-32 rounded-xl text-xs font-bold border-slate-100 ml-auto">
+                                  <SelectValue />
+                               </SelectTrigger>
+                               <SelectContent className="rounded-xl">
+                                  <SelectItem value="pending">Pending</SelectItem>
+                                  <SelectItem value="processing">Processing</SelectItem>
+                                  <SelectItem value="successful">Complete</SelectItem>
+                                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                               </SelectContent>
+                            </Select>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </Card>
+            </div>
           )}
 
           {activeView === 'account-posts' && (
@@ -495,39 +522,50 @@ export default function AdminPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {accountPosts.map((p) => (
-                    <TableRow key={p.id} className="hover:bg-slate-50/50 transition-colors border-slate-50">
-                      <TableCell className="px-8">
-                        <div className="flex items-center gap-3">
-                           <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100 relative shadow-inner">
-                              {p.authorAvatar && <Image src={p.authorAvatar} alt="" fill className="object-cover" />}
-                           </div>
-                           <span className="font-bold text-slate-900">{p.authorName}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                         <div className="flex flex-col">
-                            <span className="font-bold text-xs">Level {p.level}</span>
-                            <span className="text-[10px] text-slate-400 font-bold uppercase">{p.platform}</span>
-                         </div>
-                      </TableCell>
-                      <TableCell className="font-bold text-primary">${p.price}</TableCell>
-                      <TableCell>
-                         <Badge className={cn(
-                          "rounded-full px-3 py-1 font-bold text-[9px] uppercase",
-                          p.status === 'approved' ? "bg-green-100 text-green-700" : p.status === 'pending' ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"
-                        )}>
-                          {p.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right px-8">
-                         <div className="flex justify-end gap-2">
-                            <Button size="icon" variant="ghost" onClick={() => updateAccountPostStatus(p.id, 'approved')} className="text-green-500 hover:bg-green-50 rounded-xl"><CheckCircle2 size={18} /></Button>
-                            <Button size="icon" variant="ghost" onClick={() => updateAccountPostStatus(p.id, 'rejected')} className="text-red-500 hover:bg-red-50 rounded-xl"><XCircle size={18} /></Button>
+                  {accountPosts.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="h-64 text-center">
+                         <div className="flex flex-col items-center justify-center opacity-30">
+                            <Gamepad2 size={48} className="mb-4" />
+                            <p className="font-bold">No marketplace listings</p>
                          </div>
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ) : (
+                    accountPosts.map((p) => (
+                      <TableRow key={p.id} className="hover:bg-slate-50/50 transition-colors border-slate-50">
+                        <TableCell className="px-8">
+                          <div className="flex items-center gap-3">
+                             <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100 relative shadow-inner">
+                                {p.authorAvatar ? <Image src={p.authorAvatar} alt="" fill className="object-cover" /> : <User size={16} className="absolute inset-0 m-auto text-slate-300" />}
+                             </div>
+                             <span className="font-bold text-slate-900">{p.authorName}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                           <div className="flex flex-col">
+                              <span className="font-bold text-xs">Level {p.level}</span>
+                              <span className="text-[10px] text-slate-400 font-bold uppercase">{p.platform}</span>
+                           </div>
+                        </TableCell>
+                        <TableCell className="font-bold text-primary">${p.price}</TableCell>
+                        <TableCell>
+                           <Badge className={cn(
+                            "rounded-full px-3 py-1 font-bold text-[9px] uppercase",
+                            p.status === 'approved' ? "bg-green-100 text-green-700" : p.status === 'pending' ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"
+                          )}>
+                            {p.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right px-8">
+                           <div className="flex justify-end gap-2">
+                              <Button size="icon" variant="ghost" onClick={() => updateAccountPostStatus(p.id, 'approved')} className="text-green-500 hover:bg-green-50 rounded-xl"><CheckCircle2 size={18} /></Button>
+                              <Button size="icon" variant="ghost" onClick={() => updateAccountPostStatus(p.id, 'rejected')} className="text-red-500 hover:bg-red-50 rounded-xl"><XCircle size={18} /></Button>
+                           </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </Card>
@@ -546,33 +584,44 @@ export default function AdminPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {allUsers.map((u) => (
-                    <TableRow key={u.uid} className="hover:bg-slate-50/50 transition-colors border-slate-50">
-                      <TableCell className="px-8">
-                        <div className="flex items-center gap-3">
-                           <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100 relative shadow-inner">
-                              {u.photoURL ? <Image src={u.photoURL} alt="" fill className="object-cover" /> : <Users className="absolute inset-0 m-auto text-slate-300" size={16} />}
-                           </div>
-                           <span className="font-bold text-slate-900">{u.name}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                         <div className="flex flex-col">
-                            <span className="text-xs font-bold text-slate-600">{u.email}</span>
-                            <span className="text-[10px] text-slate-400">{u.phoneNumber || "No Phone"}</span>
+                  {allUsers.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="h-64 text-center">
+                         <div className="flex flex-col items-center justify-center opacity-30">
+                            <Users size={48} className="mb-4" />
+                            <p className="font-bold">No registered users found</p>
                          </div>
                       </TableCell>
-                      <TableCell>
-                         <Badge variant="secondary" className="rounded-full px-3 py-1 font-bold text-[9px] uppercase">
-                            {u.role}
-                         </Badge>
-                      </TableCell>
-                      <TableCell className="font-bold text-amber-600">{u.points || 0} pts</TableCell>
-                      <TableCell className="text-right px-8">
-                         <Button size="icon" variant="ghost" onClick={() => deleteUser(u.uid)} className="text-red-500 hover:bg-red-50 rounded-xl"><Trash2 size={18} /></Button>
-                      </TableCell>
                     </TableRow>
-                  ))}
+                  ) : (
+                    allUsers.map((u) => (
+                      <TableRow key={u.uid} className="hover:bg-slate-50/50 transition-colors border-slate-50">
+                        <TableCell className="px-8">
+                          <div className="flex items-center gap-3">
+                             <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100 relative shadow-inner">
+                                {u.photoURL ? <Image src={u.photoURL} alt="" fill className="object-cover" /> : <Users className="absolute inset-0 m-auto text-slate-300" size={16} />}
+                             </div>
+                             <span className="font-bold text-slate-900">{u.name}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                           <div className="flex flex-col">
+                              <span className="text-xs font-bold text-slate-600">{u.email}</span>
+                              <span className="text-[10px] text-slate-400">{u.phoneNumber || "No Phone"}</span>
+                           </div>
+                        </TableCell>
+                        <TableCell>
+                           <Badge variant="secondary" className="rounded-full px-3 py-1 font-bold text-[9px] uppercase">
+                              {u.role}
+                           </Badge>
+                        </TableCell>
+                        <TableCell className="font-bold text-amber-600">{u.points || 0} pts</TableCell>
+                        <TableCell className="text-right px-8">
+                           <Button size="icon" variant="ghost" onClick={() => deleteUser(u.uid)} className="text-red-500 hover:bg-red-50 rounded-xl"><Trash2 size={18} /></Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </Card>
@@ -660,7 +709,7 @@ export default function AdminPage() {
         </main>
       </div>
 
-      {/* Product CRUD Dialog - Defaults to z-50 in ShadCN, now overlays Sidebar (z-40) */}
+      {/* Product CRUD Dialog */}
       <Dialog open={isProductDialogOpen} onOpenChange={setIsProductDialogOpen}>
         <DialogContent className="max-w-2xl rounded-[3rem] p-0 border-none shadow-2xl bg-white overflow-hidden scrollbar-hide">
           <form onSubmit={handleSaveProduct}>
