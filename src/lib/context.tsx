@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
@@ -204,7 +203,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   // Hash handling for single-page architecture
   useEffect(() => {
     const handleHash = () => {
-      const hash = window.location.hash.replace('#', '');
+      const hash = typeof window !== 'undefined' ? window.location.hash.replace('#', '') : '';
       const validTabs = ['home', 'games', 'accounts', 'ranking', 'profile', 'chat', 'notifications'];
       if (validTabs.includes(hash)) setActiveTabState(hash);
     };
@@ -215,7 +214,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const setActiveTab = (tab: string) => {
     setActiveTabState(tab);
-    window.location.hash = tab === 'home' ? '' : tab;
+    if (typeof window !== 'undefined') {
+      window.location.hash = tab === 'home' ? '' : tab;
+    }
   };
 
   // Centralized Data Watchers
@@ -252,8 +253,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     onValue(accPostsRef, (s) => setAccountPosts(s.val() ? Object.entries(s.val()).map(([id, v]: any) => ({ ...v, id })) : []));
     onValue(eventsRef, (s) => setEvents(s.val() ? Object.entries(s.val()).map(([id, v]: any) => ({ ...v, id })) : []));
     
-    // Everyone should see all users for ranking purposes
-    onValue(usersRef, (s) => setAllUsers(s.val() ? Object.values(s.val()) : []));
+    // Ensure every user has a stable uid from the key
+    onValue(usersRef, (s) => {
+      if (s.val()) {
+        const users = Object.entries(s.val()).map(([uid, v]: any) => ({
+          ...v,
+          uid: v.uid || uid // Fallback to key if uid field is missing
+        }));
+        setAllUsers(users);
+      } else {
+        setAllUsers([]);
+      }
+    });
     
   }, [rtdb]);
 

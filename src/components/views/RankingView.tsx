@@ -11,8 +11,8 @@ import Image from 'next/image';
 export default function RankingView() {
   const { allUsers, user, isInitialLoading } = useApp();
 
-  const sortedUsers = [...allUsers]
-    .sort((a, b) => (b.points || 0) - (a.points || 0));
+  const sortedUsers = [...(allUsers || [])]
+    .sort((a, b) => (Number(b?.points || 0)) - (Number(a?.points || 0)));
 
   const top3 = sortedUsers.slice(0, 3);
   const others = sortedUsers.slice(3);
@@ -28,7 +28,7 @@ export default function RankingView() {
           <Skeleton className="w-24 h-32 rounded-2xl" />
         </div>
         <div className="space-y-4">
-          {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-16 rounded-2xl w-full" />)}
+          {[1, 2, 3, 4, 5].map(i => <Skeleton key={`skeleton-${i}`} className="h-16 rounded-2xl w-full" />)}
         </div>
       </div>
     );
@@ -58,7 +58,7 @@ export default function RankingView() {
                 <Medal size={14} className="text-slate-500" />
               </div>
             </div>
-            <p className="text-[10px] font-bold truncate max-w-[80px]">{top3[1].name}</p>
+            <p className="text-[10px] font-bold truncate max-w-[80px]">{top3[1].name || "Player"}</p>
             <p className="text-xs font-bold text-slate-500">{top3[1].points || 0} pts</p>
             <div className="w-full bg-gradient-to-t from-slate-200 to-slate-100 h-24 rounded-t-2xl mt-2 flex items-center justify-center font-headline font-bold text-2xl text-slate-400">2</div>
           </div>
@@ -79,7 +79,7 @@ export default function RankingView() {
                 CHAMPION
               </div>
             </div>
-            <p className="text-xs font-bold truncate max-w-[90px] mt-2">{top3[0].name}</p>
+            <p className="text-xs font-bold truncate max-w-[90px] mt-2">{top3[0].name || "Player"}</p>
             <p className="text-sm font-bold text-amber-600">{top3[0].points || 0} pts</p>
             <div className="w-full bg-gradient-to-t from-amber-200 to-amber-100 h-32 rounded-t-3xl mt-2 flex items-center justify-center font-headline font-bold text-4xl text-amber-400 shadow-[0_-10px_20px_rgba(245,158,11,0.1)]">1</div>
           </div>
@@ -96,7 +96,7 @@ export default function RankingView() {
                 <Medal size={14} className="text-amber-700" />
               </div>
             </div>
-            <p className="text-[10px] font-bold truncate max-w-[80px]">{top3[2].name}</p>
+            <p className="text-[10px] font-bold truncate max-w-[80px]">{top3[2].name || "Player"}</p>
             <p className="text-xs font-bold text-amber-700/60">{top3[2].points || 0} pts</p>
             <div className="w-full bg-gradient-to-t from-amber-700/20 to-amber-700/10 h-20 rounded-t-2xl mt-2 flex items-center justify-center font-headline font-bold text-xl text-amber-800/40">3</div>
           </div>
@@ -110,13 +110,13 @@ export default function RankingView() {
           <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Points</span>
         </div>
         <div className="divide-y divide-slate-100">
-          {others.length === 0 && top3.length < 4 && (
+          {others.length === 0 && top3.length < 1 && (
              <div className="p-8 text-center text-muted-foreground italic text-sm">More players coming soon...</div>
           )}
           {others.map((u, i) => {
             const isMe = u.uid === user?.uid;
             return (
-              <div key={u.uid} className={cn(
+              <div key={u.uid || `rank-${i}`} className={cn(
                 "p-4 flex items-center gap-4 transition-colors",
                 isMe ? "bg-amber-50/50" : "hover:bg-slate-50"
               )}>
@@ -126,7 +126,7 @@ export default function RankingView() {
                 </div>
                 <div className="flex-1">
                   <p className="font-bold text-sm text-slate-900 flex items-center gap-2">
-                    {u.name}
+                    {u.name || "Unknown Player"}
                     {isMe && <Badge className="bg-amber-400 text-white border-none text-[8px] px-2 py-0">Adiga</Badge>}
                   </p>
                 </div>
@@ -141,7 +141,7 @@ export default function RankingView() {
         </div>
 
         {/* Sticky Self Rank */}
-        {userRank > 10 && (
+        {userRank > 3 + others.length && user && (
            <div className="p-4 bg-amber-400 text-white flex items-center gap-4 shadow-2xl">
               <span className="w-6 text-center font-bold text-white text-sm">{userRank}</span>
               <div className="w-10 h-10 rounded-full bg-white/20 overflow-hidden relative border border-white/40">
