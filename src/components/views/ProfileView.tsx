@@ -18,16 +18,19 @@ import {
   Camera,
   X,
   Gamepad2,
-  Trophy
+  Trophy,
+  Star
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 import { uploadToImgbb } from "@/lib/imgbb";
 
 export default function ProfileView() {
@@ -39,7 +42,12 @@ export default function ProfileView() {
 
   useEffect(() => {
     if (!loading && !user) router.push('/login');
-    if (user) setEditData({ name: user.name || "", gameName: user.gameName || "", gameUid: user.gameUid || "", photoURL: user.photoURL || "" });
+    if (user) setEditData({ 
+      name: user.name || "", 
+      gameName: user.gameName || "", 
+      gameUid: user.gameUid || "", 
+      photoURL: user.photoURL || "" 
+    });
   }, [user, loading, router]);
 
   const handleUpdate = async (e: React.FormEvent) => {
@@ -55,12 +63,25 @@ export default function ProfileView() {
     try {
       const url = await uploadToImgbb(file);
       setEditData(prev => ({ ...prev, photoURL: url }));
+    } catch (e) {
+      console.error("Upload failed", e);
     } finally {
       setIsSaving(false);
     }
   };
 
-  if (isInitialLoading || loading) return <Skeleton className="min-h-screen" />;
+  if (isInitialLoading || loading) {
+    return (
+      <div className="min-h-screen px-4 py-8 space-y-6">
+        <Skeleton className="h-64 w-full rounded-[3rem]" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Skeleton className="h-48 rounded-3xl" />
+          <Skeleton className="h-48 rounded-3xl" />
+        </div>
+      </div>
+    );
+  }
+
   if (!user) return null;
 
   return (
@@ -70,9 +91,18 @@ export default function ProfileView() {
         <CardContent className="pt-0 -mt-16 flex flex-col items-center pb-10">
           <div className="relative group">
             <div className="w-32 h-32 rounded-full border-8 border-white shadow-2xl overflow-hidden bg-slate-100">
-              {user.photoURL ? <Image src={user.photoURL} alt="" fill className="object-cover" /> : <User size={60} className="m-auto mt-6 text-slate-300" />}
+              {user.photoURL ? (
+                <Image src={user.photoURL} alt="" fill className="object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-slate-300">
+                  <User size={60} />
+                </div>
+              )}
             </div>
-            <button onClick={() => setIsEditModalOpen(true)} className="absolute bottom-0 right-0 w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center shadow-lg border-4 border-white">
+            <button 
+              onClick={() => setIsEditModalOpen(true)} 
+              className="absolute bottom-0 right-0 w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center shadow-lg border-4 border-white active:scale-90 transition-transform"
+            >
               <Camera size={20} />
             </button>
           </div>
@@ -80,11 +110,15 @@ export default function ProfileView() {
           <div className="mt-6 text-center">
             <h2 className="text-3xl font-headline font-bold">{user.name}</h2>
             <p className="text-muted-foreground font-medium">{user.email}</p>
-            <div className="flex gap-2 mt-4">
+            <div className="flex gap-2 mt-4 justify-center">
               <Badge className="bg-amber-100 text-amber-700 border-none font-bold gap-1 px-4 py-1.5 rounded-full">
                 <Star size={14} fill="currentColor" /> {user.points || 0} Points
               </Badge>
-              {user.isAdmin && <Badge className="bg-primary text-white border-none rounded-full px-4">ADMIN</Badge>}
+              {user.isAdmin && (
+                <Badge className="bg-primary text-white border-none rounded-full px-4 py-1.5 font-bold">
+                  ADMIN
+                </Badge>
+              )}
             </div>
           </div>
         </CardContent>
@@ -95,21 +129,26 @@ export default function ProfileView() {
           <h3 className="text-xl font-headline font-bold flex items-center gap-2">
             <Package className="text-primary" /> My Orders
           </h3>
-          {orders.length === 0 ? (
-            <div className="p-10 bg-white rounded-[2.5rem] text-center opacity-30">
+          {(!orders || orders.length === 0) ? (
+            <div className="p-10 bg-white rounded-[2.5rem] text-center opacity-30 border border-dashed border-gray-200">
                <Package size={40} className="mx-auto mb-2" />
                <p className="font-bold">No orders yet</p>
             </div>
           ) : (
             <div className="space-y-4">
               {orders.map(order => (
-                <Card key={order.id} className="rounded-3xl border-none shadow-sm p-5 bg-white">
+                <Card key={order.id} className="rounded-3xl border-none shadow-sm p-5 bg-white hover:shadow-md transition-shadow">
                   <div className="flex justify-between items-center">
                     <div>
-                      <p className="text-xs font-bold text-muted-foreground uppercase">#{order.id.slice(0,8)}</p>
-                      <p className="font-bold">{order.items[0]?.title}</p>
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Order ID: #{order.id.slice(0,8)}</p>
+                      <p className="font-bold text-slate-900">{order.items?.[0]?.title || "Game Item"}</p>
                     </div>
-                    <Badge variant="outline" className="rounded-full">{order.status}</Badge>
+                    <Badge className={cn(
+                      "rounded-full font-bold",
+                      order.status === 'successful' ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-700"
+                    )}>
+                      {order.status}
+                    </Badge>
                   </div>
                 </Card>
               ))}
@@ -123,40 +162,78 @@ export default function ProfileView() {
                <Link href="/admin"><ShieldCheck /> ADMIN PANEL →</Link>
              </Button>
            )}
-           <Button variant="ghost" onClick={logout} className="w-full h-14 rounded-2xl text-red-500 hover:bg-red-50 font-bold gap-3">
+           <Button 
+            variant="ghost" 
+            onClick={logout} 
+            className="w-full h-14 rounded-2xl text-red-500 hover:bg-red-50 hover:text-red-600 font-bold gap-3 transition-colors"
+           >
              <LogOut /> LOGOUT
            </Button>
         </section>
       </div>
 
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-         <DialogContent className="rounded-[3rem] p-0 border-none shadow-2xl max-w-md">
+         <DialogContent className="rounded-[3rem] p-0 border-none shadow-2xl max-w-md bg-white">
             <DialogHeader className="p-8 pb-0">
                <DialogTitle className="text-2xl font-headline font-bold">Edit Profile</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleUpdate} className="p-8 space-y-6">
                <div className="flex justify-center mb-6">
-                  <div className="relative w-24 h-24 rounded-full overflow-hidden bg-slate-100 group">
-                     {editData.photoURL ? <Image src={editData.photoURL} alt="" fill className="object-cover" /> : <User size={40} className="m-auto mt-6" />}
-                     <input type="file" accept="image/*" onChange={e => e.target.files?.[0] && handlePhotoUpload(e.target.files[0])} className="absolute inset-0 opacity-0 cursor-pointer" />
-                     {isSaving && <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white"><Loader2 className="animate-spin" /></div>}
+                  <div className="relative w-24 h-24 rounded-full overflow-hidden bg-slate-100 group border-4 border-slate-50 shadow-inner">
+                     {editData.photoURL ? (
+                       <Image src={editData.photoURL} alt="" fill className="object-cover" />
+                     ) : (
+                       <User size={40} className="m-auto mt-6 text-slate-300" />
+                     )}
+                     <input 
+                      type="file" 
+                      accept="image/*" 
+                      onChange={e => e.target.files?.[0] && handlePhotoUpload(e.target.files[0])} 
+                      className="absolute inset-0 opacity-0 cursor-pointer z-10" 
+                     />
+                     <div className="absolute inset-0 bg-black/20 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Camera size={24} />
+                     </div>
+                     {isSaving && (
+                       <div className="absolute inset-0 bg-white/60 flex items-center justify-center text-primary z-20">
+                         <Loader2 className="animate-spin" />
+                       </div>
+                     )}
                   </div>
                </div>
                <div className="space-y-4">
-                  <div className="space-y-1">
-                     <Label className="text-xs font-bold uppercase ml-2">Full Name</Label>
-                     <Input value={editData.name} onChange={e => setEditData({...editData, name: e.target.value})} className="h-12 rounded-xl bg-slate-50 border-none" />
+                  <div className="space-y-1.5">
+                     <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-2">Full Name</Label>
+                     <Input 
+                      value={editData.name} 
+                      onChange={e => setEditData({...editData, name: e.target.value})} 
+                      className="h-14 rounded-2xl bg-slate-50 border-none focus-visible:ring-primary" 
+                     />
                   </div>
-                  <div className="space-y-1">
-                     <Label className="text-xs font-bold uppercase ml-2">Game Name</Label>
-                     <Input value={editData.gameName} onChange={e => setEditData({...editData, gameName: e.target.value})} className="h-12 rounded-xl bg-slate-50 border-none" />
+                  <div className="space-y-1.5">
+                     <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-2">Game Name</Label>
+                     <Input 
+                      value={editData.gameName} 
+                      onChange={e => setEditData({...editData, gameName: e.target.value})} 
+                      className="h-14 rounded-2xl bg-slate-50 border-none focus-visible:ring-primary" 
+                     />
                   </div>
-                  <div className="space-y-1">
-                     <Label className="text-xs font-bold uppercase ml-2">Player ID</Label>
-                     <Input value={editData.gameUid} onChange={e => setEditData({...editData, gameUid: e.target.value})} className="h-12 rounded-xl bg-slate-50 border-none" />
+                  <div className="space-y-1.5">
+                     <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-2">Player ID</Label>
+                     <Input 
+                      value={editData.gameUid} 
+                      onChange={e => setEditData({...editData, gameUid: e.target.value})} 
+                      className="h-14 rounded-2xl bg-slate-50 border-none focus-visible:ring-primary" 
+                     />
                   </div>
                </div>
-               <Button type="submit" disabled={isSaving} className="w-full h-14 rounded-2xl font-bold">Save Changes</Button>
+               <Button 
+                type="submit" 
+                disabled={isSaving} 
+                className="w-full h-16 rounded-2xl font-bold text-lg shadow-lg shadow-primary/10 active:scale-95 transition-transform"
+               >
+                 {isSaving ? <Loader2 className="animate-spin" /> : "Save Changes"}
+               </Button>
             </form>
          </DialogContent>
       </Dialog>
