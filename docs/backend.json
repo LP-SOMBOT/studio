@@ -79,9 +79,12 @@
   "database": {
     "users": { "description": "User profiles" },
     "accountPosts": { "description": "Marketplace account listings" },
-    "accountOrders": { "description": "Orders for marketplace accounts" },
+    "orders": { "description": "Unified orders node for top-ups and accounts" },
     "notifications": { "description": "User-specific notifications" },
-    "config": { "description": "Global shop configuration and fees" },
-    "events": { "description": "Active game events" }
+    "settings": { "description": "Global shop configuration and fees" },
+    "events": { "description": "Active game events" },
+    "products": { "description": "Inventory items" },
+    "chats": { "description": "Real-time support chat messages" },
+    "chatIndex": { "description": "Admin dashboard for active chat sessions" }
   }
 }

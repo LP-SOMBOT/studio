@@ -30,7 +30,8 @@ import {
   Gamepad2,
   Search,
   Box,
-  AlertCircle
+  AlertCircle,
+  RefreshCw
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -308,10 +309,14 @@ export default function AdminPage() {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="h-20 bg-white/60 backdrop-blur-md border-b border-slate-100 flex items-center justify-between px-10 shrink-0">
-          <div>
+          <div className="flex items-center gap-4">
             <h2 className="text-xl font-headline font-bold text-slate-900 uppercase tracking-tight">
               {activeView.replace('-', ' ')}
             </h2>
+            <div className="flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-600 rounded-full">
+               <RefreshCw size={12} className="animate-spin" />
+               <span className="text-[10px] font-bold uppercase tracking-widest">Live Sync</span>
+            </div>
           </div>
           <div className="flex items-center gap-4">
              <div className="flex flex-col items-end">
@@ -538,7 +543,7 @@ export default function AdminPage() {
                         <TableCell className="px-8">
                           <div className="flex items-center gap-3">
                              <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100 relative shadow-inner">
-                                {p.authorAvatar ? <Image src={p.authorAvatar} alt="" fill className="object-cover" /> : <User size={16} className="absolute inset-0 m-auto text-slate-300" />}
+                                {p.authorAvatar ? <Image src={p.authorAvatar} alt="" fill className="object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-300"><User size={16} /></div>}
                              </div>
                              <span className="font-bold text-slate-900">{p.authorName}</span>
                           </div>

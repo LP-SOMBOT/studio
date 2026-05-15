@@ -25,7 +25,9 @@ import {
   update,
   remove,
   limitToLast,
-  increment
+  increment,
+  off,
+  DatabaseReference
 } from 'firebase/database';
 import { toast } from '@/hooks/use-toast';
 import { type GamePackage } from './games-data';
@@ -267,6 +269,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setAllUsers([]);
       }
     });
+
+    return () => {
+      off(settingsRef);
+      off(productsRef);
+      off(accPostsRef);
+      off(eventsRef);
+      off(usersRef);
+    };
   }, [rtdb]);
 
   useEffect(() => {
@@ -283,22 +293,36 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     onValue(profileRef, (s) => setUserProfile(s.val()));
     onValue(notifsRef, (s) => setNotifications(s.val() ? Object.entries(s.val()).map(([id, v]: any) => ({ ...v, id })).sort((a,b) => b.createdAt - a.createdAt) : []));
     onValue(userOrdersRef, (s) => setOrders(s.val() ? Object.entries(s.val()).map(([id, v]: any) => ({ ...v, id })).sort((a,b) => b.createdAt - a.createdAt) : []));
+
+    return () => {
+      off(profileRef);
+      off(notifsRef);
+      off(userOrdersRef);
+    };
   }, [rtdb, user]);
 
   useEffect(() => {
     if (!rtdb || !userProfile) return;
     
-    // Admins need to see all orders and user lists
+    // Administrative Real-Time Listeners
     if (userProfile.role === 'admin' || userProfile.role === 'super_admin') {
-      onValue(ref(rtdb, 'orders'), s => {
+      const ordersRef = ref(rtdb, 'orders');
+      const chatIndexRef = ref(rtdb, 'chatIndex');
+
+      onValue(ordersRef, s => {
         const val = s.val();
         setAllOrders(val ? Object.entries(val).map(([id, v]: any) => ({ ...v, id })).sort((a,b) => b.createdAt - a.createdAt) : []);
       });
       
-      onValue(ref(rtdb, 'chatIndex'), s => {
+      onValue(chatIndexRef, s => {
         const val = s.val();
         setAllChatSessions(val ? Object.entries(val).map(([userId, v]: any) => ({ userId, ...v })).sort((a,b) => b.lastTimestamp - a.lastTimestamp) : []);
       });
+
+      return () => {
+        off(ordersRef);
+        off(chatIndexRef);
+      };
     }
   }, [rtdb, userProfile]);
 
@@ -476,7 +500,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const cleanData: any = {};
     Object.keys(data).forEach(key => {
       const val = data[key];
-      // Filter out undefined, null, empty strings and NaN values for Firebase integrity
       if (val !== undefined && val !== null && val !== "" && !Number.isNaN(val)) {
         cleanData[key] = val;
       }
