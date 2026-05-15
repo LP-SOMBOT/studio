@@ -260,9 +260,9 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-slate-50 flex overflow-hidden">
       
-      {/* Sidebar */}
+      {/* Sidebar - Changed z-index from 100 to 40 so Modals (z-50) appear on top */}
       <aside className={cn(
-        "h-screen bg-white border-r border-slate-100 flex flex-col transition-all duration-300 z-[100]",
+        "h-screen bg-white border-r border-slate-100 flex flex-col transition-all duration-300 z-40",
         isSidebarExpanded ? "w-64" : "w-20"
       )}>
         <div className="h-20 px-6 flex items-center justify-between">
@@ -660,7 +660,7 @@ export default function AdminPage() {
         </main>
       </div>
 
-      {/* Product CRUD Dialog */}
+      {/* Product CRUD Dialog - Defaults to z-50 in ShadCN, now overlays Sidebar (z-40) */}
       <Dialog open={isProductDialogOpen} onOpenChange={setIsProductDialogOpen}>
         <DialogContent className="max-w-2xl rounded-[3rem] p-0 border-none shadow-2xl bg-white overflow-hidden scrollbar-hide">
           <form onSubmit={handleSaveProduct}>
