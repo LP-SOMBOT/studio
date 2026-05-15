@@ -1,3 +1,4 @@
+
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
@@ -31,6 +32,12 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'files.catbox.moe',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'i.ibb.co',
         port: '',
         pathname: '/**',
       },
