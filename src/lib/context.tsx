@@ -154,7 +154,7 @@ type AppContextType = {
   accountPosts: AccountPost[];
   notifications: AppNotification[];
   events: GameEvent[];
-  createOrder: (paymentMethod: string, gameDetails: any, directItem: CartItem) => void;
+  createOrder: (paymentMethod: string, gameDetails: any, directItem: CartItem) => Promise<void>;
   postAccount: (data: Partial<AccountPost>) => Promise<void>;
   buyAccountPost: (post: AccountPost) => void;
   markNotificationsAsRead: (notifId?: string) => Promise<void>;
@@ -226,25 +226,47 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const accPostsRef = ref(rtdb, 'accountPosts');
     const eventsRef = ref(rtdb, 'events');
 
-    onValue(settingsRef, (s) => setStoreSettings(s.val() || {}));
-    onValue(productsRef, (s) => setProducts(s.val() ? Object.entries(s.val()).map(([id, v]: any) => ({ ...v, id })) : []));
+    let settingsLoaded = false;
+    let productsLoaded = false;
+
+    const checkInitialLoad = () => {
+      if (settingsLoaded && productsLoaded) {
+        // Data is ready, dismiss splash
+        setTimeout(() => setIsInitialLoading(false), 500);
+      }
+    };
+
+    onValue(settingsRef, (s) => {
+      setStoreSettings(s.val() || {});
+      settingsLoaded = true;
+      checkInitialLoad();
+    });
+
+    onValue(productsRef, (s) => {
+      setProducts(s.val() ? Object.entries(s.val()).map(([id, v]: any) => ({ ...v, id })) : []);
+      productsLoaded = true;
+      checkInitialLoad();
+    });
+
     onValue(accPostsRef, (s) => setAccountPosts(s.val() ? Object.entries(s.val()).map(([id, v]: any) => ({ ...v, id })) : []));
     onValue(eventsRef, (s) => setEvents(s.val() ? Object.entries(s.val()).map(([id, v]: any) => ({ ...v, id })) : []));
     
-    setIsInitialLoading(false);
   }, [rtdb]);
 
   useEffect(() => {
     if (!rtdb || !user) {
       setUserProfile(null);
       setNotifications([]);
+      setOrders([]);
       return;
     }
     const profileRef = ref(rtdb, `users/${user.uid}`);
     const notifsRef = query(ref(rtdb, `notifications/${user.uid}`), limitToLast(30));
+    const userOrdersRef = query(ref(rtdb, 'orders'), orderByChild('userId'), equalTo(user.uid));
 
     onValue(profileRef, (s) => setUserProfile(s.val()));
     onValue(notifsRef, (s) => setNotifications(s.val() ? Object.entries(s.val()).map(([id, v]: any) => ({ ...v, id })).sort((a,b) => b.createdAt - a.createdAt) : []));
+    onValue(userOrdersRef, (s) => setOrders(s.val() ? Object.entries(s.val()).map(([id, v]: any) => ({ ...v, id })).sort((a,b) => b.createdAt - a.createdAt) : []));
   }, [rtdb, user]);
 
   // Admin Watchers
@@ -286,11 +308,30 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     setIsGlobalLoading(true);
-    try { await signOut(auth); } finally { setIsGlobalLoading(false); }
+    try { 
+      await signOut(auth); 
+      router.push('/login');
+    } finally { setIsGlobalLoading(false); }
   };
 
   const buyNow = (item: any) => {
     router.push(`/checkout?id=${item.id}`);
+  };
+
+  const createOrder = async (paymentMethod: string, gameDetails: any, directItem: CartItem) => {
+    if (!rtdb || !user) return;
+    const orderId = push(ref(rtdb, 'orders')).key;
+    const newOrder: Order = {
+      id: orderId!,
+      userId: user.uid,
+      items: [directItem],
+      total: directItem.price,
+      status: 'pending',
+      createdAt: Date.now(),
+      paymentMethod,
+      gameDetails
+    };
+    await set(ref(rtdb, `orders/${orderId}`), newOrder);
   };
 
   const postAccount = async (data: any) => {
@@ -329,8 +370,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (!rtdb) return;
     await update(ref(rtdb, `orders/${oid}`), { status });
     if (status === 'successful') {
-      const snap = await set(ref(rtdb, `orders/${oid}`), { status }); // Ensure consistency
-      // Logic for points is handled in Cloud Functions or trigger
+      const orderSnap = await set(ref(rtdb, `orders/${oid}/status`), 'successful');
+      const orderData = allOrders.find(o => o.id === oid);
+      if (orderData?.userId) {
+        await update(ref(rtdb, `users/${orderData.userId}`), {
+          points: increment(1)
+        });
+        // Notify user
+        const nid = push(ref(rtdb, `notifications/${orderData.userId}`)).key;
+        await set(ref(rtdb, `notifications/${orderData.userId}/${nid}`), {
+          type: 'order_status',
+          title: "Order Successful! ✅",
+          body: `Your diamonds have been delivered. You earned 1 point!`,
+          read: false,
+          createdAt: Date.now(),
+          linkTo: '#profile'
+        });
+      }
     }
   };
 
@@ -390,7 +446,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     <AppContext.Provider value={{ 
       user: enhancedUser, loading, isGlobalLoading, isInitialLoading, activeTab, setActiveTab, setGlobalLoading: setIsGlobalLoading,
       login, signup, logout, buyNow, orders, allOrders, products, allUsers, accountPosts, notifications, events,
-      createOrder: () => {}, postAccount, buyAccountPost, markNotificationsAsRead, updateOrderStatus, updateAccountPostStatus, 
+      createOrder, postAccount, buyAccountPost, markNotificationsAsRead, updateOrderStatus, updateAccountPostStatus, 
       updateUserProfile, deleteUser, saveProduct, deleteProduct, saveEvent, deleteEvent, storeSettings, updateStoreSettings, 
       broadcastNotification, messages, allChatSessions, chatTargetId, setChatTargetId, sendMessage, markMessagesAsRead
     }}>

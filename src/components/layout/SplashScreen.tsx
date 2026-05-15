@@ -18,8 +18,8 @@ export default function SplashScreen() {
 
   useEffect(() => {
     if (!isInitialLoading) {
-      // Small delay before removing the component to allow the fade animation to finish
-      const timer = setTimeout(() => setIsVisible(false), 600);
+      // Smooth delay before removing to let data settle
+      const timer = setTimeout(() => setIsVisible(false), 800);
       return () => clearTimeout(timer);
     } else {
       setIsVisible(true);
@@ -30,11 +30,11 @@ export default function SplashScreen() {
 
   return (
     <div className={cn(
-      "fixed inset-0 z-[99999] flex flex-col items-center justify-center bg-white transition-opacity duration-500 ease-in-out",
+      "fixed inset-0 z-[99999] flex flex-col items-center justify-center bg-white transition-opacity duration-700 ease-in-out",
       !isInitialLoading ? "opacity-0 pointer-events-none" : "opacity-100"
     )}>
       {/* Decorative Glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vw] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vw] bg-primary/10 rounded-full blur-[120px] pointer-events-none" />
 
       <div className="relative w-28 h-28 animate-in zoom-in duration-700 ease-out">
         {storeSettings?.logo ? (
