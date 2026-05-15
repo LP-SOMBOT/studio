@@ -1,253 +1,165 @@
 
 "use client";
 
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useApp } from "@/lib/context";
 import { 
   User, 
   LogOut, 
   Package, 
-  Clock, 
   CheckCircle, 
-  XCircle, 
   AlertCircle, 
   Loader2,
   MessageCircle,
   Send,
-  Video
+  Video,
+  ShieldCheck,
+  Edit,
+  Camera,
+  X,
+  Gamepad2,
+  Trophy
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useRouter } from "next/navigation";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
+import Image from "next/image";
+import { uploadToImgbb } from "@/lib/imgbb";
 
 export default function ProfileView() {
-  const { user, loading, logout, orders, setActiveTab, isInitialLoading } = useApp();
+  const { user, loading, logout, orders, isInitialLoading, updateUserProfile } = useApp();
   const router = useRouter();
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [editData, setEditData] = useState({ name: "", gameName: "", gameUid: "", photoURL: "" });
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push('/login');
-    }
+    if (!loading && !user) router.push('/login');
+    if (user) setEditData({ name: user.name || "", gameName: user.gameName || "", gameUid: user.gameUid || "", photoURL: user.photoURL || "" });
   }, [user, loading, router]);
 
-  const handleLogout = async () => {
-    await logout();
-    router.push('/');
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSaving(true);
+    await updateUserProfile(editData);
+    setIsSaving(false);
+    setIsEditModalOpen(false);
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'successful': return <CheckCircle className="w-4 h-4 text-green-500" />;
-      case 'cancelled': return <XCircle className="w-4 h-4 text-red-500" />;
-      case 'processing': return <AlertCircle className="w-4 h-4 text-blue-500" />;
-      default: return <Clock className="w-4 h-4 text-yellow-500" />;
+  const handlePhotoUpload = async (file: File) => {
+    setIsSaving(true);
+    try {
+      const url = await uploadToImgbb(file);
+      setEditData(prev => ({ ...prev, photoURL: url }));
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'successful': return 'bg-green-50 text-green-700 border-green-200';
-      case 'cancelled': return 'bg-red-50 text-red-700 border-red-200';
-      case 'processing': return 'bg-blue-50 text-blue-700 border-blue-200';
-      default: return 'bg-yellow-50 text-yellow-700 border-yellow-200';
-    }
-  };
-
-  if (isInitialLoading || loading) {
-    return (
-      <div className="pb-24 animate-in fade-in duration-500">
-        <main className="container mx-auto px-4 py-8 max-w-5xl">
-          <div className="flex flex-col md:flex-row gap-8">
-            <div className="md:w-1/3 space-y-6">
-              <Skeleton className="h-[400px] rounded-[2.5rem]" />
-              <Skeleton className="h-[200px] rounded-[2.5rem]" />
-            </div>
-            <div className="md:w-2/3 space-y-6">
-              <Skeleton className="h-10 w-48 rounded-lg" />
-              <Skeleton className="h-48 rounded-3xl" />
-              <Skeleton className="h-48 rounded-3xl" />
-            </div>
-          </div>
-        </main>
-      </div>
-    );
-  }
-
+  if (isInitialLoading || loading) return <Skeleton className="min-h-screen" />;
   if (!user) return null;
 
-  const socialLinks = [
-    {
-      label: "WhatsApp",
-      value: "+252613982172",
-      href: "https://wa.me/252613982172",
-      icon: MessageCircle,
-      color: "bg-[#25D366]",
-      textColor: "text-[#25D366]"
-    },
-    {
-      label: "Telegram",
-      value: "@libaany",
-      href: "https://t.me/libaany",
-      icon: Send,
-      color: "bg-[#0088cc]",
-      textColor: "text-[#0088cc]"
-    },
-    {
-      label: "TikTok",
-      value: "@Oskarshop",
-      href: "https://www.tiktok.com/@Oskarshop",
-      icon: Video,
-      color: "bg-[#EE1D52]",
-      textColor: "text-[#EE1D52]"
-    }
-  ];
-
   return (
-    <div className="pb-24 page-transition">
-      <main className="container mx-auto px-4 py-8 max-w-5xl">
-        <div className="flex flex-col md:flex-row gap-8">
-          {/* Sidebar Area */}
-          <div className="md:w-1/3 space-y-6">
-            <Card className="rounded-[2.5rem] border-none shadow-sm overflow-hidden bg-white">
-              <div className="h-24 bg-gradient-to-br from-primary to-secondary" />
-              <CardContent className="pt-0 -mt-12 flex flex-col items-center">
-                <div className="w-24 h-24 bg-white rounded-full p-1 shadow-lg">
-                  <div className="w-full h-full bg-primary/10 rounded-full flex items-center justify-center text-primary">
-                    <User className="w-12 h-12" />
-                  </div>
-                </div>
-                <div className="mt-4 text-center">
-                  <h2 className="text-2xl font-headline font-bold line-clamp-1 px-4">{user.name}</h2>
-                  <p className="text-sm text-muted-foreground truncate max-w-full px-4">{user.email}</p>
-                  {user.isAdmin && (
-                    <Badge className="mt-2 bg-primary/20 text-primary border-none rounded-full">Administrator</Badge>
-                  )}
-                </div>
-                <div className="w-full mt-8 pt-6 border-t border-gray-100 space-y-2">
-                  <Button variant="ghost" className="w-full rounded-2xl justify-start gap-3 h-12 hover:bg-gray-50">
-                    <User className="w-5 h-5 text-primary" /> Profile Settings
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    className="w-full rounded-2xl justify-start gap-3 h-12 text-destructive hover:text-destructive hover:bg-red-50"
-                    onClick={handleLogout}
-                  >
-                    <LogOut className="w-5 h-5" /> Logout
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="rounded-[2.5rem] border-none shadow-sm bg-white p-6">
-              <h3 className="font-headline font-bold text-lg mb-6">Support & Community</h3>
-              <div className="space-y-4">
-                {socialLinks.map((link) => (
-                  <a 
-                    key={link.label}
-                    href={link.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-4 group"
-                  >
-                    <div className={cn(
-                      "w-10 h-10 rounded-xl flex items-center justify-center text-white transition-transform group-hover:scale-110",
-                      link.color
-                    )}>
-                      <link.icon className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{link.label}</p>
-                      <p className="font-bold text-sm">{link.value}</p>
-                    </div>
-                  </a>
-                ))}
-              </div>
-            </Card>
-          </div>
-
-          {/* Orders Section */}
-          <div className="md:w-2/3 space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-headline font-bold flex items-center gap-3">
-                <Package className="w-7 h-7 text-primary" /> Order History
-              </h2>
-              <Badge variant="secondary" className="rounded-full px-4 font-bold">{orders.length} Orders</Badge>
+    <div className="pb-32 px-4 py-8 max-w-4xl mx-auto space-y-8 page-transition">
+      <Card className="rounded-[3rem] border-none shadow-xl bg-white overflow-hidden">
+        <div className="h-32 bg-gradient-to-r from-primary to-secondary" />
+        <CardContent className="pt-0 -mt-16 flex flex-col items-center pb-10">
+          <div className="relative group">
+            <div className="w-32 h-32 rounded-full border-8 border-white shadow-2xl overflow-hidden bg-slate-100">
+              {user.photoURL ? <Image src={user.photoURL} alt="" fill className="object-cover" /> : <User size={60} className="m-auto mt-6 text-slate-300" />}
             </div>
-
-            {orders.length === 0 ? (
-              <Card className="p-16 text-center rounded-[2.5rem] border-dashed border-2 bg-white/50">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Package className="w-8 h-8 text-gray-400" />
-                </div>
-                <p className="text-muted-foreground font-medium">You haven't made any purchases yet.</p>
-                <Button variant="link" className="text-primary font-bold mt-2" onClick={() => setActiveTab('games')}>
-                  Browse Game Store
-                </Button>
-              </Card>
-            ) : (
-              <div className="space-y-4">
-                {orders.map((order) => (
-                  <Card key={order.id} className="rounded-3xl border-none shadow-sm hover:shadow-md transition-all overflow-hidden bg-white">
-                    <CardHeader className="p-5 pb-0 flex flex-row items-center justify-between">
-                      <div className="space-y-1">
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">#{order.id.substring(0, 12)}</p>
-                        <p className="text-xs font-semibold text-gray-500">
-                          {order.createdAt?.seconds 
-                            ? format(new Date(order.createdAt.seconds * 1000), 'PPpp')
-                            : order.createdAt 
-                              ? format(new Date(order.createdAt), 'PPpp')
-                              : 'Just now'}
-                        </p>
-                      </div>
-                      <Badge className={cn(
-                        "flex items-center gap-1.5 px-4 py-1.5 border-none rounded-full capitalize font-bold",
-                        getStatusColor(order.status)
-                      )}>
-                        {getStatusIcon(order.status)} {order.status}
-                      </Badge>
-                    </CardHeader>
-                    <CardContent className="p-5 pt-4 border-t border-gray-50 mt-4">
-                      <div className="space-y-4">
-                        {order.items.map((item, idx) => (
-                          <div key={idx} className="flex justify-between items-center text-sm">
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center font-bold text-xs text-primary">
-                                {item.quantity}x
-                              </div>
-                              <span className="font-bold">{item.title}</span>
-                            </div>
-                            <span className="font-headline font-bold text-primary">${(item.price * item.quantity).toFixed(2)}</span>
-                          </div>
-                        ))}
-                        <div className="pt-4 border-t border-gray-100 flex justify-between items-center">
-                          <span className="font-headline font-bold text-lg">Total Paid</span>
-                          <span className="text-2xl font-headline font-bold text-primary">${order.total.toFixed(2)}</span>
-                        </div>
-                        {order.gameDetails && (
-                          <div className="mt-2 text-[11px] text-muted-foreground bg-gray-50/80 p-4 rounded-2xl grid grid-cols-2 gap-4">
-                            <div>
-                              <p className="uppercase font-bold tracking-tighter opacity-60 mb-0.5">Player ID</p>
-                              <p className="font-mono font-bold text-foreground text-sm">{order.gameDetails.playerID || "N/A"}</p>
-                            </div>
-                            <div className="text-right">
-                              <p className="uppercase font-bold tracking-tighter opacity-60 mb-0.5">Payment</p>
-                              <p className="font-bold text-foreground text-sm uppercase">{order.paymentMethod}</p>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
+            <button onClick={() => setIsEditModalOpen(true)} className="absolute bottom-0 right-0 w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center shadow-lg border-4 border-white">
+              <Camera size={20} />
+            </button>
           </div>
-        </div>
-      </main>
+          
+          <div className="mt-6 text-center">
+            <h2 className="text-3xl font-headline font-bold">{user.name}</h2>
+            <p className="text-muted-foreground font-medium">{user.email}</p>
+            <div className="flex gap-2 mt-4">
+              <Badge className="bg-amber-100 text-amber-700 border-none font-bold gap-1 px-4 py-1.5 rounded-full">
+                <Star size={14} fill="currentColor" /> {user.points || 0} Points
+              </Badge>
+              {user.isAdmin && <Badge className="bg-primary text-white border-none rounded-full px-4">ADMIN</Badge>}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <section className="space-y-4">
+          <h3 className="text-xl font-headline font-bold flex items-center gap-2">
+            <Package className="text-primary" /> My Orders
+          </h3>
+          {orders.length === 0 ? (
+            <div className="p-10 bg-white rounded-[2.5rem] text-center opacity-30">
+               <Package size={40} className="mx-auto mb-2" />
+               <p className="font-bold">No orders yet</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {orders.map(order => (
+                <Card key={order.id} className="rounded-3xl border-none shadow-sm p-5 bg-white">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="text-xs font-bold text-muted-foreground uppercase">#{order.id.slice(0,8)}</p>
+                      <p className="font-bold">{order.items[0]?.title}</p>
+                    </div>
+                    <Badge variant="outline" className="rounded-full">{order.status}</Badge>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section className="space-y-6">
+           {user.isAdmin && (
+             <Button asChild className="w-full h-16 rounded-[2rem] text-xl font-bold shadow-xl shadow-primary/20 gap-3">
+               <Link href="/admin"><ShieldCheck /> ADMIN PANEL →</Link>
+             </Button>
+           )}
+           <Button variant="ghost" onClick={logout} className="w-full h-14 rounded-2xl text-red-500 hover:bg-red-50 font-bold gap-3">
+             <LogOut /> LOGOUT
+           </Button>
+        </section>
+      </div>
+
+      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+         <DialogContent className="rounded-[3rem] p-0 border-none shadow-2xl max-w-md">
+            <DialogHeader className="p-8 pb-0">
+               <DialogTitle className="text-2xl font-headline font-bold">Edit Profile</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleUpdate} className="p-8 space-y-6">
+               <div className="flex justify-center mb-6">
+                  <div className="relative w-24 h-24 rounded-full overflow-hidden bg-slate-100 group">
+                     {editData.photoURL ? <Image src={editData.photoURL} alt="" fill className="object-cover" /> : <User size={40} className="m-auto mt-6" />}
+                     <input type="file" accept="image/*" onChange={e => e.target.files?.[0] && handlePhotoUpload(e.target.files[0])} className="absolute inset-0 opacity-0 cursor-pointer" />
+                     {isSaving && <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white"><Loader2 className="animate-spin" /></div>}
+                  </div>
+               </div>
+               <div className="space-y-4">
+                  <div className="space-y-1">
+                     <Label className="text-xs font-bold uppercase ml-2">Full Name</Label>
+                     <Input value={editData.name} onChange={e => setEditData({...editData, name: e.target.value})} className="h-12 rounded-xl bg-slate-50 border-none" />
+                  </div>
+                  <div className="space-y-1">
+                     <Label className="text-xs font-bold uppercase ml-2">Game Name</Label>
+                     <Input value={editData.gameName} onChange={e => setEditData({...editData, gameName: e.target.value})} className="h-12 rounded-xl bg-slate-50 border-none" />
+                  </div>
+                  <div className="space-y-1">
+                     <Label className="text-xs font-bold uppercase ml-2">Player ID</Label>
+                     <Input value={editData.gameUid} onChange={e => setEditData({...editData, gameUid: e.target.value})} className="h-12 rounded-xl bg-slate-50 border-none" />
+                  </div>
+               </div>
+               <Button type="submit" disabled={isSaving} className="w-full h-14 rounded-2xl font-bold">Save Changes</Button>
+            </form>
+         </DialogContent>
+      </Dialog>
     </div>
   );
 }
