@@ -1,22 +1,13 @@
-
 'use client';
 
 import { useApp } from '@/lib/context';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import Image from 'next/image';
-import { useEffect } from 'react';
 
 export default function OfflinePage() {
   const { storeSettings } = useApp();
   const offlineInfo = storeSettings?.appStatus;
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      window.location.reload();
-    }, 10000); // Check every 10s
-    return () => clearInterval(interval);
-  }, []);
 
   return (
     <div className="fixed inset-0 z-[99999] bg-background flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-700 overflow-hidden">
@@ -54,7 +45,7 @@ export default function OfflinePage() {
           onClick={() => window.location.reload()} 
           className="rounded-full h-16 px-10 gap-3 font-bold text-lg shadow-2xl shadow-primary/20 bg-primary hover:bg-primary/90"
         >
-          <RefreshCw className="w-5 h-5 animate-spin-slow" /> Soo Noqo
+          <RefreshCw className="w-5 h-5" /> Soo Noqo
         </Button>
       </div>
 
