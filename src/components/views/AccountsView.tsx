@@ -22,7 +22,13 @@ import {
   X,
   Trash2,
   Edit,
-  Clock
+  Clock,
+  LayoutGrid,
+  Info,
+  DollarSign,
+  SmartphoneIcon,
+  Facebook,
+  Chrome
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -217,7 +223,7 @@ function AccountPostCard({ post, onClick, onEdit, onDelete, isOwner }: { post: a
             {post.authorAvatar ? (
               <Image src={post.authorAvatar} alt="" fill className="object-cover" />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-slate-400"><User size={20} /></div>
+              <div className="w-full h-full flex items-center justify-center text-slate-300"><User size={20} /></div>
             )}
           </div>
           <div>
@@ -294,7 +300,7 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
   const [formData, setFormData] = useState({
     platform: "Google",
     level: "",
-    age: "Less than 1 year",
+    age: "1-2 Years",
     primeLevel: "1",
     items: [] as string[],
     price: "",
@@ -317,7 +323,7 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
         thumbnailUrl: editingPost.thumbnailUrl
       });
     } else {
-      setFormData({ platform: "Google", level: "", age: "Less than 1 year", primeLevel: "1", items: [], price: "", phone: "", thumbnailUrl: "" });
+      setFormData({ platform: "Google", level: "", age: "1-2 Years", primeLevel: "1", items: [], price: "", phone: "", thumbnailUrl: "" });
     }
   });
 
@@ -372,95 +378,225 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl h-[90vh] overflow-y-auto rounded-[3rem] p-0 border-none shadow-2xl">
-        <DialogHeader className="p-8 pb-0">
-          <DialogTitle className="text-3xl font-headline font-bold">{editingPost ? 'Cusboonaysii' : 'iibi'} Account</DialogTitle>
-        </DialogHeader>
+      <DialogContent className="max-w-xl h-[92vh] overflow-y-auto rounded-[3.5rem] p-0 border-none shadow-2xl bg-white scrollbar-hide">
+        <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-md px-8 pt-8 pb-4 flex items-center justify-between">
+           <div>
+              <DialogTitle className="text-3xl font-headline font-bold">{editingPost ? 'Update' : 'Iibi'} Account</DialogTitle>
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">Marketplace Listing</p>
+           </div>
+           <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="rounded-full bg-slate-100">
+              <X size={20} />
+           </Button>
+        </div>
 
-        <form onSubmit={handleSubmit} className="p-8 space-y-8 pb-20">
-          <div className="space-y-4">
-            <label className="text-sm font-bold ml-2">Platform</label>
-            <div className="flex gap-3">
-              {['Google', 'Facebook'].map(p => (
+        <form onSubmit={handleSubmit} className="px-8 space-y-10 pb-20 mt-4">
+          {/* Section 1: Connection */}
+          <div className="space-y-6">
+            <div className="flex items-center gap-3">
+               <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-primary"><ShieldCheck size={18} /></div>
+               <h3 className="font-headline font-bold text-lg">Connection Details</h3>
+            </div>
+            
+            <div className="space-y-3">
+              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1">Choose Platform</label>
+              <div className="flex gap-3">
                 <button 
-                  key={p}
                   type="button"
-                  onClick={() => setFormData({...formData, platform: p})}
+                  onClick={() => setFormData({...formData, platform: "Google"})}
                   className={cn(
-                    "flex-1 h-14 rounded-2xl flex items-center justify-center gap-2 font-bold transition-all border-2",
-                    formData.platform === p ? "bg-blue-50 border-primary text-primary" : "bg-slate-50 border-transparent text-slate-400"
+                    "flex-1 h-20 rounded-[1.5rem] flex flex-col items-center justify-center gap-1 transition-all border-2",
+                    formData.platform === "Google" 
+                      ? "bg-blue-50 border-blue-500 text-blue-600 shadow-lg shadow-blue-500/10" 
+                      : "bg-slate-50 border-transparent text-slate-400 opacity-60"
                   )}
                 >
-                  {p}
+                  <Chrome size={24} />
+                  <span className="text-xs font-bold">Google</span>
                 </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <label className="text-sm font-bold ml-2">Level</label>
-              <Input type="number" required value={formData.level} onChange={e => setFormData({...formData, level: e.target.value})} className="h-14 rounded-2xl bg-slate-50 border-none" />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-bold ml-2">Prime</label>
-              <Select value={formData.primeLevel} onValueChange={(val) => setFormData({...formData, primeLevel: val})}>
-                <SelectTrigger className="h-14 rounded-2xl bg-slate-50 border-none px-4"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {[1, 2, 3, 4, 5, 6, 7, 8].map(l => <SelectItem key={l} value={l.toString()}>Level {l}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <label className="text-sm font-bold ml-2">Items</label>
-            <div className="flex flex-wrap gap-2">
-               {popularItems.map(item => (
-                 <Badge 
-                  key={item}
-                  onClick={() => toggleItem(item)}
+                <button 
+                  type="button"
+                  onClick={() => setFormData({...formData, platform: "Facebook"})}
                   className={cn(
-                    "cursor-pointer px-4 py-2 rounded-full text-[10px] font-bold transition-all border-none",
-                    formData.items.includes(item) ? "bg-amber-400 text-white" : "bg-slate-100 text-slate-500"
+                    "flex-1 h-20 rounded-[1.5rem] flex flex-col items-center justify-center gap-1 transition-all border-2",
+                    formData.platform === "Facebook" 
+                      ? "bg-blue-600 border-blue-700 text-white shadow-lg shadow-blue-600/20 scale-105" 
+                      : "bg-slate-50 border-transparent text-slate-400 opacity-60"
                   )}
-                 >
-                   {item}
-                 </Badge>
-               ))}
+                >
+                  <Facebook size={24} />
+                  <span className="text-xs font-bold">Facebook</span>
+                </button>
+              </div>
             </div>
           </div>
 
-          <div className="space-y-4">
-             <div className="space-y-2">
-                <label className="text-sm font-bold ml-2">Price ($)</label>
+          {/* Section 2: Account Specs */}
+          <div className="space-y-6">
+            <div className="flex items-center gap-3">
+               <div className="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center text-amber-500"><Star size={18} /></div>
+               <h3 className="font-headline font-bold text-lg">Account Statistics</h3>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1">Current Level</label>
                 <Input 
                   type="number" 
-                  disabled={!!editingPost} 
+                  placeholder="e.g. 75"
                   required 
-                  value={formData.price} 
-                  onChange={e => setFormData({...formData, price: e.target.value})} 
-                  className="h-16 rounded-2xl bg-slate-50 border-none text-xl font-bold" 
+                  value={formData.level} 
+                  onChange={e => setFormData({...formData, level: e.target.value})} 
+                  className="h-14 rounded-2xl bg-slate-50 border-none px-6 font-bold focus-visible:ring-primary shadow-inner" 
                 />
-                {editingPost && <p className="text-[10px] text-amber-600 font-bold ml-2">Price-ka lama bedeli karo markaad post-ga dirto.</p>}
-             </div>
-          </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1">Prime Status</label>
+                <Select value={formData.primeLevel} onValueChange={(val) => setFormData({...formData, primeLevel: val})}>
+                  <SelectTrigger className="h-14 rounded-2xl bg-slate-50 border-none px-6 font-bold shadow-inner">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-2xl">
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map(l => <SelectItem key={l} value={l.toString()} className="rounded-xl">Level {l}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-bold ml-2">Screenshot</label>
-            <div className="relative h-48 bg-slate-50 rounded-[2rem] border-2 border-dashed border-slate-200 flex flex-col items-center justify-center gap-3 overflow-hidden">
-               {imageFile || formData.thumbnailUrl ? (
-                 <Image src={imageFile ? URL.createObjectURL(imageFile) : formData.thumbnailUrl} alt="Preview" fill className="object-cover" />
-               ) : (
-                 <Gamepad2 size={40} className="text-slate-200" />
-               )}
-               <input type="file" accept="image/*" onChange={e => setImageFile(e.target.files?.[0] || null)} className="absolute inset-0 opacity-0 cursor-pointer" />
+            <div className="space-y-2">
+               <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1">Account Age</label>
+               <Select value={formData.age} onValueChange={(val) => setFormData({...formData, age: val})}>
+                  <SelectTrigger className="h-14 rounded-2xl bg-slate-50 border-none px-6 font-bold shadow-inner">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-2xl">
+                    {["Less than 1 year", "1-2 Years", "2-3 Years", "3-5 Years", "OG (5+ Years)"].map(a => <SelectItem key={a} value={a} className="rounded-xl">{a}</SelectItem>)}
+                  </SelectContent>
+                </Select>
             </div>
           </div>
 
-          <Button disabled={loading} type="submit" className="w-full h-16 rounded-[2rem] text-xl font-bold">
-            {loading ? <Loader2 className="animate-spin" /> : editingPost ? 'Cusboonaysii' : 'Dir Codsiga'}
-          </Button>
+          {/* Section 3: Premium Content */}
+          <div className="space-y-6">
+            <div className="flex items-center gap-3">
+               <div className="w-8 h-8 rounded-full bg-purple-50 flex items-center justify-center text-purple-500"><LayoutGrid size={18} /></div>
+               <h3 className="font-headline font-bold text-lg">Exclusive Items</h3>
+            </div>
+            
+            <div className="p-5 bg-slate-50 rounded-[2rem] border border-slate-100">
+               <div className="flex flex-wrap gap-2">
+                  {popularItems.map(item => (
+                    <Badge 
+                      key={item}
+                      onClick={() => toggleItem(item)}
+                      className={cn(
+                        "cursor-pointer px-4 py-2 rounded-xl text-[10px] font-bold transition-all border-none shadow-sm",
+                        formData.items.includes(item) 
+                          ? "bg-primary text-white scale-110 shadow-primary/20" 
+                          : "bg-white text-slate-500 hover:bg-slate-100"
+                      )}
+                    >
+                      {item}
+                    </Badge>
+                  ))}
+               </div>
+            </div>
+          </div>
+
+          {/* Section 4: Visuals */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 mb-2">
+               <div className="w-8 h-8 rounded-full bg-cyan-50 flex items-center justify-center text-cyan-500"><Gamepad2 size={18} /></div>
+               <h3 className="font-headline font-bold text-lg">Account Screenshot</h3>
+            </div>
+            <div className="relative h-60 w-full group">
+               <div className={cn(
+                 "absolute inset-0 rounded-[2.5rem] border-3 border-dashed transition-all flex flex-col items-center justify-center gap-4 overflow-hidden shadow-inner",
+                 imageFile || formData.thumbnailUrl ? "border-transparent bg-slate-100" : "border-slate-200 bg-slate-50 hover:bg-slate-100 hover:border-primary/50"
+               )}>
+                  {imageFile || formData.thumbnailUrl ? (
+                    <>
+                       <Image src={imageFile ? URL.createObjectURL(imageFile) : formData.thumbnailUrl} alt="Preview" fill className="object-cover" />
+                       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <Button variant="outline" className="rounded-full bg-white/20 border-white text-white hover:bg-white hover:text-primary">Change Image</Button>
+                       </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center text-slate-300 shadow-xl border border-slate-100">
+                         <Plus size={32} />
+                      </div>
+                      <div className="text-center">
+                         <p className="text-sm font-bold text-slate-900">Upload Lobby Image</p>
+                         <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1">PNG, JPG up to 5MB</p>
+                      </div>
+                    </>
+                  )}
+                  <input type="file" accept="image/*" onChange={e => setImageFile(e.target.files?.[0] || null)} className="absolute inset-0 opacity-0 cursor-pointer" />
+               </div>
+            </div>
+          </div>
+
+          {/* Section 5: Pricing */}
+          <div className="space-y-6">
+            <div className="flex items-center gap-3">
+               <div className="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center text-green-500"><DollarSign size={18} /></div>
+               <h3 className="font-headline font-bold text-lg">Pricing Strategy</h3>
+            </div>
+
+            <div className="p-6 bg-slate-900 rounded-[2.5rem] text-white space-y-6 shadow-2xl shadow-slate-900/20">
+               <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest ml-2">Asking Price (USD)</label>
+                  <div className="relative">
+                    <span className="absolute left-6 top-1/2 -translate-y-1/2 text-2xl font-bold text-primary">$</span>
+                    <Input 
+                      type="number" 
+                      disabled={!!editingPost} 
+                      required 
+                      value={formData.price} 
+                      onChange={e => setFormData({...formData, price: e.target.value})} 
+                      className="h-20 pl-12 rounded-[1.5rem] bg-white/10 border-none text-4xl font-headline font-bold text-white focus-visible:ring-primary shadow-inner" 
+                    />
+                  </div>
+               </div>
+
+               <div className="space-y-3 pt-4 border-t border-white/10">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-white/40 font-bold uppercase">Seller Receives</span>
+                    <span className="font-bold text-lg">${numPrice.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-white/40 font-bold uppercase">Marketplace Fee ({feeConfig.feeValue}%)</span>
+                    <span className="font-bold text-amber-400">+${fee.toFixed(2)}</span>
+                  </div>
+                  <div className="pt-3 flex justify-between items-center">
+                    <span className="font-bold text-sm">Customer Pays</span>
+                    <Badge className="bg-primary text-white px-4 py-2 rounded-xl text-xl font-headline font-bold border-none shadow-lg shadow-primary/30">
+                       ${total.toFixed(2)}
+                    </Badge>
+                  </div>
+               </div>
+               
+               {editingPost && (
+                 <div className="flex items-center gap-3 bg-white/5 p-4 rounded-2xl border border-white/5">
+                    <Info className="text-amber-400 shrink-0" size={16} />
+                    <p className="text-[9px] font-bold leading-relaxed text-white/60 uppercase">Price cannot be changed after posting to maintain transaction integrity.</p>
+                 </div>
+               )}
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3 pt-4">
+             <Button 
+              disabled={loading} 
+              type="submit" 
+              className="w-full h-18 rounded-[2rem] text-2xl font-headline font-bold shadow-2xl shadow-primary/30 active:scale-95 transition-all"
+             >
+                {loading ? <Loader2 className="animate-spin w-8 h-8" /> : editingPost ? 'SAVE CHANGES' : 'PUBLISH LISTING'}
+             </Button>
+             <p className="text-center text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                By publishing, you agree to Oskar Shop Seller Terms
+             </p>
+          </div>
         </form>
       </DialogContent>
     </Dialog>
@@ -470,7 +606,7 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
 function AccountDetailModal({ post, open, onOpenChange, onBuy }: { post: any, open: boolean, onOpenChange: (open: boolean) => void, onBuy: () => void }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl h-[95vh] overflow-y-auto rounded-[3rem] p-0 border-none shadow-2xl">
+      <DialogContent className="max-w-2xl h-[95vh] overflow-y-auto rounded-[3.5rem] p-0 border-none shadow-2xl">
         <DialogHeader className="sr-only">
           <DialogTitle>Account Details</DialogTitle>
           <DialogDescription>Full details and purchase options for the selected game account.</DialogDescription>
