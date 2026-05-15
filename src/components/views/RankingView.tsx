@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useApp } from '@/lib/context';
@@ -6,6 +5,7 @@ import { Trophy, Medal, Crown, User, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 
 export default function RankingView() {
