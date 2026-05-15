@@ -19,7 +19,8 @@ import {
   Gamepad2,
   Trophy,
   Activity,
-  UserCircle
+  UserCircle,
+  LayoutDashboard
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -153,16 +154,29 @@ export default function ProfileView() {
 
       {/* Main Options Grouped */}
       <div className="space-y-8">
-         {/* Admin Link */}
+         {/* Admin Link - Premium Style */}
          {user.isAdmin && (
            <div className="space-y-3">
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] ml-4">Management</p>
-              <ProfileOption 
-                icon={ShieldCheck} 
-                label="🔧 Oskar Control Panel" 
-                onClick={() => router.push('/admin')} 
-                variant="admin" 
-              />
+              <p className="text-[10px] font-bold text-primary uppercase tracking-[0.2em] ml-4 flex items-center gap-2">
+                <ShieldCheck size={12} /> Management Access
+              </p>
+              <button 
+                onClick={() => router.push('/admin')}
+                className="w-full p-6 bg-slate-900 text-white rounded-[2.5rem] shadow-2xl shadow-slate-900/20 flex items-center justify-between group active:scale-[0.98] transition-all"
+              >
+                <div className="flex items-center gap-4 text-left">
+                  <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                    <LayoutDashboard size={28} />
+                  </div>
+                  <div>
+                    <h3 className="font-headline font-bold text-lg">Oskar Control Panel</h3>
+                    <p className="text-white/40 text-xs font-medium">Manage orders, items & users</p>
+                  </div>
+                </div>
+                <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
+                  <ChevronRight size={20} />
+                </div>
+              </button>
            </div>
          )}
 
