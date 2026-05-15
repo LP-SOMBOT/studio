@@ -33,6 +33,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { uploadToImgbb } from "@/lib/imgbb";
 import { cn } from "@/lib/utils";
+import { toast } from "@/hooks/use-toast";
 
 export default function ProfileView() {
   const { 
@@ -63,9 +64,12 @@ export default function ProfileView() {
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
-    await updateUserProfile(editData);
-    setIsSaving(false);
-    setIsEditModalOpen(false);
+    try {
+      await updateUserProfile(editData);
+      setIsEditModalOpen(false);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handlePhotoUpload = async (file: File) => {
@@ -73,8 +77,10 @@ export default function ProfileView() {
     try {
       const url = await uploadToImgbb(file);
       setEditData(prev => ({ ...prev, photoURL: url }));
+      toast({ title: "Sawirka waa la soo geliyey!" });
     } catch (e) {
       console.error("Upload failed", e);
+      toast({ title: "Upload failed", variant: "destructive" });
     } finally {
       setIsSaving(false);
     }
@@ -105,16 +111,22 @@ export default function ProfileView() {
   if (!user) return null;
 
   return (
-    <div className="pb-32 px-4 py-8 max-w-2xl mx-auto space-y-8 page-transition">
+    <div className="pb-32 px-4 py-8 max-w-2xl mx-auto space-y-10 page-transition">
       {/* Header Profile Section */}
       <section className="flex flex-col items-center text-center">
         <div className="relative group mb-6">
-          <div className="w-32 h-32 rounded-full border-[6px] border-white shadow-xl overflow-hidden bg-slate-100 ring-2 ring-primary/5">
+          {/* Main Round Avatar */}
+          <div className="w-32 h-32 rounded-full border-[6px] border-white shadow-2xl overflow-hidden bg-slate-100 ring-2 ring-primary/5 relative">
             {user.photoURL ? (
               <Image src={user.photoURL} alt="" fill className="object-cover" unoptimized />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-slate-300">
                 <User size={60} />
+              </div>
+            )}
+            {isSaving && (
+              <div className="absolute inset-0 bg-white/60 flex items-center justify-center text-primary z-20">
+                <Loader2 className="animate-spin" />
               </div>
             )}
           </div>
@@ -126,56 +138,59 @@ export default function ProfileView() {
           </button>
         </div>
 
-        <div className="space-y-1">
-          <h2 className="text-2xl font-headline font-bold text-slate-900">{user.name}</h2>
-          <div className="flex items-center justify-center gap-3">
-            <Badge className="bg-amber-100 text-amber-700 border-none px-3 py-1 rounded-full flex gap-1 items-center font-bold text-[10px]">
-              <Star size={12} className="fill-amber-600" /> {user.points || 0} pts
+        <div className="space-y-2">
+          <h2 className="text-3xl font-headline font-bold text-slate-900">{user.name}</h2>
+          <div className="flex items-center justify-center gap-2">
+            <Badge className="bg-amber-100 text-amber-700 border-none px-4 py-1.5 rounded-full flex gap-1.5 items-center font-bold text-xs shadow-sm">
+              <Star size={14} className="fill-amber-600" /> {user.points || 0} Points
             </Badge>
-            <Badge variant="outline" className="border-slate-200 text-slate-500 font-bold text-[10px] rounded-full">
+            <Badge variant="outline" className="border-slate-200 text-slate-500 font-bold text-xs rounded-full px-4 py-1">
               Rank #{userRank}
             </Badge>
           </div>
         </div>
       </section>
 
-      {/* Main Options */}
-      <div className="space-y-6">
+      {/* Main Options Grouped */}
+      <div className="space-y-8">
          {/* Admin Link */}
          {user.isAdmin && (
-           <ProfileOption 
-             icon={ShieldCheck} 
-             label="Oskar Control Panel" 
-             onClick={() => router.push('/admin')} 
-             variant="admin" 
-           />
+           <div className="space-y-3">
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] ml-4">Management</p>
+              <ProfileOption 
+                icon={ShieldCheck} 
+                label="🔧 Oskar Control Panel" 
+                onClick={() => router.push('/admin')} 
+                variant="admin" 
+              />
+           </div>
          )}
 
          <ProfileGroup title="Marketplace & Activity">
-            <ProfileOption icon={ShoppingBag} label="My Orders" onClick={() => setActiveTab('orders')} />
+            <ProfileOption icon={ShoppingBag} label="My Orders (Purchases)" onClick={() => setActiveTab('orders')} />
             <ProfileOption icon={Gamepad2} label="My Selling Accounts" onClick={() => setActiveTab('accounts')} />
-            <ProfileOption icon={Trophy} label="Global Ranking" onClick={() => setActiveTab('ranking')} />
+            <ProfileOption icon={Trophy} label="Global Leaderboard" onClick={() => setActiveTab('ranking')} />
          </ProfileGroup>
 
          <ProfileGroup title="Support & Social">
-            <ProfileOption icon={HelpCircle} label="Help Center" onClick={() => toast({ title: "Coming Soon" })} />
+            <ProfileOption icon={HelpCircle} label="How to use Oskar Shop" onClick={() => toast({ title: "Coming Soon", description: "Waxaan diyaarinaynaa muuqaalo iyo casharo." })} />
             <ProfileOption 
               icon={MessageCircle} 
-              label="Contact WhatsApp" 
+              label="Contact WhatsApp Support" 
               onClick={() => window.open('https://wa.me/252613982172', '_blank')} 
             />
             <ProfileOption 
               icon={Video} 
-              label="OskarShop TikTok" 
+              label="Join us on TikTok" 
               onClick={() => window.open('https://tiktok.com/@Oskarshop', '_blank')} 
             />
          </ProfileGroup>
 
          <ProfileGroup title="Account Settings">
-            <ProfileOption icon={UserCircle} label="Edit Profile Details" onClick={() => setIsEditModalOpen(true)} />
+            <ProfileOption icon={UserCircle} label="Update Profile Info" onClick={() => setIsEditModalOpen(true)} />
             <ProfileOption 
               icon={LogOut} 
-              label="Logout Account" 
+              label="Logout from Oskar Shop" 
               onClick={logout} 
               variant="danger" 
             />
@@ -187,15 +202,18 @@ export default function ProfileView() {
          <DialogContent className="rounded-[3.5rem] p-0 border-none shadow-2xl max-w-md bg-white overflow-hidden">
             <div className="h-2 bg-primary w-full" />
             <DialogHeader className="p-8 pb-0">
-               <DialogTitle className="text-2xl font-headline font-bold">Cusboonaysii Profile-ka</DialogTitle>
+               <DialogTitle className="text-2xl font-headline font-bold">Update Profile</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleUpdate} className="p-8 space-y-6">
                <div className="flex justify-center mb-6">
-                  <div className="relative w-28 h-28 rounded-full overflow-hidden bg-slate-100 group border-4 border-slate-50 shadow-inner ring-4 ring-primary/5">
+                  {/* Circular Avatar in Modal */}
+                  <div className="relative w-32 h-32 rounded-full overflow-hidden bg-slate-100 group border-4 border-slate-50 shadow-2xl ring-4 ring-primary/5">
                      {editData.photoURL ? (
                        <Image src={editData.photoURL} alt="" fill className="object-cover" unoptimized />
                      ) : (
-                       <User size={50} className="m-auto mt-6 text-slate-300" />
+                       <div className="w-full h-full flex flex-col items-center justify-center text-slate-300">
+                          <User size={50} />
+                       </div>
                      )}
                      <input 
                       type="file" 
@@ -203,8 +221,9 @@ export default function ProfileView() {
                       onChange={e => e.target.files?.[0] && handlePhotoUpload(e.target.files[0])} 
                       className="absolute inset-0 opacity-0 cursor-pointer z-10" 
                      />
-                     <div className="absolute inset-0 bg-black/30 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                     <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity">
                         <Camera size={24} />
+                        <span className="text-[10px] font-bold mt-1 uppercase">Upload</span>
                      </div>
                      {isSaving && (
                        <div className="absolute inset-0 bg-white/60 flex items-center justify-center text-primary z-20">
@@ -215,17 +234,17 @@ export default function ProfileView() {
                </div>
                
                <div className="space-y-4">
-                  <ProfileInput label="Magacaaga oo buuxa" value={editData.name} onChange={val => setEditData({...editData, name: val})} />
-                  <ProfileInput label="Magaca Ciyaarta (Game Name)" value={editData.gameName} onChange={val => setEditData({...editData, gameName: val})} />
-                  <ProfileInput label="Player ID-gaaga" value={editData.gameUid} onChange={val => setEditData({...editData, gameUid: val})} />
+                  <ProfileInput label="Full Name" value={editData.name} onChange={val => setEditData({...editData, name: val})} />
+                  <ProfileInput label="Game Name (Optional)" value={editData.gameName} onChange={val => setEditData({...editData, gameName: val})} />
+                  <ProfileInput label="Player ID (Optional)" value={editData.gameUid} onChange={val => setEditData({...editData, gameUid: val})} />
                </div>
 
                <Button 
                 type="submit" 
                 disabled={isSaving} 
-                className="w-full h-16 rounded-[2rem] font-bold text-lg shadow-2xl shadow-primary/20 active:scale-95 transition-transform"
+                className="w-full h-16 rounded-[2.5rem] font-bold text-lg shadow-2xl shadow-primary/20 active:scale-95 transition-transform"
                >
-                 {isSaving ? <Loader2 className="animate-spin" /> : "Keydi Isbedelka"}
+                 {isSaving ? <Loader2 className="animate-spin" /> : "Save Profile Details"}
                </Button>
             </form>
          </DialogContent>
@@ -238,7 +257,7 @@ function ProfileGroup({ title, children }: { title: string, children: React.Reac
   return (
     <div className="space-y-3">
        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] ml-4">{title}</p>
-       <Card className="rounded-[2rem] border-none shadow-sm overflow-hidden bg-white/60 backdrop-blur-sm">
+       <Card className="rounded-[2.5rem] border-none shadow-sm overflow-hidden bg-white/60 backdrop-blur-sm">
           <div className="divide-y divide-slate-50">
              {children}
           </div>
@@ -258,7 +277,7 @@ function ProfileOption({ icon: Icon, label, onClick, variant }: { icon: any, lab
     >
       <div className="flex items-center gap-4">
          <div className={cn(
-           "w-10 h-10 rounded-xl flex items-center justify-center",
+           "w-10 h-10 rounded-xl flex items-center justify-center shadow-sm",
            variant === 'admin' ? "bg-white/10" : variant === 'danger' ? "bg-red-50 text-red-500" : "bg-primary/10 text-primary"
          )}>
             <Icon size={20} />
@@ -280,7 +299,7 @@ function ProfileInput({ label, value, onChange }: { label: string, value: string
       <Input 
         value={value} 
         onChange={e => onChange(e.target.value)} 
-        className="h-14 rounded-2xl bg-slate-50 border-none focus-visible:ring-primary shadow-inner" 
+        className="h-14 rounded-2xl bg-slate-50 border-none px-5 font-bold focus-visible:ring-primary shadow-inner" 
       />
     </div>
   );
