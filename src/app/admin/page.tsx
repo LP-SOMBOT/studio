@@ -9,6 +9,7 @@ import {
   Trash2, 
   Edit, 
   Users, 
+  User,
   Package, 
   ShoppingBag,
   LogOut,
