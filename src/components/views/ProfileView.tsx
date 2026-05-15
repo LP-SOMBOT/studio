@@ -86,7 +86,8 @@ export default function ProfileView() {
   const userRank = useMemo(() => {
     if (!user || !allUsers.length) return 0;
     const sorted = [...allUsers].sort((a, b) => (b.points || 0) - (a.points || 0));
-    return sorted.findIndex(u => u.uid === user.uid) + 1;
+    const index = sorted.findIndex(u => u.uid === user.uid);
+    return index === -1 ? 0 : index + 1;
   }, [user, allUsers]);
 
   const myAccountPosts = useMemo(() => {
@@ -97,8 +98,12 @@ export default function ProfileView() {
   if (isInitialLoading || loading) {
     return (
       <div className="min-h-screen px-4 py-8 space-y-6">
-        <Skeleton className="h-64 w-full rounded-[3rem]" />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="flex flex-col items-center">
+          <Skeleton className="w-40 h-40 rounded-full mb-6" />
+          <Skeleton className="h-8 w-48 mb-2" />
+          <Skeleton className="h-6 w-32" />
+        </div>
+        <div className="grid grid-cols-1 gap-6 pt-10">
           <Skeleton className="h-48 rounded-3xl" />
           <Skeleton className="h-48 rounded-3xl" />
         </div>
@@ -193,7 +198,7 @@ export default function ProfileView() {
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-3">
                    <div className="w-10 h-10 rounded-xl bg-slate-100 relative overflow-hidden">
-                      {post.thumbnailUrl && <Image src={post.thumbnailUrl} alt="" fill className="object-cover" />}
+                      {post.thumbnailUrl && <Image src={post.thumbnailUrl} alt="" fill className="object-cover" unoptimized />}
                    </div>
                    <div>
                       <p className="font-bold text-slate-800">Lvl {post.level} Account</p>
@@ -222,7 +227,7 @@ export default function ProfileView() {
 
       {/* Edit Modal */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-         <DialogContent className="rounded-[3.5rem] p-0 border-none shadow-3xl max-w-md bg-white overflow-hidden">
+         <DialogContent className="rounded-[3.5rem] p-0 border-none shadow-2xl max-w-md bg-white overflow-hidden">
             <div className="h-2 bg-primary w-full" />
             <DialogHeader className="p-8 pb-0">
                <DialogTitle className="text-2xl font-headline font-bold">Cusboonaysii Profile-ka</DialogTitle>
