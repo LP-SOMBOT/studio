@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
@@ -29,7 +30,6 @@ import {
 import { toast } from '@/hooks/use-toast';
 import { type GamePackage } from './games-data';
 
-// Pattern to use for ALL realtime database data access
 export const safeGet = (obj: any, path: string, fallback: any = "") => {
   return path.split('.').reduce((acc, key) => acc?.[key] ?? fallback, obj);
 };
@@ -155,6 +155,8 @@ type AppContextType = {
   events: GameEvent[];
   createOrder: (paymentMethod: string, gameDetails: any, directItem: CartItem) => Promise<void>;
   postAccount: (data: Partial<AccountPost>) => Promise<void>;
+  updateAccountPost: (postId: string, data: Partial<AccountPost>) => Promise<void>;
+  deleteAccountPost: (postId: string) => Promise<void>;
   buyAccountPost: (post: AccountPost) => void;
   markNotificationsAsRead: (notifId?: string) => Promise<void>;
   updateOrderStatus: (orderId: string, status: string) => Promise<void>;
@@ -200,11 +202,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [messages, setMessages] = useState<any[]>([]);
   const [allChatSessions, setAllChatSessions] = useState<any[]>([]);
 
-  // Hash handling for single-page architecture
   useEffect(() => {
     const handleHash = () => {
       const hash = typeof window !== 'undefined' ? window.location.hash.replace('#', '') : '';
-      const validTabs = ['home', 'games', 'accounts', 'ranking', 'profile', 'chat', 'notifications'];
+      const validTabs = ['home', 'games', 'accounts', 'ranking', 'profile', 'chat', 'notifications', 'orders'];
       if (validTabs.includes(hash)) setActiveTabState(hash);
     };
     handleHash();
@@ -219,7 +220,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Centralized Data Watchers
   useEffect(() => {
     if (!rtdb) return;
     const settingsRef = ref(rtdb, 'settings');
@@ -233,7 +233,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     const checkInitialLoad = () => {
       if (settingsLoaded && productsLoaded) {
-        // Data is ready, dismiss splash
         setTimeout(() => setIsInitialLoading(false), 500);
       }
     };
@@ -252,20 +251,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     onValue(accPostsRef, (s) => setAccountPosts(s.val() ? Object.entries(s.val()).map(([id, v]: any) => ({ ...v, id })) : []));
     onValue(eventsRef, (s) => setEvents(s.val() ? Object.entries(s.val()).map(([id, v]: any) => ({ ...v, id })) : []));
-    
-    // Ensure every user has a stable uid from the key
     onValue(usersRef, (s) => {
       if (s.val()) {
         const users = Object.entries(s.val()).map(([uid, v]: any) => ({
           ...v,
-          uid: v.uid || uid // Fallback to key if uid field is missing
+          uid: v.uid || uid
         }));
         setAllUsers(users);
       } else {
         setAllUsers([]);
       }
     });
-    
   }, [rtdb]);
 
   useEffect(() => {
@@ -284,10 +280,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     onValue(userOrdersRef, (s) => setOrders(s.val() ? Object.entries(s.val()).map(([id, v]: any) => ({ ...v, id })).sort((a,b) => b.createdAt - a.createdAt) : []));
   }, [rtdb, user]);
 
-  // Admin Watchers
   useEffect(() => {
     if (!rtdb || !userProfile || (userProfile.role !== 'admin' && userProfile.role !== 'super_admin')) return;
-    
     onValue(ref(rtdb, 'orders'), s => setAllOrders(s.val() ? Object.entries(s.val()).map(([id, v]: any) => ({ ...v, id })).sort((a,b) => b.createdAt - a.createdAt) : []));
     onValue(ref(rtdb, 'chatIndex'), s => setAllChatSessions(s.val() ? Object.entries(s.val()).map(([userId, v]: any) => ({ userId, ...v })).sort((a,b) => b.lastTimestamp - a.lastTimestamp) : []));
   }, [rtdb, userProfile]);
@@ -297,7 +291,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return { ...user, ...userProfile, isAdmin: userProfile?.role === 'admin' || userProfile?.role === 'super_admin' };
   }, [user, userProfile]);
 
-  // Core Actions
   const login = async (e: string, p: string) => {
     setIsGlobalLoading(true);
     try { await signInWithEmailAndPassword(auth, e, p); } finally { setIsGlobalLoading(false); }
@@ -363,6 +356,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     toast({ title: "Successfully posted!", description: "Waiting for admin approval." });
   };
 
+  const updateAccountPost = async (pid: string, data: any) => {
+    if (!rtdb) return;
+    const { price, totalCharge, fee, ...editableData } = data;
+    await update(ref(rtdb, `accountPosts/${pid}`), editableData);
+    toast({ title: "Post Updated!" });
+  };
+
+  const deleteAccountPost = async (pid: string) => {
+    if (!rtdb) return;
+    await remove(ref(rtdb, `accountPosts/${pid}`));
+    toast({ title: "Post Deleted" });
+  };
+
   const buyAccountPost = (post: any) => {
     router.push(`/checkout-account?id=${post.id}`);
   };
@@ -389,7 +395,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         await update(ref(rtdb, `users/${orderData.userId}`), {
           points: increment(1)
         });
-        // Notify user
         const nid = push(ref(rtdb, `notifications/${orderData.userId}`)).key;
         await set(ref(rtdb, `notifications/${orderData.userId}/${nid}`), {
           type: 'order_status',
@@ -397,7 +402,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           body: `Your diamonds have been delivered. You earned 1 point!`,
           read: false,
           createdAt: Date.now(),
-          linkTo: '#profile'
+          linkTo: '#orders'
         });
       }
     }
@@ -447,7 +452,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     await update(ref(rtdb, `chatIndex/${id}`), { unreadCount: 0 });
   };
 
-  // Admin logic (Products, Events, Users)
   const saveProduct = async (p: any) => p.id ? update(ref(rtdb, `products/${p.id}`), p) : push(ref(rtdb, 'products'), p);
   const deleteProduct = async (id: string) => remove(ref(rtdb, `products/${id}`));
   const saveEvent = async (e: any) => e.id ? update(ref(rtdb, `events/${e.id}`), e) : push(ref(rtdb, 'events'), e);
@@ -459,7 +463,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     <AppContext.Provider value={{ 
       user: enhancedUser, loading, isGlobalLoading, isInitialLoading, activeTab, setActiveTab, setGlobalLoading: setIsGlobalLoading,
       login, signup, logout, buyNow, orders, allOrders, products, allUsers, accountPosts, notifications, events,
-      createOrder, postAccount, buyAccountPost, markNotificationsAsRead, updateOrderStatus, updateAccountPostStatus, 
+      createOrder, postAccount, updateAccountPost, deleteAccountPost, buyAccountPost, markNotificationsAsRead, updateOrderStatus, updateAccountPostStatus, 
       updateUserProfile, deleteUser, saveProduct, deleteProduct, saveEvent, deleteEvent, storeSettings, updateStoreSettings, 
       broadcastNotification, messages, allChatSessions, chatTargetId, setChatTargetId, sendMessage, markMessagesAsRead
     }}>

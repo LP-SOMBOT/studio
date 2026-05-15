@@ -1,25 +1,25 @@
 
 "use client";
 
-import { House, Gamepad2, CircleUser, MessageCircle, ShieldCheck, Trophy, ShoppingBag } from "lucide-react";
+import { House, Gamepad2, CircleUser, ShoppingBag, ShieldCheck } from "lucide-react";
 import { useApp } from "@/lib/context";
 import { cn } from "@/lib/utils";
 
 export default function BottomNav() {
-  const { activeTab, setActiveTab, allChatSessions, user, notifications } = useApp();
+  const { activeTab, setActiveTab, allChatSessions, user, notifications, orders } = useApp();
 
-  // Unread logic
   const unreadChat = user?.isAdmin 
     ? allChatSessions.reduce((acc, s) => acc + (s.unreadCount || 0), 0)
     : (allChatSessions.find(s => s.userId === user?.uid)?.unreadCount || 0);
 
   const unreadNotifs = (notifications || []).filter(n => !n.read).length;
+  const activeOrdersCount = (orders || []).filter(o => o.status === 'pending' || o.status === 'processing').length;
 
   const navItems = [
     { id: "home", label: "Home", icon: House },
     { id: "games", label: "Games", icon: Gamepad2 },
     { id: "accounts", label: "Accounts", icon: ShieldCheck },
-    { id: "ranking", label: "Ranking", icon: Trophy },
+    { id: "orders", label: "Orders", icon: ShoppingBag, badge: activeOrdersCount },
     { id: "profile", label: "Profile", icon: CircleUser, badge: unreadNotifs > 0 ? unreadNotifs : unreadChat },
   ];
 
@@ -47,7 +47,6 @@ export default function BottomNav() {
                 <div className="relative">
                   <Icon size={isActive ? 20 : 22} className={cn("transition-all", isActive && "stroke-[2.5px]")} />
                   
-                  {/* Badge */}
                   {item.badge !== undefined && item.badge > 0 && (
                     <span className={cn(
                       "absolute -top-1 -right-1 bg-[#F97316] text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold border border-white",

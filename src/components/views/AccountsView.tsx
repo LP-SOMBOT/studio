@@ -12,14 +12,17 @@ import {
   Calendar,
   Star,
   User,
-  Bell,
+  Activity,
   Search,
   CheckCircle2,
   XCircle,
   Loader2,
   ArrowRight,
   Smartphone,
-  X
+  X,
+  Trash2,
+  Edit,
+  Clock
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -30,24 +33,32 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Image from 'next/image';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/hooks/use-toast';
 import { uploadToImgbb } from '@/lib/imgbb';
 
 export default function AccountsView() {
-  const { accountPosts, user, setActiveTab, isInitialLoading, postAccount, buyAccountPost } = useApp();
+  const { accountPosts, user, setActiveTab, isInitialLoading, postAccount, buyAccountPost, deleteAccountPost, updateAccountPost } = useApp();
   const [isPostSheetOpen, setIsPostSheetOpen] = useState(false);
+  const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
   const [selectedPost, setSelectedPost] = useState<any>(null);
+  const [editingPost, setEditingPost] = useState<any>(null);
+  const [deletingPostId, setDeletingPostId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
   const approvedPosts = useMemo(() => {
     return (accountPosts || [])
-      .filter(p => p.status === 'approved' || p.uid === user?.uid)
-      .filter(p => p.title?.toLowerCase().includes(searchQuery.toLowerCase()) || p.platform?.toLowerCase().includes(searchQuery.toLowerCase()))
+      .filter(p => p.status === 'approved' || p.uid === user?.uid || user?.role === 'admin' || user?.role === 'super_admin')
+      .filter(p => p.authorName?.toLowerCase().includes(searchQuery.toLowerCase()) || p.platform?.toLowerCase().includes(searchQuery.toLowerCase()))
       .sort((a, b) => b.createdAt - a.createdAt);
-  }, [accountPosts, searchQuery, user?.uid]);
+  }, [accountPosts, searchQuery, user]);
+
+  const myActivity = useMemo(() => {
+    if (!user) return [];
+    return (accountPosts || []).filter(p => p.uid === user.uid);
+  }, [accountPosts, user]);
 
   if (isInitialLoading) {
     return (
@@ -62,12 +73,14 @@ export default function AccountsView() {
 
   return (
     <div className="min-h-screen pb-24 page-transition bg-slate-50">
-      {/* Sticky Header */}
+      {/* Header */}
       <header className="sticky top-0 z-50 bg-white shadow-sm border-b border-gray-100 h-16 flex items-center justify-between px-6">
-        <h1 className="text-xl font-headline font-bold text-slate-900 tracking-tight">Suuqa Account Yada</h1>
-        <button onClick={() => setActiveTab('notifications')} className="relative p-2 text-slate-400">
-           <Bell size={24} />
-           <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white" />
+        <h1 className="text-xl font-headline font-bold text-slate-900 tracking-tight">Marketplace</h1>
+        <button onClick={() => setIsActivityModalOpen(true)} className="relative p-2 text-slate-400 bg-slate-50 rounded-full">
+           <Activity size={20} />
+           {myActivity.some(p => p.status === 'pending') && (
+             <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-amber-500 rounded-full border-2 border-white" />
+           )}
         </button>
       </header>
 
@@ -76,7 +89,7 @@ export default function AccountsView() {
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input 
-            placeholder="Search accounts..." 
+            placeholder="Search accounts or sellers..." 
             className="pl-12 h-14 rounded-2xl bg-white border-none shadow-sm"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -89,20 +102,27 @@ export default function AccountsView() {
               <ShieldCheck size={40} />
             </div>
             <div>
-               <h3 className="font-bold text-xl">Wali ma jiro accounts la iibinayo</h3>
-               <p className="text-sm">Be the first one to post your account!</p>
+               <h3 className="font-bold text-xl">No active listings</h3>
+               <p className="text-sm">Be the first to sell your account!</p>
             </div>
           </div>
         ) : (
           <div className="space-y-8">
             {approvedPosts.map((post) => (
-              <AccountPostCard key={post.id} post={post} onClick={() => setSelectedPost(post)} />
+              <AccountPostCard 
+                key={post.id} 
+                post={post} 
+                onClick={() => setSelectedPost(post)}
+                onEdit={(e) => { e.stopPropagation(); setEditingPost(post); }}
+                onDelete={(e) => { e.stopPropagation(); setDeletingPostId(post.id); }}
+                isOwner={post.uid === user?.uid || user?.role === 'admin' || user?.role === 'super_admin'}
+              />
             ))}
           </div>
         )}
       </main>
 
-      {/* Floating Action Button */}
+      {/* FAB */}
       {user && (
         <button 
           onClick={() => setIsPostSheetOpen(true)}
@@ -112,26 +132,78 @@ export default function AccountsView() {
         </button>
       )}
 
-      {/* Post Modal */}
-      <PostAccountModal open={isPostSheetOpen} onOpenChange={setIsPostSheetOpen} onComplete={() => setIsPostSheetOpen(false)} />
+      {/* Modals */}
+      <PostAccountModal 
+        open={isPostSheetOpen || !!editingPost} 
+        onOpenChange={(open) => { if (!open) { setIsPostSheetOpen(false); setEditingPost(null); } }} 
+        editingPost={editingPost}
+        onComplete={() => { setIsPostSheetOpen(false); setEditingPost(null); }} 
+      />
       
-      {/* Detail Modal */}
       {selectedPost && (
         <AccountDetailModal 
           post={selectedPost} 
           open={!!selectedPost} 
           onOpenChange={(open) => !open && setSelectedPost(null)} 
-          onBuy={() => {
-            buyAccountPost(selectedPost);
-            setSelectedPost(null);
-          }}
+          onBuy={() => { buyAccountPost(selectedPost); setSelectedPost(null); }}
         />
       )}
+
+      {/* Activity Tracker Modal */}
+      <Dialog open={isActivityModalOpen} onOpenChange={setIsActivityModalOpen}>
+         <DialogContent className="max-w-md rounded-[2.5rem] p-0 border-none shadow-2xl bg-white">
+            <DialogHeader className="p-8 pb-4">
+               <DialogTitle className="text-2xl font-headline font-bold">Account Activity</DialogTitle>
+            </DialogHeader>
+            <div className="p-6 pt-0 space-y-4 max-h-[60vh] overflow-y-auto">
+               {myActivity.length === 0 ? (
+                 <div className="py-12 text-center opacity-30">
+                    <Clock size={40} className="mx-auto mb-2" />
+                    <p className="text-sm font-bold">No activity found</p>
+                 </div>
+               ) : (
+                 myActivity.map(p => (
+                   <Card key={p.id} className="p-4 rounded-2xl border-none bg-slate-50 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                         <div className="w-10 h-10 rounded-lg overflow-hidden bg-slate-200 relative">
+                            {p.thumbnailUrl && <Image src={p.thumbnailUrl} alt="" fill className="object-cover" />}
+                         </div>
+                         <div>
+                            <p className="text-xs font-bold text-slate-900">Lv {p.level} Account</p>
+                            <p className="text-[9px] font-bold text-muted-foreground uppercase">{p.platform}</p>
+                         </div>
+                      </div>
+                      <Badge className={cn(
+                        "rounded-full text-[8px] font-bold",
+                        p.status === 'approved' ? "bg-green-100 text-green-700" : p.status === 'pending' ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"
+                      )}>
+                        {p.status.toUpperCase()}
+                      </Badge>
+                   </Card>
+                 ))
+               )}
+            </div>
+         </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation */}
+      <Dialog open={!!deletingPostId} onOpenChange={(open) => !open && setDeletingPostId(null)}>
+        <DialogContent className="max-w-sm rounded-[2rem]">
+           <DialogHeader>
+             <DialogTitle>Confirm Delete</DialogTitle>
+             <DialogDescription>Ma hubtaa inaad tirtirto post-kan? Tani lagama noqon karo.</DialogDescription>
+           </DialogHeader>
+           <DialogFooter className="gap-2">
+             <Button variant="ghost" onClick={() => setDeletingPostId(null)} className="rounded-xl">Cancel</Button>
+             <Button variant="destructive" onClick={() => { if(deletingPostId) deleteAccountPost(deletingPostId); setDeletingPostId(null); }} className="rounded-xl">Delete Post</Button>
+           </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
 
-function AccountPostCard({ post, onClick }: { post: any, onClick: () => void }) {
+function AccountPostCard({ post, onClick, onEdit, onDelete, isOwner }: { post: any, onClick: () => void, onEdit: (e:any)=>void, onDelete: (e:any)=>void, isOwner: boolean }) {
   const isGoogle = post.platform === 'Google';
   
   return (
@@ -161,7 +233,13 @@ function AccountPostCard({ post, onClick }: { post: any, onClick: () => void }) 
             <p className="text-[10px] text-muted-foreground font-bold">{post.createdAt ? format(new Date(post.createdAt), 'PPpp') : 'Just now'}</p>
           </div>
         </div>
-        {post.status === 'pending' && <Badge className="bg-amber-100 text-amber-600 border-none font-bold text-[9px]">PENDING REVIEW</Badge>}
+        
+        {isOwner && (
+          <div className="flex gap-1">
+             <Button size="icon" variant="ghost" className="h-8 w-8 text-blue-500" onClick={onEdit}><Edit size={16}/></Button>
+             <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500" onClick={onDelete}><Trash2 size={16}/></Button>
+          </div>
+        )}
       </div>
 
       <div className="aspect-[16/9] relative bg-slate-100 overflow-hidden">
@@ -171,8 +249,8 @@ function AccountPostCard({ post, onClick }: { post: any, onClick: () => void }) 
           <div className="w-full h-full flex items-center justify-center opacity-10"><Gamepad2 size={60} /></div>
         )}
         {post.sold && (
-          <div className="absolute top-0 right-0 w-32 h-32 overflow-hidden">
-            <div className="absolute top-6 -right-8 w-40 py-1 bg-red-600 text-white text-[10px] font-bold text-center rotate-45 shadow-lg">SOLD OUT</div>
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center">
+             <div className="px-6 py-2 bg-red-600 text-white font-headline font-bold text-xl rounded-full transform -rotate-12 shadow-2xl">WAA LA IIBIYAY</div>
           </div>
         )}
       </div>
@@ -193,16 +271,15 @@ function AccountPostCard({ post, onClick }: { post: any, onClick: () => void }) 
                 {item}
              </Badge>
            ))}
-           {post.items?.length > 3 && <span className="text-[10px] font-bold text-slate-400 self-center">+{post.items.length - 3} more</span>}
         </div>
 
         <div className="flex items-center justify-between pt-4 border-t border-slate-50">
-           <div className="space-y-0.5">
+           <div>
              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Price</p>
              <p className="text-2xl font-headline font-bold text-primary">${post.price?.toFixed(2)}</p>
            </div>
-           <Button className="rounded-full h-12 px-6 font-bold shadow-lg shadow-primary/20 gap-2 transition-transform active:scale-95">
-             {post.sold ? 'Sold Out' : 'Details'} <ArrowRight size={16} />
+           <Button className="rounded-full h-12 px-6 font-bold shadow-lg shadow-primary/20 gap-2">
+             Details <ArrowRight size={16} />
            </Button>
         </div>
       </div>
@@ -210,52 +287,81 @@ function AccountPostCard({ post, onClick }: { post: any, onClick: () => void }) 
   );
 }
 
-function PostAccountModal({ open, onOpenChange, onComplete }: { open: boolean, onOpenChange: (open: boolean) => void, onComplete: () => void }) {
-  const { postAccount, storeSettings } = useApp();
+function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { open: boolean, onOpenChange: (open: boolean) => void, onComplete: () => void, editingPost?: any }) {
+  const { postAccount, updateAccountPost, storeSettings } = useApp();
   const [loading, setLoading] = useState(false);
-  const [platform, setPlatform] = useState("Google");
-  const [level, setLevel] = useState("");
-  const [age, setAge] = useState("Less than 1 year");
-  const [prime, setPrime] = useState("1");
-  const [selectedItems, setSelectedItems] = useState<string[]>([]);
-  const [price, setPrice] = useState("");
-  const [phone, setPhone] = useState("");
+  
+  const [formData, setFormData] = useState({
+    platform: "Google",
+    level: "",
+    age: "Less than 1 year",
+    primeLevel: "1",
+    items: [] as string[],
+    price: "",
+    phone: "",
+    thumbnailUrl: ""
+  });
+
   const [imageFile, setImageFile] = useState<File | null>(null);
 
+  useState(() => {
+    if (editingPost) {
+      setFormData({
+        platform: editingPost.platform,
+        level: editingPost.level.toString(),
+        age: editingPost.age,
+        primeLevel: editingPost.primeLevel.toString(),
+        items: editingPost.items || [],
+        price: editingPost.price.toString(),
+        phone: editingPost.phone,
+        thumbnailUrl: editingPost.thumbnailUrl
+      });
+    } else {
+      setFormData({ platform: "Google", level: "", age: "Less than 1 year", primeLevel: "1", items: [], price: "", phone: "", thumbnailUrl: "" });
+    }
+  });
+
   const feeConfig = storeSettings?.config?.shop || { feeType: 'percentage', feeValue: 7.5 };
-  const numPrice = parseFloat(price) || 0;
+  const numPrice = parseFloat(formData.price) || 0;
   const fee = feeConfig.feeType === 'percentage' ? (numPrice * feeConfig.feeValue) / 100 : feeConfig.feeValue;
   const total = numPrice + fee;
 
   const popularItems = ["Evo AK", "Evo MP40", "M1014 Dragon", "Sakura Bundle", "Hip Hop Bundle", "Crimson Bundle", "Angel Wings", "Elite Pass S1", "Magic Cube"];
 
   const toggleItem = (item: string) => {
-    setSelectedItems(prev => prev.includes(item) ? prev.filter(i => i !== item) : [...prev, item]);
+    setFormData(prev => ({
+      ...prev,
+      items: prev.items.includes(item) ? prev.items.filter(i => i !== item) : [...prev.items, item]
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!imageFile) {
-      toast({ title: "Image Required", description: "Please upload a screenshot of your account.", variant: "destructive" });
-      return;
-    }
-
     setLoading(true);
     try {
-      const url = await uploadToImgbb(imageFile);
-      await postAccount({
-        platform,
-        level: parseInt(level),
-        age,
-        primeLevel: parseInt(prime),
-        items: selectedItems,
-        price: numPrice,
-        fee,
-        totalCharge: total,
-        thumbnailUrl: url,
-        imageUrls: [url],
-        phone
-      });
+      let finalUrl = formData.thumbnailUrl;
+      if (imageFile) {
+        finalUrl = await uploadToImgbb(imageFile);
+      }
+
+      if (editingPost) {
+        await updateAccountPost(editingPost.id, {
+          ...formData,
+          level: parseInt(formData.level),
+          primeLevel: parseInt(formData.primeLevel),
+          thumbnailUrl: finalUrl
+        });
+      } else {
+        await postAccount({
+          ...formData,
+          level: parseInt(formData.level),
+          primeLevel: parseInt(formData.primeLevel),
+          thumbnailUrl: finalUrl,
+          fee,
+          totalCharge: total,
+          price: numPrice
+        });
+      }
       onComplete();
     } catch (e: any) {
       toast({ title: "Failed", description: e.message, variant: "destructive" });
@@ -268,25 +374,24 @@ function PostAccountModal({ open, onOpenChange, onComplete }: { open: boolean, o
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl h-[90vh] overflow-y-auto rounded-[3rem] p-0 border-none shadow-2xl">
         <DialogHeader className="p-8 pb-0">
-          <DialogTitle className="text-3xl font-headline font-bold">iibi Account Kaaga</DialogTitle>
-          <DialogDescription className="font-bold text-amber-600 uppercase text-[10px] tracking-widest mt-1">Post your account to the marketplace</DialogDescription>
+          <DialogTitle className="text-3xl font-headline font-bold">{editingPost ? 'Cusboonaysii' : 'iibi'} Account</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="p-8 space-y-8 pb-20">
           <div className="space-y-4">
-            <label className="text-sm font-bold ml-2">Account Platform</label>
+            <label className="text-sm font-bold ml-2">Platform</label>
             <div className="flex gap-3">
               {['Google', 'Facebook'].map(p => (
                 <button 
                   key={p}
                   type="button"
-                  onClick={() => setPlatform(p)}
+                  onClick={() => setFormData({...formData, platform: p})}
                   className={cn(
-                    "flex-1 h-16 rounded-2xl flex items-center justify-center gap-3 font-bold transition-all border-2",
-                    platform === p ? "bg-blue-50 border-primary text-primary" : "bg-slate-50 border-transparent text-slate-400"
+                    "flex-1 h-14 rounded-2xl flex items-center justify-center gap-2 font-bold transition-all border-2",
+                    formData.platform === p ? "bg-blue-50 border-primary text-primary" : "bg-slate-50 border-transparent text-slate-400"
                   )}
                 >
-                  {p === 'Google' ? <Star size={20} /> : <MessageSquare size={20} />} {p}
+                  {p}
                 </button>
               ))}
             </div>
@@ -294,108 +399,67 @@ function PostAccountModal({ open, onOpenChange, onComplete }: { open: boolean, o
 
           <div className="grid grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label className="text-sm font-bold ml-2">Account Level</label>
-              <Input type="number" required placeholder="e.g. 75" value={level} onChange={e => setLevel(e.target.value)} className="h-14 rounded-2xl bg-slate-50 border-none" />
+              <label className="text-sm font-bold ml-2">Level</label>
+              <Input type="number" required value={formData.level} onChange={e => setFormData({...formData, level: e.target.value})} className="h-14 rounded-2xl bg-slate-50 border-none" />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-bold ml-2">Prime Level</label>
-              <Select value={prime} onValueChange={setPrime}>
-                <SelectTrigger className="h-14 rounded-2xl bg-slate-50 border-none px-4">
-                  <SelectValue />
-                </SelectTrigger>
+              <label className="text-sm font-bold ml-2">Prime</label>
+              <Select value={formData.primeLevel} onValueChange={(val) => setFormData({...formData, primeLevel: val})}>
+                <SelectTrigger className="h-14 rounded-2xl bg-slate-50 border-none px-4"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {[1, 2, 3, 4, 5, 6, 7, 8].map(l => <SelectItem key={l} value={l.toString()}>Prime {l}</SelectItem>)}
+                  {[1, 2, 3, 4, 5, 6, 7, 8].map(l => <SelectItem key={l} value={l.toString()}>Level {l}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-bold ml-2">Account Age</label>
-            <Select value={age} onValueChange={setAge}>
-              <SelectTrigger className="h-14 rounded-2xl bg-slate-50 border-none px-4">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {["Less than 1 year", "1–2 years", "2–3 years", "6+ years"].map(a => <SelectItem key={a} value={a}>{a}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-
           <div className="space-y-4">
-            <label className="text-sm font-bold ml-2">Account Items (Skins/Bundles)</label>
+            <label className="text-sm font-bold ml-2">Items</label>
             <div className="flex flex-wrap gap-2">
                {popularItems.map(item => (
-                 <button 
+                 <Badge 
                   key={item}
-                  type="button"
                   onClick={() => toggleItem(item)}
                   className={cn(
-                    "px-4 py-2 rounded-full text-[10px] font-bold transition-all border-2",
-                    selectedItems.includes(item) ? "bg-amber-400 border-amber-500 text-white" : "bg-slate-50 border-transparent text-slate-500"
+                    "cursor-pointer px-4 py-2 rounded-full text-[10px] font-bold transition-all border-none",
+                    formData.items.includes(item) ? "bg-amber-400 text-white" : "bg-slate-100 text-slate-500"
                   )}
                  >
                    {item}
-                 </button>
+                 </Badge>
                ))}
             </div>
-            {selectedItems.length > 0 && (
-              <div className="p-4 bg-amber-50 rounded-2xl flex flex-wrap gap-2 border border-amber-100 animate-in fade-in zoom-in-95">
-                 {selectedItems.map(item => (
-                    <Badge key={item} className="bg-amber-500 text-white border-none flex gap-1 items-center px-3 py-1">
-                      {item} <X size={12} className="cursor-pointer" onClick={() => toggleItem(item)} />
-                    </Badge>
-                 ))}
-              </div>
-            )}
           </div>
 
           <div className="space-y-4">
              <div className="space-y-2">
-                <label className="text-sm font-bold ml-2">Account Price ($)</label>
-                <Input type="number" required placeholder="0.00" value={price} onChange={e => setPrice(e.target.value)} className="h-16 rounded-2xl bg-slate-50 border-none text-xl font-bold" />
+                <label className="text-sm font-bold ml-2">Price ($)</label>
+                <Input 
+                  type="number" 
+                  disabled={!!editingPost} 
+                  required 
+                  value={formData.price} 
+                  onChange={e => setFormData({...formData, price: e.target.value})} 
+                  className="h-16 rounded-2xl bg-slate-50 border-none text-xl font-bold" 
+                />
+                {editingPost && <p className="text-[10px] text-amber-600 font-bold ml-2">Price-ka lama bedeli karo markaad post-ga dirto.</p>}
              </div>
-             {numPrice > 0 && (
-               <div className="p-6 bg-slate-50 rounded-3xl space-y-3 animate-in fade-in slide-in-from-top-2">
-                  <div className="flex justify-between text-xs font-bold text-amber-600">
-                    <span>Lacag bixinta adeegga:</span>
-                    <span>${fee.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-lg font-bold text-green-600 border-t pt-2 border-slate-200">
-                    <span>Wadarta bixinta (USSD):</span>
-                    <span>${total.toFixed(2)}</span>
-                  </div>
-                  <p className="text-[10px] text-muted-foreground font-medium">Lacagtan waxaad ku bixinaysaa number Kan: <span className="font-bold text-slate-900">613982172</span></p>
-               </div>
-             )}
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-bold ml-2">Account Screenshot</label>
-            <div className="relative h-48 bg-slate-50 rounded-[2rem] border-2 border-dashed border-slate-200 flex flex-col items-center justify-center gap-3 overflow-hidden group">
-               {imageFile ? (
-                 <>
-                   <Image src={URL.createObjectURL(imageFile)} alt="Preview" fill className="object-cover" />
-                   <button onClick={() => setImageFile(null)} className="absolute top-4 right-4 bg-red-500 text-white p-2 rounded-full shadow-lg z-10"><X size={20} /></button>
-                 </>
+            <label className="text-sm font-bold ml-2">Screenshot</label>
+            <div className="relative h-48 bg-slate-50 rounded-[2rem] border-2 border-dashed border-slate-200 flex flex-col items-center justify-center gap-3 overflow-hidden">
+               {imageFile || formData.thumbnailUrl ? (
+                 <Image src={imageFile ? URL.createObjectURL(imageFile) : formData.thumbnailUrl} alt="Preview" fill className="object-cover" />
                ) : (
-                 <>
-                   <Gamepad2 size={40} className="text-slate-300 group-hover:scale-110 transition-transform" />
-                   <p className="text-xs font-bold text-slate-400">Click to upload screenshot</p>
-                   <input type="file" accept="image/*" onChange={e => setImageFile(e.target.files?.[0] || null)} className="absolute inset-0 opacity-0 cursor-pointer" />
-                 </>
+                 <Gamepad2 size={40} className="text-slate-200" />
                )}
+               <input type="file" accept="image/*" onChange={e => setImageFile(e.target.files?.[0] || null)} className="absolute inset-0 opacity-0 cursor-pointer" />
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-bold ml-2">Telefoonkaaga (number WhatsApp kaga)</label>
-            <Input required placeholder="+252XXXXXXXXX" value={phone} onChange={e => setPhone(e.target.value)} className="h-14 rounded-2xl bg-slate-50 border-none" />
-            <p className="text-[10px] font-bold text-amber-600 ml-2">Tani dadka looma soo bandhigo, admin kaliya ayaa arki doona.</p>
-          </div>
-
-          <Button disabled={loading} type="submit" className="w-full h-16 rounded-[2rem] text-xl font-bold shadow-xl shadow-primary/20 active:scale-95 transition-transform">
-            {loading ? <Loader2 className="animate-spin" /> : "Dir Codsiga"}
+          <Button disabled={loading} type="submit" className="w-full h-16 rounded-[2rem] text-xl font-bold">
+            {loading ? <Loader2 className="animate-spin" /> : editingPost ? 'Cusboonaysii' : 'Dir Codsiga'}
           </Button>
         </form>
       </DialogContent>
@@ -404,8 +468,6 @@ function PostAccountModal({ open, onOpenChange, onComplete }: { open: boolean, o
 }
 
 function AccountDetailModal({ post, open, onOpenChange, onBuy }: { post: any, open: boolean, onOpenChange: (open: boolean) => void, onBuy: () => void }) {
-  const isGoogle = post.platform === 'Google';
-  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl h-[95vh] overflow-y-auto rounded-[3rem] p-0 border-none shadow-2xl">
@@ -415,11 +477,7 @@ function AccountDetailModal({ post, open, onOpenChange, onBuy }: { post: any, op
         </DialogHeader>
         
         <div className="relative aspect-[4/3] w-full bg-slate-100">
-          {post.thumbnailUrl ? (
-             <Image src={post.thumbnailUrl} alt="" fill className="object-cover" unoptimized />
-          ) : (
-             <div className="w-full h-full flex items-center justify-center opacity-10"><Gamepad2 size={100} /></div>
-          )}
+          {post.thumbnailUrl && <Image src={post.thumbnailUrl} alt="" fill className="object-cover" unoptimized />}
           <button onClick={() => onOpenChange(false)} className="absolute top-6 left-6 w-12 h-12 bg-white/40 backdrop-blur-md text-white rounded-full flex items-center justify-center shadow-lg"><ArrowRight size={24} className="rotate-180" /></button>
         </div>
 
@@ -428,12 +486,11 @@ function AccountDetailModal({ post, open, onOpenChange, onBuy }: { post: any, op
               <div>
                  <div className="flex items-center gap-3 mb-2">
                    <h2 className="text-3xl font-headline font-bold text-slate-900">{post.authorName}'s Account</h2>
-                   <Badge className={cn("rounded-full px-3 py-1 border-none font-bold text-[10px]", isGoogle ? "bg-blue-500 text-white" : "bg-[#1877F2] text-white")}>{post.platform}</Badge>
+                   <Badge className="rounded-full px-3 py-1 bg-blue-500 text-white font-bold text-[10px]">{post.platform}</Badge>
                  </div>
                  <p className="text-sm text-muted-foreground font-medium">Posted {post.createdAt ? format(new Date(post.createdAt), 'PPpp') : 'Just now'}</p>
               </div>
               <div className="text-right">
-                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Fixed Price</p>
                  <p className="text-4xl font-headline font-bold text-primary">${post.price?.toFixed(2)}</p>
               </div>
            </div>
@@ -446,7 +503,7 @@ function AccountDetailModal({ post, open, onOpenChange, onBuy }: { post: any, op
 
            <div className="space-y-4">
               <h3 className="text-xl font-headline font-bold">Premium Items</h3>
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap gap-2">
                  {(post.items || []).map((item: string, i: number) => (
                    <Badge key={i} className="bg-slate-100 text-slate-600 border-none rounded-2xl px-5 py-2.5 text-xs font-bold">
                       {item}
@@ -454,34 +511,15 @@ function AccountDetailModal({ post, open, onOpenChange, onBuy }: { post: any, op
                  ))}
               </div>
            </div>
-
-           <div className="space-y-4">
-              <h3 className="text-xl font-headline font-bold">Seller Identity</h3>
-              <div className="flex items-center gap-4 p-5 bg-slate-50 rounded-[2rem] border border-slate-100">
-                 <div className="w-14 h-14 rounded-full bg-white relative overflow-hidden shadow-sm">
-                   {post.authorAvatar ? <Image src={post.authorAvatar} alt="" fill className="object-cover" /> : <User size={30} className="m-auto mt-2 text-slate-300" />}
-                 </div>
-                 <div>
-                    <p className="font-bold text-lg">{post.authorName}</p>
-                    <p className="text-xs font-bold text-green-500 flex items-center gap-1 uppercase tracking-widest">
-                       <CheckCircle2 size={12} /> Verified Seller
-                    </p>
-                 </div>
-              </div>
-           </div>
         </div>
 
-        <div className="absolute bottom-0 left-0 right-0 p-8 bg-white/60 backdrop-blur-xl border-t border-slate-100 flex items-center justify-between z-10">
-           <div className="hidden md:block">
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-none">Total Payment</p>
-              <p className="text-2xl font-headline font-bold text-slate-900">${post.price?.toFixed(2)}</p>
-           </div>
+        <div className="absolute bottom-0 left-0 right-0 p-8 bg-white/80 backdrop-blur-xl border-t border-slate-100 flex items-center justify-between">
            <Button 
             disabled={post.sold}
             onClick={onBuy}
-            className="flex-1 md:flex-none md:w-64 h-16 rounded-[2rem] text-xl font-bold shadow-2xl shadow-primary/30 gap-2 transition-transform active:scale-95"
+            className="w-full h-16 rounded-[2rem] text-xl font-bold"
            >
-              {post.sold ? 'Sold Out' : 'IIBSO →'}
+              {post.sold ? 'WAA LA IIBIYAY' : 'IIBSO →'}
            </Button>
         </div>
       </DialogContent>
@@ -491,7 +529,7 @@ function AccountDetailModal({ post, open, onOpenChange, onBuy }: { post: any, op
 
 function StatItem({ label, value, icon: Icon, color }: { label: string, value: any, icon: any, color: string }) {
   return (
-    <div className="bg-slate-50 p-4 rounded-3xl flex flex-col items-center text-center gap-2 border border-white shadow-inner">
+    <div className="bg-slate-50 p-4 rounded-3xl flex flex-col items-center text-center gap-2 border border-white">
        <Icon size={20} className={color} />
        <div>
          <p className="text-xs font-bold text-slate-900 leading-none">{value}</p>

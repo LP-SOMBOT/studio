@@ -88,11 +88,32 @@ export default function HomeView() {
                 <p className="text-sm text-muted-foreground">Join the challenge now and win exclusive diamonds & rewards!</p>
               </div>
             </div>
-            <Button className="bg-[#FE2C55] hover:bg-[#FE2C55]/90 rounded-full px-8 gap-2 font-bold w-full md:w-auto">
+            <Button 
+              className="bg-[#FE2C55] hover:bg-[#FE2C55]/90 rounded-full px-8 gap-2 font-bold w-full md:w-auto"
+              onClick={() => window.open('https://tiktok.com/@Oskarshop', '_blank')}
+            >
               <ExternalLink className="w-4 h-4" /> Watch Now
             </Button>
           </section>
         )}
+
+        {/* Action Grid */}
+        <section className="grid grid-cols-2 gap-4">
+           <div 
+            onClick={() => setActiveTab('ranking')}
+            className="p-6 bg-primary/10 rounded-[2.5rem] border border-primary/10 flex flex-col items-center justify-center text-center gap-3 cursor-pointer active:scale-95 transition-all"
+           >
+              <Trophy className="w-10 h-10 text-primary" />
+              <span className="font-bold text-primary">Ranking</span>
+           </div>
+           <div 
+            onClick={() => setActiveTab('orders')}
+            className="p-6 bg-orange-50 rounded-[2.5rem] border border-orange-100 flex flex-col items-center justify-center text-center gap-3 cursor-pointer active:scale-95 transition-all"
+           >
+              <ShoppingBag className="w-10 h-10 text-orange-500" />
+              <span className="font-bold text-orange-600">My Orders</span>
+           </div>
+        </section>
 
         {/* Trending */}
         <section>
@@ -110,26 +131,8 @@ export default function HomeView() {
           </div>
         </section>
 
-        {/* Accounts Banner */}
-        <section>
-          <div 
-            onClick={() => setActiveTab('accounts')}
-            className="group relative h-48 rounded-[2.5rem] overflow-hidden cursor-pointer shadow-xl shadow-amber-500/10 border-2 border-amber-200/20 bg-gradient-to-br from-amber-500 to-orange-600 transition-transform active:scale-[0.98]"
-          >
-             <div className="absolute top-0 right-0 p-8 opacity-20 group-hover:scale-110 transition-transform">
-               <Trophy size={140} className="text-white" />
-             </div>
-             <div className="absolute inset-0 p-8 flex flex-col justify-center">
-               <Badge className="w-fit mb-3 bg-white/20 backdrop-blur-md border-none text-white font-bold px-4 py-1">PREMIUM</Badge>
-               <h2 className="text-3xl font-headline font-bold text-white leading-tight">Suuqa Account Yada<br/>Premium Accounts</h2>
-               <p className="text-white/80 text-sm mt-2 flex items-center gap-2 font-bold">Diri dukaamada account yada <ChevronRight size={16} /></p>
-             </div>
-          </div>
-        </section>
-
         {/* Work Hours */}
         <section className="relative overflow-hidden py-12">
-          <div className="relative">
             <div className="flex flex-col items-center text-center mb-10">
               <Badge variant="outline" className="mb-4 bg-white/50 backdrop-blur-sm border-primary/20 text-primary px-4 py-1 rounded-full flex gap-2 items-center">
                 <Clock className="w-3.5 h-3.5" /> Adeegga Oskar
@@ -138,7 +141,6 @@ export default function HomeView() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
-              {/* Sabti-Arbaco */}
               <div className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-gray-100">
                 <div className="flex items-center gap-4 mb-8">
                   <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
@@ -153,7 +155,6 @@ export default function HomeView() {
                 </div>
               </div>
 
-              {/* Khamiis & Jimco */}
               <div className="bg-primary text-white rounded-[2.5rem] p-8 shadow-xl shadow-primary/20 relative overflow-hidden">
                 <div className="relative z-10">
                   <div className="flex items-center gap-4 mb-8">
@@ -171,41 +172,7 @@ export default function HomeView() {
                 </div>
               </div>
             </div>
-          </div>
         </section>
-
-        {/* Active Events */}
-        {activeEvents.length > 0 && (
-          <section className="pb-10">
-            <div className="flex items-center gap-2 mb-6">
-              <Zap className="text-amber-500 fill-amber-500 w-6 h-6" />
-              <h2 className="text-2xl font-headline font-bold">⚡ Active Events — Free Fire</h2>
-            </div>
-            <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide px-1">
-              {activeEvents.map((event, i) => (
-                <div key={i} className="min-w-[280px] md:min-w-[320px] bg-white rounded-3xl overflow-hidden shadow-lg border border-gray-100 group transition-transform hover:-translate-y-1">
-                  <div className="relative aspect-video w-full overflow-hidden">
-                    {event.thumbnailUrl ? (
-                      <Image src={event.thumbnailUrl} alt="" fill className="object-cover group-hover:scale-105 transition-transform duration-500" unoptimized />
-                    ) : (
-                      <div className="w-full h-full bg-slate-50 flex items-center justify-center"><Star size={40} className="text-slate-200" /></div>
-                    )}
-                    <div className="absolute top-4 left-4">
-                       <Badge className="bg-amber-500 text-white border-none shadow-md">LIVE</Badge>
-                    </div>
-                  </div>
-                  <div className="p-5">
-                    <h3 className="font-bold text-lg mb-1">{event.title}</h3>
-                    <p className="text-xs text-muted-foreground line-clamp-2 mb-4 leading-relaxed">{event.description}</p>
-                    <div className="flex items-center gap-2 text-[10px] font-bold text-amber-600 uppercase tracking-tighter bg-amber-50 w-fit px-3 py-1 rounded-full">
-                      <Clock size={12} /> {event.endDate ? `Ends: ${event.endDate}` : 'Coming soon'}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
       </main>
     </div>
   );
