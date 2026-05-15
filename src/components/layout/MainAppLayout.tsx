@@ -8,7 +8,7 @@ import { useApp } from "@/lib/context";
 
 export default function MainAppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { activeTab, storeSettings } = useApp();
+  const { activeTab, storeSettings, user } = useApp();
   
   // Routes where the standard app layout should not be visible
   const isAuthPage = pathname === "/login" || pathname === "/signup";
@@ -17,9 +17,10 @@ export default function MainAppLayout({ children }: { children: React.ReactNode 
 
   // Offline mode check
   const isOffline = storeSettings?.appStatus?.offline;
-  const isAdmin = (user: any) => user?.role === 'admin' || user?.role === 'super_admin';
+  const isAdminUser = user?.role === 'admin' || user?.role === 'super_admin';
 
-  if (isAuthPage || isAdminPage) {
+  // If we are on an auth page, admin page, or the app is offline (for non-admins), show full screen content without Header/Nav
+  if (isAuthPage || isAdminPage || (isOffline && !isAdminUser)) {
     return <>{children}</>;
   }
 
