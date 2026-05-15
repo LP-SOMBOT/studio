@@ -2,12 +2,72 @@
 "use client";
 
 import { useApp } from "@/lib/context";
+import Image from "next/image";
+import { cn } from "@/lib/utils";
+import { useEffect, useState } from "react";
 
 /**
  * SplashScreen Component
- * Now returns null as we use Skeleton Placeholders in individual views 
- * for a more modern loading experience.
+ * 
+ * Provides a branded entry experience for the application.
+ * Stays visible while the app is in its initial loading state.
  */
 export default function SplashScreen() {
-  return null;
+  const { isInitialLoading, storeSettings } = useApp();
+  const [isVisible, setIsVisible] = useState(true);
+
+  useEffect(() => {
+    if (!isInitialLoading) {
+      // Small delay before removing the component to allow the fade animation to finish
+      const timer = setTimeout(() => setIsVisible(false), 600);
+      return () => clearTimeout(timer);
+    } else {
+      setIsVisible(true);
+    }
+  }, [isInitialLoading]);
+
+  if (!isVisible) return null;
+
+  return (
+    <div className={cn(
+      "fixed inset-0 z-[99999] flex flex-col items-center justify-center bg-white transition-opacity duration-500 ease-in-out",
+      !isInitialLoading ? "opacity-0 pointer-events-none" : "opacity-100"
+    )}>
+      {/* Decorative Glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vw] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
+
+      <div className="relative w-28 h-28 animate-in zoom-in duration-700 ease-out">
+        {storeSettings?.logo ? (
+          <Image 
+            src={storeSettings.logo} 
+            alt="Oskar Shop" 
+            fill 
+            className="object-contain"
+            priority
+            unoptimized
+          />
+        ) : (
+          <div className="w-full h-full bg-primary rounded-[2rem] flex items-center justify-center text-white text-5xl font-headline font-bold shadow-2xl shadow-primary/20">
+            O
+          </div>
+        )}
+      </div>
+      
+      <div className="mt-10 flex flex-col items-center gap-2 animate-in slide-in-from-bottom-4 duration-1000">
+        <h1 className="text-3xl font-headline font-bold tracking-tight text-gray-900">
+          Oskar<span className="text-primary">Shop</span>
+        </h1>
+        
+        <div className="flex gap-2 mt-6">
+           <div className="w-2.5 h-2.5 bg-primary/30 rounded-full animate-bounce [animation-delay:-0.3s]" />
+           <div className="w-2.5 h-2.5 bg-primary/60 rounded-full animate-bounce [animation-delay:-0.15s]" />
+           <div className="w-2.5 h-2.5 bg-primary rounded-full animate-bounce" />
+        </div>
+      </div>
+
+      <div className="absolute bottom-12 text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">
+        Premium Gaming Service
+      </div>
+    </div>
+  );
 }

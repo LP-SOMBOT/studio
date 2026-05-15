@@ -12,6 +12,7 @@ import DynamicHead from "@/components/layout/DynamicHead";
 import SWRegistration from "@/components/layout/SWRegistration";
 import MainAppLayout from "@/components/layout/MainAppLayout";
 import { ErrorBoundary } from "@/components/layout/ErrorBoundary";
+import SplashScreen from "@/components/layout/SplashScreen";
 
 export const metadata: Metadata = {
   title: 'Oskar Shop - Game Top-Up & Accounts',
@@ -58,6 +59,7 @@ export default function RootLayout({
             <AppProvider>
               <SWRegistration />
               <DynamicHead />
+              <SplashScreen />
               <GlobalLoading />
               <PWAInstaller />
               <NotificationGuard>
