@@ -1,14 +1,24 @@
+"use client";
 
-'use client';
-
-import { useApp } from '@/lib/context';
-import { ShoppingBag, Package, CheckCircle2, Clock, AlertCircle, ChevronRight, Gamepad2 } from 'lucide-react';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
-import Image from 'next/image';
+import { useApp } from "@/lib/context";
+import { 
+  ShoppingBag, 
+  Package, 
+  CheckCircle2, 
+  Clock, 
+  AlertCircle, 
+  ChevronRight, 
+  Gamepad2,
+  ShieldCheck,
+  User,
+  ExternalLink
+} from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 export default function OrdersView() {
   const { orders, isInitialLoading, setActiveTab } = useApp();
@@ -26,7 +36,7 @@ export default function OrdersView() {
     <div className="min-h-screen pb-32 px-4 py-8 max-w-2xl mx-auto page-transition">
       <header className="mb-10">
         <h1 className="text-3xl font-headline font-bold text-slate-900">Dalabyadayda</h1>
-        <p className="text-muted-foreground font-medium text-sm mt-1">La soco xaalada dalabkaaga</p>
+        <p className="text-muted-foreground font-medium text-sm mt-1">La soco xaalada iyo taariikhda iibsigaaga</p>
       </header>
 
       {orders.length === 0 ? (
@@ -46,7 +56,7 @@ export default function OrdersView() {
            </button>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-6">
            {orders.map((order) => (
              <OrderCard key={order.id} order={order} />
            ))}
@@ -58,7 +68,7 @@ export default function OrdersView() {
 
 function OrderCard({ order }: { order: any }) {
   const item = order.items?.[0];
-  const isAccount = item?.gameId === 'accounts';
+  const isAccount = item?.gameId === 'accounts' || order.gameId === 'accounts';
 
   const statusColors = {
     pending: "bg-amber-100 text-amber-700",
@@ -70,43 +80,77 @@ function OrderCard({ order }: { order: any }) {
   const StatusIcon = order.status === 'successful' ? CheckCircle2 : order.status === 'pending' ? Clock : Package;
 
   return (
-    <Card className="rounded-[2.5rem] border-none shadow-xl bg-white overflow-hidden group">
+    <Card className="rounded-[2.5rem] border-none shadow-xl bg-white overflow-hidden group hover:shadow-2xl transition-all duration-300">
        <div className="p-6">
           <div className="flex justify-between items-start mb-6">
              <div className="flex gap-4">
-                <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center relative overflow-hidden shrink-0">
+                <div className={cn(
+                  "w-16 h-16 rounded-2xl flex items-center justify-center relative overflow-hidden shrink-0 shadow-inner",
+                  isAccount ? "bg-amber-50" : "bg-primary/5"
+                )}>
                    {item?.thumbnail ? (
-                     <Image src={item.thumbnail} alt="" fill className="object-cover" />
+                     <Image src={item.thumbnail} alt="" fill className="object-cover" unoptimized />
+                   ) : isAccount ? (
+                     <ShieldCheck className="text-amber-300" size={32} />
                    ) : (
-                     <Gamepad2 className="text-slate-300" />
+                     <Gamepad2 className="text-primary/30" size={32} />
                    )}
                 </div>
-                <div>
-                   <h3 className="font-bold text-slate-900 leading-none mb-1">{item?.title || "Package"}</h3>
-                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{order.paymentMethod} • #{order.id.slice(0, 8)}</p>
-                   <p className="text-[10px] text-muted-foreground mt-1">{format(new Date(order.createdAt), 'PPpp')}</p>
+                <div className="min-w-0">
+                   <h3 className="font-bold text-slate-900 text-lg leading-tight mb-1 truncate">{item?.title || "Game Package"}</h3>
+                   <div className="flex items-center gap-2">
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{order.paymentMethod || 'Mobile'}</p>
+                      <span className="w-1 h-1 rounded-full bg-slate-200" />
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">ID: #{order.id.slice(0, 8)}</p>
+                   </div>
+                   <p className="text-[10px] text-muted-foreground font-medium mt-1">
+                      {format(new Date(order.createdAt), 'PPpp')}
+                   </p>
                 </div>
              </div>
-             <Badge className={cn("rounded-full px-3 py-1 font-bold text-[9px] border-none", statusColors[order.status as keyof typeof statusColors])}>
+             <Badge className={cn("rounded-full px-3 py-1 font-bold text-[9px] border-none shadow-sm", statusColors[order.status as keyof typeof statusColors])}>
                 <StatusIcon className="w-3 h-3 mr-1" /> {order.status.toUpperCase()}
              </Badge>
           </div>
 
-          <div className="bg-slate-50 rounded-2xl p-4 space-y-2">
-             <div className="flex justify-between items-center text-xs">
-                <span className="text-muted-foreground font-bold">Player ID / Account</span>
-                <span className="font-mono font-bold text-slate-900">{order.gameDetails?.playerID || order.gameDetails?.playerName || "N/A"}</span>
-             </div>
-             <div className="flex justify-between items-center text-xs">
-                <span className="text-muted-foreground font-bold">Total Amount</span>
-                <span className="font-headline font-bold text-primary text-base">${order.total.toFixed(2)}</span>
+          <div className="bg-slate-50/80 rounded-[2rem] p-5 space-y-3 border border-slate-100">
+             {isAccount ? (
+               <>
+                 <div className="flex justify-between items-center text-xs">
+                    <span className="text-muted-foreground font-bold flex items-center gap-1.5"><User size={14} /> Seller</span>
+                    <span className="font-bold text-slate-900">{order.gameDetails?.sellerName || "N/A"}</span>
+                 </div>
+                 <div className="flex justify-between items-center text-xs">
+                    <span className="text-muted-foreground font-bold flex items-center gap-1.5"><ShieldCheck size={14} /> Platform</span>
+                    <Badge variant="outline" className="border-slate-200 font-bold text-[10px]">{order.gameDetails?.platform || "Google"}</Badge>
+                 </div>
+               </>
+             ) : (
+               <div className="flex justify-between items-center text-xs">
+                  <span className="text-muted-foreground font-bold flex items-center gap-1.5"><Gamepad2 size={14} /> Player ID</span>
+                  <span className="font-mono font-bold text-slate-900 tracking-wider bg-white px-2 py-0.5 rounded border border-slate-100">
+                    {order.gameDetails?.playerID || "N/A"}
+                  </span>
+               </div>
+             )}
+             
+             <div className="pt-2 border-t border-slate-200/50 flex justify-between items-center">
+                <span className="text-muted-foreground font-bold text-xs uppercase tracking-widest">Order Amount</span>
+                <span className="font-headline font-bold text-primary text-xl">${order.total.toFixed(2)}</span>
              </div>
           </div>
           
           {order.status === 'pending' && (
-            <div className="mt-4 p-3 bg-amber-50 rounded-xl flex gap-2 items-center text-amber-700 text-[10px] font-bold">
-               <AlertCircle size={14} />
-               <span>Waxaan hubinaynaa lacag bixintaada. Dulqaad yeelo.</span>
+            <div className="mt-4 p-4 bg-amber-50 rounded-2xl flex gap-3 items-center text-amber-700 text-[11px] font-bold border border-amber-100 shadow-sm animate-pulse">
+               <AlertCircle size={18} className="shrink-0" />
+               <p className="leading-relaxed">Waxaan hubinaynaa lacag bixintaada. Fadlan dulqaad yeelo, dhowaan ayey ku soo gaadhi doonaan.</p>
+            </div>
+          )}
+
+          {order.status === 'successful' && isAccount && (
+            <div className="mt-4 p-4 bg-green-50 rounded-2xl flex gap-3 items-center text-green-700 text-[11px] font-bold border border-green-100 shadow-sm">
+               <CheckCircle2 size={18} className="shrink-0" />
+               <p className="leading-relaxed">Account credentials-kaaga waxaa lagugu soo diri doonaa Gmail-kaaga.</p>
             </div>
           )}
        </div>

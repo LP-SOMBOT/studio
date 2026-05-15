@@ -12,7 +12,8 @@ import {
   ShieldCheck,
   PartyPopper,
   Smartphone,
-  ChevronRight
+  ChevronRight,
+  X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,7 +26,7 @@ import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 
 function CheckoutContent() {
-  const { products, createOrder, setGlobalLoading } = useApp();
+  const { products, createOrder, setGlobalLoading, setActiveTab } = useApp();
   const router = useRouter();
   const searchParams = useSearchParams();
   const productId = searchParams.get('id');
@@ -114,6 +115,17 @@ function CheckoutContent() {
 
   return (
     <div className="relative min-h-[500px]">
+      {step < 4 && (
+        <div className="mb-6 flex items-center justify-between">
+          <Button variant="ghost" size="sm" onClick={() => router.back()} className="rounded-full gap-2 text-muted-foreground hover:text-foreground">
+            <ArrowLeft className="w-4 h-4" /> Go Back
+          </Button>
+          <Button variant="ghost" size="icon" onClick={() => router.push('/')} className="rounded-full text-muted-foreground hover:text-red-500">
+            <X className="w-5 h-5" />
+          </Button>
+        </div>
+      )}
+
       {step < 4 && (
         <div className="flex justify-between items-center mb-10 px-2 relative">
           <div className="absolute left-0 right-0 h-0.5 bg-gray-100 top-1/2 -translate-y-1/2 mx-8 -z-10" />
@@ -290,18 +302,23 @@ function CheckoutContent() {
                 </div>
               </div>
             </div>
-            <Button 
-              onClick={handleFinalConfirm} 
-              disabled={isProcessing}
-              className="w-full h-16 rounded-2xl text-xl font-bold shadow-xl shadow-primary/30 active:scale-95 transition-transform"
-            >
-              {isProcessing ? (
-                <div className="flex items-center gap-3">
-                  <Loader2 className="w-6 h-6 animate-spin" />
-                  <span>Verifying...</span>
-                </div>
-              ) : "Submit & Confirm Order"}
-            </Button>
+            <div className="flex flex-col gap-3">
+              <Button 
+                onClick={handleFinalConfirm} 
+                disabled={isProcessing}
+                className="w-full h-16 rounded-2xl text-xl font-bold shadow-xl shadow-primary/30 active:scale-95 transition-transform"
+              >
+                {isProcessing ? (
+                  <div className="flex items-center gap-3">
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                    <span>Verifying...</span>
+                  </div>
+                ) : "Submit & Confirm Order"}
+              </Button>
+              <Button variant="ghost" onClick={() => setStep(2)} className="h-12 rounded-xl text-muted-foreground">
+                 Cancel & Go Back
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -328,8 +345,8 @@ function CheckoutContent() {
             <Button 
               className="h-14 rounded-2xl font-bold text-lg"
               onClick={() => {
-                window.location.hash = 'profile';
-                router.push('/');
+                setActiveTab('orders');
+                router.push('/#orders');
               }}
             >
               View My Orders

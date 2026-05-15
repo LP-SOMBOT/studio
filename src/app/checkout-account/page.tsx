@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -11,7 +10,8 @@ import {
   Loader2, 
   Smartphone, 
   Gamepad2,
-  AlertCircle
+  AlertCircle,
+  X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -19,12 +19,13 @@ import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
+import { toast } from "@/hooks/use-toast";
 
 export default function CheckoutAccountPage() {
   const router = useRouter();
   const params = useSearchParams();
   const id = params.get('id');
-  const { accountPosts, user, setActiveTab } = useApp();
+  const { accountPosts, user, setActiveTab, createOrder, setGlobalLoading } = useApp();
   const [step, setStep] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -40,16 +41,44 @@ export default function CheckoutAccountPage() {
 
   const handleProceed = () => {
     const ussd = `*712*613982172*${post?.price}*#`;
+    
+    toast({
+      title: "Opening Dialer",
+      description: "Please complete the transaction in the phone dialer.",
+    });
+
     window.location.href = `tel:${ussd.replace(/#/g, '%23')}`;
     setStep(3);
   };
 
   const handleConfirmPayment = () => {
+    if (!post) return;
     setIsProcessing(true);
+    setGlobalLoading(true);
+
+    const purchaseItem = {
+      id: post.id,
+      title: `Account: ${post.authorName}`,
+      price: post.price,
+      quantity: 1,
+      gameId: 'accounts',
+      thumbnail: post.thumbnailUrl
+    };
+
+    // Create a real order record
+    createOrder('EVC/ZAAD', { 
+      platform: post.platform, 
+      accountLvl: post.level,
+      sellerName: post.authorName,
+      postId: post.id
+    }, purchaseItem);
+
     // Simulate real-time database update
     setTimeout(() => {
       setIsProcessing(false);
+      setGlobalLoading(false);
       setStep(4);
+      toast({ title: "Purchase Initiated!", description: "We are verifying your account payment." });
     }, 2000);
   };
 
@@ -58,6 +87,17 @@ export default function CheckoutAccountPage() {
       <Header />
       
       <main className="max-w-xl mx-auto px-6 py-10">
+         {step < 4 && (
+           <div className="mb-8 flex items-center justify-between">
+              <Button variant="ghost" size="sm" onClick={() => router.back()} className="rounded-full gap-2 text-muted-foreground">
+                <ArrowLeft size={18} /> Dib u Noqo
+              </Button>
+              <Button variant="ghost" size="icon" onClick={() => router.push('/accounts')} className="rounded-full text-muted-foreground hover:text-red-500">
+                <X size={20} />
+              </Button>
+           </div>
+         )}
+
          {step === 1 && (
            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
               <h1 className="text-3xl font-headline font-bold text-center">Xaqiiji Iibsiga</h1>
@@ -103,9 +143,9 @@ export default function CheckoutAccountPage() {
                  <code className="text-2xl font-mono font-bold text-slate-900">*712*613982172*{post?.price}#</code>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                 <Button variant="ghost" onClick={() => setStep(1)} className="h-16 rounded-2xl font-bold">Dib u Noqo</Button>
-                 <Button onClick={handleProceed} className="h-16 rounded-2xl font-bold shadow-lg shadow-primary/20">FURE DIALER-KA</Button>
+              <div className="grid grid-cols-1 gap-3">
+                 <Button onClick={handleProceed} className="h-16 rounded-2xl font-bold shadow-lg shadow-primary/20 text-lg">FURE DIALER-KA</Button>
+                 <Button variant="ghost" onClick={() => setStep(1)} className="h-12 rounded-2xl font-bold text-muted-foreground">Dib u Noqo</Button>
               </div>
            </div>
          )}
@@ -118,13 +158,18 @@ export default function CheckoutAccountPage() {
                <h2 className="text-3xl font-headline font-bold">Ma bixisay lacagta?</h2>
                <p className="text-muted-foreground font-medium">Hadii aad dhamaysay lacag bixinta, riix badhanka hoose si codsigaaga loo xaqiijiyo.</p>
                
-               <Button 
-                onClick={handleConfirmPayment} 
-                disabled={isProcessing}
-                className="w-full h-16 rounded-[2.5rem] text-xl font-bold shadow-2xl shadow-green-500/20 bg-green-600 hover:bg-green-700"
-               >
-                  {isProcessing ? <Loader2 className="animate-spin" /> : "XAQIIJI LACAG BIXINTA ✓"}
-               </Button>
+               <div className="flex flex-col gap-3">
+                 <Button 
+                  onClick={handleConfirmPayment} 
+                  disabled={isProcessing}
+                  className="w-full h-16 rounded-[2.5rem] text-xl font-bold shadow-2xl shadow-green-500/20 bg-green-600 hover:bg-green-700"
+                 >
+                    {isProcessing ? <Loader2 className="animate-spin" /> : "XAQIIJI LACAG BIXINTA ✓"}
+                 </Button>
+                 <Button variant="ghost" onClick={() => setStep(2)} className="h-12 rounded-2xl font-bold text-muted-foreground">
+                    I haven't paid yet, Go Back
+                 </Button>
+               </div>
             </div>
          )}
 
@@ -139,7 +184,15 @@ export default function CheckoutAccountPage() {
                </p>
                
                <div className="flex flex-col gap-3 pt-10">
-                  <Button onClick={() => setActiveTab('profile')} className="h-14 rounded-2xl font-bold">Eeg Dalabyadayda</Button>
+                  <Button 
+                    onClick={() => {
+                      setActiveTab('orders');
+                      router.push('/#orders');
+                    }} 
+                    className="h-14 rounded-2xl font-bold"
+                  >
+                    Eeg Dalabyadayda
+                  </Button>
                   <Button variant="ghost" onClick={() => router.push('/')} className="h-12 rounded-2xl font-bold">Ku laabo Home-ka</Button>
                </div>
             </div>
