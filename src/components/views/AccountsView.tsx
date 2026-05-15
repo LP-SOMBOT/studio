@@ -44,12 +44,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/hooks/use-toast';
 import { uploadToImgbb } from '@/lib/imgbb';
+import { useRouter } from 'next/navigation';
 
 export default function AccountsView() {
   const { accountPosts, user, setActiveTab, isInitialLoading, postAccount, buyAccountPost, deleteAccountPost, updateAccountPost } = useApp();
+  const router = useRouter();
   const [isPostSheetOpen, setIsPostSheetOpen] = useState(false);
   const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
-  const [selectedPost, setSelectedPost] = useState<any>(null);
   const [editingPost, setEditingPost] = useState<any>(null);
   const [deletingPostId, setDeletingPostId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -118,7 +119,7 @@ export default function AccountsView() {
               <AccountPostCard 
                 key={post.id} 
                 post={post} 
-                onClick={() => setSelectedPost(post)}
+                onClick={() => router.push(`/accounts/${post.id}`)}
                 onEdit={(e) => { e.stopPropagation(); setEditingPost(post); }}
                 onDelete={(e) => { e.stopPropagation(); setDeletingPostId(post.id); }}
                 isOwner={post.uid === user?.uid || user?.role === 'admin' || user?.role === 'super_admin'}
@@ -146,15 +147,6 @@ export default function AccountsView() {
         onComplete={() => { setIsPostSheetOpen(false); setEditingPost(null); }} 
       />
       
-      {selectedPost && (
-        <AccountDetailModal 
-          post={selectedPost} 
-          open={!!selectedPost} 
-          onOpenChange={(open) => !open && setSelectedPost(null)} 
-          onBuy={() => { buyAccountPost(selectedPost); setSelectedPost(null); }}
-        />
-      )}
-
       {/* Activity Tracker Modal */}
       <Dialog open={isActivityModalOpen} onOpenChange={setIsActivityModalOpen}>
          <DialogContent className="max-w-md rounded-[2.5rem] p-0 border-none shadow-2xl bg-white">
@@ -330,7 +322,7 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
   const feeConfig = storeSettings?.config?.shop || { feeType: 'percentage', feeValue: 7.5 };
   const numPrice = parseFloat(formData.price) || 0;
   const fee = feeConfig.feeType === 'percentage' ? (numPrice * feeConfig.feeValue) / 100 : feeConfig.feeValue;
-  const total = numPrice + fee;
+  const sellerReceives = numPrice - fee;
 
   const popularItems = ["Evo AK", "Evo MP40", "M1014 Dragon", "Sakura Bundle", "Hip Hop Bundle", "Crimson Bundle", "Angel Wings", "Elite Pass S1", "Magic Cube"];
 
@@ -364,7 +356,7 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
           primeLevel: parseInt(formData.primeLevel),
           thumbnailUrl: finalUrl,
           fee,
-          totalCharge: total,
+          totalCharge: numPrice, // Buyer pays the asking price
           price: numPrice
         });
       }
@@ -540,12 +532,12 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
           <div className="space-y-6">
             <div className="flex items-center gap-3">
                <div className="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center text-green-500"><DollarSign size={18} /></div>
-               <h3 className="font-headline font-bold text-lg">Pricing Strategy</h3>
+               <h3 className="font-headline font-bold text-lg">Pricing Information</h3>
             </div>
 
             <div className="p-6 bg-slate-900 rounded-[2.5rem] text-white space-y-6 shadow-2xl shadow-slate-900/20">
                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest ml-2">Asking Price (USD)</label>
+                  <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest ml-2">Sale Price (Buyer Pays)</label>
                   <div className="relative">
                     <span className="absolute left-6 top-1/2 -translate-y-1/2 text-2xl font-bold text-primary">$</span>
                     <Input 
@@ -561,17 +553,13 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
 
                <div className="space-y-3 pt-4 border-t border-white/10">
                   <div className="flex justify-between items-center text-xs">
-                    <span className="text-white/40 font-bold uppercase">Seller Receives</span>
-                    <span className="font-bold text-lg">${numPrice.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-white/40 font-bold uppercase">Marketplace Fee ({feeConfig.feeValue}%)</span>
-                    <span className="font-bold text-amber-400">+${fee.toFixed(2)}</span>
+                    <span className="text-white/40 font-bold uppercase">Listing Fee ({feeConfig.feeValue}%)</span>
+                    <span className="font-bold text-red-400">-${fee.toFixed(2)}</span>
                   </div>
                   <div className="pt-3 flex justify-between items-center">
-                    <span className="font-bold text-sm">Customer Pays</span>
+                    <span className="font-bold text-sm">Seller Receives</span>
                     <Badge className="bg-primary text-white px-4 py-2 rounded-xl text-xl font-headline font-bold border-none shadow-lg shadow-primary/30">
-                       ${total.toFixed(2)}
+                       ${sellerReceives.toFixed(2)}
                     </Badge>
                   </div>
                </div>
@@ -598,66 +586,6 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
              </p>
           </div>
         </form>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function AccountDetailModal({ post, open, onOpenChange, onBuy }: { post: any, open: boolean, onOpenChange: (open: boolean) => void, onBuy: () => void }) {
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl h-[95vh] overflow-y-auto rounded-[3.5rem] p-0 border-none shadow-2xl">
-        <DialogHeader className="sr-only">
-          <DialogTitle>Account Details</DialogTitle>
-          <DialogDescription>Full details and purchase options for the selected game account.</DialogDescription>
-        </DialogHeader>
-        
-        <div className="relative aspect-[4/3] w-full bg-slate-100">
-          {post.thumbnailUrl && <Image src={post.thumbnailUrl} alt="" fill className="object-cover" unoptimized />}
-          <button onClick={() => onOpenChange(false)} className="absolute top-6 left-6 w-12 h-12 bg-white/40 backdrop-blur-md text-white rounded-full flex items-center justify-center shadow-lg"><ArrowRight size={24} className="rotate-180" /></button>
-        </div>
-
-        <div className="p-8 space-y-10 pb-28">
-           <div className="flex justify-between items-start">
-              <div>
-                 <div className="flex items-center gap-3 mb-2">
-                   <h2 className="text-3xl font-headline font-bold text-slate-900">{post.authorName}'s Account</h2>
-                   <Badge className="rounded-full px-3 py-1 bg-blue-500 text-white font-bold text-[10px]">{post.platform}</Badge>
-                 </div>
-                 <p className="text-sm text-muted-foreground font-medium">Posted {post.createdAt ? format(new Date(post.createdAt), 'PPpp') : 'Just now'}</p>
-              </div>
-              <div className="text-right">
-                 <p className="text-4xl font-headline font-bold text-primary">${post.price?.toFixed(2)}</p>
-              </div>
-           </div>
-
-           <div className="grid grid-cols-3 gap-4">
-              <StatItem label="Lv" value={post.level || 0} icon={Star} color="text-amber-500" />
-              <StatItem label="Age" value={post.age || 'N/A'} icon={Calendar} color="text-blue-500" />
-              <StatItem label="Prime" value={`Lv ${post.primeLevel || 0}`} icon={ShieldCheck} color="text-purple-500" />
-           </div>
-
-           <div className="space-y-4">
-              <h3 className="text-xl font-headline font-bold">Premium Items</h3>
-              <div className="flex flex-wrap gap-2">
-                 {(post.items || []).map((item: string, i: number) => (
-                   <Badge key={i} className="bg-slate-100 text-slate-600 border-none rounded-2xl px-5 py-2.5 text-xs font-bold">
-                      {item}
-                   </Badge>
-                 ))}
-              </div>
-           </div>
-        </div>
-
-        <div className="absolute bottom-0 left-0 right-0 p-8 bg-white/80 backdrop-blur-xl border-t border-slate-100 flex items-center justify-between">
-           <Button 
-            disabled={post.sold}
-            onClick={onBuy}
-            className="w-full h-16 rounded-[2rem] text-xl font-bold"
-           >
-              {post.sold ? 'WAA LA IIBIYAY' : 'IIBSO →'}
-           </Button>
-        </div>
       </DialogContent>
     </Dialog>
   );

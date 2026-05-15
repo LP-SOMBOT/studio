@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -16,6 +17,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import Image from "next/image";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
@@ -28,6 +31,7 @@ export default function CheckoutAccountPage() {
   const { accountPosts, user, setActiveTab, createOrder, setGlobalLoading } = useApp();
   const [step, setStep] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [whatsappNumber, setWhatsappNumber] = useState("");
 
   const post = useMemo(() => {
     return (accountPosts || []).find(p => p.id === id);
@@ -70,7 +74,8 @@ export default function CheckoutAccountPage() {
       platform: post.platform, 
       accountLvl: post.level,
       sellerName: post.authorName,
-      postId: post.id
+      postId: post.id,
+      whatsappNumber
     }, purchaseItem);
 
     // Simulate real-time database update
@@ -105,11 +110,23 @@ export default function CheckoutAccountPage() {
                  <div className="aspect-video relative rounded-2xl overflow-hidden mb-6 bg-slate-100">
                     {post?.thumbnailUrl && <Image src={post.thumbnailUrl} alt="" fill className="object-cover" unoptimized />}
                  </div>
-                 <div className="space-y-4">
+                 <div className="space-y-6">
                     <div className="flex justify-between items-center">
                        <h3 className="font-bold text-xl">{post?.authorName}'s Account</h3>
                        <Badge className="bg-blue-500 text-white border-none">Lvl {post?.level}</Badge>
                     </div>
+
+                    <div className="space-y-2">
+                       <Label className="text-xs font-bold text-muted-foreground uppercase ml-1">Xiriirkaaga</Label>
+                       <Input 
+                        placeholder="Geli WhatsApp number kaaga" 
+                        value={whatsappNumber}
+                        onChange={(e) => setWhatsappNumber(e.target.value)}
+                        className="h-14 rounded-2xl bg-slate-50 border-none px-6 font-bold shadow-inner"
+                       />
+                       <p className="text-[10px] text-muted-foreground italic ml-1">* Halkan ayaan kugu soo diri doonaa password-ka.</p>
+                    </div>
+
                     <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
                        <div className="flex justify-between items-center">
                           <span className="text-muted-foreground font-bold text-sm">Account Price:</span>
@@ -124,7 +141,16 @@ export default function CheckoutAccountPage() {
                     </div>
                  </div>
               </Card>
-              <Button onClick={() => setStep(2)} className="w-full h-16 rounded-[2rem] text-xl font-bold shadow-xl shadow-primary/20">
+              <Button 
+                onClick={() => {
+                  if (!whatsappNumber) {
+                    toast({ title: "Fadlan geli WhatsApp number kaaga", variant: "destructive" });
+                    return;
+                  }
+                  setStep(2);
+                }} 
+                className="w-full h-16 rounded-[2rem] text-xl font-bold shadow-xl shadow-primary/20"
+              >
                 PROCEED TO PAYMENT
               </Button>
            </div>
