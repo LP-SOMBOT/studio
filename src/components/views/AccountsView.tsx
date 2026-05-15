@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -408,6 +409,11 @@ function AccountDetailModal({ post, open, onOpenChange, onBuy }: { post: any, op
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl h-[95vh] overflow-y-auto rounded-[3rem] p-0 border-none shadow-2xl">
+        <DialogHeader className="sr-only">
+          <DialogTitle>Account Details</DialogTitle>
+          <DialogDescription>Full details and purchase options for the selected game account.</DialogDescription>
+        </DialogHeader>
+        
         <div className="relative aspect-[4/3] w-full bg-slate-100">
           {post.thumbnailUrl ? (
              <Image src={post.thumbnailUrl} alt="" fill className="object-cover" unoptimized />
