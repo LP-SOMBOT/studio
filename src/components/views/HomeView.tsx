@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useApp } from "@/lib/context";
+import { cn } from "@/lib/utils";
 import { 
   Flame, 
   Trophy, 
