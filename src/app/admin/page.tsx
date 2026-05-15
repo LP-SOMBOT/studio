@@ -31,6 +31,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Skeleton } from "@/components/ui/skeleton";
 import { 
   Table, 
   TableBody, 
@@ -90,7 +91,8 @@ export default function AdminPage() {
     messages,
     sendMessage,
     markMessagesAsRead,
-    setChatTargetId
+    setChatTargetId,
+    isInitialLoading
   } = useApp();
 
   const [activeView, setActiveView] = useState<'dashboard' | 'orders' | 'products' | 'users' | 'settings' | 'chats'>('dashboard');
@@ -120,10 +122,13 @@ export default function AdminPage() {
     };
   }, [allOrders, products, allUsers]);
 
-  if (loading) {
+  if (isInitialLoading || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="w-10 h-10 animate-spin text-primary opacity-20" />
+      <div className="min-h-screen bg-background p-10 md:pl-32 space-y-10 animate-in fade-in duration-500">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-32 rounded-[2.5rem]" />)}
+        </div>
+        <Skeleton className="h-[400px] w-full rounded-[2.5rem]" />
       </div>
     );
   }

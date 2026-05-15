@@ -7,6 +7,7 @@ import HeroSlider from "@/components/home/HeroSlider";
 import GameCard from "@/components/games/GameCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useApp } from "@/lib/context";
 import { 
   Flame, 
@@ -20,13 +21,51 @@ import {
 } from "lucide-react";
 
 export default function HomeView() {
-  const { storeSettings, products, setActiveTab } = useApp();
+  const { storeSettings, products, setActiveTab, isInitialLoading } = useApp();
   const [localDismiss, setLocalDismiss] = useState(false);
 
   const isVisible = storeSettings.isLive && !localDismiss;
 
+  if (isInitialLoading) {
+    return (
+      <div className="pb-24 animate-in fade-in duration-500">
+        <AnnouncementTicker />
+        <main className="container mx-auto px-4 pt-6 space-y-12">
+          {/* Hero Skeleton */}
+          <Skeleton className="w-full aspect-[21/9] md:aspect-[3/1] rounded-[2rem]" />
+          
+          {/* Trending Skeleton */}
+          <section>
+            <div className="flex justify-between mb-6">
+              <Skeleton className="h-8 w-48 rounded-lg" />
+              <Skeleton className="h-6 w-20 rounded-lg" />
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <Skeleton key={i} className="aspect-[3/4] rounded-[2rem]" />
+              ))}
+            </div>
+          </section>
+
+          {/* Accounts Skeleton */}
+          <section>
+            <div className="flex justify-between mb-6">
+              <Skeleton className="h-8 w-56 rounded-lg" />
+              <Skeleton className="h-6 w-20 rounded-lg" />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-64 rounded-[2rem]" />
+              ))}
+            </div>
+          </section>
+        </main>
+      </div>
+    );
+  }
+
   return (
-    <div className="pb-24">
+    <div className="pb-24 page-transition">
       <AnnouncementTicker />
       
       <main className="container mx-auto px-4 pt-6 space-y-12">

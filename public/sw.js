@@ -1,8 +1,10 @@
 
 /**
  * OskarShop Service Worker
- * Handles PWA background notifications for LIVE events and Chat messages.
+ * Handles PWA installation and Push Notifications for background events.
  */
+
+const CACHE_NAME = 'oskar-shop-v1';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
@@ -12,30 +14,52 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(clients.claim());
 });
 
-self.addEventListener('push', (event) => {
-  if (event.data) {
+/**
+ * Handle Push Notifications
+ */
+self.addEventListener('push', function(event) {
+  if (!event.data) return;
+  
+  try {
     const data = event.data.json();
     const options = {
       body: data.body,
-      icon: data.icon || '/icon-192.png',
-      badge: '/badge.png',
-      tag: data.tag || 'oskar-shop-alert',
+      icon: data.icon || 'https://placehold.co/192x192/7C3AED/FFFFFF/png?text=O',
+      badge: 'https://placehold.co/96x96/7C3AED/FFFFFF/png?text=O',
+      tag: data.tag || 'general-alert',
       renotify: true,
-      vibrate: [200, 100, 200],
-      data: { url: data.url }
+      data: {
+        url: data.url || '/'
+      }
     };
-    event.waitUntil(self.registration.showNotification(data.title, options));
+
+    event.waitUntil(
+      self.registration.showNotification(data.title || 'Oskar Shop', options)
+    );
+  } catch (e) {
+    // Fallback for non-JSON payloads
+    const text = event.data.text();
+    event.waitUntil(
+      self.registration.showNotification('Oskar Shop Update', {
+        body: text,
+        icon: 'https://placehold.co/192x192/7C3AED/FFFFFF/png?text=O',
+      })
+    );
   }
 });
 
-self.addEventListener('notificationclick', (event) => {
+/**
+ * Handle Notification Click
+ */
+self.addEventListener('notificationclick', function(event) {
   event.notification.close();
-  const urlToOpen = event.notification.data?.url || '/';
+
+  const urlToOpen = new URL(event.notification.data?.url || '/', self.location.origin).href;
 
   event.waitUntil(
-    clients.matchAll({ type: 'window' }).then((windowClients) => {
-      for (let i = 0; i < windowClients.length; i++) {
-        const client = windowClients[i];
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
+      for (let i = 0; i < clientList.length; i++) {
+        const client = clientList[i];
         if (client.url === urlToOpen && 'focus' in client) {
           return client.focus();
         }

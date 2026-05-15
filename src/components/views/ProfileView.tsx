@@ -19,12 +19,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
 export default function ProfileView() {
-  const { user, loading, logout, orders, setActiveTab } = useApp();
+  const { user, loading, logout, orders, setActiveTab, isInitialLoading } = useApp();
   const router = useRouter();
 
   useEffect(() => {
@@ -56,10 +57,22 @@ export default function ProfileView() {
     }
   };
 
-  if (loading) {
+  if (isInitialLoading || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="pb-24 animate-in fade-in duration-500">
+        <main className="container mx-auto px-4 py-8 max-w-5xl">
+          <div className="flex flex-col md:flex-row gap-8">
+            <div className="md:w-1/3 space-y-6">
+              <Skeleton className="h-[400px] rounded-[2.5rem]" />
+              <Skeleton className="h-[200px] rounded-[2.5rem]" />
+            </div>
+            <div className="md:w-2/3 space-y-6">
+              <Skeleton className="h-10 w-48 rounded-lg" />
+              <Skeleton className="h-48 rounded-3xl" />
+              <Skeleton className="h-48 rounded-3xl" />
+            </div>
+          </div>
+        </main>
       </div>
     );
   }
@@ -94,7 +107,7 @@ export default function ProfileView() {
   ];
 
   return (
-    <div className="pb-24">
+    <div className="pb-24 page-transition">
       <main className="container mx-auto px-4 py-8 max-w-5xl">
         <div className="flex flex-col md:flex-row gap-8">
           {/* Sidebar Area */}
