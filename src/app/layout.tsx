@@ -1,3 +1,4 @@
+
 import type {Metadata, Viewport} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
@@ -7,10 +8,10 @@ import { FirebaseClientProvider } from "@/firebase";
 import OnboardingGuard from "@/components/layout/OnboardingGuard";
 import NotificationGuard from "@/components/layout/NotificationGuard";
 import GlobalLoading from "@/components/layout/GlobalLoading";
-import SplashScreen from "@/components/layout/SplashScreen";
 import DynamicHead from "@/components/layout/DynamicHead";
 import SWRegistration from "@/components/layout/SWRegistration";
 import MainAppLayout from "@/components/layout/MainAppLayout";
+import { ErrorBoundary } from "@/components/layout/ErrorBoundary";
 
 export const metadata: Metadata = {
   title: 'Oskar Shop - Game Top-Up & Accounts',
@@ -52,23 +53,24 @@ export default function RootLayout({
           <div className="absolute bottom-[-10%] left-[20%] w-[45%] h-[45%] bg-[#00D1FF]/15 blur-[140px] rounded-full" />
         </div>
 
-        <FirebaseClientProvider>
-          <AppProvider>
-            <SWRegistration />
-            <DynamicHead />
-            <SplashScreen />
-            <GlobalLoading />
-            <PWAInstaller />
-            <NotificationGuard>
-              <OnboardingGuard>
-                <MainAppLayout>
-                  {children}
-                </MainAppLayout>
-              </OnboardingGuard>
-            </NotificationGuard>
-            <Toaster />
-          </AppProvider>
-        </FirebaseClientProvider>
+        <ErrorBoundary>
+          <FirebaseClientProvider>
+            <AppProvider>
+              <SWRegistration />
+              <DynamicHead />
+              <GlobalLoading />
+              <PWAInstaller />
+              <NotificationGuard>
+                <OnboardingGuard>
+                  <MainAppLayout>
+                    {children}
+                  </MainAppLayout>
+                </OnboardingGuard>
+              </NotificationGuard>
+              <Toaster />
+            </AppProvider>
+          </FirebaseClientProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );

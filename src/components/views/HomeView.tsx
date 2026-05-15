@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import AnnouncementTicker from "@/components/home/AnnouncementTicker";
 import HeroSlider from "@/components/home/HeroSlider";
 import GameCard from "@/components/games/GameCard";
@@ -17,46 +17,35 @@ import {
   Clock, 
   Calendar, 
   Zap, 
-  X 
+  X,
+  ChevronRight,
+  Star
 } from "lucide-react";
+import Image from "next/image";
 
 export default function HomeView() {
-  const { storeSettings, products, setActiveTab, isInitialLoading } = useApp();
+  const { storeSettings, products, events, setActiveTab, isInitialLoading } = useApp();
   const [localDismiss, setLocalDismiss] = useState(false);
 
-  const isVisible = storeSettings.isLive && !localDismiss;
+  const isVisible = storeSettings?.isLive && !localDismiss;
+
+  const activeEvents = useMemo(() => {
+    return (events || []).filter(e => e.active && e.type === 'freefire_event');
+  }, [events]);
 
   if (isInitialLoading) {
     return (
       <div className="pb-24 animate-in fade-in duration-500">
         <AnnouncementTicker />
         <main className="container mx-auto px-4 pt-6 space-y-12">
-          {/* Hero Skeleton */}
           <Skeleton className="w-full aspect-[21/9] md:aspect-[3/1] rounded-[2rem]" />
-          
-          {/* Trending Skeleton */}
           <section>
             <div className="flex justify-between mb-6">
               <Skeleton className="h-8 w-48 rounded-lg" />
               <Skeleton className="h-6 w-20 rounded-lg" />
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <Skeleton key={i} className="aspect-[3/4] rounded-[2rem]" />
-              ))}
-            </div>
-          </section>
-
-          {/* Accounts Skeleton */}
-          <section>
-            <div className="flex justify-between mb-6">
-              <Skeleton className="h-8 w-56 rounded-lg" />
-              <Skeleton className="h-6 w-20 rounded-lg" />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3].map((i) => (
-                <Skeleton key={i} className="h-64 rounded-[2rem]" />
-              ))}
+              {[1, 2, 3, 4, 5, 6].map((i) => <Skeleton key={i} className="aspect-[3/4] rounded-[2rem]" />)}
             </div>
           </section>
         </main>
@@ -104,6 +93,7 @@ export default function HomeView() {
           </section>
         )}
 
+        {/* Trending */}
         <section>
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
@@ -119,102 +109,121 @@ export default function HomeView() {
           </div>
         </section>
 
+        {/* Accounts Banner */}
         <section>
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-2">
-              <Trophy className="w-6 h-6 text-yellow-500" />
-              <h2 className="text-2xl font-headline font-bold">Premium Game Accounts</h2>
-            </div>
-            <Button variant="link" className="text-primary font-bold" onClick={() => setActiveTab('games')}>View All</Button>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {products.filter(g => g.category === 'accounts').map((game) => (
-              <GameCard key={game.id} {...game} />
-            ))}
+          <div 
+            onClick={() => setActiveTab('accounts')}
+            className="group relative h-48 rounded-[2.5rem] overflow-hidden cursor-pointer shadow-xl shadow-amber-500/10 border-2 border-amber-200/20 bg-gradient-to-br from-amber-500 to-orange-600 transition-transform active:scale-[0.98]"
+          >
+             <div className="absolute top-0 right-0 p-8 opacity-20 group-hover:scale-110 transition-transform">
+               <Trophy size={140} className="text-white" />
+             </div>
+             <div className="absolute inset-0 p-8 flex flex-col justify-center">
+               <Badge className="w-fit mb-3 bg-white/20 backdrop-blur-md border-none text-white font-bold px-4 py-1">PREMIUM</Badge>
+               <h2 className="text-3xl font-headline font-bold text-white leading-tight">Suuqa Account Yada<br/>Premium Accounts</h2>
+               <p className="text-white/80 text-sm mt-2 flex items-center gap-2 font-bold">Diri dukaamada account yada <ChevronRight size={16} /></p>
+             </div>
           </div>
         </section>
 
+        {/* Work Hours */}
         <section className="relative overflow-hidden py-12">
-          <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-64 h-64 bg-secondary/5 rounded-full blur-3xl" />
-          
           <div className="relative">
             <div className="flex flex-col items-center text-center mb-10">
               <Badge variant="outline" className="mb-4 bg-white/50 backdrop-blur-sm border-primary/20 text-primary px-4 py-1 rounded-full flex gap-2 items-center">
                 <Clock className="w-3.5 h-3.5" /> Adeegga Oskar
               </Badge>
               <h2 className="text-3xl md:text-4xl font-headline font-bold mb-3 tracking-tight">Waqtiga Shaqada 🗓️</h2>
-              <p className="text-muted-foreground max-w-md">Waxaan hubinnaa in si degdeg ah loo farsameeyo dalabaadkaaga waqtiyada aan online-ka nahay.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
-              <div className="bg-white rounded-[2.5rem] p-8 shadow-xl shadow-gray-200/50 border border-gray-100 flex flex-col h-full">
+              {/* Sabti-Arbaco */}
+              <div className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-gray-100">
                 <div className="flex items-center gap-4 mb-8">
                   <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
                     <Calendar className="w-6 h-6" />
                   </div>
-                  <div>
-                    <h3 className="font-headline font-bold text-xl leading-none">Sabti – Arbaco</h3>
-                    <p className="text-xs text-muted-foreground mt-1">Waqtiyada shaqada (Split Shifts)</p>
-                  </div>
+                  <h3 className="font-headline font-bold text-xl leading-none">Sabti – Arbaco</h3>
                 </div>
-
-                <div className="space-y-4 flex-1">
-                  <div className="flex items-center justify-between p-4 bg-green-50/50 rounded-2xl border border-green-100/50">
-                    <div className="flex items-center gap-3">
-                      <Zap className="w-4 h-4 text-green-500" />
-                      <span className="text-sm font-semibold">Subaxnimo</span>
-                    </div>
-                    <span className="text-sm font-bold text-green-700 bg-white px-3 py-1 rounded-full shadow-sm">5:40 Subax – 8:00 Duhur ✅</span>
-                  </div>
-
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-200">
-                    <div className="flex items-center gap-3 opacity-50">
-                      <Clock className="w-4 h-4" />
-                      <span className="text-sm font-semibold">Nasasho</span>
-                    </div>
-                    <span className="text-xs font-bold text-muted-foreground">8:00 Duhur – 5:10 Galab ⛔</span>
-                  </div>
-
-                  <div className="flex items-center justify-between p-4 bg-green-50/50 rounded-2xl border border-green-100/50">
-                    <div className="flex items-center gap-3">
-                      <Zap className="w-4 h-4 text-green-500" />
-                      <span className="text-sm font-semibold">Habeenimo</span>
-                    </div>
-                    <span className="text-sm font-bold text-green-700 bg-white px-3 py-1 rounded-full shadow-sm">5:10 Galab – 9:30 Habeen ✅</span>
-                  </div>
+                <div className="space-y-4">
+                  <WorkTimeRow label="Subaxnimo" time="5:40 Subax – 8:00 Duhur" active />
+                  <WorkTimeRow label="Nasasho" time="8:00 Duhur – 5:10 Galab" />
+                  <WorkTimeRow label="Habeenimo" time="5:10 Galab – 9:30 Habeen" active />
                 </div>
               </div>
 
-              <div className="bg-primary text-white rounded-[2.5rem] p-8 shadow-xl shadow-primary/20 flex flex-col h-full relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-10 -mt-10 blur-2xl transition-transform duration-700" />
-                
+              {/* Khamiis & Jimco */}
+              <div className="bg-primary text-white rounded-[2.5rem] p-8 shadow-xl shadow-primary/20 relative overflow-hidden">
                 <div className="relative z-10">
                   <div className="flex items-center gap-4 mb-8">
                     <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center text-white backdrop-blur-md">
                       <Calendar className="w-6 h-6" />
                     </div>
-                    <div>
-                      <h3 className="font-headline font-bold text-xl leading-none">Khamiis & Jimco</h3>
-                      <p className="text-xs text-white/60 mt-1">Adeeg Buuxa (Full Access)</p>
-                    </div>
+                    <h3 className="font-headline font-bold text-xl leading-none">Khamiis & Jimco</h3>
                   </div>
-
                   <div className="py-10 flex flex-col items-center justify-center text-center space-y-4">
-                    <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm border border-white/30 animate-pulse">
-                      <Zap className="w-10 h-10 text-white" />
+                    <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center animate-pulse">
+                      <Zap size={40} />
                     </div>
-                    <div>
-                      <h4 className="text-3xl font-headline font-bold">24 Saac Online</h4>
-                      <p className="text-white/80 text-sm mt-2 max-w-[200px] mx-auto">Adeeg aan kala go' lahayn dhamaadka usbuuca. ✅</p>
-                    </div>
+                    <h4 className="text-3xl font-headline font-bold">24 Saac Online</h4>
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </section>
+
+        {/* Active Events */}
+        {activeEvents.length > 0 && (
+          <section className="pb-10">
+            <div className="flex items-center gap-2 mb-6">
+              <Zap className="text-amber-500 fill-amber-500 w-6 h-6" />
+              <h2 className="text-2xl font-headline font-bold">⚡ Active Events — Free Fire</h2>
+            </div>
+            <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide px-1">
+              {activeEvents.map((event, i) => (
+                <div key={i} className="min-w-[280px] md:min-w-[320px] bg-white rounded-3xl overflow-hidden shadow-lg border border-gray-100 group transition-transform hover:-translate-y-1">
+                  <div className="relative aspect-video w-full overflow-hidden">
+                    {event.thumbnailUrl ? (
+                      <Image src={event.thumbnailUrl} alt="" fill className="object-cover group-hover:scale-105 transition-transform duration-500" unoptimized />
+                    ) : (
+                      <div className="w-full h-full bg-slate-50 flex items-center justify-center"><Star size={40} className="text-slate-200" /></div>
+                    )}
+                    <div className="absolute top-4 left-4">
+                       <Badge className="bg-amber-500 text-white border-none shadow-md">LIVE</Badge>
+                    </div>
+                  </div>
+                  <div className="p-5">
+                    <h3 className="font-bold text-lg mb-1">{event.title}</h3>
+                    <p className="text-xs text-muted-foreground line-clamp-2 mb-4 leading-relaxed">{event.description}</p>
+                    <div className="flex items-center gap-2 text-[10px] font-bold text-amber-600 uppercase tracking-tighter bg-amber-50 w-fit px-3 py-1 rounded-full">
+                      <Clock size={12} /> {event.endDate ? `Ends: ${event.endDate}` : 'Coming soon'}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
       </main>
+    </div>
+  );
+}
+
+function WorkTimeRow({ label, time, active }: { label: string, time: string, active?: boolean }) {
+  return (
+    <div className={cn(
+      "flex items-center justify-between p-4 rounded-2xl border transition-all",
+      active ? "bg-green-50 border-green-100 text-green-700" : "bg-gray-50 border-gray-100 text-gray-400 opacity-60"
+    )}>
+      <div className="flex items-center gap-3">
+        {active ? <Zap size={16} /> : <Clock size={16} />}
+        <span className="text-sm font-semibold">{label}</span>
+      </div>
+      <span className={cn(
+        "text-[11px] font-bold px-3 py-1 rounded-full shadow-sm",
+        active ? "bg-white" : "bg-transparent border border-gray-200"
+      )}>{time} {active ? '✅' : '⛔'}</span>
     </div>
   );
 }

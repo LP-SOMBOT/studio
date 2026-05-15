@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -42,7 +43,6 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#7C3AED] overflow-x-hidden page-transition">
-      {/* Header Section */}
       <div className="pt-16 pb-12 px-10 shrink-0">
         <Link href="/login" className="inline-flex items-center gap-2 text-white/80 font-bold hover:text-white mb-6 transition-colors">
           <ArrowLeft className="w-4 h-4" /> Back
@@ -55,7 +55,6 @@ export default function SignupPage() {
         </p>
       </div>
 
-      {/* Form Card Section */}
       <div className="flex-1 bg-white rounded-t-[3.5rem] p-10 shadow-2xl">
         <div className="max-w-md mx-auto h-full flex flex-col">
           <h2 className="text-3xl font-headline font-bold mb-8 text-gray-900">

@@ -1,28 +1,31 @@
 
 "use client";
 
-import { House, Gamepad2, CircleUser, MessageCircle } from "lucide-react";
+import { House, Gamepad2, CircleUser, MessageCircle, ShieldCheck, Trophy, ShoppingBag } from "lucide-react";
 import { useApp } from "@/lib/context";
 import { cn } from "@/lib/utils";
 
 export default function BottomNav() {
-  const { activeTab, setActiveTab, allChatSessions, user } = useApp();
+  const { activeTab, setActiveTab, allChatSessions, user, notifications } = useApp();
 
-  // Unread messages logic
+  // Unread logic
   const unreadChat = user?.isAdmin 
     ? allChatSessions.reduce((acc, s) => acc + (s.unreadCount || 0), 0)
     : (allChatSessions.find(s => s.userId === user?.uid)?.unreadCount || 0);
 
+  const unreadNotifs = (notifications || []).filter(n => !n.read).length;
+
   const navItems = [
     { id: "home", label: "Home", icon: House },
     { id: "games", label: "Games", icon: Gamepad2 },
-    { id: "chat", label: "Chat", icon: MessageCircle, badge: unreadChat },
-    { id: "profile", label: "Profile", icon: CircleUser },
+    { id: "accounts", label: "Accounts", icon: ShieldCheck },
+    { id: "ranking", label: "Ranking", icon: Trophy },
+    { id: "profile", label: "Profile", icon: CircleUser, badge: unreadNotifs > 0 ? unreadNotifs : unreadChat },
   ];
 
   return (
     <div className="fixed bottom-5 left-0 right-0 z-[100] flex justify-center px-4 pointer-events-none">
-      <nav className="w-full max-w-[400px] h-16 bg-white rounded-[40px] shadow-[0_8px_30px_rgba(0,0,0,0.12)] flex items-center justify-around px-2 py-2 pointer-events-auto border border-gray-50/50">
+      <nav className="w-full max-w-[500px] h-16 bg-white rounded-[40px] shadow-[0_8px_30px_rgba(0,0,0,0.12)] flex items-center justify-around px-2 py-2 pointer-events-auto border border-gray-50/50">
         {navItems.map((item) => {
           const isActive = activeTab === item.id;
           const Icon = item.icon;
@@ -50,7 +53,7 @@ export default function BottomNav() {
                       "absolute -top-1 -right-1 bg-[#F97316] text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold border border-white",
                       isActive ? "bg-white text-[#F97316]" : ""
                     )}>
-                      {item.badge}
+                      {item.badge > 9 ? '9+' : item.badge}
                     </span>
                   )}
                 </div>

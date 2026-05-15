@@ -8,12 +8,16 @@ import { useApp } from "@/lib/context";
 
 export default function MainAppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { activeTab } = useApp();
+  const { activeTab, storeSettings } = useApp();
   
   // Routes where the standard app layout should not be visible
   const isAuthPage = pathname === "/login" || pathname === "/signup";
   const isAdminPage = pathname.startsWith("/admin");
-  const isSpecialFlow = pathname === "/checkout" || activeTab === 'chat';
+  const isSpecialFlow = pathname === "/checkout" || activeTab === 'chat' || activeTab === 'accounts';
+
+  // Offline mode check
+  const isOffline = storeSettings?.appStatus?.offline;
+  const isAdmin = (user: any) => user?.role === 'admin' || user?.role === 'super_admin';
 
   if (isAuthPage || isAdminPage) {
     return <>{children}</>;
@@ -25,7 +29,7 @@ export default function MainAppLayout({ children }: { children: React.ReactNode 
       <main className="page-transition">
         {children}
       </main>
-      {!isSpecialFlow && <BottomNav />}
+      <BottomNav />
     </div>
   );
 }

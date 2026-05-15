@@ -9,68 +9,79 @@
         "uid": { "type": "string" },
         "email": { "type": "string", "format": "email" },
         "name": { "type": "string" },
-        "isAdmin": { "type": "boolean" },
+        "role": { "type": "string", "enum": ["user", "admin", "super_admin"] },
         "phoneNumber": { "type": "string" },
+        "points": { "type": "number" },
         "createdAt": { "type": "number" },
-        "photoURL": { "type": "string" }
+        "photoURL": { "type": "string" },
+        "gameName": { "type": "string" },
+        "gameUid": { "type": "string" }
       },
       "required": ["uid", "email"]
     },
-    "ChatMessage": {
-      "title": "Chat Message",
-      "description": "A single message in a conversation.",
+    "AccountPost": {
+      "title": "Account Post",
+      "description": "A user-submitted game account for sale.",
       "type": "object",
       "properties": {
-        "text": { "type": "string" },
-        "imageUrl": { "type": "string" },
-        "senderId": { "type": "string" },
-        "timestamp": { "type": "number" },
-        "isRead": { "type": "boolean" }
+        "uid": { "type": "string" },
+        "authorName": { "type": "string" },
+        "authorAvatar": { "type": "string" },
+        "platform": { "type": "string", "enum": ["Google", "Facebook"] },
+        "level": { "type": "number" },
+        "age": { "type": "string" },
+        "primeLevel": { "type": "number" },
+        "items": { "type": "array" },
+        "price": { "type": "number" },
+        "fee": { "type": "number" },
+        "totalCharge": { "type": "number" },
+        "thumbnailUrl": { "type": "string" },
+        "imageUrls": { "type": "array" },
+        "phone": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+        "createdAt": { "type": "number" },
+        "views": { "type": "number" },
+        "sold": { "type": "boolean" }
       }
     },
-    "Order": {
-      "title": "Order",
-      "description": "A game package purchase order stored in Realtime Database.",
+    "Notification": {
+      "title": "Notification",
+      "description": "User notification document.",
       "type": "object",
       "properties": {
-        "userId": { "type": "string" },
-        "items": { "type": "array" },
-        "total": { "type": "number" },
-        "status": { "type": "string", "enum": ["pending", "processing", "successful", "cancelled"] },
+        "type": { "type": "string" },
+        "title": { "type": "string" },
+        "body": { "type": "string" },
+        "read": { "type": "boolean" },
         "createdAt": { "type": "number" },
-        "paymentMethod": { "type": "string" },
-        "gameDetails": { "type": "object" }
-      },
-      "required": ["userId", "items", "total", "status", "createdAt"]
+        "linkTo": { "type": "string" },
+        "icon": { "type": "string" }
+      }
     },
-    "StoreSettings": {
-      "title": "Store Settings",
-      "description": "Global configuration for the application.",
+    "Event": {
+      "title": "Event",
+      "description": "Active game events.",
       "type": "object",
       "properties": {
-        "isLive": { "type": "boolean" },
-        "announcementTicker": { "type": "string" }
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "thumbnailUrl": { "type": "string" },
+        "type": { "type": "string", "enum": ["freefire_event", "general"] },
+        "active": { "type": "boolean" },
+        "startDate": { "type": "string" },
+        "endDate": { "type": "string" }
       }
     }
   },
   "auth": {
-    "providers": ["password", "google.com"]
+    "providers": ["password"]
   },
   "database": {
-    "users": {
-      "description": "User profiles managed via uid keys."
-    },
-    "orders": {
-      "description": "All orders created by users."
-    },
-    "settings": {
-      "description": "Global application settings like live status."
-    },
-    "chats": {
-      "description": "Message history keyed by userId."
-    },
-    "chatIndex": {
-      "description": "Metadata about conversations for admin view."
-    }
+    "users": { "description": "User profiles" },
+    "accountPosts": { "description": "Marketplace account listings" },
+    "accountOrders": { "description": "Orders for marketplace accounts" },
+    "notifications": { "description": "User-specific notifications" },
+    "config": { "description": "Global shop configuration and fees" },
+    "events": { "description": "Active game events" }
   }
 }
