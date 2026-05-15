@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useApp } from '@/lib/context';
@@ -125,10 +126,10 @@ export default function RankingView() {
                    {u.photoURL ? <Image src={u.photoURL} alt="" fill className="object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-300"><User size={20} /></div>}
                 </div>
                 <div className="flex-1">
-                  <p className="font-bold text-sm text-slate-900 flex items-center gap-2">
+                  <div className="font-bold text-sm text-slate-900 flex items-center gap-2">
                     {u.name || "Unknown Player"}
                     {isMe && <Badge className="bg-amber-400 text-white border-none text-[8px] px-2 py-0">Adiga</Badge>}
-                  </p>
+                  </div>
                 </div>
                 <div className="text-right">
                   <Badge variant="outline" className="rounded-full border-slate-200 bg-white font-bold text-slate-600">
