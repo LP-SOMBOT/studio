@@ -100,7 +100,7 @@ export default function HomeView() {
           </section>
         )}
 
-        {/* Trending Top Ups - Dense Grid for Desktop */}
+        {/* Popular items - Dense Grid for Desktop */}
         <section>
           <div className="flex items-center justify-between mb-8 lg:mb-12">
             <div className="flex items-center gap-3 lg:gap-4">
@@ -108,7 +108,7 @@ export default function HomeView() {
                 <Flame className="w-6 h-6 lg:w-8 lg:h-8 text-orange-500" />
               </div>
               <div>
-                <h2 className="text-2xl lg:text-4xl font-headline font-bold text-slate-900 dark:text-white">Trending Top Ups</h2>
+                <h2 className="text-2xl lg:text-4xl font-headline font-bold text-slate-900 dark:text-white">Popular items</h2>
                 <p className="text-xs lg:text-sm text-muted-foreground font-medium uppercase tracking-widest mt-1">Most popular packages right now</p>
               </div>
             </div>
