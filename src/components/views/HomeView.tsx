@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo } from "react";
@@ -7,6 +6,7 @@ import HeroSlider from "@/components/home/HeroSlider";
 import GameCard from "@/components/games/GameCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useApp } from "@/lib/context";
 import { cn } from "@/lib/utils";
