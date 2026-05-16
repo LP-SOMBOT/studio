@@ -86,8 +86,8 @@ function OrderCard({ order }: { order: any }) {
   return (
     <Card className="rounded-[2.5rem] border-none shadow-xl bg-white dark:bg-slate-900 overflow-hidden group hover:shadow-2xl transition-all duration-300">
        <div className="p-6 h-full flex flex-col">
-          {/* Header section - Responsive Layout */}
-          <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-6">
+          {/* Header section - Balanced Layout */}
+          <div className="flex justify-between items-start gap-4 mb-6">
              <div className="flex gap-4 min-w-0">
                 <div className={cn(
                   "w-16 h-16 md:w-20 md:h-20 rounded-2xl flex items-center justify-center relative overflow-hidden shrink-0 shadow-inner transition-all",
@@ -150,7 +150,7 @@ function OrderCard({ order }: { order: any }) {
              </div>
           </div>
           
-          {/* Responsive Status Feedback Messages */}
+          {/* Status Feedback Messages */}
           <div className="mt-5">
              {order.status === 'pending' && (
                <div className="p-4 md:p-5 bg-amber-50 dark:bg-amber-500/10 rounded-2xl flex gap-3 items-center text-amber-700 dark:text-amber-400 text-[11px] md:text-[13px] font-bold border border-amber-100 dark:border-amber-500/20 shadow-sm animate-pulse">
@@ -162,7 +162,7 @@ function OrderCard({ order }: { order: any }) {
              {order.status === 'processing' && (
                <div className="p-4 md:p-5 bg-blue-50 dark:bg-blue-500/10 rounded-2xl flex gap-3 items-center text-blue-700 dark:text-blue-400 text-[11px] md:text-[13px] font-bold border border-blue-100 dark:border-blue-500/20 shadow-sm">
                   <RefreshCw size={20} className="shrink-0 animate-spin" />
-                  <p className="leading-relaxed">Dalabkaaga waa la xaqiijinooyaa fadlan dulqaadka badi, Waxey qadaneysa kaliya 5 daqiiqo, Mahadsanid!</p>
+                  <p className="leading-relaxed">Dalabkaaga waa la xaqiijinooyaa fadlan dulqaadka badi, Mahadsanid!</p>
                </div>
              )}
 
@@ -177,7 +177,7 @@ function OrderCard({ order }: { order: any }) {
                <div className="p-4 md:p-5 bg-red-50 dark:bg-red-500/10 rounded-2xl flex gap-3 items-center text-red-700 dark:text-red-400 text-[11px] md:text-[13px] font-bold border border-red-100 dark:border-red-500/20 shadow-sm">
                   <ShieldAlert size={20} className="shrink-0" />
                   <p className="leading-relaxed text-left">
-                    Dalabkaaga Waa Lagu guuldareystay fadlan hubi inaad bixisay lacagta, ama inuu saxanyahay Xogta aad Gelisay, Ama laxariir WhatsApp 613982172, Mahadsanid!
+                    Dalabkaaga Waa Lagu guuldareystay fadlan hubi inaad bixisay lacagta, ama inuu saxanyahay Xogta aad Gelisay, Ama laxariir WhatsApp, Mahadsanid!
                   </p>
                </div>
              )}
