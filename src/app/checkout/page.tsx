@@ -45,7 +45,6 @@ function CheckoutContent() {
     return (products || []).find(p => p.id === productId);
   }, [products, productId]);
 
-  // FIX: Always use base price as per admin requirements
   const total = item ? (item.price || 0) : 0;
   const isFreeFire = item?.gameId === 'freefire';
 
@@ -65,7 +64,6 @@ function CheckoutContent() {
 
   const handlePaymentInitiation = () => {
     const paymentNum = storeSettings.paymentNumber || "613982172";
-    // Price formatting logic: '.' becomes '*' for USSD compatibility
     const formattedPrice = total.toString().replace('.', '*');
     const ussd = `*712*${paymentNum}*${formattedPrice}#`;
     
@@ -313,8 +311,7 @@ function CheckoutContent() {
             </div>
             <h2 className="text-2xl font-headline font-bold mb-4 text-slate-900 dark:text-white">Xaqiiji Dalabkaaga</h2>
             <p className="text-muted-foreground dark:text-slate-400 mb-8 text-sm leading-relaxed px-2">
-              Did you finish the USSD transaction on your phone? 
-              Once confirmed, our system will immediately process your delivery.
+              Mahubtaa inaad lacagta dirtay? Hadii aadan dirin taabo "Dib U noqo Kadib riix Dir lacagta". Hadii aad dirtay Riix "Xaqiiji".
             </p>
             <div className="bg-primary/5 dark:bg-primary/10 p-6 rounded-3xl mb-8 text-left border border-primary/10 dark:border-primary/20">
               <div className="flex justify-between font-bold text-lg mb-2 dark:text-white">
