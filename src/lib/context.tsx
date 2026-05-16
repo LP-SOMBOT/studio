@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
@@ -125,6 +124,7 @@ type StoreSettings = {
     shop?: {
       feeType: 'percentage' | 'fixed';
       feeValue: number;
+      listingFee?: number;
     };
     adminSettings?: {
       pin: string;
@@ -197,7 +197,6 @@ type AppContextType = {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-// Cache Keys
 const USER_CACHE_KEY = 'oskar_user_cache';
 const SETTINGS_CACHE_KEY = 'oskar_settings_cache';
 const PRODUCTS_CACHE_KEY = 'oskar_products_cache';
@@ -221,19 +220,14 @@ const setCache = (key: string, data: any) => {
     } catch (e: any) {
       console.warn("Storage quota exceeded, clearing cache to make room.");
       if (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
-        // Remove non-critical caches
         localStorage.removeItem(PRODUCTS_CACHE_KEY);
         localStorage.removeItem(EVENTS_CACHE_KEY);
         localStorage.removeItem(BANNERS_CACHE_KEY);
-        
-        // Try saving again if it's highly critical
         try {
           if (key === SETTINGS_CACHE_KEY || key === USER_CACHE_KEY) {
             localStorage.setItem(key, JSON.stringify(data));
           }
-        } catch {
-          // If still fails, give up
-        }
+        } catch {}
       }
     }
   }
@@ -249,7 +243,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [activeTab, setActiveTabState] = useState('home');
   const [isGlobalLoading, setIsGlobalLoading] = useState(false);
   
-  // Track sync status of each critical stream
   const [syncStatus, setSyncStatus] = useState({
     settings: false,
     products: false,
@@ -259,7 +252,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     allUsers: false
   });
 
-  // Initialize from cache
   const [storeSettings, setStoreSettings] = useState<StoreSettings>(() => getCache(SETTINGS_CACHE_KEY, {}));
   const [products, setProducts] = useState<GamePackage[]>(() => getCache(PRODUCTS_CACHE_KEY, []));
   const [accountPosts, setAccountPosts] = useState<AccountPost[]>([]);
@@ -276,7 +268,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [allChatSessions, setAllChatSessions] = useState<any[]>([]);
 
   const isInitialLoading = useMemo(() => {
-    // Initial loading is complete only when all essential nodes have synced at least once
     return !syncStatus.settings || !syncStatus.products || !syncStatus.banners || !syncStatus.events;
   }, [syncStatus]);
 
@@ -303,7 +294,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }, [pathname, router]);
 
-  // Global Listeners with Caching
   useEffect(() => {
     if (!rtdb) return;
     
@@ -371,7 +361,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     };
   }, [rtdb]);
 
-  // User-Specific Listeners
   useEffect(() => {
     if (!rtdb || !user) {
       setUserProfile(null);
@@ -516,7 +505,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       views: 0,
       sold: false
     });
-    toast({ title: "Successfully posted!", description: "Waiting for admin approval." });
+    toast({ title: "Successfully posted!", description: "Waiting for admin approval of listing fee payment." });
   };
 
   const updateAccountPost = async (pid: string, data: any) => {

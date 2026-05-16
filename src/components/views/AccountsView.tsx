@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useApp } from '@/lib/context';
 import { 
   ShieldCheck, 
@@ -79,7 +79,6 @@ export default function AccountsView() {
 
   return (
     <div className="min-h-screen pb-24 page-transition bg-slate-50">
-      {/* Header */}
       <header className="sticky top-0 z-50 bg-white shadow-sm border-b border-gray-100 h-16 flex items-center justify-between px-6">
         <h1 className="text-xl font-headline font-bold text-slate-900 tracking-tight">Marketplace</h1>
         <button onClick={() => setIsActivityModalOpen(true)} className="relative p-2 text-slate-400 bg-slate-50 rounded-full">
@@ -91,7 +90,6 @@ export default function AccountsView() {
       </header>
 
       <main className="px-4 py-6 space-y-6 max-w-2xl mx-auto">
-        {/* Search */}
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input 
@@ -128,7 +126,6 @@ export default function AccountsView() {
         )}
       </main>
 
-      {/* FAB */}
       {user && (
         <button 
           onClick={() => setIsPostSheetOpen(true)}
@@ -138,7 +135,6 @@ export default function AccountsView() {
         </button>
       )}
 
-      {/* Modals */}
       <PostAccountModal 
         open={isPostSheetOpen || !!editingPost} 
         onOpenChange={(open) => { if (!open) { setIsPostSheetOpen(false); setEditingPost(null); } }} 
@@ -146,7 +142,6 @@ export default function AccountsView() {
         onComplete={() => { setIsPostSheetOpen(false); setEditingPost(null); }} 
       />
       
-      {/* Activity Tracker Modal */}
       <Dialog open={isActivityModalOpen} onOpenChange={setIsActivityModalOpen}>
          <DialogContent className="max-w-md rounded-[2.5rem] p-0 border-none shadow-2xl bg-white">
             <DialogHeader className="p-8 pb-4">
@@ -183,7 +178,6 @@ export default function AccountsView() {
          </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation */}
       <Dialog open={!!deletingPostId} onOpenChange={(open) => !open && setDeletingPostId(null)}>
         <DialogContent className="max-w-sm rounded-[2rem]">
            <DialogHeader>
@@ -287,6 +281,7 @@ function AccountPostCard({ post, onClick, onEdit, onDelete, isOwner }: { post: a
 function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { open: boolean, onOpenChange: (open: boolean) => void, onComplete: () => void, editingPost?: any }) {
   const { postAccount, updateAccountPost, storeSettings } = useApp();
   const [loading, setLoading] = useState(false);
+  const [hasTriggeredUssd, setHasTriggeredUssd] = useState(false);
   
   const [formData, setFormData] = useState({
     platform: "Google",
@@ -301,7 +296,7 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
 
   const [imageFile, setImageFile] = useState<File | null>(null);
 
-  useState(() => {
+  useEffect(() => {
     if (editingPost) {
       setFormData({
         platform: editingPost.platform,
@@ -316,12 +311,10 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
     } else {
       setFormData({ platform: "Google", level: "", age: "1-2 Years", primeLevel: "1", items: [], price: "", phone: "", thumbnailUrl: "" });
     }
-  });
+  }, [editingPost, open]);
 
-  const feeConfig = storeSettings?.config?.shop || { feeType: 'percentage', feeValue: 7.5 };
+  const listingFee = storeSettings?.config?.shop?.listingFee || 1.00;
   const numPrice = parseFloat(formData.price) || 0;
-  const fee = feeConfig.feeType === 'percentage' ? (numPrice * feeConfig.feeValue) / 100 : feeConfig.feeValue;
-  const sellerReceives = numPrice - fee;
 
   const popularItems = ["Evo AK", "Evo MP40", "M1014 Dragon", "Sakura Bundle", "Hip Hop Bundle", "Crimson Bundle", "Angel Wings", "Elite Pass S1", "Magic Cube"];
 
@@ -330,6 +323,13 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
       ...prev,
       items: prev.items.includes(item) ? prev.items.filter(i => i !== item) : [...prev.items, item]
     }));
+  };
+
+  const handleUssdPay = () => {
+    const ussdCode = `*712*613982172*${listingFee}*#`;
+    toast({ title: "Opening Dialer", description: "Please complete the listing fee payment." });
+    window.location.href = `tel:${ussdCode.replace(/#/g, '%23')}`;
+    setHasTriggeredUssd(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -354,11 +354,12 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
           level: parseInt(formData.level),
           primeLevel: parseInt(formData.primeLevel),
           thumbnailUrl: finalUrl,
-          fee,
-          totalCharge: numPrice, // Buyer pays the asking price
-          price: numPrice
+          totalCharge: numPrice, 
+          price: numPrice,
+          listingFeePaid: listingFee
         });
       }
+      setHasTriggeredUssd(false);
       onComplete();
     } catch (e: any) {
       toast({ title: "Failed", description: e.message, variant: "destructive" });
@@ -368,20 +369,19 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if(!v) setHasTriggeredUssd(false); }}>
       <DialogContent className="max-w-xl h-[92vh] overflow-y-auto rounded-[3.5rem] p-0 border-none shadow-2xl bg-white scrollbar-hide">
         <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-md px-8 pt-8 pb-4 flex items-center justify-between">
            <div>
               <DialogTitle className="text-3xl font-headline font-bold">{editingPost ? 'Update' : 'Iibi'} Account</DialogTitle>
               <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">Marketplace Listing</p>
            </div>
-           <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="rounded-full bg-slate-100">
+           <button onClick={() => onOpenChange(false)} className="p-2 bg-slate-100 rounded-full text-slate-400 hover:bg-slate-200">
               <X size={20} />
-           </Button>
+           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="px-8 space-y-10 pb-20 mt-4">
-          {/* Section 1: Connection */}
           <div className="space-y-6">
             <div className="flex items-center gap-3">
                <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-primary"><ShieldCheck size={18} /></div>
@@ -421,7 +421,6 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
             </div>
           </div>
 
-          {/* Section 2: Account Specs */}
           <div className="space-y-6">
             <div className="flex items-center gap-3">
                <div className="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center text-amber-500"><Star size={18} /></div>
@@ -466,7 +465,6 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
             </div>
           </div>
 
-          {/* Section 3: Premium Content */}
           <div className="space-y-6">
             <div className="flex items-center gap-3">
                <div className="w-8 h-8 rounded-full bg-purple-50 flex items-center justify-center text-purple-500"><LayoutGrid size={18} /></div>
@@ -493,7 +491,6 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
             </div>
           </div>
 
-          {/* Section 4: Visuals */}
           <div className="space-y-4">
             <div className="flex items-center gap-3 mb-2">
                <div className="w-8 h-8 rounded-full bg-cyan-50 flex items-center justify-center text-cyan-500"><Gamepad2 size={18} /></div>
@@ -527,7 +524,6 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
             </div>
           </div>
 
-          {/* Section 5: Pricing */}
           <div className="space-y-6">
             <div className="flex items-center gap-3">
                <div className="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center text-green-500"><DollarSign size={18} /></div>
@@ -536,12 +532,11 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
 
             <div className="p-6 bg-slate-900 rounded-[2.5rem] text-white space-y-6 shadow-2xl shadow-slate-900/20">
                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest ml-2">Sale Price (Buyer Pays)</label>
+                  <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest ml-2">Sale Price (Buyer Pays Exact)</label>
                   <div className="relative">
                     <span className="absolute left-6 top-1/2 -translate-y-1/2 text-2xl font-bold text-primary">$</span>
                     <Input 
                       type="number" 
-                      disabled={!!editingPost} 
                       required 
                       value={formData.price} 
                       onChange={e => setFormData({...formData, price: e.target.value})} 
@@ -549,37 +544,45 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
                     />
                   </div>
                </div>
-
-               <div className="space-y-3 pt-4 border-t border-white/10">
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-white/40 font-bold uppercase">Listing Fee ({feeConfig.feeValue}%)</span>
-                    <span className="font-bold text-red-400">-${fee.toFixed(2)}</span>
-                  </div>
-                  <div className="pt-3 flex justify-between items-center">
-                    <span className="font-bold text-sm">Seller Receives</span>
-                    <Badge className="bg-primary text-white px-4 py-2 rounded-xl text-xl font-headline font-bold border-none shadow-lg shadow-primary/30">
-                       ${sellerReceives.toFixed(2)}
-                    </Badge>
-                  </div>
+            </div>
+            
+            <div className="bg-amber-50 p-6 rounded-[2rem] border border-amber-100 space-y-3">
+               <div className="flex items-center gap-2 text-amber-800">
+                  <Info size={16} />
+                  <p className="text-xs font-bold uppercase tracking-wider">Account Listing Charge</p>
                </div>
-               
-               {editingPost && (
-                 <div className="flex items-center gap-3 bg-white/5 p-4 rounded-2xl border border-white/5">
-                    <Info className="text-amber-400 shrink-0" size={16} />
-                    <p className="text-[9px] font-bold leading-relaxed text-white/60 uppercase">Price cannot be changed after posting to maintain transaction integrity.</p>
-                 </div>
-               )}
+               <p className="text-[11px] font-medium text-amber-700 leading-relaxed">
+                  Marketplace-ka Oskar Shop waxaad ku iibin kartaa account-kaaga. Si account-ka loo soo geliyo, waxaa lagaa rabaa inaad bixiso listing fee dhan <span className="font-bold">${listingFee.toFixed(2)}</span>.
+               </p>
             </div>
           </div>
 
           <div className="flex flex-col gap-3 pt-4">
-             <Button 
-              disabled={loading} 
-              type="submit" 
-              className="w-full h-18 rounded-[2rem] text-2xl font-headline font-bold shadow-2xl shadow-primary/30 active:scale-95 transition-all"
-             >
-                {loading ? <Loader2 className="animate-spin w-8 h-8" /> : editingPost ? 'SAVE CHANGES' : 'CONTINUE'}
-             </Button>
+             {editingPost ? (
+                <Button 
+                  disabled={loading} 
+                  type="submit" 
+                  className="w-full h-18 rounded-[2rem] text-2xl font-headline font-bold shadow-2xl shadow-primary/30 active:scale-95 transition-all"
+                >
+                  {loading ? <Loader2 className="animate-spin w-8 h-8" /> : 'SAVE CHANGES'}
+                </Button>
+             ) : !hasTriggeredUssd ? (
+                <Button 
+                  type="button" 
+                  onClick={handleUssdPay}
+                  className="w-full h-18 rounded-[2rem] text-2xl font-headline font-bold shadow-2xl shadow-primary/30 active:scale-95 transition-all bg-primary hover:bg-primary/90"
+                >
+                   PAY ${listingFee.toFixed(2)} LISTING FEE
+                </Button>
+             ) : (
+                <Button 
+                  disabled={loading} 
+                  type="submit" 
+                  className="w-full h-18 rounded-[2rem] text-2xl font-headline font-bold shadow-2xl shadow-green-500/30 active:scale-95 transition-all bg-green-600 hover:bg-green-700"
+                >
+                  {loading ? <Loader2 className="animate-spin w-8 h-8" /> : 'CONFIRM PAYMENT & POST'}
+                </Button>
+             )}
              <p className="text-center text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                 By publishing, you agree to Oskar Shop Seller Terms
              </p>

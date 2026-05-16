@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -136,7 +135,6 @@ export default function AdminPage() {
   const [activeView, setActiveView] = useState<'dashboard' | 'orders' | 'products' | 'account-posts' | 'events' | 'users' | 'settings'>('dashboard');
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
   
-  // States for CRUD modals
   const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
   const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
   const [isBannerDialogOpen, setIsBannerDialogOpen] = useState(false);
@@ -158,7 +156,6 @@ export default function AdminPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [orderStatusFilter, setOrderStatusFilter] = useState<string>("all");
 
-  // PIN Authentication
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const sessionPin = sessionStorage.getItem("admin_pin_access");
@@ -339,7 +336,6 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex overflow-hidden">
-      {/* Sidebar */}
       <aside className={cn("h-screen bg-white border-r border-slate-100 flex flex-col transition-all duration-300 z-40", isSidebarExpanded ? "w-64" : "w-20")}>
         <div className="h-20 px-6 flex items-center justify-between">
           {isSidebarExpanded && <span className="font-headline font-bold text-lg text-slate-900">Oskar Control</span>}
@@ -357,7 +353,6 @@ export default function AdminPage() {
         <div className="p-4 border-t"><button onClick={logout} className="w-full h-12 flex items-center gap-4 text-red-500 rounded-xl hover:bg-red-50 px-4"><LogOut size={20} /><span className="font-bold text-sm">Logout</span></button></div>
       </aside>
 
-      {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="h-20 bg-white/60 backdrop-blur-md border-b flex items-center justify-between px-10 shrink-0">
           <h2 className="text-xl font-headline font-bold uppercase tracking-tight">{activeView}</h2>
@@ -376,7 +371,6 @@ export default function AdminPage() {
         </header>
 
         <main className="flex-1 overflow-y-auto p-10 space-y-10 scrollbar-hide">
-          
           {activeView === 'dashboard' && (
             <div className="space-y-10">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -561,7 +555,6 @@ export default function AdminPage() {
           {activeView === 'settings' && (
             <div className="max-w-3xl space-y-8 animate-in slide-in-from-bottom-8">
               <Accordion type="single" collapsible className="w-full space-y-4">
-                 
                  <AccordionItem value="ticker" className="border-none bg-white rounded-[2rem] px-8 shadow-lg">
                     <AccordionTrigger className="hover:no-underline"><div className="flex items-center gap-4 text-left"><div className="p-3 bg-blue-50 text-primary rounded-2xl"><Sparkles size={20} /></div><div><h4 className="font-bold text-slate-900">Announcement Ticker</h4><p className="text-xs text-muted-foreground">Manage the homepage scrolling note</p></div></div></AccordionTrigger>
                     <AccordionContent className="pb-8 space-y-4">
@@ -611,11 +604,11 @@ export default function AdminPage() {
                  </AccordionItem>
 
                  <AccordionItem value="security" className="border-none bg-white rounded-[2rem] px-8 shadow-lg">
-                    <AccordionTrigger className="hover:no-underline"><div className="flex items-center gap-4 text-left"><div className="p-3 bg-purple-50 text-purple-500 rounded-2xl"><Shield size={20} /></div><div><h4 className="font-bold text-slate-900">Admin Security</h4><p className="text-xs text-muted-foreground">Access control and global configuration</p></div></div></AccordionTrigger>
+                    <AccordionTrigger className="hover:no-underline"><div className="flex items-center gap-4 text-left"><div className="p-3 bg-purple-50 text-purple-500 rounded-2xl"><Shield size={20} /></div><div><h4 className="font-bold text-slate-900">Marketplace & Security</h4><p className="text-xs text-muted-foreground">Fees, access control and global configuration</p></div></div></AccordionTrigger>
                     <AccordionContent className="pb-8 space-y-6">
                        <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-2"><Label className="text-[10px] font-bold uppercase tracking-widest ml-1">Control Panel PIN</Label><Input type="password" maxLength={6} defaultValue={storeSettings.config?.adminSettings?.pin} onBlur={e => updateStoreSettings({ config: { ...storeSettings.config, adminSettings: { ...storeSettings.config?.adminSettings, pin: e.target.value } } })} className="h-12 rounded-xl bg-slate-50 border-none shadow-inner" /></div>
-                          <div className="space-y-2"><Label className="text-[10px] font-bold uppercase tracking-widest ml-1">Store Fee (%)</Label><Input type="number" defaultValue={storeSettings.config?.shop?.feeValue} onBlur={e => updateStoreSettings({ config: { ...storeSettings.config, shop: { ...storeSettings.config?.shop, feeValue: parseFloat(e.target.value) } } })} className="h-12 rounded-xl bg-slate-50 border-none shadow-inner" /></div>
+                          <div className="space-y-2"><Label className="text-[10px] font-bold uppercase tracking-widest ml-1">Account Listing Fee ($)</Label><Input type="number" defaultValue={storeSettings.config?.shop?.listingFee || 1} onBlur={e => updateStoreSettings({ config: { ...storeSettings.config, shop: { ...storeSettings.config?.shop, listingFee: parseFloat(e.target.value) } } })} className="h-12 rounded-xl bg-slate-50 border-none shadow-inner" /></div>
                        </div>
                     </AccordionContent>
                  </AccordionItem>
@@ -646,7 +639,6 @@ export default function AdminPage() {
         </main>
       </div>
 
-      {/* User Management Modal */}
       <Dialog open={isUserManageOpen} onOpenChange={setIsUserManageOpen}>
         <DialogContent className="max-w-md w-[95vw] rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl bg-white max-h-[90vh] overflow-y-auto scrollbar-hide">
           <DialogHeader className="sr-only">
@@ -665,7 +657,6 @@ export default function AdminPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Product & Event Modals */}
       <Dialog open={isProductDialogOpen} onOpenChange={setIsProductDialogOpen}>
         <DialogContent className="max-w-xl w-[95vw] rounded-[3rem] p-8 border-none bg-white max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle className="text-2xl font-headline font-bold">Manage Inventory Item</DialogTitle></DialogHeader>
@@ -703,7 +694,6 @@ export default function AdminPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Order Detail Modal */}
       <Dialog open={isOrderDetailOpen} onOpenChange={setIsOrderDetailOpen}>
         <DialogContent className="max-w-3xl w-[95vw] rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl bg-white max-h-[90vh] overflow-y-auto">
           <DialogHeader className="sr-only">
