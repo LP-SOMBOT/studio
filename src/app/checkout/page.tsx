@@ -131,7 +131,7 @@ function CheckoutContent() {
 
       {step < 4 && (
         <div className="flex justify-between items-center mb-10 px-2 relative">
-          <div className="absolute left-0 right-0 h-0.5 bg-gray-100 top-1/2 -translate-y-1/2 mx-8 -z-10" />
+          <div className="absolute left-0 right-0 h-0.5 bg-gray-100 dark:bg-white/5 top-1/2 -translate-y-1/2 mx-8 -z-10" />
           <div 
             className="absolute left-0 h-0.5 bg-primary top-1/2 -translate-y-1/2 mx-8 -z-10 transition-all duration-500" 
             style={{ width: `${((step - 1) / 2) * 100}%` }}
@@ -140,13 +140,15 @@ function CheckoutContent() {
             <div key={s} className="flex flex-col items-center gap-2">
               <div className={cn(
                 "w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all shadow-sm",
-                step >= s ? "bg-primary text-white scale-110 shadow-primary/20" : "bg-white text-gray-400 border-2 border-gray-100"
+                step >= s 
+                  ? "bg-primary text-white scale-110 shadow-primary/20" 
+                  : "bg-white dark:bg-slate-900 text-gray-400 dark:text-gray-600 border-2 border-gray-100 dark:border-white/5"
               )}>
                 {step > s ? <CheckCircle2 className="w-5 h-5" /> : s}
               </div>
               <span className={cn(
                 "text-[10px] font-bold uppercase tracking-wider",
-                step >= s ? "text-primary" : "text-gray-400"
+                step >= s ? "text-primary" : "text-gray-400 dark:text-gray-600"
               )}>
                 {s === 1 ? "Details" : s === 2 ? "Payment" : "Confirm"}
               </span>
@@ -159,35 +161,35 @@ function CheckoutContent() {
         "transition-all duration-300 transform",
         step === 1 ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none absolute inset-0"
       )}>
-        <Card className="rounded-[2.5rem] shadow-xl border-none p-2">
+        <Card className="rounded-[2.5rem] shadow-xl border-none p-2 bg-white dark:bg-slate-900">
           <CardHeader>
-            <CardTitle className="font-headline font-bold text-2xl flex items-center gap-2">
+            <CardTitle className="font-headline font-bold text-2xl flex items-center gap-2 text-slate-900 dark:text-white">
               <Gamepad2 className="w-6 h-6 text-primary" /> In-Game Details
             </CardTitle>
-            <CardDescription>We need this to deliver your {item?.title || 'items'} accurately.</CardDescription>
+            <CardDescription className="dark:text-slate-400">We need this to deliver your {item?.title || 'items'} accurately.</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleDetailsSubmit} className="space-y-6 pt-4">
               {isFreeFire && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="playerID" className="text-sm font-bold">Free Fire Player ID</Label>
+                    <Label htmlFor="playerID" className="text-sm font-bold dark:text-slate-200">Free Fire Player ID</Label>
                     <Input 
                       id="playerID" 
                       placeholder="e.g. 123456789" 
                       required 
-                      className="h-12 rounded-2xl bg-gray-50 border-none focus-visible:ring-primary"
+                      className="h-12 rounded-2xl bg-gray-50 dark:bg-slate-800 border-none focus-visible:ring-primary dark:text-white"
                       value={gameDetails.playerID}
                       onChange={(e) => setGameDetails({...gameDetails, playerID: e.target.value})}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="playerName" className="text-sm font-bold">In-Game Name</Label>
+                    <Label htmlFor="playerName" className="text-sm font-bold dark:text-slate-200">In-Game Name</Label>
                     <Input 
                       id="playerName" 
                       placeholder="e.g. OSKAR_PLAYER" 
                       required 
-                      className="h-12 rounded-2xl bg-gray-50 border-none focus-visible:ring-primary"
+                      className="h-12 rounded-2xl bg-gray-50 dark:bg-slate-800 border-none focus-visible:ring-primary dark:text-white"
                       value={gameDetails.playerName}
                       onChange={(e) => setGameDetails({...gameDetails, playerName: e.target.value})}
                     />
@@ -195,19 +197,19 @@ function CheckoutContent() {
                 </div>
               )}
               <div className="space-y-2">
-                <Label htmlFor="phone" className="text-sm font-bold">Contact Phone Number</Label>
+                <Label htmlFor="phone" className="text-sm font-bold dark:text-slate-200">Contact Phone Number</Label>
                 <Input 
                   id="phone" 
                   type="tel" 
                   placeholder="e.g. 612XXXXXX" 
                   required 
-                  className="h-12 rounded-2xl bg-gray-50 border-none focus-visible:ring-primary"
+                  className="h-12 rounded-2xl bg-gray-50 dark:bg-slate-800 border-none focus-visible:ring-primary dark:text-white"
                   value={gameDetails.phoneNumber}
                   onChange={(e) => setGameDetails({...gameDetails, phoneNumber: e.target.value})}
                 />
               </div>
 
-              <div className="space-y-2 pt-4 border-t">
+              <div className="space-y-2 pt-4 border-t dark:border-white/5">
                 <Label htmlFor="sender" className="text-sm font-bold flex items-center gap-2 text-primary">
                   <CreditCard className="w-4 h-4" /> Geli number ka lacagta kasoo dirtay
                 </Label>
@@ -216,11 +218,11 @@ function CheckoutContent() {
                   type="tel" 
                   placeholder="e.g. 613XXXXXX" 
                   required 
-                  className="h-14 rounded-2xl bg-blue-50 border-2 border-blue-100 focus-visible:ring-primary font-bold text-lg"
+                  className="h-14 rounded-2xl bg-blue-50 dark:bg-blue-900/10 border-2 border-blue-100 dark:border-blue-500/20 focus-visible:ring-primary font-bold text-lg dark:text-white"
                   value={gameDetails.senderNumber}
                   onChange={(e) => setGameDetails({...gameDetails, senderNumber: e.target.value})}
                 />
-                <p className="text-[10px] text-muted-foreground font-medium italic">
+                <p className="text-[10px] text-muted-foreground dark:text-slate-500 font-medium italic">
                   * This is used to verify your payment in our system.
                 </p>
               </div>
@@ -240,9 +242,9 @@ function CheckoutContent() {
         "transition-all duration-300 transform",
         step === 2 ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none absolute inset-0"
       )}>
-        <Card className="rounded-[2.5rem] shadow-xl border-none p-2">
+        <Card className="rounded-[2.5rem] shadow-xl border-none p-2 bg-white dark:bg-slate-900">
           <CardHeader>
-            <CardTitle className="font-headline font-bold text-2xl">Payment Method</CardTitle>
+            <CardTitle className="font-headline font-bold text-2xl text-slate-900 dark:text-white">Payment Method</CardTitle>
           </CardHeader>
           <CardContent>
             <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-4 mb-8">
@@ -252,35 +254,37 @@ function CheckoutContent() {
                   onClick={() => setPaymentMethod(method)}
                   className={cn(
                     "flex items-center justify-between p-5 border-2 rounded-[2rem] cursor-pointer transition-all",
-                    paymentMethod === method ? 'border-primary bg-primary/5' : 'border-gray-50 hover:bg-gray-50'
+                    paymentMethod === method 
+                      ? 'border-primary bg-primary/5 dark:bg-primary/10' 
+                      : 'border-gray-50 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-slate-800/50'
                   )}
                 >
                   <Label htmlFor={method} className="flex items-center gap-4 cursor-pointer w-full">
                     <div className={cn(
                       "w-12 h-12 rounded-2xl flex items-center justify-center transition-colors",
-                      paymentMethod === method ? "bg-primary text-white" : "bg-gray-100 text-gray-500"
+                      paymentMethod === method ? "bg-primary text-white" : "bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-slate-400"
                     )}>
                       <Smartphone className="w-6 h-6" />
                     </div>
                     <div className="flex-1">
-                      <p className="font-bold text-lg">{method}</p>
-                      <p className="text-xs text-muted-foreground">Mobile payment integration</p>
+                      <p className="font-bold text-lg dark:text-white">{method}</p>
+                      <p className="text-xs text-muted-foreground dark:text-slate-500">Mobile payment integration</p>
                     </div>
-                    <RadioGroupItem value={method} id={method} />
+                    <RadioGroupItem value={method} id={method} className="dark:border-white/20" />
                   </Label>
                 </div>
               ))}
             </RadioGroup>
 
-            <div className="bg-gray-50 p-6 rounded-[2rem] mb-8 border border-gray-100">
+            <div className="bg-gray-50 dark:bg-slate-800/40 p-6 rounded-[2rem] mb-8 border border-gray-100 dark:border-white/5">
               <div className="flex justify-between items-center">
-                <span className="text-base text-muted-foreground font-medium">Order Total:</span>
+                <span className="text-base text-muted-foreground dark:text-slate-400 font-medium">Order Total:</span>
                 <span className="text-3xl font-headline font-bold text-primary">${total.toFixed(2)}</span>
               </div>
             </div>
 
             <div className="flex gap-4">
-              <Button variant="ghost" onClick={() => setStep(1)} className="flex-1 h-14 rounded-2xl gap-2 font-bold">
+              <Button variant="ghost" onClick={() => setStep(1)} className="flex-1 h-14 rounded-2xl gap-2 font-bold dark:text-slate-300">
                 <ArrowLeft className="w-4 h-4" /> Back
               </Button>
               <Button 
@@ -298,33 +302,33 @@ function CheckoutContent() {
         "transition-all duration-300 transform",
         step === 3 ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none absolute inset-0"
       )}>
-        <Card className="rounded-[2.5rem] shadow-2xl border-none p-4 text-center">
+        <Card className="rounded-[2.5rem] shadow-2xl border-none p-4 text-center bg-white dark:bg-slate-900">
           <CardContent className="pt-8">
-            <div className="mx-auto w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6 animate-bounce">
+            <div className="mx-auto w-20 h-20 bg-green-100 dark:bg-green-500/20 rounded-full flex items-center justify-center mb-6 animate-bounce">
               <ShieldCheck className="w-10 h-10 text-green-500" />
             </div>
-            <h2 className="text-2xl font-headline font-bold mb-4">Confirm Your Payment</h2>
-            <p className="text-muted-foreground mb-8 text-sm leading-relaxed px-2">
+            <h2 className="text-2xl font-headline font-bold mb-4 text-slate-900 dark:text-white">Confirm Your Payment</h2>
+            <p className="text-muted-foreground dark:text-slate-400 mb-8 text-sm leading-relaxed px-2">
               Did you finish the USSD transaction on your phone? 
               Once confirmed, our system will immediately process your delivery.
             </p>
-            <div className="bg-primary/5 p-6 rounded-3xl mb-8 text-left border border-primary/10">
-              <div className="flex justify-between font-bold text-lg mb-2">
+            <div className="bg-primary/5 dark:bg-primary/10 p-6 rounded-3xl mb-8 text-left border border-primary/10 dark:border-primary/20">
+              <div className="flex justify-between font-bold text-lg mb-2 dark:text-white">
                 <span>Total Amount</span>
                 <span className="text-primary">${total.toFixed(2)}</span>
               </div>
-              <div className="space-y-1 pt-2 border-t border-primary/10 mt-2">
-                <div className="text-xs text-muted-foreground flex justify-between items-center">
+              <div className="space-y-1 pt-2 border-t border-primary/10 dark:border-white/5 mt-2">
+                <div className="text-xs text-muted-foreground dark:text-slate-500 flex justify-between items-center">
                   <span>Sender Number:</span>
-                  <span className="font-mono font-bold text-foreground">{gameDetails.senderNumber || "N/A"}</span>
+                  <span className="font-mono font-bold text-foreground dark:text-slate-200">{gameDetails.senderNumber || "N/A"}</span>
                 </div>
-                <div className="text-xs text-muted-foreground flex justify-between items-center">
+                <div className="text-xs text-muted-foreground dark:text-slate-500 flex justify-between items-center">
                   <span>Player ID:</span>
-                  <span className="font-mono font-bold text-foreground">{gameDetails.playerID || "N/A"}</span>
+                  <span className="font-mono font-bold text-foreground dark:text-slate-200">{gameDetails.playerID || "N/A"}</span>
                 </div>
-                <div className="text-xs text-muted-foreground flex justify-between items-center">
+                <div className="text-xs text-muted-foreground dark:text-slate-500 flex justify-between items-center">
                   <span>Method:</span>
-                  <span className="font-bold text-foreground">{paymentMethod}</span>
+                  <span className="font-bold text-foreground dark:text-slate-200">{paymentMethod}</span>
                 </div>
               </div>
             </div>
@@ -341,7 +345,7 @@ function CheckoutContent() {
                   </div>
                 ) : "Submit & Confirm Order"}
               </Button>
-              <Button variant="ghost" onClick={() => setStep(2)} className="h-12 rounded-xl text-muted-foreground">
+              <Button variant="ghost" onClick={() => setStep(2)} className="h-12 rounded-xl text-muted-foreground dark:text-slate-500 hover:dark:text-slate-300">
                  Cancel & Go Back
               </Button>
             </div>
@@ -362,9 +366,9 @@ function CheckoutContent() {
             <PartyPopper className="absolute -top-3 -right-3 w-8 h-8 text-yellow-500 animate-bounce" />
           </div>
           
-          <h1 className="text-4xl font-headline font-bold mb-4">Boom! Success.</h1>
-          <p className="text-base text-muted-foreground max-w-sm mb-10 leading-relaxed">
-            Your order is now being processed. We'll send the diamonds to <span className="font-bold text-foreground">@{gameDetails.playerName || "your account"}</span> shortly!
+          <h1 className="text-4xl font-headline font-bold mb-4 text-slate-900 dark:text-white">Boom! Success.</h1>
+          <p className="text-base text-muted-foreground dark:text-slate-400 max-w-sm mb-10 leading-relaxed">
+            Your order is now being processed. We'll send the diamonds to <span className="font-bold text-foreground dark:text-white">@{gameDetails.playerName || "your account"}</span> shortly!
           </p>
 
           <div className="grid grid-cols-1 gap-3 w-full max-w-sm">
@@ -378,7 +382,7 @@ function CheckoutContent() {
             </Button>
             <Button 
               variant="ghost"
-              className="h-12 rounded-2xl text-muted-foreground"
+              className="h-12 rounded-2xl text-muted-foreground dark:text-slate-500"
               onClick={() => router.push('/')}
             >
               Back to Homepage
