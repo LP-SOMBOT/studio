@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
@@ -26,7 +27,8 @@ import {
   limitToLast,
   increment,
   off,
-  get
+  get,
+  runTransaction
 } from 'firebase/database';
 import { toast } from '@/hooks/use-toast';
 import { type GamePackage } from './games-data';
@@ -500,9 +502,27 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const createOrder = async (paymentMethod: string, gameDetails: any, directItem: CartItem) => {
     if (!rtdb || !user) return;
     
-    // Generate a readable unique ID e.g., iibinta842913
-    const randomNum = Math.floor(100000 + Math.random() * 900000);
-    const orderId = `iibinta${randomNum}`;
+    // Use a persistent counter for sequential Order IDs
+    const counterRef = ref(rtdb, 'settings/orderCounter');
+    let sequenceId = 10;
+    
+    try {
+      const result = await runTransaction(counterRef, (currentValue) => {
+        if (currentValue === null || typeof currentValue !== 'number' || currentValue < 10) {
+          return 10;
+        }
+        return currentValue + 1;
+      });
+      
+      if (result.committed) {
+        sequenceId = result.snapshot.val();
+      }
+    } catch (e) {
+      console.error("Counter transaction failed, using timestamp fallback", e);
+      sequenceId = Date.now();
+    }
+
+    const orderId = `iibinta${sequenceId}`;
     
     const newOrder: Order = {
       id: orderId,
