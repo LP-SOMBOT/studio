@@ -105,7 +105,7 @@ function OrderCard({ order }: { order: any }) {
                    <div className="flex items-center gap-2">
                       <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{order.paymentMethod || 'Mobile'}</p>
                       <span className="w-1 h-1 rounded-full bg-slate-200 dark:bg-slate-800" />
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">ID: #{order.id.slice(0, 8)}</p>
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">ID: #{order.id.toUpperCase()}</p>
                    </div>
                    <p className="text-[10px] text-muted-foreground font-medium mt-1">
                       {format(new Date(order.createdAt), 'PPpp')}
