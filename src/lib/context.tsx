@@ -101,12 +101,20 @@ type GameEvent = {
   endDate?: string;
 };
 
+type Banner = {
+  id: string;
+  imageUrl: string;
+  linkTo?: string;
+  active: boolean;
+  createdAt: number;
+};
+
 type StoreSettings = {
   isLive: boolean;
   announcementTicker?: string;
   logo?: string;
   onboardingImages?: string[];
-  sliderImages?: string[];
+  sliderImages?: string[]; // Legacy, moving to banners node
   appStatus?: {
     offline: boolean;
     offlineTitle?: string;
@@ -135,6 +143,7 @@ type UserProfile = {
   gameName?: string;
   gameUid?: string;
   phoneNumber?: string;
+  banned?: boolean;
 };
 
 type AppContextType = {
@@ -156,6 +165,7 @@ type AppContextType = {
   accountPosts: AccountPost[];
   notifications: AppNotification[];
   events: GameEvent[];
+  banners: Banner[];
   createOrder: (paymentMethod: string, gameDetails: any, directItem: CartItem) => Promise<void>;
   postAccount: (data: Partial<AccountPost>) => Promise<void>;
   updateAccountPost: (postId: string, data: Partial<AccountPost>) => Promise<void>;
@@ -171,6 +181,8 @@ type AppContextType = {
   deleteProduct: (id: string) => Promise<void>;
   saveEvent: (event: Partial<GameEvent>) => Promise<void>;
   deleteEvent: (id: string) => Promise<void>;
+  saveBanner: (banner: Partial<Banner>) => Promise<void>;
+  deleteBanner: (id: string) => Promise<void>;
   storeSettings: StoreSettings;
   updateStoreSettings: (settings: any) => Promise<void>;
   broadcastNotification: (title: string, body: string, target?: string) => Promise<void>;
@@ -184,6 +196,8 @@ type AppContextType = {
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
+
+const CACHE_KEY = 'oskar_user_cache';
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const { user, loading } = useUser();
@@ -202,7 +216,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [events, setEvents] = useState<GameEvent[]>([]);
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [banners, setBanners] = useState<Banner[]>([]);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(() => {
+    if (typeof window !== 'undefined') {
+      const cached = localStorage.getItem(CACHE_KEY);
+      return cached ? JSON.parse(cached) : null;
+    }
+    return null;
+  });
   const [storeSettings, setStoreSettings] = useState<StoreSettings>({});
   const [chatTargetId, setChatTargetId] = useState<string | null>(null);
   const [messages, setMessages] = useState<any[]>([]);
@@ -237,12 +258,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const productsRef = ref(rtdb, 'products');
     const accPostsRef = ref(rtdb, 'accountPosts');
     const eventsRef = ref(rtdb, 'events');
+    const bannersRef = ref(rtdb, 'banners');
     const usersRef = ref(rtdb, 'users');
 
     onValue(settingsRef, (s) => setStoreSettings(s.val() || {}));
     onValue(productsRef, (s) => setProducts(s.val() ? Object.entries(s.val()).map(([id, v]: any) => ({ ...v, id })) : []));
     onValue(accPostsRef, (s) => setAccountPosts(s.val() ? Object.entries(s.val()).map(([id, v]: any) => ({ ...v, id })) : []));
     onValue(eventsRef, (s) => setEvents(s.val() ? Object.entries(s.val()).map(([id, v]: any) => ({ ...v, id })) : []));
+    onValue(bannersRef, (s) => setBanners(s.val() ? Object.entries(s.val()).map(([id, v]: any) => ({ ...v, id })) : []));
     onValue(usersRef, (s) => {
       if (s.val()) {
         const users = Object.entries(s.val()).map(([uid, v]: any) => ({
@@ -262,6 +285,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       off(productsRef);
       off(accPostsRef);
       off(eventsRef);
+      off(bannersRef);
       off(usersRef);
       clearTimeout(timer);
     };
@@ -278,7 +302,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const notifsRef = query(ref(rtdb, `notifications/${user.uid}`), limitToLast(30));
     const userOrdersRef = query(ref(rtdb, 'orders'), orderByChild('userId'), equalTo(user.uid));
 
-    onValue(profileRef, (s) => setUserProfile(s.val()));
+    onValue(profileRef, (s) => {
+      const data = s.val();
+      setUserProfile(data);
+      if (data) localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+      if (data?.banned) {
+        toast({ title: "Account Banned", description: "Your account has been suspended.", variant: "destructive" });
+        logout();
+      }
+    });
     onValue(notifsRef, (s) => setNotifications(s.val() ? Object.entries(s.val()).map(([id, v]: any) => ({ ...v, id })).sort((a,b) => b.createdAt - a.createdAt) : []));
     onValue(userOrdersRef, (s) => setOrders(s.val() ? Object.entries(s.val()).map(([id, v]: any) => ({ ...v, id })).sort((a,b) => b.createdAt - a.createdAt) : []));
 
@@ -299,35 +331,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     };
   }, [user, userProfile]);
 
-  // Robust REAL-TIME Admin Listener
   useEffect(() => {
     const isPinAuthorized = typeof window !== 'undefined' && sessionStorage.getItem("admin_pin_access") === "granted";
-    
     if (!rtdb || (!enhancedUser?.isAdmin && !isPinAuthorized)) {
       if (allOrders.length > 0) setAllOrders([]);
       return;
     }
-
     const allOrdersRef = ref(rtdb, 'orders');
     const chatIndexRef = ref(rtdb, 'chatIndex');
-
     const unsubscribeOrders = onValue(allOrdersRef, (snapshot) => {
       const val = snapshot.val();
-      if (val) {
-        const sorted = Object.entries(val)
-          .map(([id, v]: any) => ({ ...v, id }))
-          .sort((a, b) => b.createdAt - a.createdAt);
-        setAllOrders(sorted);
-      } else {
-        setAllOrders([]);
-      }
+      if (val) setAllOrders(Object.entries(val).map(([id, v]: any) => ({ ...v, id })).sort((a, b) => b.createdAt - a.createdAt));
+      else setAllOrders([]);
     });
-
     const unsubscribeChat = onValue(chatIndexRef, (snapshot) => {
       const val = snapshot.val();
       setAllChatSessions(val ? Object.entries(val).map(([userId, v]: any) => ({ userId, ...v })).sort((a,b) => b.lastTimestamp - a.lastTimestamp) : []);
     });
-
     return () => {
       off(allOrdersRef, 'value', unsubscribeOrders);
       off(chatIndexRef, 'value', unsubscribeChat);
@@ -352,7 +372,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     try {
       const cred = await createUserWithEmailAndPassword(auth, e, p);
       await updateProfile(cred.user, { displayName: n });
-      await set(ref(rtdb, `users/${cred.user.uid}`), {
+      const profile = {
         uid: cred.user.uid,
         email: e,
         name: n,
@@ -360,13 +380,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         role: 'user',
         points: 0,
         createdAt: Date.now()
-      });
+      };
+      await set(ref(rtdb, `users/${cred.user.uid}`), profile);
+      localStorage.setItem(CACHE_KEY, JSON.stringify(profile));
     } finally { setIsGlobalLoading(false); }
   };
 
   const logout = async () => {
     setIsGlobalLoading(true);
     try { 
+      localStorage.removeItem(CACHE_KEY);
       await signOut(auth); 
       router.push('/login');
     } finally { setIsGlobalLoading(false); }
@@ -439,53 +462,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const updateOrderStatus = async (oid: string, status: string) => {
     if (!rtdb) return;
-    
-    // Fetch current state to determine point reversal logic
     const orderSnap = await get(ref(rtdb, `orders/${oid}`));
     const orderData = orderSnap.val();
     if (!orderData) return;
-    
     const oldStatus = orderData.status;
     const userId = orderData.userId;
-    
     await update(ref(rtdb, `orders/${oid}`), { status });
-    
     if (userId) {
       if (oldStatus !== 'successful' && status === 'successful') {
-        // Just turned successful -> Reward point
         await update(ref(rtdb, `users/${userId}`), { points: increment(1) });
-        const nid = push(ref(rtdb, `notifications/${userId}`)).key;
-        await set(ref(rtdb, `notifications/${userId}/${nid}`), {
-          type: 'order_status',
-          title: "Order Successful! ✅",
-          body: `Your items have been delivered. You earned 1 point!`,
-          read: false,
-          createdAt: Date.now(),
-          linkTo: '#orders'
-        });
+        broadcastNotification("Order Successful! ✅", "Your items have been delivered. You earned 1 point!", userId);
       } else if (oldStatus === 'successful' && status !== 'successful') {
-        // Was successful, now it's cancelled/revoked -> Reverse point
         await update(ref(rtdb, `users/${userId}`), { points: increment(-1) });
-        const nid = push(ref(rtdb, `notifications/${userId}`)).key;
-        await set(ref(rtdb, `notifications/${userId}/${nid}`), {
-          type: 'order_status',
-          title: "Order Update: Points Revoked ⚠️",
-          body: `Your order was marked as ${status}. 1 point was deducted from your balance.`,
-          read: false,
-          createdAt: Date.now(),
-          linkTo: '#orders'
-        });
-      } else if (oldStatus !== status) {
-        // Other status changes
-        const nid = push(ref(rtdb, `notifications/${userId}`)).key;
-        await set(ref(rtdb, `notifications/${userId}/${nid}`), {
-          type: 'order_status',
-          title: "Order Progress Update",
-          body: `Your order is now being ${status}.`,
-          read: false,
-          createdAt: Date.now(),
-          linkTo: '#orders'
-        });
+        broadcastNotification("Order Update: Points Revoked ⚠️", `Order was marked as ${status}. 1 point reversed.`, userId);
       }
     }
   };
@@ -493,6 +482,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const updateAccountPostStatus = async (pid: string, status: string) => {
     if (!rtdb) return;
     await update(ref(rtdb, `accountPosts/${pid}`), { status });
+    const postSnap = await get(ref(rtdb, `accountPosts/${pid}`));
+    const postData = postSnap.val();
+    if (postData?.uid) {
+      broadcastNotification(
+        status === 'approved' ? "Post Approved! ✅" : "Post Rejected ❌",
+        status === 'approved' ? "Your account is now live in the marketplace." : "Your account listing was rejected by admin.",
+        postData.uid
+      );
+    }
   };
 
   const updateUserProfile = async (updates: any) => {
@@ -505,6 +503,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (!rtdb) return;
     await update(ref(rtdb, `users/${uid}`), updates);
     toast({ title: "User updated!" });
+  };
+
+  const deleteUser = async (uid: string) => {
+    if (!rtdb) return;
+    await remove(ref(rtdb, `users/${uid}`));
+    toast({ title: "User account deleted." });
   };
 
   const markNotificationsAsRead = async (nid?: string) => {
@@ -546,28 +550,40 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const cleanData: any = {};
     Object.keys(data).forEach(key => {
       const val = data[key];
-      if (val !== undefined && val !== null && val !== "" && !Number.isNaN(val)) {
-        cleanData[key] = val;
-      }
+      if (val !== undefined && val !== null && val !== "" && !Number.isNaN(val)) cleanData[key] = val;
     });
-
-    if (id) {
-      await update(ref(rtdb, `products/${id}`), cleanData);
-    } else {
-      await push(ref(rtdb, 'products'), cleanData);
-    }
+    if (id) await update(ref(rtdb, `products/${id}`), cleanData);
+    else await push(ref(rtdb, 'products'), cleanData);
   };
 
   const deleteProduct = async (id: string) => remove(ref(rtdb, `products/${id}`));
-  const deleteUser = async (uid: string) => remove(ref(rtdb, `users/${uid}`));
+  
+  const saveEvent = async (e: any) => {
+    if (!rtdb) return;
+    const { id, ...data } = e;
+    if (id) await update(ref(rtdb, `events/${id}`), data);
+    else await push(ref(rtdb, 'events'), data);
+  };
+
+  const deleteEvent = async (id: string) => remove(ref(rtdb, `events/${id}`));
+
+  const saveBanner = async (b: any) => {
+    if (!rtdb) return;
+    const { id, ...data } = b;
+    if (id) await update(ref(rtdb, `banners/${id}`), data);
+    else await push(ref(rtdb, 'banners'), { ...data, createdAt: Date.now(), active: true });
+  };
+
+  const deleteBanner = async (id: string) => remove(ref(rtdb, `banners/${id}`));
+
   const updateStoreSettings = async (s: any) => update(ref(rtdb, 'settings'), s);
 
   return (
     <AppContext.Provider value={{ 
       user: enhancedUser, loading, isGlobalLoading, isInitialLoading, activeTab, setActiveTab, setGlobalLoading: setIsGlobalLoading,
-      login, signup, logout, buyNow, orders, allOrders, products, allUsers, accountPosts, notifications, events,
+      login, signup, logout, buyNow, orders, allOrders, products, allUsers, accountPosts, notifications, events, banners,
       createOrder, postAccount, updateAccountPost, deleteAccountPost, buyAccountPost, markNotificationsAsRead, updateOrderStatus, updateAccountPostStatus, 
-      updateUserProfile, manageUser, deleteUser, saveProduct, deleteProduct, saveEvent: async()=>{}, deleteEvent: async()=>{}, storeSettings, updateStoreSettings, 
+      updateUserProfile, manageUser, deleteUser, saveProduct, deleteProduct, saveEvent, deleteEvent, saveBanner, deleteBanner, storeSettings, updateStoreSettings, 
       broadcastNotification, messages, allChatSessions, chatTargetId, setChatTargetId, sendMessage, markMessagesAsRead, refreshAdminData
     }}>
       {children}

@@ -4,22 +4,15 @@
 import { useEffect, useState, useMemo } from "react";
 import Image from "next/image";
 import { useApp } from "@/lib/context";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function HeroSlider() {
-  const { storeSettings } = useApp();
+  const { banners, isInitialLoading } = useApp();
   const [current, setCurrent] = useState(0);
 
   const slides = useMemo(() => {
-    if (storeSettings.sliderImages && storeSettings.sliderImages.length > 0) {
-      return storeSettings.sliderImages.map((url, i) => ({
-        id: `custom-${i}`,
-        imageUrl: url,
-        description: "Promotion",
-        imageHint: "gaming"
-      }));
-    }
-    return [];
-  }, [storeSettings.sliderImages]);
+    return (banners || []).filter(b => b.active);
+  }, [banners]);
 
   useEffect(() => {
     if (slides.length <= 1) return;
@@ -29,9 +22,13 @@ export default function HeroSlider() {
     return () => clearInterval(timer);
   }, [slides.length]);
 
+  if (isInitialLoading) {
+    return <Skeleton className="w-full aspect-[21/9] md:aspect-[3/1] rounded-[2rem] animate-shimmer" />;
+  }
+
   if (slides.length === 0) {
     return (
-      <div className="w-full aspect-[21/9] md:aspect-[3/1] bg-gray-100 rounded-[2rem] flex items-center justify-center text-muted-foreground italic text-sm">
+      <div className="w-full aspect-[21/9] md:aspect-[3/1] bg-slate-100 rounded-[2rem] flex items-center justify-center text-slate-400 italic text-xs font-bold border-2 border-dashed border-slate-200">
         No active promotions.
       </div>
     );
@@ -48,11 +45,10 @@ export default function HeroSlider() {
         >
           <Image
             src={slide.imageUrl}
-            alt={slide.description}
+            alt="Oskar Shop Promotion"
             fill
             className="object-cover"
             priority={index === 0}
-            data-ai-hint={slide.imageHint}
             unoptimized
           />
         </div>
@@ -65,7 +61,7 @@ export default function HeroSlider() {
               key={i}
               onClick={() => setCurrent(i)}
               className={`w-2 md:w-8 h-2 rounded-full transition-all duration-300 ${
-                i === current ? "bg-white w-8 md:w-12" : "bg-white/40"
+                i === current ? "bg-white w-8 md:w-12 shadow-lg" : "bg-white/40"
               }`}
             />
           ))}

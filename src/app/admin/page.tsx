@@ -45,7 +45,13 @@ import {
   ArrowUpCircle,
   ArrowDownCircle,
   Shield,
-  Star
+  Star,
+  Ban,
+  LayoutGrid,
+  ChevronDown,
+  Layers,
+  Sparkles,
+  Info
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -79,11 +85,11 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
@@ -102,19 +108,24 @@ import { format } from "date-fns";
 export default function AdminPage() {
   const { 
     user, 
-    loading,
     storeSettings, 
     updateStoreSettings, 
     allUsers, 
     allOrders, 
     products, 
     accountPosts,
+    events,
+    banners,
     updateOrderStatus,
     updateAccountPostStatus,
     deleteUser,
     manageUser,
     saveProduct,
     deleteProduct,
+    saveEvent,
+    deleteEvent,
+    saveBanner,
+    deleteBanner,
     logout,
     isInitialLoading,
     refreshAdminData
@@ -122,34 +133,29 @@ export default function AdminPage() {
 
   const [pin, setPin] = useState("");
   const [isPinAuthenticated, setIsPinAuthenticated] = useState(false);
-  const [activeView, setActiveView] = useState<'dashboard' | 'orders' | 'products' | 'account-posts' | 'users' | 'settings'>('dashboard');
+  const [activeView, setActiveView] = useState<'dashboard' | 'orders' | 'products' | 'account-posts' | 'events' | 'users' | 'settings'>('dashboard');
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
   
-  // Product CRUD state
+  // States for CRUD modals
   const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<any>(null);
-  const [productForm, setProductForm] = useState({
-    title: "",
-    gameId: "freefire",
-    category: "top-up",
-    description: "",
-    price: "",
-    discountedPrice: "",
-    thumbnail: ""
-  });
-
-  // User Management state
+  const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
+  const [isBannerDialogOpen, setIsBannerDialogOpen] = useState(false);
   const [isUserManageOpen, setIsUserManageOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<any>(null);
-  const [pointAdjustment, setPointAdjustment] = useState("");
-
-  // Order Details state
-  const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [isOrderDetailOpen, setIsOrderDetailOpen] = useState(false);
-  const [orderStatusFilter, setOrderStatusFilter] = useState<string>("all");
 
+  const [editingProduct, setEditingProduct] = useState<any>(null);
+  const [editingEvent, setEditingEvent] = useState<any>(null);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+
+  const [productForm, setProductForm] = useState({ title: "", gameId: "freefire", category: "top-up", description: "", price: "", discountedPrice: "", thumbnail: "" });
+  const [eventForm, setEventForm] = useState({ title: "", description: "", thumbnailUrl: "", type: "freefire_event", active: true });
+  const [bannerForm, setBannerForm] = useState({ imageUrl: "", linkTo: "" });
+
+  const [pointAdjustment, setPointAdjustment] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [orderStatusFilter, setOrderStatusFilter] = useState<string>("all");
 
   // PIN Authentication
   useEffect(() => {
@@ -162,7 +168,7 @@ export default function AdminPage() {
     if (pin === savedPin) {
       setIsPinAuthenticated(true);
       sessionStorage.setItem("admin_pin_access", "granted");
-      toast({ title: "PIN Accepted", description: "Admin access granted." });
+      toast({ title: "PIN Accepted" });
       window.location.reload();
     } else {
       toast({ title: "Wrong PIN", variant: "destructive" });
@@ -170,124 +176,100 @@ export default function AdminPage() {
     }
   };
 
-  const handlePinClick = (val: string) => {
-    if (pin.length < 6) setPin(prev => prev + val);
-  };
-
   const handleOpenProductDialog = (product?: any) => {
     if (product) {
       setEditingProduct(product);
-      setProductForm({
-        title: product.title || "",
-        gameId: product.gameId || "freefire",
-        category: product.category || "top-up",
-        description: product.description || "",
-        price: product.price?.toString() || "",
-        discountedPrice: product.discountedPrice?.toString() || "",
-        thumbnail: product.thumbnail || ""
-      });
+      setProductForm({ ...product, price: product.price?.toString(), discountedPrice: product.discountedPrice?.toString() || "" });
     } else {
       setEditingProduct(null);
-      setProductForm({
-        title: "",
-        gameId: "freefire",
-        category: "top-up",
-        description: "",
-        price: "",
-        discountedPrice: "",
-        thumbnail: ""
-      });
+      setProductForm({ title: "", gameId: "freefire", category: "top-up", description: "", price: "", discountedPrice: "", thumbnail: "" });
     }
     setIsProductDialogOpen(true);
+  };
+
+  const handleOpenEventDialog = (ev?: any) => {
+    if (ev) {
+      setEditingEvent(ev);
+      setEventForm(ev);
+    } else {
+      setEditingEvent(null);
+      setEventForm({ title: "", description: "", thumbnailUrl: "", type: "freefire_event", active: true });
+    }
+    setIsEventDialogOpen(true);
   };
 
   const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsUploading(true);
     try {
-      const payload = {
-        ...productForm,
-        price: parseFloat(productForm.price),
-        discountedPrice: productForm.discountedPrice ? parseFloat(productForm.discountedPrice) : undefined,
-        id: editingProduct?.id
-      };
-      await saveProduct(payload);
-      toast({ title: editingProduct ? "Product Updated" : "Product Created" });
+      await saveProduct({ ...productForm, price: parseFloat(productForm.price), discountedPrice: productForm.discountedPrice ? parseFloat(productForm.discountedPrice) : undefined });
+      toast({ title: "Product Saved" });
       setIsProductDialogOpen(false);
-    } catch (err) {
-      toast({ title: "Operation failed", variant: "destructive" });
-    } finally {
-      setIsUploading(false);
-    }
+    } catch (err) { toast({ title: "Save Failed", variant: "destructive" }); }
+    finally { setIsUploading(false); }
+  };
+
+  const handleSaveEvent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsUploading(true);
+    try {
+      await saveEvent(eventForm);
+      toast({ title: "Event Saved" });
+      setIsEventDialogOpen(false);
+    } finally { setIsUploading(false); }
+  };
+
+  const handleSaveBanner = async () => {
+    if (!bannerForm.imageUrl) return;
+    setIsUploading(true);
+    try {
+      await saveBanner(bannerForm);
+      toast({ title: "Banner Added" });
+      setBannerForm({ imageUrl: "", linkTo: "" });
+      setIsBannerDialogOpen(false);
+    } finally { setIsUploading(false); }
   };
 
   const handleAdjustPoints = async (type: 'credit' | 'debit') => {
     if (!selectedUser || !pointAdjustment) return;
     const amount = parseInt(pointAdjustment);
-    if (isNaN(amount)) return;
-    
-    const finalAmount = type === 'credit' ? amount : -amount;
-    const newPoints = (selectedUser.points || 0) + finalAmount;
-    
+    const newPoints = (selectedUser.points || 0) + (type === 'credit' ? amount : -amount);
     await manageUser(selectedUser.uid, { points: newPoints });
-    setSelectedUser((prev: any) => ({ ...prev, points: newPoints }));
+    setSelectedUser({ ...selectedUser, points: newPoints });
     setPointAdjustment("");
     toast({ title: `Points ${type === 'credit' ? 'Credited' : 'Debited'}` });
   };
 
-  const handleUpdateRole = async (role: string) => {
+  const handleBanUser = async () => {
     if (!selectedUser) return;
-    await manageUser(selectedUser.uid, { role });
-    setSelectedUser((prev: any) => ({ ...prev, role }));
-    toast({ title: `Role updated to ${role}` });
-  };
-
-  const handleViewOrder = (order: any) => {
-    setSelectedOrder(order);
-    setIsOrderDetailOpen(true);
+    const isBanned = !selectedUser.banned;
+    await manageUser(selectedUser.uid, { banned: isBanned });
+    setSelectedUser({ ...selectedUser, banned: isBanned });
+    toast({ title: isBanned ? "User Banned" : "User Unbanned", variant: isBanned ? "destructive" : "default" });
   };
 
   const handleStatusChange = async (orderId: string, status: string) => {
-    try {
-      await updateOrderStatus(orderId, status);
-      toast({ title: `Order ${status.toUpperCase()}` });
-      if (selectedOrder?.id === orderId) {
-        setSelectedOrder((prev: any) => ({ ...prev, status }));
-      }
-    } catch (err) {
-      toast({ title: "Status update failed", variant: "destructive" });
-    }
+    await updateOrderStatus(orderId, status);
+    toast({ title: `Order ${status}` });
+    if (selectedOrder?.id === orderId) setSelectedOrder({ ...selectedOrder, status });
   };
 
-  const handleProductImageUpload = async (file: File) => {
+  const handleImageUpload = async (file: File, target: 'product' | 'event' | 'banner' | 'offline') => {
     setIsUploading(true);
     try {
       const url = await uploadToImgbb(file);
-      setProductForm(prev => ({ ...prev, thumbnail: url }));
+      if (target === 'product') setProductForm(p => ({ ...p, thumbnail: url }));
+      if (target === 'event') setEventForm(e => ({ ...e, thumbnailUrl: url }));
+      if (target === 'banner') setBannerForm(b => ({ ...b, imageUrl: url }));
+      if (target === 'offline') updateStoreSettings({ appStatus: { ...storeSettings.appStatus, offlineImageUrl: url } });
       toast({ title: "Image Uploaded" });
-    } catch (e) {
-      toast({ title: "Upload Failed", variant: "destructive" });
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  const handleOfflineImageUpload = async (file: File) => {
-    setIsUploading(true);
-    try {
-      const url = await uploadToImgbb(file);
-      await updateStoreSettings({ appStatus: { ...storeSettings.appStatus, offlineImageUrl: url } });
-      toast({ title: "Media Updated" });
-    } catch (e) {
-      toast({ title: "Upload Failed", variant: "destructive" });
-    } finally {
-      setIsUploading(false);
-    }
+    } catch (e) { toast({ title: "Upload Failed", variant: "destructive" }); }
+    finally { setIsUploading(false); }
   };
 
   if (isInitialLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 p-10 flex flex-col items-center justify-center gap-6">
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center gap-6">
         <Loader2 className="w-10 h-10 animate-spin text-primary" />
         <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Waking Oskar Control...</p>
       </div>
@@ -297,29 +279,20 @@ export default function AdminPage() {
   if (!isPinAuthenticated && !user?.isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-900 p-4">
-        <Card className="max-w-md w-full p-10 rounded-[3rem] bg-white shadow-2xl text-center animate-in zoom-in duration-500">
+        <Card className="max-w-md w-full p-10 rounded-[3rem] bg-white shadow-2xl text-center">
           <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto mb-6 text-primary">
             <Lock size={40} />
           </div>
           <h2 className="text-2xl font-headline font-bold mb-2">OskarShop Admin</h2>
-          <p className="text-muted-foreground text-sm mb-8 font-medium">Enter Admin PIN to continue</p>
-          
+          <p className="text-muted-foreground text-sm mb-8">Enter Admin PIN to continue</p>
           <div className="flex justify-center gap-3 mb-10">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className={cn(
-                "w-4 h-4 rounded-full border-2 transition-all",
-                pin.length > i ? "bg-primary border-primary scale-110 shadow-lg shadow-primary/30" : "border-slate-200"
-              )} />
-            ))}
+            {[...Array(6)].map((_, i) => <div key={i} className={cn("w-4 h-4 rounded-full border-2 transition-all", pin.length > i ? "bg-primary border-primary scale-110 shadow-lg" : "border-slate-200")} />)}
           </div>
-
           <div className="grid grid-cols-3 gap-4 max-w-[280px] mx-auto">
-            {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map(n => (
-              <Button key={n} variant="outline" className="h-16 rounded-2xl text-xl font-bold border-slate-100 hover:bg-slate-50" onClick={() => handlePinClick(n)}>{n}</Button>
-            ))}
-            <Button variant="outline" className="h-16 rounded-2xl border-slate-100" onClick={() => setPin(prev => prev.slice(0, -1))}><Delete /></Button>
-            <Button variant="outline" className="h-16 rounded-2xl text-xl font-bold border-slate-100" onClick={() => handlePinClick("0")}>0</Button>
-            <Button className="h-16 rounded-2xl text-xl font-bold" onClick={handlePinSubmit}><CheckCircle2 /></Button>
+            {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map(n => <Button key={n} variant="outline" className="h-16 rounded-2xl text-xl font-bold" onClick={() => pin.length < 6 && setPin(p => p + n)}>{n}</Button>)}
+            <Button variant="outline" className="h-16 rounded-2xl" onClick={() => setPin(p => p.slice(0, -1))}><Delete /></Button>
+            <Button variant="outline" className="h-16 rounded-2xl text-xl font-bold" onClick={() => pin.length < 6 && setPin(p => p + "0")}>0</Button>
+            <Button className="h-16 rounded-2xl" onClick={handlePinSubmit}><CheckCircle2 /></Button>
           </div>
         </Card>
       </div>
@@ -327,897 +300,339 @@ export default function AdminPage() {
   }
 
   const metrics = {
-    allRevenue: allOrders.filter(o => o.status === 'successful').reduce((acc, o) => acc + (o.total || 0), 0),
-    totalCount: allOrders.length,
-    activeProducts: products.length,
-    registeredUsers: allUsers.length
+    revenue: allOrders.filter(o => o.status === 'successful').reduce((acc, o) => acc + (o.total || 0), 0),
+    orders: allOrders.length,
+    users: allUsers.length,
+    inventory: products.length
   };
 
-  const filteredProducts = products.filter(p => p.title.toLowerCase().includes(searchQuery.toLowerCase()));
-  
   const filteredOrders = allOrders.filter(o => {
-    const matchesSearch = 
-      o.id.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      o.gameDetails?.playerName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      o.gameDetails?.playerID?.toString().includes(searchQuery);
-    
+    const matchesSearch = o.id.includes(searchQuery) || o.gameDetails?.playerName?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = orderStatusFilter === "all" || o.status === orderStatusFilter;
-    
     return matchesSearch && matchesStatus;
   });
 
-  const filteredUsers = allUsers.filter(u => 
-    u.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    u.email?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   return (
     <div className="min-h-screen bg-slate-50 flex overflow-hidden">
-      
-      <aside className={cn(
-        "h-screen bg-white border-r border-slate-100 flex flex-col transition-all duration-300 z-[60]",
-        isSidebarExpanded ? "w-64" : "w-20"
-      )}>
+      {/* Sidebar */}
+      <aside className={cn("h-screen bg-white border-r border-slate-100 flex flex-col transition-all duration-300 z-[60]", isSidebarExpanded ? "w-64" : "w-20")}>
         <div className="h-20 px-6 flex items-center justify-between">
-          {isSidebarExpanded && (
-            <div className="flex items-center gap-3 animate-in fade-in">
-              <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white shadow-lg shadow-primary/20">
-                <ShieldCheck className="w-6 h-6" />
-              </div>
-              <span className="font-headline font-bold text-lg text-slate-900">Oskar Control</span>
-            </div>
-          )}
-          <button onClick={() => setIsSidebarExpanded(!isSidebarExpanded)} className="p-2 text-slate-400 hover:bg-slate-50 rounded-xl transition-colors">
-            {isSidebarExpanded ? <X size={20} /> : <Menu size={20} />}
-          </button>
+          {isSidebarExpanded && <span className="font-headline font-bold text-lg text-slate-900">Oskar Control</span>}
+          <button onClick={() => setIsSidebarExpanded(!isSidebarExpanded)} className="p-2 text-slate-400 hover:bg-slate-50 rounded-xl"><Menu size={20} /></button>
         </div>
-
-        <nav className="flex-1 px-4 py-10 space-y-2">
-          <SideNavItem active={activeView === 'dashboard'} expanded={isSidebarExpanded} onClick={() => setActiveView('dashboard')} icon={LayoutDashboard} label="Pulse Dashboard" />
-          <SideNavItem active={activeView === 'orders'} expanded={isSidebarExpanded} onClick={() => setActiveView('orders')} icon={ShoppingBag} label="Sales & Orders" />
-          <SideNavItem active={activeView === 'products'} expanded={isSidebarExpanded} onClick={() => setActiveView('products')} icon={Package} label="Inventory (CRUD)" />
-          <SideNavItem active={activeView === 'account-posts'} expanded={isSidebarExpanded} onClick={() => setActiveView('account-posts')} icon={Gamepad2} label="Suuqa Listings" />
-          <SideNavItem active={activeView === 'users'} expanded={isSidebarExpanded} onClick={() => setActiveView('users')} icon={Users} label="User Accounts" />
-          <SideNavItem active={activeView === 'settings'} expanded={isSidebarExpanded} onClick={() => setActiveView('settings')} icon={SettingsIcon} label="System Config" />
+        <nav className="flex-1 px-4 py-6 space-y-2">
+          <SideNavItem active={activeView === 'dashboard'} expanded={isSidebarExpanded} onClick={() => setActiveView('dashboard')} icon={LayoutDashboard} label="Dashboard" />
+          <SideNavItem active={activeView === 'orders'} expanded={isSidebarExpanded} onClick={() => setActiveView('orders')} icon={ShoppingBag} label="Orders" />
+          <SideNavItem active={activeView === 'products'} expanded={isSidebarExpanded} onClick={() => setActiveView('products')} icon={Package} label="Inventory" />
+          <SideNavItem active={activeView === 'account-posts'} expanded={isSidebarExpanded} onClick={() => setActiveView('account-posts')} icon={Gamepad2} label="Marketplace" />
+          <SideNavItem active={activeView === 'events'} expanded={isSidebarExpanded} onClick={() => setActiveView('events')} icon={Calendar} label="Live Events" />
+          <SideNavItem active={activeView === 'users'} expanded={isSidebarExpanded} onClick={() => setActiveView('users')} icon={Users} label="Users" />
+          <SideNavItem active={activeView === 'settings'} expanded={isSidebarExpanded} onClick={() => setActiveView('settings')} icon={SettingsIcon} label="Settings" />
         </nav>
-
-        <div className="p-4 border-t border-slate-50">
-          <button 
-            onClick={logout}
-            className={cn(
-              "w-full h-12 flex items-center gap-4 rounded-xl text-red-500 hover:bg-red-50 transition-all",
-              isSidebarExpanded ? "px-4" : "justify-center"
-            )}
-          >
-            <LogOut size={20} />
-            {isSidebarExpanded && <span className="font-bold text-sm">Logout</span>}
-          </button>
-        </div>
+        <div className="p-4 border-t"><button onClick={logout} className="w-full h-12 flex items-center gap-4 text-red-500 rounded-xl hover:bg-red-50 px-4"><LogOut size={20} /><span className="font-bold text-sm">Logout</span></button></div>
       </aside>
 
+      {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-20 bg-white/60 backdrop-blur-md border-b border-slate-100 flex items-center justify-between px-10 shrink-0">
+        <header className="h-20 bg-white/60 backdrop-blur-md border-b flex items-center justify-between px-10 shrink-0">
+          <h2 className="text-xl font-headline font-bold uppercase tracking-tight">{activeView}</h2>
           <div className="flex items-center gap-4">
-            <h2 className="text-xl font-headline font-bold text-slate-900 uppercase tracking-tight">
-              {activeView.replace('-', ' ')}
-            </h2>
-            <div className="flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-600 rounded-full cursor-pointer hover:bg-green-100" onClick={refreshAdminData}>
+             <div className="flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-600 rounded-full" onClick={refreshAdminData}>
                <RefreshCw size={12} className="animate-spin" />
-               <span className="text-[10px] font-bold uppercase tracking-widest">Live Sync Active</span>
+               <span className="text-[10px] font-bold uppercase">Live Sync Active</span>
             </div>
-          </div>
-          <div className="flex items-center gap-4">
-             <div className="flex flex-col items-end">
-                <p className="text-sm font-bold text-slate-900">{user?.name}</p>
-                <p className="text-[10px] font-bold text-primary uppercase">{user?.role || 'Administrator'}</p>
-             </div>
-             <div className="w-10 h-10 rounded-full bg-slate-100 border-2 border-white shadow-sm overflow-hidden relative">
-                {user?.photoURL ? <Image src={user.photoURL} alt="" fill className="object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-300"><User size={20} /></div>}
-             </div>
+            <div className="flex items-center gap-3">
+               <div className="text-right"><p className="text-sm font-bold">{user?.name}</p><p className="text-[10px] text-primary uppercase font-bold">{user?.role}</p></div>
+               <div className="w-10 h-10 rounded-full bg-slate-100 overflow-hidden relative shadow-inner">
+                 {user?.photoURL ? <Image src={user.photoURL} alt="" fill className="object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-300"><User size={20} /></div>}
+               </div>
+            </div>
           </div>
         </header>
 
         <main className="flex-1 overflow-y-auto p-10 space-y-10 scrollbar-hide">
           
           {activeView === 'dashboard' && (
-            <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4">
+            <div className="space-y-10">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <StatCard label="Total Revenue" value={`$${metrics.allRevenue.toFixed(2)}`} icon={DollarSign} color="blue" />
-                <StatCard label="Orders Received" value={metrics.totalCount.toString()} icon={ShoppingBag} color="amber" />
-                <StatCard label="Inventory Size" value={metrics.activeProducts.toString()} icon={Package} color="emerald" />
-                <StatCard label="Registered Users" value={metrics.registeredUsers.toString()} icon={Users} color="indigo" />
+                <StatCard label="Total Revenue" value={`$${metrics.revenue.toFixed(2)}`} icon={DollarSign} color="blue" />
+                <StatCard label="All Orders" value={metrics.orders.toString()} icon={ShoppingBag} color="amber" />
+                <StatCard label="Registered Users" value={metrics.users.toString()} icon={Users} color="emerald" />
+                <StatCard label="Inventory Items" value={metrics.inventory.toString()} icon={Package} color="indigo" />
               </div>
-
-              <Card className="rounded-[2.5rem] p-10 border-none shadow-xl bg-white">
-                <div className="flex items-center justify-between mb-8">
-                   <h3 className="text-lg font-headline font-bold">Revenue Pulse (Last 7 Days)</h3>
-                   <Badge className="bg-primary/10 text-primary border-none rounded-full px-4">+12.5% vs Last Week</Badge>
-                </div>
-                <div className="h-[350px] w-full">
-                  <ResponsiveContainer width="100%" height="100%">
+              <Card className="rounded-[2.5rem] p-10 border-none shadow-xl bg-white h-[400px]">
+                 <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={chartData}>
-                      <defs>
-                        <linearGradient id="colorValue" x1="0" x2="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#0EA5E9" stopOpacity={0.3}/>
-                          <stop offset="95%" stopColor="#0EA5E9" stopOpacity={0}/>
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                      <Area type="monotone" dataKey="value" stroke="#0EA5E9" strokeWidth={5} fillOpacity={1} fill="url(#colorValue)" />
-                      <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{fontSize: 10, fontWait: 'bold', fill: '#64748b'}} dy={10} />
-                      <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fontWait: 'bold', fill: '#64748b'}} />
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                      <XAxis dataKey="day" axisLine={false} tickLine={false} />
+                      <YAxis axisLine={false} tickLine={false} />
                       <Tooltip />
+                      <Area type="monotone" dataKey="value" stroke="#0EA5E9" fillOpacity={0.1} fill="#0EA5E9" strokeWidth={4} />
                     </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-              </Card>
-            </div>
-          )}
-
-          {activeView === 'products' && (
-            <div className="space-y-6 animate-in fade-in">
-              <div className="flex justify-between items-center">
-                <div className="relative w-96">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <Input 
-                    placeholder="Search inventory..." 
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-12 h-12 rounded-xl bg-white border-none shadow-sm"
-                  />
-                </div>
-                <Button onClick={() => handleOpenProductDialog()} className="h-12 rounded-xl px-6 gap-2 font-bold shadow-lg shadow-primary/20">
-                  <PlusCircle className="w-5 h-5" /> Add New Item
-                </Button>
-              </div>
-
-              <Card className="rounded-[2rem] border-none shadow-xl bg-white overflow-hidden">
-                <Table>
-                  <TableHeader className="bg-slate-50/50">
-                    <TableRow className="border-slate-50">
-                      <TableHead className="font-bold text-[10px] uppercase tracking-widest px-8">Media</TableHead>
-                      <TableHead className="font-bold text-[10px] uppercase tracking-widest">Product Details</TableHead>
-                      <TableHead className="font-bold text-[10px] uppercase tracking-widest">Category</TableHead>
-                      <TableHead className="font-bold text-[10px] uppercase tracking-widest">Price</TableHead>
-                      <TableHead className="font-bold text-[10px] uppercase tracking-widest text-right px-8">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredProducts.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={5} className="h-64 text-center">
-                           <div className="flex flex-col items-center justify-center opacity-30">
-                              <Box size={48} className="mb-4" />
-                              <p className="font-bold">No products in inventory</p>
-                           </div>
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      filteredProducts.map((p) => (
-                        <TableRow key={p.id} className="hover:bg-slate-50/50 transition-colors border-slate-50">
-                          <TableCell className="px-8">
-                            <div className="w-14 h-14 relative rounded-xl overflow-hidden bg-slate-100 shadow-inner">
-                              {p.thumbnail ? <Image src={p.thumbnail} alt="" fill className="object-cover" /> : <ImageIcon className="absolute inset-0 m-auto text-slate-300" />}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex flex-col">
-                               <span className="font-bold text-slate-900">{p.title}</span>
-                               <span className="text-[10px] text-slate-400 font-bold uppercase">{p.gameId}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className="rounded-full px-3 py-1 font-bold text-[9px] uppercase border-slate-200">
-                               {p.category}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex flex-col">
-                               <span className="font-bold text-primary">${p.discountedPrice || p.price}</span>
-                               {p.discountedPrice && <span className="text-[10px] text-slate-300 line-through">${p.price}</span>}
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-right px-8">
-                            <div className="flex justify-end gap-2">
-                               <Button size="icon" variant="ghost" onClick={() => handleOpenProductDialog(p)} className="text-blue-500 hover:bg-blue-50 rounded-xl">
-                                  <Edit size={18} />
-                               </Button>
-                               <Button size="icon" variant="ghost" onClick={() => deleteProduct(p.id)} className="text-red-500 hover:bg-red-50 rounded-xl">
-                                  <Trash2 size={18} />
-                               </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
+                 </ResponsiveContainer>
               </Card>
             </div>
           )}
 
           {activeView === 'orders' && (
-            <div className="space-y-6 animate-in fade-in">
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div className="space-y-6">
+              <div className="flex gap-4">
+                <Input placeholder="Search Order ID or Player..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="max-w-md h-12 rounded-xl" />
                 <div className="flex gap-2">
-                  {["all", "pending", "processing", "successful", "cancelled"].map((status) => (
-                    <Button 
-                      key={status} 
-                      variant={orderStatusFilter === status ? "default" : "outline"} 
-                      size="sm"
-                      onClick={() => setOrderStatusFilter(status)}
-                      className="rounded-full px-4 h-9 font-bold text-[10px] uppercase tracking-wider transition-all"
-                    >
-                      {status}
-                    </Button>
-                  ))}
-                </div>
-                <div className="relative w-full md:w-80">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <Input 
-                    placeholder="Search Order ID or Player..." 
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="h-10 pl-10 rounded-full bg-white border-none shadow-sm"
-                  />
+                  {["all", "pending", "processing", "successful", "cancelled"].map(s => <Button key={s} variant={orderStatusFilter === s ? "default" : "outline"} onClick={() => setOrderStatusFilter(s)} className="rounded-full h-12 px-6 uppercase font-bold text-xs">{s}</Button>)}
                 </div>
               </div>
-
-              <Card className="rounded-[2rem] border-none shadow-xl bg-white overflow-hidden">
-                 <Table>
+              <Card className="rounded-[2rem] border-none shadow-xl overflow-hidden">
+                <Table>
                   <TableHeader className="bg-slate-50/50">
-                    <TableRow className="border-slate-50">
-                      <TableHead className="font-bold text-[10px] uppercase tracking-widest px-8">Reference</TableHead>
-                      <TableHead className="font-bold text-[10px] uppercase tracking-widest">Customer & Item</TableHead>
-                      <TableHead className="font-bold text-[10px] uppercase tracking-widest">Game Target</TableHead>
-                      <TableHead className="font-bold text-[10px] uppercase tracking-widest">Amount</TableHead>
-                      <TableHead className="font-bold text-[10px] uppercase tracking-widest">Status</TableHead>
-                      <TableHead className="font-bold text-[10px] uppercase tracking-widest text-right px-8">Action</TableHead>
+                    <TableRow>
+                      <TableHead className="font-bold px-8">Reference</TableHead>
+                      <TableHead className="font-bold">Player & Item</TableHead>
+                      <TableHead className="font-bold">Amount</TableHead>
+                      <TableHead className="font-bold">Status</TableHead>
+                      <TableHead className="text-right px-8">Action</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredOrders.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={6} className="h-80 text-center">
-                           <div className="flex flex-col items-center justify-center opacity-20">
-                              <ShoppingBag size={64} className="mb-4" />
-                              <h3 className="text-xl font-bold">No orders found</h3>
-                              <p className="text-sm">Try adjusting your filters or search.</p>
+                    {filteredOrders.map(o => (
+                      <TableRow key={o.id}>
+                        <TableCell className="px-8 font-mono text-[10px] font-bold text-primary">#{o.id.slice(0, 8).toUpperCase()}</TableCell>
+                        <TableCell>
+                           <div className="flex flex-col">
+                              <span className="font-bold text-slate-900">{o.gameDetails?.playerName || "Client"}</span>
+                              <span className="text-[10px] text-slate-400 font-bold uppercase">{o.items?.[0]?.title}</span>
                            </div>
                         </TableCell>
+                        <TableCell className="font-bold">${o.total?.toFixed(2)}</TableCell>
+                        <TableCell>
+                           <Badge className={cn("rounded-full uppercase text-[8px] font-bold", o.status === 'successful' ? "bg-green-100 text-green-700" : o.status === 'pending' ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700")}>{o.status}</Badge>
+                        </TableCell>
+                        <TableCell className="text-right px-8">
+                           <Button size="sm" onClick={() => { setSelectedOrder(o); setIsOrderDetailOpen(true); }} className="rounded-full h-8 px-4 font-bold text-[10px] gap-2"><Eye size={12} /> Details</Button>
+                        </TableCell>
                       </TableRow>
-                    ) : (
-                      filteredOrders.map((o) => (
-                        <TableRow key={o.id} className="hover:bg-slate-50/50 transition-colors border-slate-50">
-                          <TableCell className="px-8">
-                            <div className="flex flex-col">
-                               <span className="font-mono text-[10px] font-bold text-primary">#{o.id.slice(0, 8).toUpperCase()}</span>
-                               <span className="text-[9px] text-slate-400">{o.createdAt ? format(new Date(o.createdAt), 'MMM d, HH:mm') : 'N/A'}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-3">
-                               <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
-                                  <Package size={14} className="text-slate-400" />
-                               </div>
-                               <div className="flex flex-col min-w-0">
-                                  <span className="font-bold text-slate-900 truncate max-w-[120px]">{o.gameDetails?.playerName || "Client"}</span>
-                                  <span className="text-[10px] text-slate-400 font-bold uppercase truncate">{o.items?.[0]?.title || "Item"}</span>
-                               </div>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                             <div className="flex flex-col">
-                                <div className="flex items-center gap-1.5">
-                                   <Gamepad2 size={10} className="text-slate-400" />
-                                   <span className="text-[10px] font-mono font-bold">{o.gameDetails?.playerID || "---"}</span>
-                                </div>
-                                <span className="text-[9px] text-slate-400 uppercase font-bold">{o.items?.[0]?.gameId || 'General'}</span>
-                             </div>
-                          </TableCell>
-                          <TableCell className="font-headline font-bold text-slate-900">${o.total?.toFixed(2)}</TableCell>
-                          <TableCell>
-                            <Badge className={cn(
-                              "rounded-full px-2.5 py-0.5 font-bold text-[8px] uppercase border-none",
-                              o.status === 'successful' ? "bg-green-100 text-green-700" : 
-                              o.status === 'pending' ? "bg-amber-100 text-amber-700" : 
-                              o.status === 'processing' ? "bg-blue-100 text-blue-700" : "bg-red-100 text-red-700"
-                            )}>
-                              {o.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right px-8">
-                            <Button 
-                              size="sm" 
-                              onClick={() => handleViewOrder(o)}
-                              className="h-8 rounded-full px-4 gap-2 font-bold text-[10px] shadow-sm hover:shadow-md transition-all"
-                            >
-                               <Eye size={12} /> View Details
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
+                    ))}
                   </TableBody>
                 </Table>
               </Card>
             </div>
           )}
 
-          {activeView === 'account-posts' && (
-            <Card className="rounded-[2rem] border-none shadow-xl bg-white overflow-hidden animate-in fade-in">
-              <Table>
-                <TableHeader className="bg-slate-50/50">
-                  <TableRow className="border-slate-50">
-                    <TableHead className="font-bold text-[10px] uppercase tracking-widest px-8">Seller</TableHead>
-                    <TableHead className="font-bold text-[10px] uppercase tracking-widest">Details</TableHead>
-                    <TableHead className="font-bold text-[10px] uppercase tracking-widest">Price</TableHead>
-                    <TableHead className="font-bold text-[10px] uppercase tracking-widest">Status</TableHead>
-                    <TableHead className="font-bold text-[10px] uppercase tracking-widest text-right px-8">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {accountPosts.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={5} className="h-64 text-center">
-                         <div className="flex flex-col items-center justify-center opacity-30">
-                            <Gamepad2 size={48} className="mb-4" />
-                            <p className="font-bold">No marketplace listings</p>
+          {activeView === 'products' && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <Input placeholder="Search items..." className="max-w-xs h-12 rounded-xl" />
+                <Button onClick={() => handleOpenProductDialog()} className="h-12 rounded-xl gap-2 font-bold shadow-lg shadow-primary/20"><PlusCircle size={20} /> Add Item</Button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {products.map(p => (
+                  <Card key={p.id} className="p-6 rounded-[2rem] border-none shadow-xl bg-white flex gap-4">
+                    <div className="w-20 h-20 rounded-2xl bg-slate-100 overflow-hidden relative shadow-inner">
+                      {p.thumbnail ? <Image src={p.thumbnail} alt="" fill className="object-cover" /> : <ImageIcon className="m-auto absolute inset-0 text-slate-200" />}
+                    </div>
+                    <div className="flex-1 flex flex-col justify-between">
+                       <div><h4 className="font-bold text-slate-900 leading-tight">{p.title}</h4><p className="text-[10px] font-bold text-primary uppercase">{p.gameId}</p></div>
+                       <div className="flex justify-between items-end"><span className="font-bold text-lg text-primary">${p.price}</span><div className="flex gap-2"><Button size="icon" variant="ghost" className="h-8 w-8 text-blue-500" onClick={() => handleOpenProductDialog(p)}><Edit size={16} /></Button><Button size="icon" variant="ghost" className="h-8 w-8 text-red-500" onClick={() => deleteProduct(p.id)}><Trash2 size={16} /></Button></div></div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activeView === 'events' && (
+             <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                   <h3 className="text-xl font-bold">Manage Free Fire Events</h3>
+                   <Button onClick={() => handleOpenEventDialog()} className="h-12 rounded-xl font-bold gap-2"><Sparkles size={20} /> New Event</Button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                   {events.map(ev => (
+                      <Card key={ev.id} className="rounded-[2.5rem] overflow-hidden border-none shadow-xl bg-white">
+                         <div className="aspect-video relative bg-slate-100">
+                            {ev.thumbnailUrl && <Image src={ev.thumbnailUrl} alt="" fill className="object-cover" />}
+                            {!ev.active && <div className="absolute inset-0 bg-black/60 flex items-center justify-center"><Badge variant="destructive">INACTIVE</Badge></div>}
                          </div>
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    accountPosts.map((p) => (
-                      <TableRow key={p.id} className="hover:bg-slate-50/50 transition-colors border-slate-50">
-                        <TableCell className="px-8">
-                          <div className="flex items-center gap-3">
-                             <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100 relative shadow-inner">
-                                {p.authorAvatar ? <Image src={p.authorAvatar} alt="" fill className="object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-300"><User size={16} /></div>}
-                             </div>
-                             <span className="font-bold text-slate-900">{p.authorName}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                           <div className="flex flex-col">
-                              <span className="font-bold text-xs">Level {p.level}</span>
-                              <span className="text-[10px] text-slate-400 font-bold uppercase">{p.platform}</span>
-                           </div>
-                        </TableCell>
-                        <TableCell className="font-bold text-primary">${p.price}</TableCell>
-                        <TableCell>
-                           <Badge className={cn(
-                            "rounded-full px-3 py-1 font-bold text-[9px] uppercase",
-                            p.status === 'approved' ? "bg-green-100 text-green-700" : p.status === 'pending' ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"
-                          )}>
-                            {p.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right px-8">
-                           <div className="flex justify-end gap-2">
-                              <Button size="icon" variant="ghost" onClick={() => updateAccountPostStatus(p.id, 'approved')} className="text-green-500 hover:bg-green-50 rounded-xl"><CheckCircle2 size={18} /></Button>
-                              <Button size="icon" variant="ghost" onClick={() => updateAccountPostStatus(p.id, 'rejected')} className="text-red-500 hover:bg-red-50 rounded-xl"><XCircle size={18} /></Button>
-                           </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
+                         <div className="p-6 space-y-4">
+                            <div><h4 className="text-lg font-bold">{ev.title}</h4><p className="text-xs text-muted-foreground line-clamp-2">{ev.description}</p></div>
+                            <div className="flex justify-between items-center pt-4 border-t"><Badge variant="outline" className="rounded-full px-3">{ev.type}</Badge><div className="flex gap-2"><Button size="sm" variant="ghost" className="text-blue-500" onClick={() => handleOpenEventDialog(ev)}><Edit size={16} /></Button><Button size="sm" variant="ghost" className="text-red-500" onClick={() => deleteEvent(ev.id)}><Trash2 size={16} /></Button></div></div>
+                         </div>
+                      </Card>
+                   ))}
+                </div>
+             </div>
+          )}
+
+          {activeView === 'account-posts' && (
+            <Card className="rounded-[2rem] overflow-hidden border-none shadow-xl">
+               <Table>
+                  <TableHeader className="bg-slate-50/50">
+                     <TableRow>
+                        <TableHead className="px-8">Seller</TableHead>
+                        <TableHead>Details</TableHead>
+                        <TableHead>Price</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right px-8">Actions</TableHead>
+                     </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                     {accountPosts.map(p => (
+                        <TableRow key={p.id}>
+                           <TableCell className="px-8"><div className="flex items-center gap-3"><div className="w-8 h-8 rounded-full overflow-hidden bg-slate-100 relative">{p.authorAvatar && <Image src={p.authorAvatar} alt="" fill className="object-cover" />}</div><span className="font-bold text-xs">{p.authorName}</span></div></TableCell>
+                           <TableCell><div className="flex flex-col"><span className="text-xs font-bold">Lv {p.level}</span><span className="text-[9px] uppercase font-bold text-slate-400">{p.platform}</span></div></TableCell>
+                           <TableCell className="font-bold text-primary">${p.price}</TableCell>
+                           <TableCell><Badge className={cn("rounded-full text-[8px] font-bold uppercase", p.status === 'approved' ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700")}>{p.status}</Badge></TableCell>
+                           <TableCell className="text-right px-8"><div className="flex justify-end gap-2"><Button size="icon" variant="ghost" className="h-8 w-8 text-green-500" onClick={() => updateAccountPostStatus(p.id, 'approved')}><CheckCircle2 size={16} /></Button><Button size="icon" variant="ghost" className="h-8 w-8 text-red-500" onClick={() => updateAccountPostStatus(p.id, 'rejected')}><XCircle size={16} /></Button></div></TableCell>
+                        </TableRow>
+                     ))}
+                  </TableBody>
+               </Table>
             </Card>
           )}
 
           {activeView === 'users' && (
-            <div className="space-y-6 animate-in fade-in">
-              <div className="relative w-full md:w-96">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <Input 
-                  placeholder="Search users by name or email..." 
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-12 h-12 rounded-xl bg-white border-none shadow-sm"
-                />
-              </div>
-
-              <Card className="rounded-[2rem] border-none shadow-xl bg-white overflow-hidden">
-                <Table>
+            <Card className="rounded-[2rem] border-none shadow-xl overflow-hidden">
+               <Table>
                   <TableHeader className="bg-slate-50/50">
-                    <TableRow className="border-slate-50">
-                      <TableHead className="font-bold text-[10px] uppercase tracking-widest px-8">User Profile</TableHead>
-                      <TableHead className="font-bold text-[10px] uppercase tracking-widest">Contact Info</TableHead>
-                      <TableHead className="font-bold text-[10px] uppercase tracking-widest">System Role</TableHead>
-                      <TableHead className="font-bold text-[10px] uppercase tracking-widest">Balance</TableHead>
-                      <TableHead className="font-bold text-[10px] uppercase tracking-widest text-right px-8">Management</TableHead>
+                    <TableRow>
+                      <TableHead className="font-bold px-8">Profile</TableHead>
+                      <TableHead className="font-bold">Contact</TableHead>
+                      <TableHead className="font-bold">Role</TableHead>
+                      <TableHead className="font-bold">Balance</TableHead>
+                      <TableHead className="text-right px-8">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredUsers.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={5} className="h-64 text-center">
-                           <div className="flex flex-col items-center justify-center opacity-30">
-                              <Users size={48} className="mb-4" />
-                              <p className="font-bold">No users found</p>
-                           </div>
-                        </TableCell>
+                    {allUsers.map(u => (
+                      <TableRow key={u.uid} className={cn(u.banned && "bg-red-50/50 opacity-70")}>
+                        <TableCell className="px-8"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100 relative">{u.photoURL && <Image src={u.photoURL} alt="" fill className="object-cover" />}</div><div className="flex flex-col"><span className="font-bold text-slate-900 text-xs">{u.name}</span>{u.banned && <Badge variant="destructive" className="h-4 text-[8px]">BANNED</Badge>}</div></div></TableCell>
+                        <TableCell><div className="flex flex-col"><span className="text-[10px] font-bold text-slate-600">{u.email}</span><span className="text-[9px] text-slate-400">{u.phoneNumber}</span></div></TableCell>
+                        <TableCell><Badge variant="secondary" className="rounded-full text-[9px] uppercase font-bold">{u.role}</Badge></TableCell>
+                        <TableCell><div className="flex items-center gap-1.5"><Star size={12} className="text-amber-500 fill-amber-500" /><span className="font-bold text-slate-900">{u.points || 0}</span></div></TableCell>
+                        <TableCell className="text-right px-8"><div className="flex justify-end gap-2"><Button size="icon" variant="ghost" onClick={() => { setSelectedUser(u); setIsUserManageOpen(true); }} className="text-primary hover:bg-primary/5 rounded-xl"><UserCog size={18} /></Button><Button size="icon" variant="ghost" onClick={() => deleteUser(u.uid)} className="text-red-500 hover:bg-red-50 rounded-xl"><Trash2 size={18} /></Button></div></TableCell>
                       </TableRow>
-                    ) : (
-                      filteredUsers.map((u) => (
-                        <TableRow key={u.uid} className="hover:bg-slate-50/50 transition-colors border-slate-50">
-                          <TableCell className="px-8">
-                            <div className="flex items-center gap-3">
-                               <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100 relative shadow-inner">
-                                  {u.photoURL ? <Image src={u.photoURL} alt="" fill className="object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-200"><User size={16} /></div>}
-                               </div>
-                               <div className="flex flex-col">
-                                 <span className="font-bold text-slate-900">{u.name}</span>
-                                 <span className="text-[10px] text-slate-400">{format(new Date(u.createdAt || Date.now()), 'MMM yyyy')}</span>
-                               </div>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                             <div className="flex flex-col">
-                                <span className="text-xs font-bold text-slate-600">{u.email}</span>
-                                <span className="text-[10px] text-slate-400">{u.phoneNumber || "No Phone"}</span>
-                             </div>
-                          </TableCell>
-                          <TableCell>
-                             <Badge variant="secondary" className={cn(
-                               "rounded-full px-3 py-1 font-bold text-[9px] uppercase",
-                               u.role === 'admin' || u.role === 'super_admin' ? "bg-red-50 text-red-600 border-red-100" : 
-                               u.role === 'staff' ? "bg-blue-50 text-blue-600 border-blue-100" : "bg-slate-50 text-slate-600"
-                             )}>
-                                {u.role || 'user'}
-                             </Badge>
-                          </TableCell>
-                          <TableCell>
-                             <div className="flex items-center gap-1.5">
-                               <Star size={12} className="text-amber-500 fill-amber-500" />
-                               <span className="font-bold text-slate-900">{u.points || 0}</span>
-                             </div>
-                          </TableCell>
-                          <TableCell className="text-right px-8">
-                             <div className="flex justify-end gap-2">
-                                <Button 
-                                  size="icon" 
-                                  variant="ghost" 
-                                  onClick={() => { setSelectedUser(u); setIsUserManageOpen(true); }}
-                                  className="text-primary hover:bg-primary/5 rounded-xl"
-                                >
-                                   <UserCog size={18} />
-                                </Button>
-                                <Button size="icon" variant="ghost" onClick={() => deleteUser(u.uid)} className="text-red-500 hover:bg-red-50 rounded-xl">
-                                   <Trash2 size={18} />
-                                </Button>
-                             </div>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
+                    ))}
                   </TableBody>
-                </Table>
-              </Card>
-            </div>
+               </Table>
+            </Card>
           )}
 
           {activeView === 'settings' && (
-            <div className="max-w-2xl space-y-8 animate-in slide-in-from-bottom-8 duration-700">
-              <Card className="rounded-[3rem] p-10 border-none shadow-2xl bg-white">
-                <h3 className="text-2xl font-headline font-bold mb-10 flex items-center gap-4">
-                  <MonitorOff className="w-8 h-8 text-primary" /> Maintenance & UI
-                </h3>
-
-                <div className="space-y-8">
-                  <div className="flex items-center justify-between p-6 bg-slate-50 rounded-2xl border border-slate-100">
-                    <div>
-                      <p className="font-bold text-slate-900">Maintenance Mode</p>
-                      <p className="text-xs text-muted-foreground">Kill switch for the entire store</p>
-                    </div>
-                    <Switch 
-                      checked={storeSettings.appStatus?.offline} 
-                      onCheckedChange={(val) => updateStoreSettings({ appStatus: { ...storeSettings.appStatus, offline: val } })} 
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-6 pt-6 border-t border-slate-100">
-                    <div className="space-y-2">
-                       <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Offline Message Title</Label>
-                       <Input 
-                        defaultValue={storeSettings.appStatus?.offlineTitle}
-                        onBlur={(e) => updateStoreSettings({ appStatus: { ...storeSettings.appStatus, offlineTitle: e.target.value } })}
-                        className="h-12 rounded-xl bg-slate-50 border-none shadow-inner"
-                       />
-                    </div>
-                    <div className="space-y-2">
-                       <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Offline Description</Label>
+            <div className="max-w-3xl space-y-8 animate-in slide-in-from-bottom-8">
+              <Accordion type="single" collapsible className="w-full space-y-4">
+                 
+                 <AccordionItem value="ticker" className="border-none bg-white rounded-[2rem] px-8 shadow-lg">
+                    <AccordionTrigger className="hover:no-underline"><div className="flex items-center gap-4 text-left"><div className="p-3 bg-blue-50 text-primary rounded-2xl"><Sparkles size={20} /></div><div><h4 className="font-bold text-slate-900">Announcement Ticker</h4><p className="text-xs text-muted-foreground">Manage the homepage scrolling note</p></div></div></AccordionTrigger>
+                    <AccordionContent className="pb-8 space-y-4">
+                       <Label className="text-[10px] font-bold uppercase tracking-widest ml-1">Ticker Text Content</Label>
                        <Textarea 
-                        defaultValue={storeSettings.appStatus?.offlineBody}
-                        onBlur={(e) => updateStoreSettings({ appStatus: { ...storeSettings.appStatus, offlineBody: e.target.value } })}
-                        className="rounded-xl bg-slate-50 border-none shadow-inner min-h-[100px]"
+                        defaultValue={storeSettings.announcementTicker}
+                        onBlur={e => updateStoreSettings({ announcementTicker: e.target.value })}
+                        className="rounded-2xl bg-slate-50 border-none min-h-[100px] text-sm font-bold shadow-inner"
+                        placeholder="Welcome to Oskar Shop..."
                        />
-                    </div>
-                    <div className="space-y-2">
-                       <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Maintenance Hero Image</Label>
-                       <div className="relative h-48 w-full group rounded-2xl overflow-hidden bg-slate-50 border-2 border-dashed border-slate-200 flex flex-col items-center justify-center">
-                          {storeSettings.appStatus?.offlineImageUrl ? (
-                            <Image src={storeSettings.appStatus.offlineImageUrl} alt="Offline" fill className="object-cover opacity-50" />
-                          ) : (
-                            <ImageIcon className="w-10 h-10 text-slate-200" />
-                          )}
-                          <Button variant="secondary" size="sm" className="relative z-10 rounded-full font-bold h-10 px-6">
-                             {isUploading ? <Loader2 className="animate-spin w-4 h-4 mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
-                             Change Media
-                             <input type="file" accept="image/*" onChange={(e) => e.target.files?.[0] && handleOfflineImageUpload(e.target.files[0])} className="absolute inset-0 opacity-0 cursor-pointer" />
-                          </Button>
-                       </div>
-                    </div>
-                  </div>
+                       <p className="text-[10px] text-muted-foreground italic">* Changes reflect immediately on refresh for all users.</p>
+                    </AccordionContent>
+                 </AccordionItem>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-slate-100">
-                     <div className="space-y-2">
-                        <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Admin Access PIN</Label>
-                        <Input 
-                          type="password" 
-                          maxLength={6}
-                          defaultValue={storeSettings.config?.adminSettings?.pin}
-                          onBlur={(e) => updateStoreSettings({ config: { ...storeSettings.config, adminSettings: { ...storeSettings.config?.adminSettings, pin: e.target.value } } })}
-                          className="h-12 rounded-xl bg-slate-50 border-none shadow-inner"
-                        />
-                     </div>
-                     <div className="space-y-2">
-                        <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Store Fee (%)</Label>
-                        <Input 
-                          type="number"
-                          defaultValue={storeSettings.config?.shop?.feeValue}
-                          onBlur={(e) => updateStoreSettings({ config: { ...storeSettings.config, shop: { ...storeSettings.config?.shop, feeValue: parseFloat(e.target.value) } } })}
-                          className="h-12 rounded-xl bg-slate-50 border-none shadow-inner"
-                        />
-                     </div>
-                  </div>
-                </div>
-              </Card>
+                 <AccordionItem value="banners" className="border-none bg-white rounded-[2rem] px-8 shadow-lg">
+                    <AccordionTrigger className="hover:no-underline"><div className="flex items-center gap-4 text-left"><div className="p-3 bg-amber-50 text-amber-500 rounded-2xl"><Layers size={20} /></div><div><h4 className="font-bold text-slate-900">Homepage Banners</h4><p className="text-xs text-muted-foreground">Manage slider images and promotions</p></div></div></AccordionTrigger>
+                    <AccordionContent className="pb-8 space-y-6">
+                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {banners.map(b => (
+                             <div key={b.id} className="relative aspect-[21/9] rounded-2xl overflow-hidden shadow-md group">
+                                <Image src={b.imageUrl} alt="" fill className="object-cover" />
+                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                   <Button size="icon" variant="destructive" className="rounded-full" onClick={() => deleteBanner(b.id)}><Trash2 size={16} /></Button>
+                                </div>
+                             </div>
+                          ))}
+                          <button onClick={() => setIsBannerDialogOpen(true)} className="aspect-[21/9] rounded-2xl border-3 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-300 hover:border-primary hover:text-primary transition-all gap-2 bg-slate-50">
+                             <PlusCircle size={32} />
+                             <span className="text-xs font-bold uppercase">Add New Banner</span>
+                          </button>
+                       </div>
+                    </AccordionContent>
+                 </AccordionItem>
+
+                 <AccordionItem value="maintenance" className="border-none bg-white rounded-[2rem] px-8 shadow-lg">
+                    <AccordionTrigger className="hover:no-underline"><div className="flex items-center gap-4 text-left"><div className="p-3 bg-red-50 text-red-500 rounded-2xl"><MonitorOff size={20} /></div><div><h4 className="font-bold text-slate-900">Maintenance & Kill-Switch</h4><p className="text-xs text-muted-foreground">Take the store offline for updates</p></div></div></AccordionTrigger>
+                    <AccordionContent className="pb-8 space-y-6">
+                       <div className="flex items-center justify-between p-6 bg-slate-900 text-white rounded-[1.5rem]">
+                          <div><p className="font-bold">Maintenance Mode</p><p className="text-xs text-white/40">Only admins can browse when active</p></div>
+                          <Switch checked={storeSettings.appStatus?.offline} onCheckedChange={val => updateStoreSettings({ appStatus: { ...storeSettings.appStatus, offline: val } })} />
+                       </div>
+                       <div className="space-y-4">
+                          <div className="space-y-2"><Label className="text-[10px] font-bold uppercase tracking-widest ml-1">Offline Title</Label><Input defaultValue={storeSettings.appStatus?.offlineTitle} onBlur={e => updateStoreSettings({ appStatus: { ...storeSettings.appStatus, offlineTitle: e.target.value } })} className="h-12 rounded-xl bg-slate-50 border-none shadow-inner" /></div>
+                          <div className="space-y-2"><Label className="text-[10px] font-bold uppercase tracking-widest ml-1">Offline Hero Media</Label><div className="relative h-40 w-full rounded-[1.5rem] overflow-hidden bg-slate-100 group border-2 border-dashed flex flex-col items-center justify-center">{storeSettings.appStatus?.offlineImageUrl ? <Image src={storeSettings.appStatus.offlineImageUrl} alt="" fill className="object-cover opacity-50" /> : <ImageIcon size={32} className="text-slate-300" />}<Button variant="secondary" className="relative z-10 rounded-full h-10 px-6 font-bold shadow-lg"><input type="file" accept="image/*" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'offline')} className="absolute inset-0 opacity-0 cursor-pointer" />{isUploading ? <Loader2 className="animate-spin mr-2" /> : <Plus size={16} className="mr-2" />}Change Media</Button></div></div>
+                       </div>
+                    </AccordionContent>
+                 </AccordionItem>
+
+                 <AccordionItem value="security" className="border-none bg-white rounded-[2rem] px-8 shadow-lg">
+                    <AccordionTrigger className="hover:no-underline"><div className="flex items-center gap-4 text-left"><div className="p-3 bg-purple-50 text-purple-500 rounded-2xl"><Shield size={20} /></div><div><h4 className="font-bold text-slate-900">Admin Security</h4><p className="text-xs text-muted-foreground">Access control and global configuration</p></div></div></AccordionTrigger>
+                    <AccordionContent className="pb-8 space-y-6">
+                       <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2"><Label className="text-[10px] font-bold uppercase tracking-widest ml-1">Control Panel PIN</Label><Input type="password" maxLength={6} defaultValue={storeSettings.config?.adminSettings?.pin} onBlur={e => updateStoreSettings({ config: { ...storeSettings.config, adminSettings: { ...storeSettings.config?.adminSettings, pin: e.target.value } } })} className="h-12 rounded-xl bg-slate-50 border-none shadow-inner" /></div>
+                          <div className="space-y-2"><Label className="text-[10px] font-bold uppercase tracking-widest ml-1">Store Fee (%)</Label><Input type="number" defaultValue={storeSettings.config?.shop?.feeValue} onBlur={e => updateStoreSettings({ config: { ...storeSettings.config, shop: { ...storeSettings.config?.shop, feeValue: parseFloat(e.target.value) } } })} className="h-12 rounded-xl bg-slate-50 border-none shadow-inner" /></div>
+                       </div>
+                    </AccordionContent>
+                 </AccordionItem>
+
+              </Accordion>
             </div>
           )}
 
         </main>
       </div>
 
+      {/* User Management Modal */}
       <Dialog open={isUserManageOpen} onOpenChange={setIsUserManageOpen}>
-        <DialogContent className="max-w-md rounded-[3rem] p-0 border-none shadow-2xl bg-white overflow-hidden z-[100]">
+        <DialogContent className="max-w-md rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl bg-white">
           {selectedUser && (
             <div className="flex flex-col">
-              <div className="bg-slate-900 p-8 text-white">
-                <div className="flex justify-between items-start mb-6">
-                  <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-white/20">
-                      {selectedUser.photoURL ? <Image src={selectedUser.photoURL} alt="" width={64} height={64} className="object-cover" /> : <User size={32} className="m-4 text-white/40" />}
-                    </div>
-                    <div>
-                      <h2 className="text-2xl font-headline font-bold">{selectedUser.name}</h2>
-                      <p className="text-xs text-white/40 font-medium">{selectedUser.email}</p>
-                    </div>
-                  </div>
-                  <Button variant="ghost" size="icon" onClick={() => setIsUserManageOpen(false)} className="text-white/40 hover:text-white rounded-full">
-                    <X size={20} />
-                  </Button>
-                </div>
-              </div>
-
+              <div className="bg-slate-900 p-8 text-white"><div className="flex items-center gap-4"><div className="w-16 h-16 rounded-full overflow-hidden border-2 border-white/20 relative">{selectedUser.photoURL ? <Image src={selectedUser.photoURL} alt="" fill className="object-cover" /> : <User size={32} className="m-4 text-white/40" />}</div><div><h2 className="text-2xl font-bold font-headline">{selectedUser.name}</h2><p className="text-xs text-white/40">{selectedUser.email}</p></div></div></div>
               <div className="p-8 space-y-8">
-                <div className="space-y-4">
-                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                    <Shield size={14} /> Permission Level
-                  </h3>
-                  <div className="grid grid-cols-2 gap-3">
-                    {['user', 'staff', 'admin', 'super_admin'].map((r) => (
-                      <Button 
-                        key={r}
-                        variant={selectedUser.role === r ? "default" : "outline"}
-                        onClick={() => handleUpdateRole(r)}
-                        className={cn(
-                          "h-12 rounded-2xl font-bold text-[10px] uppercase tracking-wider",
-                          selectedUser.role === r ? "bg-primary shadow-lg shadow-primary/20" : "border-slate-100"
-                        )}
-                      >
-                        {r.replace('_', ' ')}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                    <Star size={14} /> Points Management
-                  </h3>
-                  <div className="bg-slate-50 rounded-[2rem] p-6 border border-slate-100 flex flex-col items-center text-center">
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase mb-1">Current Balance</p>
-                    <p className="text-4xl font-headline font-bold text-slate-900">{selectedUser.points || 0}</p>
-                    <div className="flex gap-4 w-full mt-6">
-                      <Input 
-                        type="number"
-                        placeholder="Amount"
-                        value={pointAdjustment}
-                        onChange={(e) => setPointAdjustment(e.target.value)}
-                        className="h-14 rounded-2xl bg-white border-none shadow-sm text-center font-bold text-lg"
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-3 w-full mt-3">
-                      <Button 
-                        onClick={() => handleAdjustPoints('credit')}
-                        className="h-12 rounded-2xl bg-green-600 hover:bg-green-700 gap-2 font-bold"
-                      >
-                        <ArrowUpCircle size={18} /> Credit
-                      </Button>
-                      <Button 
-                        onClick={() => handleAdjustPoints('debit')}
-                        className="h-12 rounded-2xl bg-red-600 hover:bg-red-700 gap-2 font-bold"
-                      >
-                        <ArrowDownCircle size={18} /> Debit
-                      </Button>
-                    </div>
-                  </div>
-                </div>
+                <div className="space-y-4"><h3 className="text-xs font-bold uppercase text-slate-400 flex items-center gap-2"><Shield size={14} /> Permissions</h3><div className="grid grid-cols-2 gap-2">{['user', 'staff', 'admin'].map(r => <Button key={r} variant={selectedUser.role === r ? "default" : "outline"} onClick={() => manageUser(selectedUser.uid, { role: r as any })} className="h-11 rounded-2xl text-[10px] uppercase font-bold">{r}</Button>)}</div></div>
+                <div className="space-y-4"><h3 className="text-xs font-bold uppercase text-slate-400 flex items-center gap-2"><Star size={14} /> Points Balance</h3><div className="bg-slate-50 rounded-[2rem] p-6 text-center"><p className="text-4xl font-headline font-bold mb-6">{selectedUser.points || 0}</p><div className="flex gap-2"><Input type="number" placeholder="Amount" value={pointAdjustment} onChange={e => setPointAdjustment(e.target.value)} className="h-12 rounded-xl border-none shadow-sm text-center font-bold" /><Button onClick={() => handleAdjustPoints('credit')} className="bg-green-600"><ArrowUpCircle /></Button><Button onClick={() => handleAdjustPoints('debit')} className="bg-red-600"><ArrowDownCircle /></Button></div></div></div>
+                <div className="pt-6 border-t flex flex-col gap-3"><Button variant={selectedUser.banned ? "outline" : "destructive"} onClick={handleBanUser} className="w-full h-14 rounded-2xl gap-2 font-bold">{selectedUser.banned ? <CheckCircle2 /> : <Ban />} {selectedUser.banned ? "Unban Account" : "Ban Account"}</Button><p className="text-[9px] text-center text-slate-400 font-bold uppercase">Actions recorded for audit logs</p></div>
               </div>
             </div>
           )}
         </DialogContent>
       </Dialog>
 
-      <Dialog open={isOrderDetailOpen} onOpenChange={setIsOrderDetailOpen}>
-        <DialogContent className="max-w-3xl rounded-[3rem] p-0 border-none shadow-2xl bg-white overflow-hidden scrollbar-hide z-[100]">
-          {selectedOrder && (
-            <div className="flex flex-col h-full">
-              <div className="bg-slate-900 p-8 text-white">
-                <div className="flex justify-between items-start mb-6">
-                  <div>
-                    <Badge className="bg-primary text-white mb-2 border-none rounded-full px-3 text-[10px] font-bold uppercase tracking-widest">
-                       Reference #{selectedOrder.id.slice(0, 12).toUpperCase()}
-                    </Badge>
-                    <h2 className="text-3xl font-headline font-bold">Order Breakdown</h2>
-                  </div>
-                  <Button variant="ghost" size="icon" onClick={() => setIsOrderDetailOpen(false)} className="text-white/40 hover:text-white hover:bg-white/10 rounded-full">
-                    <X size={24} />
-                  </Button>
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                   <DetailMetric label="Status" value={selectedOrder.status} icon={AlertCircle} isStatus />
-                   <DetailMetric label="Total Paid" value={`$${selectedOrder.total?.toFixed(2)}`} icon={DollarSign} />
-                   <DetailMetric label="Method" value={selectedOrder.paymentMethod || 'Mobile'} icon={CreditCard} />
-                   <DetailMetric label="Timestamp" value={selectedOrder.createdAt ? format(new Date(selectedOrder.createdAt), 'MMM d, HH:mm') : 'N/A'} icon={Calendar} />
-                </div>
-              </div>
+      {/* Product & Event Modals */}
+      <Dialog open={isProductDialogOpen} onOpenChange={setIsProductDialogOpen}><DialogContent className="max-w-xl rounded-[3rem] p-8 border-none bg-white"><form onSubmit={handleSaveProduct} className="space-y-6"><h3 className="text-2xl font-headline font-bold">Manage Item</h3><div className="grid grid-cols-2 gap-4"><div><Label>Title</Label><Input required value={productForm.title} onChange={e => setProductForm({...productForm, title: e.target.value})} className="h-12" /></div><div><Label>Game ID</Label><Input required value={productForm.gameId} onChange={e => setProductForm({...productForm, gameId: e.target.value})} className="h-12" /></div></div><div className="grid grid-cols-2 gap-4"><div><Label>Price ($)</Label><Input type="number" required value={productForm.price} onChange={e => setProductForm({...productForm, price: e.target.value})} className="h-12" /></div><div><Label>Discount Price</Label><Input type="number" value={productForm.discountedPrice} onChange={e => setProductForm({...productForm, discountedPrice: e.target.value})} className="h-12" /></div></div><div className="space-y-2"><Label>Description</Label><Textarea required value={productForm.description} onChange={e => setProductForm({...productForm, description: e.target.value})} className="min-h-[80px]" /></div><div className="relative h-32 w-full rounded-2xl border-2 border-dashed bg-slate-50 flex items-center justify-center overflow-hidden">{productForm.thumbnail ? <Image src={productForm.thumbnail} alt="" fill className="object-cover" /> : <ImageIcon size={24} className="text-slate-300" />}<Button variant="outline" className="relative z-10"><input type="file" accept="image/*" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'product')} className="absolute inset-0 opacity-0" />Upload</Button></div><Button type="submit" disabled={isUploading} className="w-full h-14 rounded-2xl font-bold">{isUploading ? <Loader2 className="animate-spin" /> : "Save Changes"}</Button></form></DialogContent></Dialog>
+      
+      <Dialog open={isEventDialogOpen} onOpenChange={setIsEventDialogOpen}><DialogContent className="max-w-xl rounded-[3rem] p-8 border-none bg-white"><form onSubmit={handleSaveEvent} className="space-y-6"><h3 className="text-2xl font-headline font-bold">Live Event Hub</h3><div className="space-y-2"><Label>Event Title</Label><Input required value={eventForm.title} onChange={e => setEventForm({...eventForm, title: e.target.value})} className="h-12" /></div><div className="space-y-2"><Label>Short Description</Label><Textarea required value={eventForm.description} onChange={e => setEventForm({...eventForm, description: e.target.value})} className="min-h-[100px]" /></div><div className="relative h-40 w-full rounded-2xl border-2 border-dashed bg-slate-50 flex items-center justify-center overflow-hidden">{eventForm.thumbnailUrl ? <Image src={eventForm.thumbnailUrl} alt="" fill className="object-cover" /> : <ImageIcon size={24} className="text-slate-300" />}<Button variant="outline" className="relative z-10"><input type="file" accept="image/*" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'event')} className="absolute inset-0 opacity-0" />Upload Poster</Button></div><div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl"><Label>Event Active Status</Label><Switch checked={eventForm.active} onCheckedChange={val => setEventForm({...eventForm, active: val})} /></div><Button type="submit" disabled={isUploading} className="w-full h-14 rounded-2xl font-bold">{isUploading ? <Loader2 className="animate-spin" /> : "Publish Event"}</Button></form></DialogContent></Dialog>
 
-              <div className="p-10 space-y-10 max-h-[60vh] overflow-y-auto">
-                 <div className="space-y-4">
-                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                       <Package size={14} /> Item Details
-                    </h3>
-                    <div className="bg-slate-50 rounded-[2rem] p-6 border border-slate-100 flex items-center gap-6">
-                       <div className="w-20 h-20 relative rounded-2xl overflow-hidden shadow-md bg-white">
-                          {selectedOrder.items?.[0]?.thumbnail ? (
-                            <Image src={selectedOrder.items[0].thumbnail} alt="" fill className="object-cover" />
-                          ) : (
-                            <Box className="absolute inset-0 m-auto text-slate-200" size={32} />
-                          )}
-                       </div>
-                       <div>
-                          <p className="text-xl font-bold text-slate-900">{selectedOrder.items?.[0]?.title || "Generic Package"}</p>
-                          <p className="text-xs font-medium text-slate-500 mt-1">Quantity: 1 • Game ID: {selectedOrder.items?.[0]?.gameId?.toUpperCase() || 'N/A'}</p>
-                       </div>
-                    </div>
-                 </div>
+      <Dialog open={isBannerDialogOpen} onOpenChange={setIsBannerDialogOpen}><DialogContent className="max-w-md rounded-[3rem] p-8 border-none bg-white"><div className="space-y-6"><h3 className="text-2xl font-headline font-bold">New Promotion Banner</h3><div className="relative h-48 w-full rounded-2xl border-2 border-dashed bg-slate-50 flex items-center justify-center overflow-hidden">{bannerForm.imageUrl ? <Image src={bannerForm.imageUrl} alt="" fill className="object-cover" /> : <ImageIcon size={24} className="text-slate-300" />}<Button variant="outline" className="relative z-10"><input type="file" accept="image/*" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'banner')} className="absolute inset-0 opacity-0" />Upload Banner</Button></div><div className="space-y-2"><Label>Redirect Hash (Optional)</Label><Input value={bannerForm.linkTo || ""} onChange={e => setBannerForm({...bannerForm, linkTo: e.target.value})} placeholder="#games" className="h-12" /></div><Button onClick={handleSaveBanner} disabled={isUploading || !bannerForm.imageUrl} className="w-full h-14 rounded-2xl font-bold">Add Banner ✓</Button></div></DialogContent></Dialog>
 
-                 <div className="space-y-4">
-                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                       <Gamepad2 size={14} /> In-Game Destination
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                       <Card className="p-6 rounded-[2rem] border-none bg-slate-50 flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-primary shadow-sm">
-                             <User size={24} />
-                          </div>
-                          <div>
-                             <p className="text-[10px] font-bold text-slate-400 uppercase">Player Name</p>
-                             <p className="text-lg font-bold text-slate-900">{selectedOrder.gameDetails?.playerName || "N/A"}</p>
-                          </div>
-                       </Card>
-                       <Card className="p-6 rounded-[2rem] border-none bg-slate-50 flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-primary shadow-sm">
-                             <Hash size={24} />
-                          </div>
-                          <div>
-                             <p className="text-[10px] font-bold text-slate-400 uppercase">Player ID</p>
-                             <p className="text-lg font-mono font-bold text-slate-900 tracking-wider">{selectedOrder.gameDetails?.playerID || "N/A"}</p>
-                          </div>
-                       </Card>
-                       {selectedOrder.gameDetails?.whatsappNumber && (
-                         <Card className="p-6 rounded-[2rem] border-none bg-slate-50 flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-green-500 shadow-sm">
-                               <Smartphone size={24} />
-                            </div>
-                            <div>
-                               <p className="text-[10px] font-bold text-slate-400 uppercase">Contact WhatsApp</p>
-                               <p className="text-lg font-bold text-slate-900">{selectedOrder.gameDetails.whatsappNumber}</p>
-                            </div>
-                         </Card>
-                       )}
-                    </div>
-                 </div>
-              </div>
-
-              <div className="p-8 bg-slate-50 border-t border-slate-100 flex flex-col md:flex-row gap-4 items-center justify-between">
-                 <div className="flex items-center gap-3">
-                    <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
-                       <RefreshCw size={18} className="animate-spin" />
-                    </div>
-                    <p className="text-xs font-bold text-slate-500 uppercase tracking-tight">Status Control Engine Active</p>
-                 </div>
-                 <div className="flex gap-3 w-full md:w-auto">
-                    <Select defaultValue={selectedOrder.status} onValueChange={(val) => handleStatusChange(selectedOrder.id, val)}>
-                       <SelectTrigger className="h-14 w-full md:w-48 rounded-2xl bg-white border-none shadow-sm font-bold text-sm">
-                          <SelectValue />
-                       </SelectTrigger>
-                       <SelectContent className="rounded-2xl border-none shadow-2xl">
-                          <SelectItem value="pending" className="rounded-xl">Pending</SelectItem>
-                          <SelectItem value="processing" className="rounded-xl">Processing</SelectItem>
-                          <SelectItem value="successful" className="rounded-xl">Complete ✓</SelectItem>
-                          <SelectItem value="cancelled" className="rounded-xl">Cancelled ✕</SelectItem>
-                       </SelectContent>
-                    </Select>
-                    <Button 
-                      onClick={() => handleStatusChange(selectedOrder.id, 'successful')}
-                      disabled={selectedOrder.status === 'successful'}
-                      className="h-14 px-8 rounded-2xl font-bold bg-green-600 hover:bg-green-700 shadow-lg shadow-green-500/20 gap-2 flex-1 md:flex-none"
-                    >
-                       Mark Delivered <CheckCircle2 size={18} />
-                    </Button>
-                 </div>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={isProductDialogOpen} onOpenChange={setIsProductDialogOpen}>
-        <DialogContent className="max-w-2xl rounded-[3rem] p-0 border-none shadow-2xl bg-white overflow-hidden scrollbar-hide z-[100]">
-          <form onSubmit={handleSaveProduct}>
-            <DialogHeader className="p-8 pb-4">
-               <DialogTitle className="text-2xl font-headline font-bold">{editingProduct ? "Edit Inventory Item" : "New Inventory Item"}</DialogTitle>
-            </DialogHeader>
-            <div className="p-8 pt-0 space-y-6 max-h-[70vh] overflow-y-auto">
-               <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Display Title</Label>
-                    <Input required value={productForm.title} onChange={(e) => setProductForm({...productForm, title: e.target.value})} className="h-12 rounded-xl bg-slate-50 border-none shadow-inner" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Game ID</Label>
-                    <Select value={productForm.gameId} onValueChange={(val) => setProductForm({...productForm, gameId: val})}>
-                      <SelectTrigger className="h-12 rounded-xl bg-slate-50 border-none shadow-inner">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-xl">
-                        <SelectItem value="freefire">Free Fire</SelectItem>
-                        <SelectItem value="pubg">PUBG Mobile</SelectItem>
-                        <SelectItem value="clash">Clash of Clans</SelectItem>
-                        <SelectItem value="netflix">Netflix & Subscriptions</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-               </div>
-
-               <div className="space-y-2">
-                  <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Description</Label>
-                  <Textarea required value={productForm.description} onChange={(e) => setProductForm({...productForm, description: e.target.value})} className="rounded-xl bg-slate-50 border-none shadow-inner min-h-[80px]" />
-               </div>
-
-               <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Base Price ($)</Label>
-                    <Input type="number" required value={productForm.price} onChange={(e) => setProductForm({...productForm, price: e.target.value})} className="h-12 rounded-xl bg-slate-50 border-none shadow-inner" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Discounted Price (Optional)</Label>
-                    <Input type="number" value={productForm.discountedPrice} onChange={(e) => setProductForm({...productForm, discountedPrice: e.target.value})} className="h-12 rounded-xl bg-slate-50 border-none shadow-inner" />
-                  </div>
-               </div>
-
-               <div className="space-y-2">
-                  <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Thumbnail Media</Label>
-                  <div className="relative h-40 w-full group rounded-2xl overflow-hidden bg-slate-50 border-2 border-dashed border-slate-200 flex flex-col items-center justify-center">
-                    {productForm.thumbnail ? (
-                      <Image src={productForm.thumbnail} alt="" fill className="object-cover" />
-                    ) : (
-                      <ImageIcon className="w-8 h-8 text-slate-200" />
-                    )}
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                       <Button variant="secondary" size="sm" className="rounded-full font-bold">
-                          {isUploading ? <Loader2 className="animate-spin w-4 h-4" /> : "Upload Image"}
-                          <input type="file" accept="image/*" onChange={(e) => e.target.files?.[0] && handleProductImageUpload(e.target.files[0])} className="absolute inset-0 opacity-0 cursor-pointer" />
-                       </Button>
-                    </div>
-                  </div>
-               </div>
-            </div>
-            <DialogFooter className="p-8 bg-slate-50/50 gap-3">
-               <Button variant="ghost" type="button" onClick={() => setIsProductDialogOpen(false)} className="h-12 rounded-xl font-bold">Cancel</Button>
-               <Button type="submit" disabled={isUploading} className="h-12 rounded-xl px-8 font-bold shadow-lg shadow-primary/20">
-                  {isUploading ? <Loader2 className="animate-spin w-5 h-5" /> : "Save Inventory Item"}
-               </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      {/* Order Detail Modal */}
+      <Dialog open={isOrderDetailOpen} onOpenChange={setIsOrderDetailOpen}><DialogContent className="max-w-3xl rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl bg-white">{selectedOrder && (<div className="flex flex-col"><div className="bg-slate-900 p-10 text-white"><Badge className="bg-primary text-white mb-2">REF #{selectedOrder.id.slice(0, 12).toUpperCase()}</Badge><h2 className="text-3xl font-headline font-bold">Order Verification</h2></div><div className="p-10 space-y-8"><div className="grid grid-cols-2 gap-8"><div><h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Customer Intel</h4><Card className="p-4 rounded-2xl bg-slate-50 border-none flex items-center gap-3"><User size={20} className="text-primary" /><div><p className="text-sm font-bold">{selectedOrder.gameDetails?.playerName || "N/A"}</p><p className="text-[10px] text-muted-foreground uppercase">{selectedOrder.gameDetails?.playerID || "N/A"}</p></div></Card></div><div><h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Item Data</h4><Card className="p-4 rounded-2xl bg-slate-50 border-none flex items-center gap-3"><Package size={20} className="text-amber-500" /><div><p className="text-sm font-bold">{selectedOrder.items?.[0]?.title}</p><p className="text-[10px] text-primary font-bold uppercase">${selectedOrder.total?.toFixed(2)}</p></div></Card></div></div><div className="pt-6 border-t flex items-center justify-between"><div className="flex items-center gap-3"><div className="p-2 bg-blue-100 text-blue-600 rounded-lg animate-spin"><RefreshCw size={18} /></div><p className="text-xs font-bold text-slate-400 uppercase">Live Processor Active</p></div><div className="flex gap-2"><Select defaultValue={selectedOrder.status} onValueChange={v => handleStatusChange(selectedOrder.id, v)}><SelectTrigger className="h-14 w-40 rounded-2xl font-bold"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="pending">Pending</SelectItem><SelectItem value="processing">Processing</SelectItem><SelectItem value="successful">Success ✓</SelectItem><SelectItem value="cancelled">Cancel ✕</SelectItem></SelectContent></Select><Button onClick={() => handleStatusChange(selectedOrder.id, 'successful')} disabled={selectedOrder.status === 'successful'} className="h-14 px-8 rounded-2xl font-bold bg-green-600 hover:bg-green-700">Set Successful</Button></div></div></div></div>)}</DialogContent></Dialog>
     </div>
   );
 }
 
-const chartData = [
-  { day: 'MON', value: 400 },
-  { day: 'TUE', value: 300 },
-  { day: 'WED', value: 500 },
-  { day: 'THU', value: 450 },
-  { day: 'FRI', value: 700 },
-  { day: 'SAT', value: 650 },
-  { day: 'SUN', value: 800 },
-];
+const chartData = [ { day: 'MON', value: 400 }, { day: 'TUE', value: 300 }, { day: 'WED', value: 500 }, { day: 'THU', value: 450 }, { day: 'FRI', value: 700 }, { day: 'SAT', value: 650 }, { day: 'SUN', value: 800 } ];
 
 function SideNavItem({ active, expanded, onClick, icon: Icon, label }: { active: boolean, expanded: boolean, onClick: () => void, icon: any, label: string }) {
   return (
-    <button 
-      onClick={onClick}
-      className={cn(
-        "w-full h-12 flex items-center transition-all duration-300 rounded-xl relative group",
-        active ? "bg-primary text-white shadow-xl shadow-primary/20" : "text-slate-400 hover:bg-slate-50 hover:text-primary",
-        expanded ? "px-4 gap-4" : "justify-center"
-      )}
-    >
-      <Icon size={22} className={cn("transition-all", active ? "scale-110" : "group-hover:scale-110")} />
-      {expanded && <span className="font-bold text-sm whitespace-nowrap animate-in fade-in">{label}</span>}
-      {!expanded && active && (
-        <div className="absolute left-0 w-1 h-6 bg-white rounded-r-full" />
-      )}
+    <button onClick={onClick} className={cn("w-full h-12 flex items-center transition-all duration-300 rounded-xl relative group", active ? "bg-primary text-white shadow-lg" : "text-slate-400 hover:bg-slate-50", expanded ? "px-4 gap-4" : "justify-center")}>
+      <Icon size={20} />
+      {expanded && <span className="font-bold text-sm whitespace-nowrap">{label}</span>}
     </button>
   );
 }
 
 function StatCard({ label, value, icon: Icon, color }: { label: string, value: string, icon: any, color: string }) {
-  const colors: Record<string, string> = {
-    blue: "bg-blue-50 text-blue-500",
-    amber: "bg-amber-50 text-amber-500",
-    emerald: "bg-emerald-50 text-emerald-500",
-    indigo: "bg-indigo-50 text-indigo-500"
-  };
-
+  const colors: Record<string, string> = { blue: "bg-blue-50 text-blue-500", amber: "bg-amber-50 text-amber-500", emerald: "bg-emerald-50 text-emerald-500", indigo: "bg-indigo-50 text-indigo-500" };
   return (
-    <Card className="rounded-[2rem] p-6 border-none shadow-lg bg-white group hover:shadow-xl transition-all duration-300">
-      <div className="flex items-start justify-between">
-        <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center mb-6", colors[color])}>
-           <Icon size={24} />
-        </div>
-        <div className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Active</div>
-      </div>
+    <Card className="rounded-[2.5rem] p-6 border-none shadow-lg bg-white">
+      <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center mb-6", colors[color])}><Icon size={24} /></div>
       <h3 className="text-3xl font-headline font-bold text-slate-900 mb-1">{value}</h3>
       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">{label}</p>
     </Card>
-  );
-}
-
-function DetailMetric({ label, value, icon: Icon, isStatus }: { label: string, value: string, icon: any, isStatus?: boolean }) {
-  const statusColors: Record<string, string> = {
-    pending: "text-amber-400",
-    processing: "text-blue-400",
-    successful: "text-green-400",
-    cancelled: "text-red-400"
-  };
-
-  return (
-    <div className="space-y-1">
-       <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest flex items-center gap-1.5">
-          <Icon size={12} /> {label}
-       </p>
-       <p className={cn(
-         "text-sm font-bold uppercase",
-         isStatus ? statusColors[value] || "text-white" : "text-white"
-       )}>{value}</p>
-    </div>
   );
 }
