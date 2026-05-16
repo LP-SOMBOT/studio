@@ -178,6 +178,7 @@ type AppContextType = {
   postAccount: (data: Partial<AccountPost>) => Promise<void>;
   updateAccountPost: (postId: string, data: Partial<AccountPost>) => Promise<void>;
   deleteAccountPost: (postId: string) => Promise<void>;
+  deleteOrder: (orderId: string) => Promise<void>;
   buyAccountPost: (post: AccountPost) => void;
   markNotificationsAsRead: (notifId?: string) => Promise<void>;
   updateOrderStatus: (orderId: string, status: string) => Promise<void>;
@@ -570,6 +571,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     toast({ title: "Post Deleted" });
   };
 
+  const deleteOrder = async (oid: string) => {
+    if (!rtdb) return;
+    await remove(ref(rtdb, `orders/${oid}`));
+    toast({ title: "Order Deleted" });
+  };
+
   const buyAccountPost = (post: any) => {
     if (!user) {
       toast({ title: "Fadlan soo gal", description: "Waa inaad soo gashaa si aad u iibsato account-kan.", variant: "destructive" });
@@ -714,7 +721,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     <AppContext.Provider value={{ 
       user: enhancedUser, loading, isGlobalLoading, isInitialLoading, activeTab, setActiveTab, setGlobalLoading: setIsGlobalLoading,
       login, signup, logout, buyNow, orders, allOrders, products, allUsers, accountPosts, notifications, events, banners,
-      createOrder, postAccount, updateAccountPost, deleteAccountPost, buyAccountPost, markNotificationsAsRead, updateOrderStatus, updateAccountPostStatus, 
+      createOrder, postAccount, updateAccountPost, deleteAccountPost, deleteOrder, buyAccountPost, markNotificationsAsRead, updateOrderStatus, updateAccountPostStatus, 
       updateUserProfile, manageUser, deleteUser, saveProduct, deleteProduct, saveEvent, deleteEvent, saveBanner, deleteBanner, storeSettings, updateStoreSettings, 
       broadcastNotification, messages, allChatSessions, chatTargetId, setChatTargetId, sendMessage, markMessagesAsRead, refreshAdminData,
       theme, toggleTheme

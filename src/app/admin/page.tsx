@@ -134,6 +134,8 @@ export default function AdminPage() {
     deleteEvent,
     saveBanner,
     deleteBanner,
+    deleteOrder,
+    deleteAccountPost,
     logout,
     isInitialLoading,
     refreshAdminData
@@ -161,7 +163,7 @@ export default function AdminPage() {
   const [pendingOrderStatus, setPendingStatus] = useState<string>("");
   const [pendingAccountStatus, setPendingAccountStatus] = useState<string>("");
 
-  const [deleteTarget, setDeleteTarget] = useState<{ id: string, type: 'user' | 'product' | 'event' | 'banner' | 'account' } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string, type: 'user' | 'product' | 'event' | 'banner' | 'account' | 'order' } | null>(null);
 
   const [productForm, setProductForm] = useState({ title: "", gameId: "freefire", category: "top-up", description: "", price: "", discountedPrice: "", thumbnail: "" });
   const [eventForm, setEventForm] = useState({ title: "", description: "", thumbnailUrl: "", type: "freefire_event", active: true });
@@ -243,7 +245,7 @@ export default function AdminPage() {
     setIsAccountDetailOpen(true);
   };
 
-  const confirmDelete = (id: string, type: 'user' | 'product' | 'event' | 'banner' | 'account') => {
+  const confirmDelete = (id: string, type: 'user' | 'product' | 'event' | 'banner' | 'account' | 'order') => {
     setDeleteTarget({ id, type });
     setIsDeleteDialogOpen(true);
   };
@@ -255,6 +257,8 @@ export default function AdminPage() {
       if (deleteTarget.type === 'product') await deleteProduct(deleteTarget.id);
       if (deleteTarget.type === 'event') await deleteEvent(deleteTarget.id);
       if (deleteTarget.type === 'banner') await deleteBanner(deleteTarget.id);
+      if (deleteTarget.type === 'order') await deleteOrder(deleteTarget.id);
+      if (deleteTarget.type === 'account') await deleteAccountPost(deleteTarget.id);
       toast({ title: "Deleted Successfully" });
     } finally {
       setDeleteTarget(null);
@@ -505,7 +509,7 @@ export default function AdminPage() {
                       <TableHead className="font-bold">Player & Item</TableHead>
                       <TableHead className="font-bold">Amount</TableHead>
                       <TableHead className="font-bold">Status</TableHead>
-                      <TableHead className="text-right px-8">Action</TableHead>
+                      <TableHead className="text-right px-8">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -522,7 +526,12 @@ export default function AdminPage() {
                         </TableCell>
                         <TableCell className="font-bold text-slate-900 dark:text-white">${o.total?.toFixed(2)}</TableCell>
                         <TableCell><Badge className={cn("rounded-full uppercase text-[8px] font-bold border-none", getStatusBadge(o.status))}>{o.status}</Badge></TableCell>
-                        <TableCell className="text-right px-8"><Button size="sm" onClick={() => handleOpenOrderDialog(o)} className="rounded-full h-8 px-4 font-bold text-[10px] gap-2"><Eye size={12} /> Details</Button></TableCell>
+                        <TableCell className="text-right px-8">
+                           <div className="flex justify-end gap-2">
+                             <Button size="sm" onClick={() => handleOpenOrderDialog(o)} className="rounded-full h-8 px-4 font-bold text-[10px] gap-2"><Eye size={12} /> Details</Button>
+                             <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500" onClick={() => confirmDelete(o.id, 'order')}><Trash2 size={16} /></Button>
+                           </div>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -754,7 +763,7 @@ export default function AdminPage() {
                           <div className="space-y-2"><Label className="text-[10px] font-bold text-slate-400 uppercase">Offline Title</Label><Input defaultValue={storeSettings.appStatus?.offlineTitle} onBlur={e => updateStoreSettings({ appStatus: { ...storeSettings.appStatus, offlineTitle: e.target.value } })} className="rounded-xl dark:bg-slate-800 border-none font-bold" /></div>
                           <div className="space-y-2"><Label className="text-[10px] font-bold text-slate-400 uppercase">Offline Message</Label><Textarea defaultValue={storeSettings.appStatus?.offlineBody} onBlur={e => updateStoreSettings({ appStatus: { ...storeSettings.appStatus, offlineBody: e.target.value } })} className="rounded-xl dark:bg-slate-800 border-none font-bold" /></div>
                           <div className="space-y-2">
-                             <Label className="text-[10px] font-bold text-slate-400 uppercase">Maintenance Image</Label>
+                             <Label className="text-[10px] font-bold uppercase text-slate-400">Maintenance Image</Label>
                              <div className="flex items-center gap-4">
                                 <div className="w-32 aspect-video rounded-xl bg-slate-100 dark:bg-slate-800 relative overflow-hidden group border border-slate-200 dark:border-white/5">
                                    {storeSettings.appStatus?.offlineImageUrl ? (
