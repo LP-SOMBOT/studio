@@ -479,9 +479,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const createOrder = async (paymentMethod: string, gameDetails: any, directItem: CartItem) => {
     if (!rtdb || !user) return;
-    const orderId = push(ref(rtdb, 'orders')).key;
+    
+    // Generate a readable unique ID e.g., iibinta842913
+    const randomNum = Math.floor(100000 + Math.random() * 900000);
+    const orderId = `iibinta${randomNum}`;
+    
     const newOrder: Order = {
-      id: orderId!,
+      id: orderId,
       userId: user.uid,
       items: [directItem],
       total: directItem.price,
