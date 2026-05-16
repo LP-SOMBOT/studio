@@ -140,7 +140,10 @@ export default function ProfileView() {
         </div>
 
         <div className="space-y-2">
-          <h2 className="text-3xl font-headline font-bold text-slate-900">{user.name}</h2>
+          <div className="flex items-center justify-center gap-2">
+            <h2 className="text-3xl font-headline font-bold text-slate-900">{user.name}</h2>
+            {user.isAdmin && <ShieldCheck size={24} className="text-primary fill-primary/10" />}
+          </div>
           <div className="flex items-center justify-center gap-2">
             <Badge className="bg-amber-100 text-amber-700 border-none px-4 py-1.5 rounded-full flex gap-1.5 items-center font-bold text-xs shadow-sm">
               <Star size={14} className="fill-amber-600" /> {user.points || 0} Points
@@ -148,6 +151,11 @@ export default function ProfileView() {
             <Badge variant="outline" className="border-slate-200 text-slate-500 font-bold text-xs rounded-full px-4 py-1">
               Rank #{userRank}
             </Badge>
+            {user.isAdmin && (
+              <Badge className="bg-slate-900 text-white border-none rounded-full px-4 py-1 font-bold text-[10px] uppercase tracking-widest">
+                Admin Staff
+              </Badge>
+            )}
           </div>
         </div>
       </section>

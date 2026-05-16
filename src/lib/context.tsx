@@ -432,20 +432,49 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const updateOrderStatus = async (oid: string, status: string) => {
     if (!rtdb) return;
+    
+    // Fetch current state to determine point reversal logic
+    const orderSnap = await get(ref(rtdb, `orders/${oid}`));
+    const orderData = orderSnap.val();
+    if (!orderData) return;
+    
+    const oldStatus = orderData.status;
+    const userId = orderData.userId;
+    
     await update(ref(rtdb, `orders/${oid}`), { status });
     
-    if (status === 'successful') {
-      const orderSnap = await get(ref(rtdb, `orders/${oid}`));
-      const orderData = orderSnap.val();
-      if (orderData?.userId) {
-        await update(ref(rtdb, `users/${orderData.userId}`), {
-          points: increment(1)
-        });
-        const nid = push(ref(rtdb, `notifications/${orderData.userId}`)).key;
-        await set(ref(rtdb, `notifications/${orderData.userId}/${nid}`), {
+    if (userId) {
+      if (oldStatus !== 'successful' && status === 'successful') {
+        // Just turned successful -> Reward point
+        await update(ref(rtdb, `users/${userId}`), { points: increment(1) });
+        const nid = push(ref(rtdb, `notifications/${userId}`)).key;
+        await set(ref(rtdb, `notifications/${userId}/${nid}`), {
           type: 'order_status',
           title: "Order Successful! ✅",
-          body: `Your diamonds have been delivered. You earned 1 point!`,
+          body: `Your items have been delivered. You earned 1 point!`,
+          read: false,
+          createdAt: Date.now(),
+          linkTo: '#orders'
+        });
+      } else if (oldStatus === 'successful' && status !== 'successful') {
+        // Was successful, now it's cancelled/revoked -> Reverse point
+        await update(ref(rtdb, `users/${userId}`), { points: increment(-1) });
+        const nid = push(ref(rtdb, `notifications/${userId}`)).key;
+        await set(ref(rtdb, `notifications/${userId}/${nid}`), {
+          type: 'order_status',
+          title: "Order Update: Points Revoked ⚠️",
+          body: `Your order was marked as ${status}. 1 point was deducted from your balance.`,
+          read: false,
+          createdAt: Date.now(),
+          linkTo: '#orders'
+        });
+      } else if (oldStatus !== status) {
+        // Other status changes
+        const nid = push(ref(rtdb, `notifications/${userId}`)).key;
+        await set(ref(rtdb, `notifications/${userId}/${nid}`), {
+          type: 'order_status',
+          title: "Order Progress Update",
+          body: `Your order is now being ${status}.`,
           read: false,
           createdAt: Date.now(),
           linkTo: '#orders'
