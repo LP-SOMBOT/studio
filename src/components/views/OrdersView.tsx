@@ -11,7 +11,9 @@ import {
   Gamepad2,
   ShieldCheck,
   User,
-  ExternalLink
+  RefreshCw,
+  XCircle,
+  ShieldAlert
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -77,7 +79,7 @@ function OrderCard({ order }: { order: any }) {
     cancelled: "bg-red-100 text-red-700"
   };
 
-  const StatusIcon = order.status === 'successful' ? CheckCircle2 : order.status === 'pending' ? Clock : Package;
+  const StatusIcon = order.status === 'successful' ? CheckCircle2 : order.status === 'pending' ? Clock : order.status === 'processing' ? RefreshCw : XCircle;
 
   return (
     <Card className="rounded-[2.5rem] border-none shadow-xl bg-white overflow-hidden group hover:shadow-2xl transition-all duration-300">
@@ -109,7 +111,8 @@ function OrderCard({ order }: { order: any }) {
                 </div>
              </div>
              <Badge className={cn("rounded-full px-3 py-1 font-bold text-[9px] border-none shadow-sm", statusColors[order.status as keyof typeof statusColors])}>
-                <StatusIcon className="w-3 h-3 mr-1" /> {order.status.toUpperCase()}
+                <StatusIcon className={cn("w-3 h-3 mr-1", order.status === 'processing' && "animate-spin")} /> 
+                {order.status.toUpperCase()}
              </Badge>
           </div>
 
@@ -140,19 +143,38 @@ function OrderCard({ order }: { order: any }) {
              </div>
           </div>
           
-          {order.status === 'pending' && (
-            <div className="mt-4 p-4 bg-amber-50 rounded-2xl flex gap-3 items-center text-amber-700 text-[11px] font-bold border border-amber-100 shadow-sm animate-pulse">
-               <AlertCircle size={18} className="shrink-0" />
-               <p className="leading-relaxed">Waxaan hubinaynaa lacag bixintaada. Fadlan dulqaad yeelo, dhowaan ayey ku soo gaadhi doonaan.</p>
-            </div>
-          )}
+          {/* Real-time Status Notes */}
+          <div className="mt-4">
+             {order.status === 'pending' && (
+               <div className="p-4 bg-amber-50 rounded-2xl flex gap-3 items-center text-amber-700 text-[11px] font-bold border border-amber-100 shadow-sm animate-pulse">
+                  <Clock size={18} className="shrink-0" />
+                  <p className="leading-relaxed">Dalabkaaga waa la diray, Mahadsanid!</p>
+               </div>
+             )}
 
-          {order.status === 'successful' && isAccount && (
-            <div className="mt-4 p-4 bg-green-50 rounded-2xl flex gap-3 items-center text-green-700 text-[11px] font-bold border border-green-100 shadow-sm">
-               <CheckCircle2 size={18} className="shrink-0" />
-               <p className="leading-relaxed">Account credentials-kaaga waxaa lagugu soo diri doonaa Gmail-kaaga.</p>
-            </div>
-          )}
+             {order.status === 'processing' && (
+               <div className="p-4 bg-blue-50 rounded-2xl flex gap-3 items-center text-blue-700 text-[11px] font-bold border border-blue-100 shadow-sm">
+                  <RefreshCw size={18} className="shrink-0 animate-spin" />
+                  <p className="leading-relaxed">Dalabkaaga waa la xaqiijinooyaa fadlan dulqaadka badi, Waxey qadaneysa kaliya 5 daqiiqo, Mahadsanid!</p>
+               </div>
+             )}
+
+             {order.status === 'successful' && (
+               <div className="p-4 bg-green-50 rounded-2xl flex gap-3 items-center text-green-700 text-[11px] font-bold border border-green-100 shadow-sm">
+                  <CheckCircle2 size={18} className="shrink-0" />
+                  <p className="leading-relaxed">Dalabkaaga waa laguu Soo diray, Mahadsanid!</p>
+               </div>
+             )}
+
+             {order.status === 'cancelled' && (
+               <div className="p-4 bg-red-50 rounded-2xl flex gap-3 items-center text-red-700 text-[11px] font-bold border border-red-100 shadow-sm">
+                  <ShieldAlert size={18} className="shrink-0" />
+                  <p className="leading-relaxed text-left">
+                    Dalabkaaga Waa Lagu guuldareystay fadlan hubi inaad bixisay lacagta, ama inuu saxanyahay Xogta aad Gelisay, Ama laxariir WhatsApp 613982172, Mahadsanid!
+                  </p>
+               </div>
+             )}
+          </div>
        </div>
     </Card>
   );
