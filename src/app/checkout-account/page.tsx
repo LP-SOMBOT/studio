@@ -26,7 +26,7 @@ export default function CheckoutAccountPage() {
   const router = useRouter();
   const params = useSearchParams();
   const id = params.get('id');
-  const { accountPosts, user, setActiveTab, createOrder, setGlobalLoading } = useApp();
+  const { accountPosts, user, loading, setActiveTab, createOrder, setGlobalLoading } = useApp();
   const [step, setStep] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
   const [whatsappNumber, setWhatsappNumber] = useState("");
@@ -37,8 +37,13 @@ export default function CheckoutAccountPage() {
   }, [accountPosts, id]);
 
   useEffect(() => {
-    if (!id && step < 4) router.push('/#accounts');
-  }, [id, step, router]);
+    if (!loading && !user && step < 4) {
+      router.push('/login');
+    }
+    if (!id && step < 4 && user) {
+      router.push('/#accounts');
+    }
+  }, [id, step, router, user, loading]);
 
   if (!post && step < 4) return null;
 

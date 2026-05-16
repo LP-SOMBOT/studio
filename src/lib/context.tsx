@@ -489,6 +489,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const buyNow = (item: any) => {
+    if (!user) {
+      toast({ title: "Fadlan soo gal", description: "Waa inaad soo gashaa si aad wax u iibsato.", variant: "destructive" });
+      router.push('/login');
+      return;
+    }
     router.push(`/checkout?id=${item.id}`);
   };
 
@@ -541,6 +546,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const buyAccountPost = (post: any) => {
+    if (!user) {
+      toast({ title: "Fadlan soo gal", description: "Waa inaad soo gashaa si aad u iibsato account-kan.", variant: "destructive" });
+      router.push('/login');
+      return;
+    }
     router.push(`/checkout-account?id=${post.id}`);
   };
 

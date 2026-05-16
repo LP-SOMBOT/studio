@@ -25,7 +25,7 @@ import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 
 function CheckoutContent() {
-  const { products, createOrder, setGlobalLoading, setActiveTab } = useApp();
+  const { products, createOrder, setGlobalLoading, setActiveTab, user, loading } = useApp();
   const router = useRouter();
   const searchParams = useSearchParams();
   const productId = searchParams.get('id');
@@ -49,10 +49,13 @@ function CheckoutContent() {
   const isFreeFire = item?.gameId === 'freefire';
 
   useEffect(() => {
-    if (!productId && !isSuccess) {
+    if (!loading && !user && !isSuccess) {
+      router.push('/login');
+    }
+    if (!productId && !isSuccess && user) {
       router.push('/');
     }
-  }, [productId, isSuccess, router]);
+  }, [productId, isSuccess, router, user, loading]);
 
   const handleDetailsSubmit = (e: React.FormEvent) => {
     e.preventDefault();

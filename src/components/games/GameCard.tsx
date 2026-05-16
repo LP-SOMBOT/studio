@@ -19,7 +19,7 @@ type GameCardProps = {
 };
 
 export default function GameCard({ id, title, description, thumbnail, price, discountedPrice, gameId, imageHint }: GameCardProps) {
-  const { buyNow } = useApp();
+  const { buyNow, user } = useApp();
 
   const handleBuyNow = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -68,7 +68,7 @@ export default function GameCard({ id, title, description, thumbnail, price, dis
       </CardContent>
       <CardFooter className="p-5 pt-0">
         <Button onClick={handleBuyNow} className="w-full rounded-2xl h-12 gap-2 font-bold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all">
-          <ShoppingCart className="w-5 h-5" /> Buy Now
+          <ShoppingCart className="w-5 h-5" /> {user ? "Buy Now" : "Login to Buy"}
         </Button>
       </CardFooter>
     </Card>

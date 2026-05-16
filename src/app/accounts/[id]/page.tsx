@@ -164,7 +164,7 @@ export default function AccountDetailPage() {
                   disabled={post.sold}
                   className="w-full h-16 rounded-[2rem] text-xl font-bold shadow-2xl shadow-primary/30 gap-3 active:scale-95 transition-transform"
                 >
-                  {post.sold ? "Waa la iibiyay" : `IIBSO ACCOUNT-KA — $${post.price.toFixed(2)}`}
+                  {post.sold ? "Waa la iibiyay" : user ? `IIBSO ACCOUNT-KA — $${post.price.toFixed(2)}` : "Login si aad u iibsato"}
                 </Button>
              </div>
 
@@ -202,7 +202,7 @@ export default function AccountDetailPage() {
            disabled={post.sold}
            className="w-full max-w-lg h-16 rounded-[2rem] text-xl font-bold shadow-2xl shadow-primary/30 gap-3 active:scale-95 transition-transform"
          >
-            {post.sold ? "Waa la iibiyay" : `IIBSO ACCOUNT-KA — $${post.price.toFixed(2)}`}
+            {post.sold ? "Waa la iibiyay" : user ? `IIBSO ACCOUNT-KA — $${post.price.toFixed(2)}` : "Login si aad u iibsato"}
          </Button>
       </div>
 
