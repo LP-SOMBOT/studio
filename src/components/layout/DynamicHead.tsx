@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect } from "react";
@@ -10,9 +9,15 @@ import { useApp } from "@/lib/context";
  * based on the logo stored in the database.
  */
 export default function DynamicHead() {
-  const { storeSettings } = useApp();
+  const { storeSettings, theme } = useApp();
 
   useEffect(() => {
+    // Update Theme Color based on Light/Dark mode
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    if (metaTheme) {
+      metaTheme.setAttribute('content', theme === 'dark' ? '#0F172A' : '#0EA5E9');
+    }
+
     if (!storeSettings?.logo) return;
 
     const logo = storeSettings.logo;
@@ -32,13 +37,7 @@ export default function DynamicHead() {
     updateIcon('shortcut icon');
     updateIcon('apple-touch-icon');
 
-    // For PWAs, we also update the theme color if provided in settings later
-    const metaTheme = document.querySelector('meta[name="theme-color"]');
-    if (metaTheme) {
-      metaTheme.setAttribute('content', '#7C3AED');
-    }
-
-  }, [storeSettings?.logo]);
+  }, [storeSettings?.logo, theme]);
 
   return null;
 }
