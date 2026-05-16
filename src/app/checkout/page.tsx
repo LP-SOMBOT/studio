@@ -379,7 +379,7 @@ function CheckoutContent() {
                 setActiveTab('orders');
               }}
             >
-              View My Orders
+              Eeg Dalabkaaga
             </Button>
             <Button 
               variant="ghost"
