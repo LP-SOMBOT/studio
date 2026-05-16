@@ -344,7 +344,7 @@ function CheckoutContent() {
                     <Loader2 className="w-6 h-6 animate-spin" />
                     <span>Verifying...</span>
                   </div>
-                ) : "Submit & Confirm Order"}
+                ) : "Xaqiiji"}
               </Button>
               <Button variant="ghost" onClick={() => setStep(2)} className="h-12 rounded-xl text-muted-foreground dark:text-slate-500 hover:dark:text-slate-300">
                  Cancel & Go Back
