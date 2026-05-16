@@ -12,7 +12,8 @@ import {
   Gamepad2,
   AlertCircle,
   X,
-  CreditCard
+  CreditCard,
+  Copy
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -57,6 +58,16 @@ export default function CheckoutAccountPage() {
 
     window.location.href = `tel:${ussd.replace(/#/g, '%23')}`;
     setStep(3);
+  };
+
+  const copyToClipboard = (text: string) => {
+    if (typeof window !== 'undefined') {
+      navigator.clipboard.writeText(text);
+      toast({
+        title: "La koobiyey!",
+        description: "USSD code-ka waa la koobiyey.",
+      });
+    }
   };
 
   const handleConfirmPayment = () => {
@@ -183,7 +194,16 @@ export default function CheckoutAccountPage() {
               
               <div className="p-8 bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-white/5 space-y-4">
                  <p className="text-[10px] font-bold text-muted-foreground dark:text-slate-500 uppercase tracking-widest">USSD Code</p>
-                 <code className="text-2xl font-mono font-bold text-slate-900 dark:text-white">*712*613982172*{post?.price}#</code>
+                 <div className="flex items-center justify-center gap-3">
+                    <code className="text-2xl font-mono font-bold text-slate-900 dark:text-white">*712*613982172*{post?.price}#</code>
+                    <button 
+                      onClick={() => copyToClipboard(`*712*613982172*${post?.price}#`)}
+                      className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors text-primary active:scale-90"
+                      title="Copy Code"
+                    >
+                       <Copy size={22} />
+                    </button>
+                 </div>
               </div>
 
               <div className="grid grid-cols-1 gap-3">
