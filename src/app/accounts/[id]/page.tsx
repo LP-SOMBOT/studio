@@ -15,7 +15,8 @@ import {
   CheckCircle2,
   Gamepad2,
   X,
-  Maximize2
+  Maximize2,
+  Share2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +26,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { toast } from "@/hooks/use-toast";
 
 export default function AccountDetailPage() {
   const { id } = useParams();
@@ -36,6 +38,36 @@ export default function AccountDetailPage() {
   const post = useMemo(() => {
     return (accountPosts || []).find(p => p.id === id);
   }, [accountPosts, id]);
+
+  const handleShare = async () => {
+    if (!post) return;
+    const shareUrl = `${window.location.origin}/accounts/${post.id}`;
+    const shareTitle = `Oskar Shop - ${post.authorName}'s Account`;
+    const shareText = `Eeg account-kan Lv ${post.level} ee jooga Oskar Shop!`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: shareTitle,
+          text: shareText,
+          url: shareUrl,
+        });
+      } catch (err) {
+        // Silently fail if user cancels
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        toast({
+          title: "URL-ka waa la koobiyey!",
+          description: "Link-ga account-ka waa kuu diyaar.",
+        });
+      } catch (err) {
+        // Fallback for older browsers
+        window.open(`https://wa.me/?text=${encodeURIComponent(shareText + ' ' + shareUrl)}`, '_blank');
+      }
+    }
+  };
 
   if (!post) {
     return (
@@ -54,14 +86,22 @@ export default function AccountDetailPage() {
   return (
     <div className="min-h-screen pb-32 bg-slate-50 dark:bg-transparent page-transition">
       {/* Custom Sticky Header */}
-      <header className="sticky top-0 z-50 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-gray-100 dark:border-white/5 h-16 flex items-center px-4 gap-4">
+      <header className="sticky top-0 z-50 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-gray-100 dark:border-white/5 h-16 flex items-center px-4 justify-between">
+         <div className="flex items-center gap-4">
+            <button 
+              onClick={() => router.push('/#accounts')} 
+              className="p-2 text-slate-900 dark:text-white rounded-full hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors"
+            >
+                <ArrowLeft size={24} />
+            </button>
+            <h1 className="text-lg font-headline font-bold text-slate-900 dark:text-white">Faahfaahinta Account</h1>
+         </div>
          <button 
-           onClick={() => router.push('/#accounts')} 
-           className="p-2 text-slate-900 dark:text-white rounded-full hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors"
+           onClick={handleShare}
+           className="p-2.5 text-primary bg-primary/10 rounded-full active:scale-90 transition-transform"
          >
-            <ArrowLeft size={24} />
+            <Share2 size={20} />
          </button>
-         <h1 className="text-lg font-headline font-bold text-slate-900 dark:text-white">Faahfaahinta Account</h1>
       </header>
 
       <main className="max-w-6xl mx-auto lg:mt-10 lg:px-6">

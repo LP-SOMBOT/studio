@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -29,7 +28,8 @@ import {
   SmartphoneIcon,
   Facebook,
   Chrome,
-  ImageIcon
+  ImageIcon,
+  Share2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -201,6 +201,25 @@ export default function AccountsView() {
 function AccountPostCard({ post, onClick, onEdit, onDelete, isOwner }: { post: any, onClick: () => void, onEdit: (e:any)=>void, onDelete: (e:any)=>void, isOwner: boolean }) {
   const isGoogle = post.platform === 'Google';
   
+  const handleShare = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const shareUrl = `${window.location.origin}/accounts/${post.id}`;
+    const shareText = `Eeg account-kan Lv ${post.level} ee jooga Oskar Shop!`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `Oskar Shop - ${post.authorName}`,
+          text: shareText,
+          url: shareUrl,
+        });
+      } catch (err) {}
+    } else {
+      navigator.clipboard.writeText(shareUrl);
+      toast({ title: "URL copied!" });
+    }
+  };
+  
   return (
     <Card 
       onClick={onClick}
@@ -229,12 +248,15 @@ function AccountPostCard({ post, onClick, onEdit, onDelete, isOwner }: { post: a
           </div>
         </div>
         
-        {isOwner && (
-          <div className="flex gap-1">
-             <Button size="icon" variant="ghost" className="h-8 w-8 text-blue-500" onClick={onEdit}><Edit size={16}/></Button>
-             <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500" onClick={onDelete}><Trash2 size={16}/></Button>
-          </div>
-        )}
+        <div className="flex gap-1">
+           <Button size="icon" variant="ghost" className="h-8 w-8 text-primary" onClick={handleShare}><Share2 size={16}/></Button>
+           {isOwner && (
+             <>
+                <Button size="icon" variant="ghost" className="h-8 w-8 text-blue-500" onClick={onEdit}><Edit size={16}/></Button>
+                <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500" onClick={onDelete}><Trash2 size={16}/></Button>
+             </>
+           )}
+        </div>
       </div>
 
       <div className="aspect-[16/9] relative bg-slate-900 overflow-hidden flex items-center justify-center">
