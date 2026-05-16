@@ -37,7 +37,7 @@ export default function CheckoutAccountPage() {
   }, [accountPosts, id]);
 
   useEffect(() => {
-    if (!id && step < 4) router.push('/accounts');
+    if (!id && step < 4) router.push('/#accounts');
   }, [id, step, router]);
 
   if (!post && step < 4) return null;
@@ -92,10 +92,10 @@ export default function CheckoutAccountPage() {
       <main className="max-w-xl mx-auto px-6 py-10">
          {step < 4 && (
            <div className="mb-8 flex items-center justify-between">
-              <Button variant="ghost" size="sm" onClick={() => router.back()} className="rounded-full gap-2 text-muted-foreground">
+              <Button variant="ghost" size="sm" onClick={() => router.push(`/#accounts`)} className="rounded-full gap-2 text-muted-foreground">
                 <ArrowLeft size={18} /> Dib u Noqo
               </Button>
-              <Button variant="ghost" size="icon" onClick={() => router.push('/accounts')} className="rounded-full text-muted-foreground hover:text-red-500">
+              <Button variant="ghost" size="icon" onClick={() => router.push('/#accounts')} className="rounded-full text-muted-foreground hover:text-red-500">
                 <X size={20} />
               </Button>
            </div>
