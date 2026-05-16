@@ -128,12 +128,13 @@ type UserProfile = {
   uid: string;
   email: string;
   name: string;
-  role: 'user' | 'admin' | 'super_admin';
+  role: 'user' | 'staff' | 'admin' | 'super_admin';
   points: number;
   createdAt: number;
   photoURL?: string;
   gameName?: string;
   gameUid?: string;
+  phoneNumber?: string;
 };
 
 type AppContextType = {
@@ -164,6 +165,7 @@ type AppContextType = {
   updateOrderStatus: (orderId: string, status: string) => Promise<void>;
   updateAccountPostStatus: (postId: string, status: string) => Promise<void>;
   updateUserProfile: (updates: Partial<UserProfile>) => Promise<void>;
+  manageUser: (uid: string, updates: Partial<UserProfile>) => Promise<void>;
   deleteUser: (uid: string) => Promise<void>;
   saveProduct: (product: Partial<GamePackage>) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;
@@ -289,7 +291,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const enhancedUser = useMemo(() => {
     if (!user) return null;
-    return { ...user, ...userProfile, isAdmin: userProfile?.role === 'admin' || userProfile?.role === 'super_admin' };
+    const role = userProfile?.role || 'user';
+    return { 
+      ...user, 
+      ...userProfile, 
+      isAdmin: role === 'admin' || role === 'super_admin' || role === 'staff' 
+    };
   }, [user, userProfile]);
 
   // Robust REAL-TIME Admin Listener
@@ -494,6 +501,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     toast({ title: "Profile updated!" });
   };
 
+  const manageUser = async (uid: string, updates: Partial<UserProfile>) => {
+    if (!rtdb) return;
+    await update(ref(rtdb, `users/${uid}`), updates);
+    toast({ title: "User updated!" });
+  };
+
   const markNotificationsAsRead = async (nid?: string) => {
     if (!rtdb || !user) return;
     if (nid) await update(ref(rtdb, `notifications/${user.uid}/${nid}`), { read: true });
@@ -554,7 +567,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       user: enhancedUser, loading, isGlobalLoading, isInitialLoading, activeTab, setActiveTab, setGlobalLoading: setIsGlobalLoading,
       login, signup, logout, buyNow, orders, allOrders, products, allUsers, accountPosts, notifications, events,
       createOrder, postAccount, updateAccountPost, deleteAccountPost, buyAccountPost, markNotificationsAsRead, updateOrderStatus, updateAccountPostStatus, 
-      updateUserProfile, deleteUser, saveProduct, deleteProduct, saveEvent: async()=>{}, deleteEvent: async()=>{}, storeSettings, updateStoreSettings, 
+      updateUserProfile, manageUser, deleteUser, saveProduct, deleteProduct, saveEvent: async()=>{}, deleteEvent: async()=>{}, storeSettings, updateStoreSettings, 
       broadcastNotification, messages, allChatSessions, chatTargetId, setChatTargetId, sendMessage, markMessagesAsRead, refreshAdminData
     }}>
       {children}

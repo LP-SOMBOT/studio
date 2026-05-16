@@ -40,7 +40,11 @@ import {
   ExternalLink,
   MoreVertical,
   Calendar,
-  Smartphone
+  Smartphone,
+  UserCog,
+  ArrowUpCircle,
+  ArrowDownCircle,
+  Shield
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -107,6 +111,7 @@ export default function AdminPage() {
     updateOrderStatus,
     updateAccountPostStatus,
     deleteUser,
+    manageUser,
     saveProduct,
     deleteProduct,
     logout,
@@ -131,6 +136,11 @@ export default function AdminPage() {
     discountedPrice: "",
     thumbnail: ""
   });
+
+  // User Management state
+  const [isUserManageOpen, setIsUserManageOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [pointAdjustment, setPointAdjustment] = useState("");
 
   // Order Details state
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
@@ -211,30 +221,25 @@ export default function AdminPage() {
     }
   };
 
-  const handleProductImageUpload = async (file: File) => {
-    setIsUploading(true);
-    try {
-      const url = await uploadToImgbb(file);
-      setProductForm(prev => ({ ...prev, thumbnail: url }));
-      toast({ title: "Image Uploaded" });
-    } catch (e) {
-      toast({ title: "Upload Failed", variant: "destructive" });
-    } finally {
-      setIsUploading(false);
-    }
+  const handleAdjustPoints = async (type: 'credit' | 'debit') => {
+    if (!selectedUser || !pointAdjustment) return;
+    const amount = parseInt(pointAdjustment);
+    if (isNaN(amount)) return;
+    
+    const finalAmount = type === 'credit' ? amount : -amount;
+    const newPoints = (selectedUser.points || 0) + finalAmount;
+    
+    await manageUser(selectedUser.uid, { points: newPoints });
+    setSelectedUser((prev: any) => ({ ...prev, points: newPoints }));
+    setPointAdjustment("");
+    toast({ title: `Points ${type === 'credit' ? 'Credited' : 'Debited'}` });
   };
 
-  const handleOfflineImageUpload = async (file: File) => {
-    setIsUploading(true);
-    try {
-      const url = await uploadToImgbb(file);
-      await updateStoreSettings({ appStatus: { ...storeSettings.appStatus, offlineImageUrl: url } });
-      toast({ title: "Offline Image Updated" });
-    } catch (e) {
-      toast({ title: "Upload Failed", variant: "destructive" });
-    } finally {
-      setIsUploading(false);
-    }
+  const handleUpdateRole = async (role: string) => {
+    if (!selectedUser) return;
+    await manageUser(selectedUser.uid, { role });
+    setSelectedUser((prev: any) => ({ ...prev, role }));
+    toast({ title: `Role updated to ${role}` });
   };
 
   const handleViewOrder = (order: any) => {
@@ -316,6 +321,11 @@ export default function AdminPage() {
     return matchesSearch && matchesStatus;
   });
 
+  const filteredUsers = allUsers.filter(u => 
+    u.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    u.email?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="min-h-screen bg-slate-50 flex overflow-hidden">
       
@@ -376,7 +386,7 @@ export default function AdminPage() {
           <div className="flex items-center gap-4">
              <div className="flex flex-col items-end">
                 <p className="text-sm font-bold text-slate-900">{user?.name}</p>
-                <p className="text-[10px] font-bold text-primary uppercase">Super Administrator</p>
+                <p className="text-[10px] font-bold text-primary uppercase">{user?.role || 'Administrator'}</p>
              </div>
              <div className="w-10 h-10 rounded-full bg-slate-100 border-2 border-white shadow-sm overflow-hidden relative">
                 {user?.photoURL ? <Image src={user.photoURL} alt="" fill className="object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-300"><User size={20} /></div>}
@@ -404,7 +414,7 @@ export default function AdminPage() {
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={chartData}>
                       <defs>
-                        <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                        <linearGradient id="colorValue" x1="0" x2="0" x2="0" y2="1">
                           <stop offset="5%" stopColor="#0EA5E9" stopOpacity={0.3}/>
                           <stop offset="95%" stopColor="#0EA5E9" stopOpacity={0}/>
                         </linearGradient>
@@ -674,59 +684,95 @@ export default function AdminPage() {
           )}
 
           {activeView === 'users' && (
-            <Card className="rounded-[2rem] border-none shadow-xl bg-white overflow-hidden animate-in fade-in">
-               <Table>
-                <TableHeader className="bg-slate-50/50">
-                  <TableRow className="border-slate-50">
-                    <TableHead className="font-bold text-[10px] uppercase tracking-widest px-8">User</TableHead>
-                    <TableHead className="font-bold text-[10px] uppercase tracking-widest">Email & Contact</TableHead>
-                    <TableHead className="font-bold text-[10px] uppercase tracking-widest">Role</TableHead>
-                    <TableHead className="font-bold text-[10px] uppercase tracking-widest">Points</TableHead>
-                    <TableHead className="font-bold text-[10px] uppercase tracking-widest text-right px-8">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {allUsers.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={5} className="h-64 text-center">
-                         <div className="flex flex-col items-center justify-center opacity-30">
-                            <Users size={48} className="mb-4" />
-                            <p className="font-bold">No registered users found</p>
-                         </div>
-                      </TableCell>
+            <div className="space-y-6 animate-in fade-in">
+              <div className="relative w-full md:w-96">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Input 
+                  placeholder="Search users by name or email..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-12 h-12 rounded-xl bg-white border-none shadow-sm"
+                />
+              </div>
+
+              <Card className="rounded-[2rem] border-none shadow-xl bg-white overflow-hidden">
+                <Table>
+                  <TableHeader className="bg-slate-50/50">
+                    <TableRow className="border-slate-50">
+                      <TableHead className="font-bold text-[10px] uppercase tracking-widest px-8">User Profile</TableHead>
+                      <TableHead className="font-bold text-[10px] uppercase tracking-widest">Contact Info</TableHead>
+                      <TableHead className="font-bold text-[10px] uppercase tracking-widest">System Role</TableHead>
+                      <TableHead className="font-bold text-[10px] uppercase tracking-widest">Balance</TableHead>
+                      <TableHead className="font-bold text-[10px] uppercase tracking-widest text-right px-8">Management</TableHead>
                     </TableRow>
-                  ) : (
-                    allUsers.map((u) => (
-                      <TableRow key={u.uid} className="hover:bg-slate-50/50 transition-colors border-slate-50">
-                        <TableCell className="px-8">
-                          <div className="flex items-center gap-3">
-                             <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100 relative shadow-inner">
-                                {u.photoURL ? <Image src={u.photoURL} alt="" fill className="object-cover" /> : <Users className="absolute inset-0 m-auto text-slate-300" size={16} />}
-                             </div>
-                             <span className="font-bold text-slate-900">{u.name}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                           <div className="flex flex-col">
-                              <span className="text-xs font-bold text-slate-600">{u.email}</span>
-                              <span className="text-[10px] text-slate-400">{u.phoneNumber || "No Phone"}</span>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredUsers.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="h-64 text-center">
+                           <div className="flex flex-col items-center justify-center opacity-30">
+                              <Users size={48} className="mb-4" />
+                              <p className="font-bold">No users found</p>
                            </div>
                         </TableCell>
-                        <TableCell>
-                           <Badge variant="secondary" className="rounded-full px-3 py-1 font-bold text-[9px] uppercase">
-                              {u.role}
-                           </Badge>
-                        </TableCell>
-                        <TableCell className="font-bold text-amber-600">{u.points || 0} pts</TableCell>
-                        <TableCell className="text-right px-8">
-                           <Button size="icon" variant="ghost" onClick={() => deleteUser(u.uid)} className="text-red-500 hover:bg-red-50 rounded-xl"><Trash2 size={18} /></Button>
-                        </TableCell>
                       </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </Card>
+                    ) : (
+                      filteredUsers.map((u) => (
+                        <TableRow key={u.uid} className="hover:bg-slate-50/50 transition-colors border-slate-50">
+                          <TableCell className="px-8">
+                            <div className="flex items-center gap-3">
+                               <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100 relative shadow-inner">
+                                  {u.photoURL ? <Image src={u.photoURL} alt="" fill className="object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-200"><User size={16} /></div>}
+                               </div>
+                               <div className="flex flex-col">
+                                 <span className="font-bold text-slate-900">{u.name}</span>
+                                 <span className="text-[10px] text-slate-400">{format(new Date(u.createdAt || Date.now()), 'MMM yyyy')}</span>
+                               </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                             <div className="flex flex-col">
+                                <span className="text-xs font-bold text-slate-600">{u.email}</span>
+                                <span className="text-[10px] text-slate-400">{u.phoneNumber || "No Phone"}</span>
+                             </div>
+                          </TableCell>
+                          <TableCell>
+                             <Badge variant="secondary" className={cn(
+                               "rounded-full px-3 py-1 font-bold text-[9px] uppercase",
+                               u.role === 'admin' || u.role === 'super_admin' ? "bg-red-50 text-red-600 border-red-100" : 
+                               u.role === 'staff' ? "bg-blue-50 text-blue-600 border-blue-100" : "bg-slate-50 text-slate-600"
+                             )}>
+                                {u.role || 'user'}
+                             </Badge>
+                          </TableCell>
+                          <TableCell>
+                             <div className="flex items-center gap-1.5">
+                               <Star size={12} className="text-amber-500 fill-amber-500" />
+                               <span className="font-bold text-slate-900">{u.points || 0}</span>
+                             </div>
+                          </TableCell>
+                          <TableCell className="text-right px-8">
+                             <div className="flex justify-end gap-2">
+                                <Button 
+                                  size="icon" 
+                                  variant="ghost" 
+                                  onClick={() => { setSelectedUser(u); setIsUserManageOpen(true); }}
+                                  className="text-primary hover:bg-primary/5 rounded-xl"
+                                >
+                                   <UserCog size={18} />
+                                </Button>
+                                <Button size="icon" variant="ghost" onClick={() => deleteUser(u.uid)} className="text-red-500 hover:bg-red-50 rounded-xl">
+                                   <Trash2 size={18} />
+                                </Button>
+                             </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </Card>
+            </div>
           )}
 
           {activeView === 'settings' && (
@@ -810,6 +856,90 @@ export default function AdminPage() {
 
         </main>
       </div>
+
+      {/* User Management Modal */}
+      <Dialog open={isUserManageOpen} onOpenChange={setIsUserManageOpen}>
+        <DialogContent className="max-w-md rounded-[3rem] p-0 border-none shadow-2xl bg-white overflow-hidden z-[100]">
+          {selectedUser && (
+            <div className="flex flex-col">
+              <div className="bg-slate-900 p-8 text-white">
+                <div className="flex justify-between items-start mb-6">
+                  <div className="flex items-center gap-4">
+                    <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-white/20">
+                      {selectedUser.photoURL ? <Image src={selectedUser.photoURL} alt="" width={64} height={64} className="object-cover" /> : <User size={32} className="m-4 text-white/40" />}
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-headline font-bold">{selectedUser.name}</h2>
+                      <p className="text-xs text-white/40 font-medium">{selectedUser.email}</p>
+                    </div>
+                  </div>
+                  <Button variant="ghost" size="icon" onClick={() => setIsUserManageOpen(false)} className="text-white/40 hover:text-white rounded-full">
+                    <X size={20} />
+                  </Button>
+                </div>
+              </div>
+
+              <div className="p-8 space-y-8">
+                {/* Role Section */}
+                <div className="space-y-4">
+                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                    <Shield size={14} /> Permission Level
+                  </h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    {['user', 'staff', 'admin', 'super_admin'].map((r) => (
+                      <Button 
+                        key={r}
+                        variant={selectedUser.role === r ? "default" : "outline"}
+                        onClick={() => handleUpdateRole(r)}
+                        className={cn(
+                          "h-12 rounded-2xl font-bold text-[10px] uppercase tracking-wider",
+                          selectedUser.role === r ? "bg-primary shadow-lg shadow-primary/20" : "border-slate-100"
+                        )}
+                      >
+                        {r.replace('_', ' ')}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Points Section */}
+                <div className="space-y-4">
+                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                    <Star size={14} /> Points Management
+                  </h3>
+                  <div className="bg-slate-50 rounded-[2rem] p-6 border border-slate-100 flex flex-col items-center text-center">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase mb-1">Current Balance</p>
+                    <p className="text-4xl font-headline font-bold text-slate-900">{selectedUser.points || 0}</p>
+                    <div className="flex gap-4 w-full mt-6">
+                      <Input 
+                        type="number"
+                        placeholder="Amount"
+                        value={pointAdjustment}
+                        onChange={(e) => setPointAdjustment(e.target.value)}
+                        className="h-14 rounded-2xl bg-white border-none shadow-sm text-center font-bold text-lg"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 w-full mt-3">
+                      <Button 
+                        onClick={() => handleAdjustPoints('credit')}
+                        className="h-12 rounded-2xl bg-green-600 hover:bg-green-700 gap-2 font-bold"
+                      >
+                        <ArrowUpCircle size={18} /> Credit
+                      </Button>
+                      <Button 
+                        onClick={() => handleAdjustPoints('debit')}
+                        className="h-12 rounded-2xl bg-red-600 hover:bg-red-700 gap-2 font-bold"
+                      >
+                        <ArrowDownCircle size={18} /> Debit
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Advanced Order Detail Modal */}
       <Dialog open={isOrderDetailOpen} onOpenChange={setIsOrderDetailOpen}>
