@@ -330,8 +330,8 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex overflow-hidden">
-      {/* Sidebar */}
-      <aside className={cn("h-screen bg-white border-r border-slate-100 flex flex-col transition-all duration-300 z-[60]", isSidebarExpanded ? "w-64" : "w-20")}>
+      {/* Sidebar - z-40 ensures Dialog (z-50) is above it */}
+      <aside className={cn("h-screen bg-white border-r border-slate-100 flex flex-col transition-all duration-300 z-40", isSidebarExpanded ? "w-64" : "w-20")}>
         <div className="h-20 px-6 flex items-center justify-between">
           {isSidebarExpanded && <span className="font-headline font-bold text-lg text-slate-900">Oskar Control</span>}
           <button onClick={() => setIsSidebarExpanded(!isSidebarExpanded)} className="p-2 text-slate-400 hover:bg-slate-50 rounded-xl"><Menu size={20} /></button>
