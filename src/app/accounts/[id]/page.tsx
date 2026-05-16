@@ -179,7 +179,7 @@ export default function AccountDetailPage() {
              </div>
 
              <div className="grid grid-cols-3 gap-4">
-                <StatItem label="Lvl" value={post.level} icon={Star} color="text-amber-500" />
+                <StatItem label="Account Lvl" value={post.level} icon={Star} color="text-amber-500" />
                 <StatItem label="Age" value={post.age} icon={Calendar} color="text-blue-500" />
                 <StatItem label="Prime" value={`Prime ${post.primeLevel}`} icon={ShieldCheck} color="text-purple-500" />
              </div>
