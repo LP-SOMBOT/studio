@@ -8,8 +8,6 @@ import {
   ShieldCheck, 
   Star, 
   Calendar, 
-  MessageSquare, 
-  Send, 
   Clock, 
   ChevronLeft, 
   ChevronRight,
@@ -33,7 +31,6 @@ export default function AccountDetailPage() {
   const router = useRouter();
   const { accountPosts, user, buyAccountPost } = useApp();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [commentInput, setCommentInput] = useState("");
   const [fullScreenImage, setFullScreenImage] = useState<string | null>(null);
 
   const post = useMemo(() => {
@@ -167,36 +164,12 @@ export default function AccountDetailPage() {
                   {post.sold ? "Waa la iibiyay" : user ? `IIBSO ACCOUNT-KA — $${post.price.toFixed(2)}` : "Login si aad u iibsato"}
                 </Button>
              </div>
-
-             {/* Comments Section placeholder */}
-             <section className="space-y-6 pt-10 border-t border-slate-100 dark:border-white/5">
-                <h3 className="text-xl font-headline font-bold text-slate-900 dark:text-white">Faallooyinka</h3>
-                <div className="space-y-6">
-                   <div className="py-10 text-center opacity-20">
-                      <MessageSquare size={40} className="mx-auto mb-2 dark:text-white" />
-                      <p className="text-sm font-bold dark:text-white">Wali wax faallo ah looma reebin</p>
-                   </div>
-                </div>
-                
-                <div className="flex gap-3 items-center">
-                   <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden relative shrink-0">
-                      {user?.photoURL && <Image src={user.photoURL} alt="" fill className="object-cover" />}
-                   </div>
-                   <Input 
-                     placeholder="Ku qor faalladaada..." 
-                     className="rounded-full h-12 bg-white dark:bg-slate-900 border-none shadow-sm dark:shadow-none"
-                     value={commentInput}
-                     onChange={e => setCommentInput(e.target.value)}
-                   />
-                   <Button size="icon" className="rounded-full h-12 w-12 shrink-0"><Send size={20} /></Button>
-                </div>
-             </section>
           </div>
         </div>
       </main>
 
       {/* Floating Buy Button (Mobile Only) */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 p-6 bg-white/60 dark:bg-slate-950/60 backdrop-blur-xl border-t border-slate-100 dark:border-white/5 flex items-center justify-center z-50">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 p-6 bg-white/60 dark:bg-slate-950/60 backdrop-blur-xl border-t border-gray-100 dark:border-white/5 flex items-center justify-center z-50">
          <Button 
            onClick={() => buyAccountPost(post)}
            disabled={post.sold}
