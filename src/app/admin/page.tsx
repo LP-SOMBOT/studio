@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -55,7 +56,9 @@ import {
   MessageCircle,
   SmartphoneIcon,
   Home,
-  ShieldAlert
+  ShieldAlert,
+  Video,
+  Globe
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -170,12 +173,28 @@ export default function AdminPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [orderStatusFilter, setOrderStatusFilter] = useState<string>("all");
 
+  const [helpLinksForm, setHelpLinksForm] = useState({
+    tutorialUrl: "",
+    whatsappNumber: "",
+    tiktokUrl: ""
+  });
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const sessionPin = sessionStorage.getItem("admin_pin_access");
       if (sessionPin === "granted") setIsPinAuthenticated(true);
     }
   }, []);
+
+  useEffect(() => {
+    if (storeSettings?.helpLinks) {
+      setHelpLinksForm({
+        tutorialUrl: storeSettings.helpLinks.tutorialUrl || "",
+        whatsappNumber: storeSettings.helpLinks.whatsappNumber || "",
+        tiktokUrl: storeSettings.helpLinks.tiktokUrl || ""
+      });
+    }
+  }, [storeSettings]);
 
   const handlePinSubmit = () => {
     const savedPin = storeSettings?.config?.adminSettings?.pin || "123456";
@@ -283,6 +302,16 @@ export default function AdminPage() {
       setIsBannerDialogOpen(false);
     } finally { 
       setIsUploading(false); 
+    }
+  };
+
+  const handleSaveHelpLinks = async () => {
+    setIsUploading(true);
+    try {
+      await updateStoreSettings({ helpLinks: helpLinksForm });
+      toast({ title: "Support links updated" });
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -593,6 +622,43 @@ export default function AdminPage() {
                  <AccordionItem value="banners" className="border-none bg-white dark:bg-slate-900 rounded-[2rem] px-8 shadow-lg">
                     <AccordionTrigger className="hover:no-underline"><div className="flex items-center gap-4 text-left"><div className="p-3 bg-amber-50 dark:bg-amber-500/10 text-amber-500 rounded-2xl"><Layers size={20} /></div><div><h4 className="font-bold text-slate-900 dark:text-white">Homepage Banners</h4><p className="text-xs text-muted-foreground">Manage slider images and promotions</p></div></div></AccordionTrigger>
                     <AccordionContent className="pb-8 space-y-6"><div className="grid grid-cols-1 md:grid-cols-2 gap-4">{banners.map(b => (<div key={b.id} className="relative aspect-[21/9] rounded-2xl overflow-hidden shadow-md group"><Image src={b.imageUrl} alt="" fill className="object-cover" /><div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2"><Button size="icon" variant="destructive" className="rounded-full" onClick={() => confirmDelete(b.id, 'banner')}><Trash2 size={16} /></Button></div></div>))}<button onClick={() => setIsBannerDialogOpen(true)} className="aspect-[21/9] rounded-2xl border-3 border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center text-slate-300 dark:text-slate-700 hover:border-primary hover:text-primary transition-all gap-2 bg-slate-50 dark:bg-slate-800/40"><PlusCircle size={32} /><span className="text-xs font-bold uppercase">Add New Banner</span></button></div></AccordionContent>
+                 </AccordionItem>
+                 <AccordionItem value="help-links" className="border-none bg-white dark:bg-slate-900 rounded-[2rem] px-8 shadow-lg">
+                    <AccordionTrigger className="hover:no-underline"><div className="flex items-center gap-4 text-left"><div className="p-3 bg-green-50 dark:bg-green-500/10 text-green-500 rounded-2xl"><Globe size={20} /></div><div><h4 className="font-bold text-slate-900 dark:text-white">Help & Support Links</h4><p className="text-xs text-muted-foreground">Manage tutorial video, TikTok, and WhatsApp</p></div></div></AccordionTrigger>
+                    <AccordionContent className="pb-8 space-y-6 pt-2">
+                       <div className="grid grid-cols-1 gap-6">
+                          <div className="space-y-2">
+                             <Label className="text-[10px] font-bold uppercase text-slate-400 flex items-center gap-2"><Video size={12}/> Tutorial Video URL</Label>
+                             <Input 
+                                value={helpLinksForm.tutorialUrl} 
+                                onChange={e => setHelpLinksForm({...helpLinksForm, tutorialUrl: e.target.value})} 
+                                className="rounded-xl dark:bg-slate-800 border-none font-bold"
+                                placeholder="https://youtube.com/..."
+                             />
+                          </div>
+                          <div className="space-y-2">
+                             <Label className="text-[10px] font-bold uppercase text-slate-400 flex items-center gap-2"><MessageCircle size={12}/> WhatsApp Support Number</Label>
+                             <Input 
+                                value={helpLinksForm.whatsappNumber} 
+                                onChange={e => setHelpLinksForm({...helpLinksForm, whatsappNumber: e.target.value})} 
+                                className="rounded-xl dark:bg-slate-800 border-none font-bold"
+                                placeholder="252613982172"
+                             />
+                          </div>
+                          <div className="space-y-2">
+                             <Label className="text-[10px] font-bold uppercase text-slate-400 flex items-center gap-2"><ImageIcon size={12}/> TikTok Profile URL</Label>
+                             <Input 
+                                value={helpLinksForm.tiktokUrl} 
+                                onChange={e => setHelpLinksForm({...helpLinksForm, tiktokUrl: e.target.value})} 
+                                className="rounded-xl dark:bg-slate-800 border-none font-bold"
+                                placeholder="https://tiktok.com/@Oskarshop"
+                             />
+                          </div>
+                          <Button onClick={handleSaveHelpLinks} className="h-12 rounded-xl font-bold gap-2">
+                             {isUploading ? <Loader2 className="animate-spin" /> : <CheckCircle2 size={18} />} Save Help Settings
+                          </Button>
+                       </div>
+                    </AccordionContent>
                  </AccordionItem>
               </Accordion>
             </div>

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo } from "react";
@@ -93,7 +94,10 @@ export default function HomeView() {
             
             <Button 
               className="bg-[#FE2C55] hover:bg-[#FE2C55]/90 rounded-[1.5rem] lg:rounded-2xl px-10 h-14 lg:h-16 gap-3 font-bold w-full md:w-auto shadow-2xl shadow-[#FE2C55]/40 text-lg active:scale-95 transition-transform"
-              onClick={() => window.open('https://tiktok.com/@Oskarshop', '_blank')}
+              onClick={() => {
+                const url = storeSettings?.helpLinks?.tiktokUrl || 'https://tiktok.com/@Oskarshop';
+                window.open(url, '_blank');
+              }}
             >
               <ExternalLink className="w-5 h-5" /> Watch Now
             </Button>

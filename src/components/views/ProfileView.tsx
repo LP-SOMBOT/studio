@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -47,7 +48,8 @@ export default function ProfileView() {
     allUsers, 
     setActiveTab,
     theme,
-    toggleTheme
+    toggleTheme,
+    storeSettings
   } = useApp();
   const router = useRouter();
   
@@ -96,6 +98,8 @@ export default function ProfileView() {
     const index = sorted.findIndex(u => u.uid === user.uid);
     return index === -1 ? 0 : index + 1;
   }, [user, allUsers]);
+
+  const helpLinks = storeSettings?.helpLinks || {};
 
   if (isInitialLoading || loading) {
     return (
@@ -199,16 +203,29 @@ export default function ProfileView() {
             </ProfileGroup>
 
             <ProfileGroup title="Support & Social">
-                <ProfileOption icon={HelpCircle} label="How to use Oskar Shop" onClick={() => toast({ title: "Coming Soon", description: "Waxaan diyaarinaynaa muuqaalo iyo casharo." })} />
                 <ProfileOption 
-                icon={MessageCircle} 
-                label="Contact WhatsApp Support" 
-                onClick={() => window.open('https://wa.me/252613982172', '_blank')} 
+                  icon={HelpCircle} 
+                  label="How to use Oskar Shop" 
+                  onClick={() => {
+                    if (helpLinks.tutorialUrl) window.open(helpLinks.tutorialUrl, '_blank');
+                    else toast({ title: "Coming Soon", description: "Waxaan diyaarinaynaa muuqaalo iyo casharo." });
+                  }} 
                 />
                 <ProfileOption 
-                icon={Video} 
-                label="Join us on TikTok" 
-                onClick={() => window.open('https://tiktok.com/@Oskarshop', '_blank')} 
+                  icon={MessageCircle} 
+                  label="Contact WhatsApp Support" 
+                  onClick={() => {
+                    const num = helpLinks.whatsappNumber || "252613982172";
+                    window.open(`https://wa.me/${num}`, '_blank');
+                  }} 
+                />
+                <ProfileOption 
+                  icon={Video} 
+                  label="Join us on TikTok" 
+                  onClick={() => {
+                    const url = helpLinks.tiktokUrl || "https://tiktok.com/@Oskarshop";
+                    window.open(url, '_blank');
+                  }} 
                 />
             </ProfileGroup>
 

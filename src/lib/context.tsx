@@ -122,6 +122,11 @@ type StoreSettings = {
     offlineBody?: string;
     offlineImageUrl?: string;
   };
+  helpLinks?: {
+    tutorialUrl?: string;
+    whatsappNumber?: string;
+    tiktokUrl?: string;
+  };
   config?: {
     shop?: {
       feeType: 'percentage' | 'fixed';
@@ -502,7 +507,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const createOrder = async (paymentMethod: string, gameDetails: any, directItem: CartItem) => {
     if (!rtdb || !user) return;
     
-    // Use a persistent counter for sequential Order IDs
     const counterRef = ref(rtdb, 'settings/orderCounter');
     let sequenceId = 10;
     
