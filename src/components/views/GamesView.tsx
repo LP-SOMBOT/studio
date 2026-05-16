@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo } from "react";
@@ -6,7 +5,7 @@ import GameCard from "@/components/games/GameCard";
 import { useApp } from "@/lib/context";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, Filter, Gamepad2, LayoutGrid, ListFilter } from "lucide-react";
+import { Search, Filter, Gamepad2, LayoutGrid, ListFilter, Zap } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 
@@ -32,11 +31,9 @@ export default function GamesView() {
 
   const categories = [
     { id: "all", label: "All Packages", icon: LayoutGrid },
-    { id: "top-up", label: "Top-Ups", icon: Gamepad2 },
-    { id: "accounts", label: "Accounts", icon: Filter },
+    { id: "freefire", label: "Free Fire", icon: Gamepad2 },
+    { id: "bloodstrike", label: "Blood Strike", icon: Zap },
   ];
-
-  const games = Array.from(new Set(products.map(g => g.gameId)));
 
   return (
     <div className="pb-24 page-transition">
@@ -87,24 +84,6 @@ export default function GamesView() {
                   ))}
                 </TabsList>
               </div>
-
-              {games.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest py-1 mr-2 flex items-center gap-1">
-                    <ListFilter className="w-3 h-3" /> Filter by Game:
-                  </span>
-                  {games.map(gameId => (
-                    <Badge 
-                      key={gameId}
-                      variant={activeTab === gameId ? "default" : "secondary"}
-                      className="cursor-pointer px-4 py-1.5 rounded-full capitalize hover:scale-105 transition-transform"
-                      onClick={() => setActiveTab(gameId)}
-                    >
-                      {gameId.replace('-', ' ')}
-                    </Badge>
-                  ))}
-                </div>
-              )}
             </div>
 
             <TabsContent value={activeTab} className="mt-0">

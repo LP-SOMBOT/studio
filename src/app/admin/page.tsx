@@ -50,7 +50,10 @@ import {
   ChevronDown,
   Layers,
   Sparkles,
-  Info
+  Info,
+  Phone,
+  MessageCircle,
+  SmartphoneIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -153,6 +156,7 @@ export default function AdminPage() {
 
   const [pointAdjustment, setPointAdjustment] = useState("");
   const [isUploading, setIsUploading] = useState(false);
+  const [isSavingStatus, setIsSavingStatus] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [orderStatusFilter, setOrderStatusFilter] = useState<string>("all");
 
@@ -267,9 +271,14 @@ export default function AdminPage() {
 
   const handleStatusSave = async () => {
     if (!selectedOrder || !pendingOrderStatus) return;
-    await updateOrderStatus(selectedOrder.id, pendingOrderStatus);
-    toast({ title: `Order set to ${pendingOrderStatus}` });
-    setIsOrderDetailOpen(false);
+    setIsSavingStatus(true);
+    try {
+      await updateOrderStatus(selectedOrder.id, pendingOrderStatus);
+      toast({ title: `Order set to ${pendingOrderStatus}` });
+      setIsOrderDetailOpen(false);
+    } finally {
+      setIsSavingStatus(false);
+    }
   };
 
   const handleImageUpload = async (file: File, target: 'product' | 'event' | 'banner' | 'offline' | 'logo') => {
@@ -661,7 +670,21 @@ export default function AdminPage() {
         <DialogContent className="max-w-xl w-[95vw] rounded-[3rem] p-8 border-none bg-white max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle className="text-2xl font-headline font-bold">Manage Inventory Item</DialogTitle></DialogHeader>
           <form onSubmit={handleSaveProduct} className="space-y-6 pt-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4"><div><Label>Title</Label><Input required value={productForm.title} onChange={e => setProductForm({...productForm, title: e.target.value})} className="h-12" /></div><div><Label>Game ID</Label><Input required value={productForm.gameId} onChange={e => setProductForm({...productForm, gameId: e.target.value})} className="h-12" /></div></div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div><Label>Title</Label><Input required value={productForm.title} onChange={e => setProductForm({...productForm, title: e.target.value})} className="h-12" /></div>
+              <div>
+                <Label>Game Category</Label>
+                <Select value={productForm.gameId} onValueChange={val => setProductForm({...productForm, gameId: val})}>
+                  <SelectTrigger className="h-12 rounded-xl">
+                    <SelectValue placeholder="Select Game" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="freefire">Free Fire</SelectItem>
+                    <SelectItem value="bloodstrike">Blood Strike</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4"><div><Label>Price ($)</Label><Input type="number" required value={productForm.price} onChange={e => setProductForm({...productForm, price: e.target.value})} className="h-12" /></div><div><Label>Discount Price</Label><Input type="number" value={productForm.discountedPrice} onChange={e => setProductForm({...productForm, discountedPrice: e.target.value})} className="h-12" /></div></div>
             <div className="space-y-2"><Label>Description</Label><Textarea required value={productForm.description} onChange={e => setProductForm({...productForm, description: e.target.value})} className="min-h-[80px]" /></div>
             <div className="relative h-32 w-full rounded-2xl border-2 border-dashed bg-slate-50 flex items-center justify-center overflow-hidden">{productForm.thumbnail ? <Image src={productForm.thumbnail} alt="" fill className="object-cover" /> : <ImageIcon size={24} className="text-slate-300" />}<Button variant="outline" className="relative z-10" type="button"><input type="file" accept="image/*" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'product')} className="absolute inset-0 opacity-0 cursor-pointer" />Upload</Button></div>
@@ -713,25 +736,41 @@ export default function AdminPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                   <div>
                     <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Customer Details</h4>
-                    <Card className="p-5 rounded-2xl bg-slate-50 border-none flex items-center gap-4 shadow-inner">
-                       <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                          <User size={24} />
+                    <Card className="p-5 rounded-2xl bg-slate-50 border-none flex flex-col gap-4 shadow-inner">
+                       <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                             <User size={24} />
+                          </div>
+                          <div className="min-w-0">
+                             <p className="text-sm font-bold text-slate-900 truncate">{selectedOrder.gameDetails?.playerName || "N/A"}</p>
+                             <p className="text-[10px] text-muted-foreground uppercase font-mono tracking-tight">{selectedOrder.gameDetails?.playerID || "N/A"}</p>
+                          </div>
                        </div>
-                       <div>
-                          <p className="text-sm font-bold text-slate-900">{selectedOrder.gameDetails?.playerName || "N/A"}</p>
-                          <p className="text-[10px] text-muted-foreground uppercase font-mono tracking-tight">{selectedOrder.gameDetails?.playerID || "N/A"}</p>
+                       
+                       <div className="space-y-2 pt-2 border-t border-slate-200/50">
+                          <div className="flex items-center justify-between">
+                             <span className="text-[10px] font-bold text-slate-400 uppercase">Sender Number:</span>
+                             <span className="text-xs font-bold text-primary flex items-center gap-1.5"><Phone size={10} /> {selectedOrder.gameDetails?.senderNumber || "N/A"}</span>
+                          </div>
+                          {selectedOrder.gameDetails?.whatsappNumber && (
+                            <div className="flex items-center justify-between">
+                               <span className="text-[10px] font-bold text-slate-400 uppercase">WhatsApp:</span>
+                               <span className="text-xs font-bold text-green-600 flex items-center gap-1.5"><MessageCircle size={10} /> {selectedOrder.gameDetails.whatsappNumber}</span>
+                            </div>
+                          )}
                        </div>
                     </Card>
                   </div>
                   <div>
                     <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Item Data</h4>
-                    <Card className="p-5 rounded-2xl bg-slate-50 border-none flex items-center gap-4 shadow-inner">
+                    <Card className="p-5 rounded-2xl bg-slate-50 border-none flex items-center gap-4 shadow-inner h-full">
                        <div className="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center text-amber-500">
                           <Package size={24} />
                        </div>
                        <div>
                           <p className="text-sm font-bold text-slate-900">{selectedOrder.items?.[0]?.title}</p>
                           <p className="text-[10px] text-primary font-bold uppercase">${selectedOrder.total?.toFixed(2)}</p>
+                          <Badge variant="outline" className="mt-1 text-[8px] border-slate-200">{selectedOrder.paymentMethod}</Badge>
                        </div>
                     </Card>
                   </div>
@@ -783,10 +822,10 @@ export default function AdminPage() {
                       </Button>
                       <Button 
                         onClick={handleStatusSave}
-                        disabled={pendingOrderStatus === selectedOrder.status}
+                        disabled={isSavingStatus || pendingOrderStatus === selectedOrder.status}
                         className="flex-[2] h-16 rounded-2xl font-bold text-lg shadow-xl shadow-primary/20"
                       >
-                         Save Changes
+                         {isSavingStatus ? <Loader2 className="animate-spin" /> : "Save Changes"}
                       </Button>
                    </div>
                 </div>
