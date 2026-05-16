@@ -604,14 +604,33 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const orderSnap = await get(ref(rtdb, `orders/${oid}`));
     const orderData = orderSnap.val();
     if (!orderData) return;
+    
     const oldStatus = orderData.status;
     const userId = orderData.userId;
+    const items = orderData.items || [];
+    
+    // Check if any items are accounts
+    const accountItem = items.find((i: any) => i.gameId === 'accounts' || i.gameId === 'account');
+    
     await update(ref(rtdb, `orders/${oid}`), { status });
-    if (userId) {
-      if (oldStatus !== 'successful' && status === 'successful') {
+    
+    if (status === 'successful') {
+      // If an account was purchased, mark the post as sold
+      if (accountItem && accountItem.id) {
+        await update(ref(rtdb, `accountPosts/${accountItem.id}`), { sold: true });
+      }
+
+      if (userId && oldStatus !== 'successful') {
         await update(ref(rtdb, `users/${userId}`), { points: increment(1) });
         broadcastNotification("Order Successful! ✅", "Your items have been delivered. You earned 1 point!", userId);
-      } else if (oldStatus === 'successful' && status !== 'successful') {
+      }
+    } else if (oldStatus === 'successful' && status !== 'successful') {
+      // Revert sold status if order is moved back from successful
+      if (accountItem && accountItem.id) {
+        await update(ref(rtdb, `accountPosts/${accountItem.id}`), { sold: false });
+      }
+
+      if (userId) {
         await update(ref(rtdb, `users/${userId}`), { points: increment(-1) });
         broadcastNotification("Order Update: Points Revoked ⚠️", `Order was marked as ${status}. 1 point reversed.`, userId);
       }

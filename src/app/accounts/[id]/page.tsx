@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -169,6 +170,7 @@ export default function AccountDetailPage() {
                    <div className="flex items-center gap-3 mb-2">
                      <h2 className="text-3xl font-headline font-bold text-slate-900 dark:text-white">{post.authorName}</h2>
                      <Badge className="rounded-full bg-blue-500 text-white border-none text-[10px] font-bold">{post.platform}</Badge>
+                     {post.sold && <Badge variant="destructive" className="rounded-full text-[10px] font-bold">WAA LA IIBIYAY</Badge>}
                    </div>
                    <p className="text-sm text-muted-foreground font-medium">{format(new Date(post.createdAt), 'PPpp')}</p>
                 </div>
@@ -199,7 +201,7 @@ export default function AccountDetailPage() {
                 <Button 
                   onClick={() => buyAccountPost(post)}
                   disabled={post.sold}
-                  className="w-full h-16 rounded-[2rem] text-xl font-bold shadow-2xl shadow-primary/30 gap-3 active:scale-95 transition-transform"
+                  className="w-full h-16 rounded-[2rem] text-xl font-bold shadow-xl shadow-primary/30 gap-3 active:scale-95 transition-transform"
                 >
                   {post.sold ? "Waa la iibiyay" : user ? `IIBSO ACCOUNT-KA — $${post.price.toFixed(2)}` : "Login si aad u iibsato"}
                 </Button>

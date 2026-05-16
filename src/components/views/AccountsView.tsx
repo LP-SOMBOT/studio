@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -58,6 +59,9 @@ export default function AccountsView() {
 
   const approvedPosts = useMemo(() => {
     return (accountPosts || [])
+      // Rule: Do not show accounts that are marked as sold to anyone (including owner)
+      .filter(p => !p.sold)
+      // Standard status checks
       .filter(p => p.status === 'approved' || p.uid === user?.uid || user?.role === 'admin' || user?.role === 'super_admin')
       .filter(p => p.authorName?.toLowerCase().includes(searchQuery.toLowerCase()) || p.platform?.toLowerCase().includes(searchQuery.toLowerCase()))
       .sort((a, b) => b.createdAt - a.createdAt);
@@ -166,7 +170,10 @@ export default function AccountsView() {
                          </div>
                          <div>
                             <p className="text-xs font-bold text-slate-900 dark:text-white">Lv {p.level} Account</p>
-                            <p className="text-[9px] font-bold text-muted-foreground uppercase">{p.platform}</p>
+                            <div className="flex items-center gap-2">
+                               <p className="text-[9px] font-bold text-muted-foreground uppercase">{p.platform}</p>
+                               {p.sold && <Badge className="h-3 text-[7px] bg-red-500 text-white border-none py-0">SOLD</Badge>}
+                            </div>
                          </div>
                       </div>
                       <Badge className={cn(
