@@ -572,7 +572,7 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
                   onClick={handleUssdPay}
                   className="w-full h-18 rounded-[2rem] text-2xl font-headline font-bold shadow-2xl shadow-primary/30 active:scale-95 transition-all bg-primary hover:bg-primary/90"
                 >
-                   PAY ${listingFee.toFixed(2)} LISTING FEE
+                   PAY $${listingFee.toFixed(2)}
                 </Button>
              ) : (
                 <Button 
