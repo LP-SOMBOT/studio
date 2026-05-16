@@ -746,19 +746,6 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                <div className="bg-blue-50 p-6 rounded-[2rem] border border-blue-100 flex items-center justify-between">
-                   <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 animate-spin">
-                         <RefreshCw size={18} />
-                      </div>
-                      <div>
-                        <p className="text-xs font-bold text-blue-900 uppercase">Live Transaction Engine</p>
-                        <p className="text-[10px] text-blue-600 font-medium">Verified by Oskar Payment Node</p>
-                      </div>
-                   </div>
-                   <Badge variant="outline" className="bg-white border-blue-200 text-blue-700 rounded-full h-8 px-4 font-bold">{selectedOrder.paymentMethod}</Badge>
-                </div>
-
                 <div className="pt-8 border-t space-y-6">
                    <div className="flex flex-col gap-2">
                       <Label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest ml-1">Process Action</Label>
