@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -197,15 +196,15 @@ export default function ProfileView() {
 
          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <ProfileGroup title="Marketplace & Activity">
-                <ProfileOption icon={ShoppingBag} label="My Orders (Purchases)" onClick={() => setActiveTab('orders')} />
-                <ProfileOption icon={Gamepad2} label="My Selling Accounts" onClick={() => setActiveTab('accounts')} />
+                <ProfileOption icon={ShoppingBag} label="Dalabyadada" onClick={() => setActiveTab('orders')} />
+                <ProfileOption icon={Gamepad2} label="iska iibi account" onClick={() => setActiveTab('accounts')} />
                 <ProfileOption icon={Trophy} label="Global Leaderboard" onClick={() => setActiveTab('ranking')} />
             </ProfileGroup>
 
-            <ProfileGroup title="Support & Social">
+            <ProfileGroup title="Caawinaad">
                 <ProfileOption 
                   icon={HelpCircle} 
-                  label="How to use Oskar Shop" 
+                  label="Sida loo isticmaalo appka Oskar shop" 
                   onClick={() => {
                     if (helpLinks.tutorialUrl) window.open(helpLinks.tutorialUrl, '_blank');
                     else toast({ title: "Coming Soon", description: "Waxaan diyaarinaynaa muuqaalo iyo casharo." });
@@ -235,7 +234,7 @@ export default function ProfileView() {
                 label={theme === 'light' ? "Switch to Dark Mode" : "Switch to Light Mode"} 
                 onClick={toggleTheme} 
                 />
-                <ProfileOption icon={UserCircle} label="Update Profile Info" onClick={() => setIsEditModalOpen(true)} />
+                <ProfileOption icon={UserCircle} label="Bedel xogtaada" onClick={() => setIsEditModalOpen(true)} />
                 <ProfileOption 
                 icon={LogOut} 
                 label="Logout from Oskar Shop" 
