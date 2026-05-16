@@ -221,7 +221,7 @@ export default function ProfileView() {
 
       {/* Edit Modal */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-         <DialogContent className="rounded-[3.5rem] p-0 border-none shadow-2xl max-w-md bg-white overflow-hidden">
+         <DialogContent className="rounded-[3.5rem] p-0 border-none shadow-2xl max-w-md bg-white max-h-[90vh] overflow-y-auto scrollbar-hide">
             <div className="h-2 bg-primary w-full" />
             <DialogHeader className="p-8 pb-0">
                <DialogTitle className="text-2xl font-headline font-bold">Update Profile</DialogTitle>
