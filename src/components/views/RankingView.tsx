@@ -8,17 +8,23 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
+import { useMemo } from 'react';
 
 export default function RankingView() {
   const { allUsers, user, isInitialLoading } = useApp();
 
-  const sortedUsers = [...(allUsers || [])]
-    .sort((a, b) => (Number(b?.points || 0)) - (Number(a?.points || 0)));
+  // Reactive sorting based on live points from database
+  const sortedUsers = useMemo(() => {
+    return [...(allUsers || [])]
+      .sort((a, b) => (Number(b?.points || 0)) - (Number(a?.points || 0)));
+  }, [allUsers]);
 
-  const top3 = sortedUsers.slice(0, 3);
-  const others = sortedUsers.slice(3);
+  const top3 = useMemo(() => sortedUsers.slice(0, 3), [sortedUsers]);
+  const others = useMemo(() => sortedUsers.slice(3), [sortedUsers]);
 
-  const userRank = sortedUsers.findIndex(u => u.uid === user?.uid) + 1;
+  const userRank = useMemo(() => {
+    return sortedUsers.findIndex(u => u.uid === user?.uid) + 1;
+  }, [sortedUsers, user]);
 
   if (isInitialLoading) {
     return (

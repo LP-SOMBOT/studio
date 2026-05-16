@@ -444,8 +444,8 @@ export default function AdminPage() {
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                       <Area type="monotone" dataKey="value" stroke="#0EA5E9" strokeWidth={5} fillOpacity={1} fill="url(#colorValue)" />
-                      <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{fontSize: 10, fontWeight: 'bold', fill: '#64748b'}} dy={10} />
-                      <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fontWeight: 'bold', fill: '#64748b'}} />
+                      <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{fontSize: 10, fontWait: 'bold', fill: '#64748b'}} dy={10} />
+                      <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fontWait: 'bold', fill: '#64748b'}} />
                       <Tooltip />
                     </AreaChart>
                   </ResponsiveContainer>
