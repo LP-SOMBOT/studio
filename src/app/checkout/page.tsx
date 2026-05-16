@@ -347,7 +347,7 @@ function CheckoutContent() {
                 ) : "Xaqiiji"}
               </Button>
               <Button variant="ghost" onClick={() => setStep(2)} className="h-12 rounded-xl text-muted-foreground dark:text-slate-500 hover:dark:text-slate-300">
-                 Cancel & Go Back
+                 Dib u noqo
               </Button>
             </div>
           </CardContent>
