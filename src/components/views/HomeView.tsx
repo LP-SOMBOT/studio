@@ -185,27 +185,23 @@ export default function HomeView() {
           </section>
         )}
 
-        {/* Global Ranking Quick Link - Premium Desktop View */}
+        {/* Global Ranking Quick Link - Simplified View */}
         <section className="pt-6">
           <div 
             onClick={() => setActiveTab('ranking')}
-            className="w-full p-10 lg:p-16 rounded-[3rem] lg:rounded-[4.5rem] bg-gradient-to-r from-primary via-blue-600 to-blue-800 text-white flex items-center justify-between group cursor-pointer shadow-2xl shadow-primary/30 active:scale-[0.98] transition-all overflow-hidden relative"
+            className="w-full p-8 lg:p-12 rounded-[2.5rem] lg:rounded-[3rem] bg-primary text-white flex flex-col md:flex-row items-center justify-between group cursor-pointer shadow-xl active:scale-[0.98] transition-all relative overflow-hidden"
           >
-            {/* Animated Background Elements */}
-            <div className="absolute right-0 top-0 -mr-20 -mt-20 w-80 h-80 bg-white/10 rounded-full blur-[100px] group-hover:bg-white/20 transition-all duration-1000" />
-            <div className="absolute left-1/4 bottom-0 -mb-20 w-60 h-60 bg-blue-400/20 rounded-full blur-[80px]" />
-
-            <div className="relative z-10 flex items-center gap-8 lg:gap-12">
-               <div className="w-20 h-20 lg:w-32 lg:h-32 bg-white/20 backdrop-blur-xl rounded-[2rem] lg:rounded-[2.5rem] flex items-center justify-center border border-white/30 shadow-2xl group-hover:rotate-12 transition-transform duration-500">
-                  <Trophy className="w-10 h-10 lg:w-16 lg:h-16 text-white drop-shadow-lg" />
+            <div className="flex items-center gap-6 lg:gap-8 text-center md:text-left flex-col md:flex-row">
+               <div className="w-16 h-16 lg:w-20 lg:h-20 bg-white/10 rounded-2xl flex items-center justify-center text-white shrink-0">
+                  <Trophy className="w-8 h-8 lg:w-10 lg:h-10" />
                </div>
-               <div className="space-y-2">
-                  <h3 className="text-3xl lg:text-5xl font-headline font-bold tracking-tight">Oskar Global Ranking</h3>
-                  <p className="text-white/70 text-lg lg:text-xl font-medium max-w-lg">Compete with thousands of players and reach the Hall of Fame!</p>
+               <div className="space-y-1">
+                  <h3 className="text-2xl lg:text-4xl font-headline font-bold tracking-tight">Oskar Global Ranking</h3>
+                  <p className="text-white/80 text-sm lg:text-lg font-medium">Compete with players and reach the Hall of Fame!</p>
                </div>
             </div>
-            <div className="relative z-10 w-16 h-16 lg:w-20 lg:h-20 bg-white text-primary rounded-full flex items-center justify-center shadow-2xl group-hover:translate-x-4 transition-all duration-500">
-               <ChevronRight size={32} />
+            <div className="mt-6 md:mt-0 w-12 h-12 lg:w-14 lg:h-14 bg-white/20 rounded-full flex items-center justify-center group-hover:bg-white/30 transition-colors">
+               <ChevronRight size={28} />
             </div>
           </div>
         </section>
