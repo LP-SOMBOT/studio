@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo, Suspense } from "react";
@@ -12,7 +11,8 @@ import {
   PartyPopper,
   Smartphone,
   ChevronRight,
-  X
+  X,
+  CreditCard
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,7 +37,8 @@ function CheckoutContent() {
   const [gameDetails, setGameDetails] = useState({
     playerID: "",
     playerName: "",
-    phoneNumber: ""
+    phoneNumber: "",
+    senderNumber: ""
   });
 
   const item = useMemo(() => {
@@ -202,6 +203,25 @@ function CheckoutContent() {
                   onChange={(e) => setGameDetails({...gameDetails, phoneNumber: e.target.value})}
                 />
               </div>
+
+              <div className="space-y-2 pt-4 border-t">
+                <Label htmlFor="sender" className="text-sm font-bold flex items-center gap-2 text-primary">
+                  <CreditCard className="w-4 h-4" /> Geli number ka lacagta kasoo dirtay
+                </Label>
+                <Input 
+                  id="sender" 
+                  type="tel" 
+                  placeholder="e.g. 613XXXXXX" 
+                  required 
+                  className="h-14 rounded-2xl bg-blue-50 border-2 border-blue-100 focus-visible:ring-primary font-bold text-lg"
+                  value={gameDetails.senderNumber}
+                  onChange={(e) => setGameDetails({...gameDetails, senderNumber: e.target.value})}
+                />
+                <p className="text-[10px] text-muted-foreground font-medium italic">
+                  * This is used to verify your payment in our system.
+                </p>
+              </div>
+
               <Button 
                 type="submit" 
                 className="w-full h-14 rounded-2xl text-lg font-bold gap-2 shadow-lg shadow-primary/20 active:scale-95 transition-transform"
@@ -291,6 +311,10 @@ function CheckoutContent() {
                 <span className="text-primary">${total.toFixed(2)}</span>
               </div>
               <div className="space-y-1 pt-2 border-t border-primary/10 mt-2">
+                <div className="text-xs text-muted-foreground flex justify-between items-center">
+                  <span>Sender Number:</span>
+                  <span className="font-mono font-bold text-foreground">{gameDetails.senderNumber || "N/A"}</span>
+                </div>
                 <div className="text-xs text-muted-foreground flex justify-between items-center">
                   <span>Player ID:</span>
                   <span className="font-mono font-bold text-foreground">{gameDetails.playerID || "N/A"}</span>

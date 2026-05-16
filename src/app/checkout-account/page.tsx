@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -12,7 +11,8 @@ import {
   Smartphone, 
   Gamepad2,
   AlertCircle,
-  X
+  X,
+  CreditCard
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -30,6 +30,7 @@ export default function CheckoutAccountPage() {
   const [step, setStep] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
   const [whatsappNumber, setWhatsappNumber] = useState("");
+  const [senderNumber, setSenderNumber] = useState("");
 
   const post = useMemo(() => {
     return (accountPosts || []).find(p => p.id === id);
@@ -73,7 +74,8 @@ export default function CheckoutAccountPage() {
       accountLvl: post.level,
       sellerName: post.authorName,
       postId: post.id,
-      whatsappNumber
+      whatsappNumber,
+      senderNumber
     }, purchaseItem);
 
     // Simulate real-time database update
@@ -112,15 +114,29 @@ export default function CheckoutAccountPage() {
                        <Badge className="bg-blue-500 text-white border-none">Lvl {post?.level}</Badge>
                     </div>
 
-                    <div className="space-y-2">
-                       <Label className="text-xs font-bold text-muted-foreground uppercase ml-1">Xiriirkaaga</Label>
-                       <Input 
-                        placeholder="Geli WhatsApp number kaaga" 
-                        value={whatsappNumber}
-                        onChange={(e) => setWhatsappNumber(e.target.value)}
-                        className="h-14 rounded-2xl bg-slate-50 border-none px-6 font-bold shadow-inner"
-                       />
-                       <p className="text-[10px] text-muted-foreground italic ml-1">* Halkan ayaan kugu soo diri doonaa password-ka.</p>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                         <Label className="text-xs font-bold text-muted-foreground uppercase ml-1">Xiriirkaaga (WhatsApp)</Label>
+                         <Input 
+                          placeholder="Geli WhatsApp number kaaga" 
+                          value={whatsappNumber}
+                          onChange={(e) => setWhatsappNumber(e.target.value)}
+                          className="h-14 rounded-2xl bg-slate-50 border-none px-6 font-bold shadow-inner"
+                         />
+                         <p className="text-[10px] text-muted-foreground italic ml-1">* Halkan ayaan kugu soo diri doonaa password-ka.</p>
+                      </div>
+
+                      <div className="space-y-2 pt-2">
+                         <Label className="text-xs font-bold text-primary uppercase ml-1 flex items-center gap-2">
+                            <CreditCard className="w-4 h-4" /> Geli number ka lacagta kasoo dirtay
+                         </Label>
+                         <Input 
+                          placeholder="e.g. 613XXXXXX" 
+                          value={senderNumber}
+                          onChange={(e) => setSenderNumber(e.target.value)}
+                          className="h-14 rounded-2xl bg-blue-50 border-2 border-blue-100 px-6 font-bold shadow-sm"
+                         />
+                      </div>
                     </div>
 
                     <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
@@ -139,8 +155,8 @@ export default function CheckoutAccountPage() {
               </Card>
               <Button 
                 onClick={() => {
-                  if (!whatsappNumber) {
-                    toast({ title: "Fadlan geli WhatsApp number kaaga", variant: "destructive" });
+                  if (!whatsappNumber || !senderNumber) {
+                    toast({ title: "Fadlan buuxi meelaha banaan", description: "WhatsApp iyo Sender Number waa muhiim.", variant: "destructive" });
                     return;
                   }
                   setStep(2);
