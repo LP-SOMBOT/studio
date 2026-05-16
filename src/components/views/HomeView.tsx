@@ -109,7 +109,6 @@ export default function HomeView() {
               </div>
               <div>
                 <h2 className="text-2xl lg:text-4xl font-headline font-bold text-slate-900 dark:text-white">Popular items</h2>
-                <p className="text-xs lg:text-sm text-muted-foreground font-medium uppercase tracking-widest mt-1">Most popular packages right now</p>
               </div>
             </div>
             <Button 
