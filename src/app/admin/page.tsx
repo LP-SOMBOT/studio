@@ -33,7 +33,14 @@ import {
   AlertCircle,
   RefreshCw,
   Clock,
-  ArrowRight
+  ArrowRight,
+  Eye,
+  CreditCard,
+  Hash,
+  ExternalLink,
+  MoreVertical,
+  Calendar,
+  Smartphone
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -56,7 +63,8 @@ import {
   DialogContent, 
   DialogHeader, 
   DialogTitle, 
-  DialogFooter
+  DialogFooter,
+  DialogDescription
 } from "@/components/ui/dialog";
 import { 
   Select, 
@@ -65,6 +73,12 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
@@ -78,6 +92,7 @@ import {
   ResponsiveContainer 
 } from 'recharts';
 import { uploadToImgbb } from "@/lib/imgbb";
+import { format } from "date-fns";
 
 export default function AdminPage() {
   const { 
@@ -116,6 +131,12 @@ export default function AdminPage() {
     discountedPrice: "",
     thumbnail: ""
   });
+
+  // Order Details state
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [isOrderDetailOpen, setIsOrderDetailOpen] = useState(false);
+  const [orderStatusFilter, setOrderStatusFilter] = useState<string>("all");
+
   const [isUploading, setIsUploading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -216,6 +237,23 @@ export default function AdminPage() {
     }
   };
 
+  const handleViewOrder = (order: any) => {
+    setSelectedOrder(order);
+    setIsOrderDetailOpen(true);
+  };
+
+  const handleStatusChange = async (orderId: string, status: string) => {
+    try {
+      await updateOrderStatus(orderId, status);
+      toast({ title: `Order ${status.toUpperCase()}` });
+      if (selectedOrder?.id === orderId) {
+        setSelectedOrder((prev: any) => ({ ...prev, status }));
+      }
+    } catch (err) {
+      toast({ title: "Status update failed", variant: "destructive" });
+    }
+  };
+
   if (isInitialLoading) {
     return (
       <div className="min-h-screen bg-slate-50 p-10 flex flex-col items-center justify-center gap-6">
@@ -266,6 +304,17 @@ export default function AdminPage() {
   };
 
   const filteredProducts = products.filter(p => p.title.toLowerCase().includes(searchQuery.toLowerCase()));
+  
+  const filteredOrders = allOrders.filter(o => {
+    const matchesSearch = 
+      o.id.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      o.gameDetails?.playerName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      o.gameDetails?.playerID?.toString().includes(searchQuery);
+    
+    const matchesStatus = orderStatusFilter === "all" || o.status === orderStatusFilter;
+    
+    return matchesSearch && matchesStatus;
+  });
 
   return (
     <div className="min-h-screen bg-slate-50 flex overflow-hidden">
@@ -456,91 +505,102 @@ export default function AdminPage() {
 
           {activeView === 'orders' && (
             <div className="space-y-6 animate-in fade-in">
-              <div className="flex justify-between items-center px-4">
-                 <div className="flex items-center gap-2">
-                   <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                   <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Real-time Stream</span>
-                 </div>
-                 <Button variant="outline" size="sm" onClick={refreshAdminData} className="rounded-full h-8 px-4 text-[10px] font-bold gap-2">
-                    <RefreshCw size={12} /> Force Refresh
-                 </Button>
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div className="flex gap-2">
+                  {["all", "pending", "processing", "successful", "cancelled"].map((status) => (
+                    <Button 
+                      key={status} 
+                      variant={orderStatusFilter === status ? "default" : "outline"} 
+                      size="sm"
+                      onClick={() => setOrderStatusFilter(status)}
+                      className="rounded-full px-4 h-9 font-bold text-[10px] uppercase tracking-wider transition-all"
+                    >
+                      {status}
+                    </Button>
+                  ))}
+                </div>
+                <div className="relative w-full md:w-80">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <Input 
+                    placeholder="Search Order ID or Player..." 
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="h-10 pl-10 rounded-full bg-white border-none shadow-sm"
+                  />
+                </div>
               </div>
 
               <Card className="rounded-[2rem] border-none shadow-xl bg-white overflow-hidden">
                  <Table>
                   <TableHeader className="bg-slate-50/50">
                     <TableRow className="border-slate-50">
-                      <TableHead className="font-bold text-[10px] uppercase tracking-widest px-8">Date / ID</TableHead>
-                      <TableHead className="font-bold text-[10px] uppercase tracking-widest">Customer / Item</TableHead>
-                      <TableHead className="font-bold text-[10px] uppercase tracking-widest">Details</TableHead>
+                      <TableHead className="font-bold text-[10px] uppercase tracking-widest px-8">Reference</TableHead>
+                      <TableHead className="font-bold text-[10px] uppercase tracking-widest">Customer & Item</TableHead>
+                      <TableHead className="font-bold text-[10px] uppercase tracking-widest">Game Target</TableHead>
                       <TableHead className="font-bold text-[10px] uppercase tracking-widest">Amount</TableHead>
                       <TableHead className="font-bold text-[10px] uppercase tracking-widest">Status</TableHead>
-                      <TableHead className="font-bold text-[10px] uppercase tracking-widest text-right px-8">Actions</TableHead>
+                      <TableHead className="font-bold text-[10px] uppercase tracking-widest text-right px-8">Action</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {allOrders.length === 0 ? (
+                    {filteredOrders.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={6} className="h-80 text-center">
                            <div className="flex flex-col items-center justify-center opacity-20">
                               <ShoppingBag size={64} className="mb-4" />
-                              <h3 className="text-xl font-bold">Waiting for orders...</h3>
-                              <p className="text-sm">Real-time orders will appear here automatically.</p>
+                              <h3 className="text-xl font-bold">No orders found</h3>
+                              <p className="text-sm">Try adjusting your filters or search.</p>
                            </div>
                         </TableCell>
                       </TableRow>
                     ) : (
-                      allOrders.map((o) => (
+                      filteredOrders.map((o) => (
                         <TableRow key={o.id} className="hover:bg-slate-50/50 transition-colors border-slate-50">
                           <TableCell className="px-8">
                             <div className="flex flex-col">
-                               <span className="font-mono text-[10px] font-bold text-slate-400">#{o.id.slice(0, 8).toUpperCase()}</span>
-                               <span className="text-[9px] text-slate-400">{o.createdAt ? new Date(o.createdAt).toLocaleString() : 'N/A'}</span>
+                               <span className="font-mono text-[10px] font-bold text-primary">#{o.id.slice(0, 8).toUpperCase()}</span>
+                               <span className="text-[9px] text-slate-400">{o.createdAt ? format(new Date(o.createdAt), 'MMM d, HH:mm') : 'N/A'}</span>
                             </div>
                           </TableCell>
                           <TableCell>
-                            <div className="flex flex-col">
-                               <span className="font-bold text-slate-900">{o.gameDetails?.playerName || o.gameDetails?.sellerName || "Customer"}</span>
-                               <span className="text-[10px] text-slate-400 font-bold uppercase">{o.items?.[0]?.title || "Unknown Product"}</span>
+                            <div className="flex items-center gap-3">
+                               <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
+                                  <Package size={14} className="text-slate-400" />
+                               </div>
+                               <div className="flex flex-col min-w-0">
+                                  <span className="font-bold text-slate-900 truncate max-w-[120px]">{o.gameDetails?.playerName || "Client"}</span>
+                                  <span className="text-[10px] text-slate-400 font-bold uppercase truncate">{o.items?.[0]?.title || "Item"}</span>
+                               </div>
                             </div>
                           </TableCell>
                           <TableCell>
-                             <div className="flex flex-col gap-1">
-                                {o.gameDetails?.playerID && (
-                                   <div className="flex items-center gap-1.5">
-                                      <Gamepad2 size={10} className="text-slate-400" />
-                                      <span className="text-[10px] font-mono font-bold">{o.gameDetails.playerID}</span>
-                                   </div>
-                                )}
-                                {o.gameDetails?.phoneNumber && (
-                                   <div className="flex items-center gap-1.5">
-                                      <Clock size={10} className="text-slate-400" />
-                                      <span className="text-[10px] font-bold">{o.gameDetails.phoneNumber}</span>
-                                   </div>
-                                )}
+                             <div className="flex flex-col">
+                                <div className="flex items-center gap-1.5">
+                                   <Gamepad2 size={10} className="text-slate-400" />
+                                   <span className="text-[10px] font-mono font-bold">{o.gameDetails?.playerID || "---"}</span>
+                                </div>
+                                <span className="text-[9px] text-slate-400 uppercase font-bold">{o.items?.[0]?.gameId || 'General'}</span>
                              </div>
                           </TableCell>
-                          <TableCell className="font-bold text-slate-900">${o.total?.toFixed(2)}</TableCell>
+                          <TableCell className="font-headline font-bold text-slate-900">${o.total?.toFixed(2)}</TableCell>
                           <TableCell>
                             <Badge className={cn(
-                              "rounded-full px-3 py-1 font-bold text-[9px] uppercase",
-                              o.status === 'successful' ? "bg-green-100 text-green-700" : o.status === 'pending' ? "bg-amber-100 text-amber-700" : o.status === 'processing' ? "bg-blue-100 text-blue-700" : "bg-red-100 text-red-700"
+                              "rounded-full px-2.5 py-0.5 font-bold text-[8px] uppercase border-none",
+                              o.status === 'successful' ? "bg-green-100 text-green-700" : 
+                              o.status === 'pending' ? "bg-amber-100 text-amber-700" : 
+                              o.status === 'processing' ? "bg-blue-100 text-blue-700" : "bg-red-100 text-red-700"
                             )}>
                               {o.status}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-right px-8">
-                            <Select onValueChange={(val) => updateOrderStatus(o.id, val)} defaultValue={o.status}>
-                               <SelectTrigger className="h-10 w-32 rounded-xl text-xs font-bold border-slate-100 ml-auto">
-                                  <SelectValue />
-                                </SelectTrigger>
-                               <SelectContent className="rounded-xl">
-                                  <SelectItem value="pending">Pending</SelectItem>
-                                  <SelectItem value="processing">Processing</SelectItem>
-                                  <SelectItem value="successful">Complete</SelectItem>
-                                  <SelectItem value="cancelled">Cancelled</SelectItem>
-                               </SelectContent>
-                            </Select>
+                            <Button 
+                              size="sm" 
+                              onClick={() => handleViewOrder(o)}
+                              className="h-8 rounded-full px-4 gap-2 font-bold text-[10px] shadow-sm hover:shadow-md transition-all"
+                            >
+                               <Eye size={12} /> View Details
+                            </Button>
                           </TableCell>
                         </TableRow>
                       ))
@@ -751,6 +811,124 @@ export default function AdminPage() {
         </main>
       </div>
 
+      {/* Advanced Order Detail Modal */}
+      <Dialog open={isOrderDetailOpen} onOpenChange={setIsOrderDetailOpen}>
+        <DialogContent className="max-w-3xl rounded-[3rem] p-0 border-none shadow-2xl bg-white overflow-hidden scrollbar-hide z-[100]">
+          {selectedOrder && (
+            <div className="flex flex-col h-full">
+              <div className="bg-slate-900 p-8 text-white">
+                <div className="flex justify-between items-start mb-6">
+                  <div>
+                    <Badge className="bg-primary text-white mb-2 border-none rounded-full px-3 text-[10px] font-bold uppercase tracking-widest">
+                       Reference #{selectedOrder.id.slice(0, 12).toUpperCase()}
+                    </Badge>
+                    <h2 className="text-3xl font-headline font-bold">Order Breakdown</h2>
+                  </div>
+                  <Button variant="ghost" size="icon" onClick={() => setIsOrderDetailOpen(false)} className="text-white/40 hover:text-white hover:bg-white/10 rounded-full">
+                    <X size={24} />
+                  </Button>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                   <DetailMetric label="Status" value={selectedOrder.status} icon={AlertCircle} isStatus />
+                   <DetailMetric label="Total Paid" value={`$${selectedOrder.total?.toFixed(2)}`} icon={DollarSign} />
+                   <DetailMetric label="Method" value={selectedOrder.paymentMethod || 'Mobile'} icon={CreditCard} />
+                   <DetailMetric label="Timestamp" value={selectedOrder.createdAt ? format(new Date(selectedOrder.createdAt), 'MMM d, HH:mm') : 'N/A'} icon={Calendar} />
+                </div>
+              </div>
+
+              <div className="p-10 space-y-10 max-h-[60vh] overflow-y-auto">
+                 {/* Section: Product Info */}
+                 <div className="space-y-4">
+                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                       <Package size={14} /> Item Details
+                    </h3>
+                    <div className="bg-slate-50 rounded-[2rem] p-6 border border-slate-100 flex items-center gap-6">
+                       <div className="w-20 h-20 relative rounded-2xl overflow-hidden shadow-md bg-white">
+                          {selectedOrder.items?.[0]?.thumbnail ? (
+                            <Image src={selectedOrder.items[0].thumbnail} alt="" fill className="object-cover" />
+                          ) : (
+                            <Box className="absolute inset-0 m-auto text-slate-200" size={32} />
+                          )}
+                       </div>
+                       <div>
+                          <p className="text-xl font-bold text-slate-900">{selectedOrder.items?.[0]?.title || "Generic Package"}</p>
+                          <p className="text-xs font-medium text-slate-500 mt-1">Quantity: 1 • Game ID: {selectedOrder.items?.[0]?.gameId?.toUpperCase() || 'N/A'}</p>
+                       </div>
+                    </div>
+                 </div>
+
+                 {/* Section: Delivery Target */}
+                 <div className="space-y-4">
+                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                       <Gamepad2 size={14} /> In-Game Destination
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                       <Card className="p-6 rounded-[2rem] border-none bg-slate-50 flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-primary shadow-sm">
+                             <User size={24} />
+                          </div>
+                          <div>
+                             <p className="text-[10px] font-bold text-slate-400 uppercase">Player Name</p>
+                             <p className="text-lg font-bold text-slate-900">{selectedOrder.gameDetails?.playerName || "N/A"}</p>
+                          </div>
+                       </Card>
+                       <Card className="p-6 rounded-[2rem] border-none bg-slate-50 flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-primary shadow-sm">
+                             <Hash size={24} />
+                          </div>
+                          <div>
+                             <p className="text-[10px] font-bold text-slate-400 uppercase">Player ID</p>
+                             <p className="text-lg font-mono font-bold text-slate-900 tracking-wider">{selectedOrder.gameDetails?.playerID || "N/A"}</p>
+                          </div>
+                       </Card>
+                       {selectedOrder.gameDetails?.whatsappNumber && (
+                         <Card className="p-6 rounded-[2rem] border-none bg-slate-50 flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-green-500 shadow-sm">
+                               <Smartphone size={24} />
+                            </div>
+                            <div>
+                               <p className="text-[10px] font-bold text-slate-400 uppercase">Contact WhatsApp</p>
+                               <p className="text-lg font-bold text-slate-900">{selectedOrder.gameDetails.whatsappNumber}</p>
+                            </div>
+                         </Card>
+                       )}
+                    </div>
+                 </div>
+              </div>
+
+              <div className="p-8 bg-slate-50 border-t border-slate-100 flex flex-col md:flex-row gap-4 items-center justify-between">
+                 <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
+                       <RefreshCw size={18} className="animate-spin" />
+                    </div>
+                    <p className="text-xs font-bold text-slate-500 uppercase tracking-tight">Status Control Engine Active</p>
+                 </div>
+                 <div className="flex gap-3 w-full md:w-auto">
+                    <Select defaultValue={selectedOrder.status} onValueChange={(val) => handleStatusChange(selectedOrder.id, val)}>
+                       <SelectTrigger className="h-14 w-full md:w-48 rounded-2xl bg-white border-none shadow-sm font-bold text-sm">
+                          <SelectValue />
+                       </SelectTrigger>
+                       <SelectContent className="rounded-2xl border-none shadow-2xl">
+                          <SelectItem value="pending" className="rounded-xl">Pending</SelectItem>
+                          <SelectItem value="processing" className="rounded-xl">Processing</SelectItem>
+                          <SelectItem value="successful" className="rounded-xl">Complete ✓</SelectItem>
+                          <SelectItem value="cancelled" className="rounded-xl">Cancelled ✕</SelectItem>
+                       </SelectContent>
+                    </Select>
+                    <Button 
+                      onClick={() => handleStatusChange(selectedOrder.id, 'successful')}
+                      disabled={selectedOrder.status === 'successful'}
+                      className="h-14 px-8 rounded-2xl font-bold bg-green-600 hover:bg-green-700 shadow-lg shadow-green-500/20 gap-2 flex-1 md:flex-none"
+                    >
+                       Mark Delivered <CheckCircle2 size={18} />
+                    </Button>
+                 </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Product CRUD Dialog */}
       <Dialog open={isProductDialogOpen} onOpenChange={setIsProductDialogOpen}>
         <DialogContent className="max-w-2xl rounded-[3rem] p-0 border-none shadow-2xl bg-white overflow-hidden scrollbar-hide z-[100]">
@@ -874,5 +1052,26 @@ function StatCard({ label, value, icon: Icon, color }: { label: string, value: s
       <h3 className="text-3xl font-headline font-bold text-slate-900 mb-1">{value}</h3>
       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">{label}</p>
     </Card>
+  );
+}
+
+function DetailMetric({ label, value, icon: Icon, isStatus }: { label: string, value: string, icon: any, isStatus?: boolean }) {
+  const statusColors: Record<string, string> = {
+    pending: "text-amber-400",
+    processing: "text-blue-400",
+    successful: "text-green-400",
+    cancelled: "text-red-400"
+  };
+
+  return (
+    <div className="space-y-1">
+       <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest flex items-center gap-1.5">
+          <Icon size={12} /> {label}
+       </p>
+       <p className={cn(
+         "text-sm font-bold uppercase",
+         isStatus ? statusColors[value] || "text-white" : "text-white"
+       )}>{value}</p>
+    </div>
   );
 }
