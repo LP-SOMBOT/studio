@@ -438,7 +438,7 @@ export default function AdminPage() {
         <nav className="flex-1 px-4 py-6 space-y-2">
           <SideNavItem active={false} expanded={isSidebarExpanded} onClick={() => router.push('/')} icon={Home} label="Back to Store" className="text-primary hover:bg-primary/5 mb-4" />
           <div className="h-px bg-slate-50 dark:bg-white/5 my-4 mx-2" />
-          <SideNavItem active={activeView === 'dashboard'} expanded={isSidebarExpanded} onClick={() => setActiveView('dashboard')} icon={LayoutDashboard} label="Dashboard" />
+          <SideNavItem active={activeView === 'dashboard'} expanded={isSidebarExpanded} onClick={() => setActiveTab('dashboard')} icon={LayoutDashboard} label="Dashboard" />
           <SideNavItem active={activeView === 'orders'} expanded={isSidebarExpanded} onClick={() => setActiveView('orders')} icon={ShoppingBag} label="Orders" />
           <SideNavItem active={activeView === 'products'} expanded={isSidebarExpanded} onClick={() => setActiveView('products')} icon={Package} label="Inventory" />
           <SideNavItem active={activeView === 'account-posts'} expanded={isSidebarExpanded} onClick={() => setActiveView('account-posts')} icon={Gamepad2} label="Marketplace" />
@@ -704,8 +704,22 @@ export default function AdminPage() {
                           <div className="space-y-2">
                              <Label className="text-[10px] font-bold text-slate-400 uppercase">Maintenance Image</Label>
                              <div className="flex items-center gap-4">
-                                <div className="w-32 aspect-video rounded-xl bg-slate-100 dark:bg-slate-800 relative overflow-hidden">
-                                   {storeSettings.appStatus?.offlineImageUrl && <Image src={storeSettings.appStatus.offlineImageUrl} alt="" fill className="object-cover" unoptimized />}
+                                <div className="w-32 aspect-video rounded-xl bg-slate-100 dark:bg-slate-800 relative overflow-hidden group border border-slate-200 dark:border-white/5">
+                                   {storeSettings.appStatus?.offlineImageUrl ? (
+                                     <>
+                                       <Image src={storeSettings.appStatus.offlineImageUrl} alt="" fill className="object-cover" unoptimized />
+                                       <button 
+                                         onClick={() => updateStoreSettings({ appStatus: { ...storeSettings.appStatus, offlineImageUrl: "" } })}
+                                         className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                       >
+                                         <X size={12} />
+                                       </button>
+                                     </>
+                                   ) : (
+                                     <div className="w-full h-full flex items-center justify-center text-slate-300 dark:text-slate-700">
+                                       <ImageIcon size={20} />
+                                     </div>
+                                   )}
                                 </div>
                                 <Input type="file" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'offline')} className="h-10 flex-1 rounded-xl dark:bg-slate-800 border-none" />
                              </div>
