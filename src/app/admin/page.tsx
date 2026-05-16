@@ -767,10 +767,30 @@ export default function AdminPage() {
                            <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="rounded-2xl">
-                           <SelectItem value="pending" className="rounded-xl">⏳ Pending (Waiting)</SelectItem>
-                           <SelectItem value="processing" className="rounded-xl">⚙️ Processing (In-Queue)</SelectItem>
-                           <SelectItem value="successful" className="rounded-xl">✅ Successful (Delivered)</SelectItem>
-                           <SelectItem value="cancelled" className="rounded-xl">❌ Cancelled (Refund/Issue)</SelectItem>
+                           <SelectItem value="pending" className="rounded-xl">
+                             <div className="flex items-center gap-2">
+                               <Clock className="w-4 h-4 text-amber-500" />
+                               <span>Pending (Waiting)</span>
+                             </div>
+                           </SelectItem>
+                           <SelectItem value="processing" className="rounded-xl">
+                             <div className="flex items-center gap-2">
+                               <RefreshCw className="w-4 h-4 text-blue-500 animate-spin" />
+                               <span>Processing (In-Queue)</span>
+                             </div>
+                           </SelectItem>
+                           <SelectItem value="successful" className="rounded-xl">
+                             <div className="flex items-center gap-2">
+                               <CheckCircle2 className="w-4 h-4 text-green-500" />
+                               <span>Successful (Delivered)</span>
+                             </div>
+                           </SelectItem>
+                           <SelectItem value="cancelled" className="rounded-xl">
+                             <div className="flex items-center gap-2">
+                               <XCircle className="w-4 h-4 text-red-500" />
+                               <span>Cancelled (Refund/Issue)</span>
+                             </div>
+                           </SelectItem>
                         </SelectContent>
                       </Select>
                    </div>
@@ -822,4 +842,3 @@ function StatCard({ label, value, icon: Icon, color }: { label: string, value: s
     </Card>
   );
 }
-
