@@ -1,4 +1,3 @@
-
 "use client";
 
 import { House, Gamepad2, CircleUser, ShoppingBag, ShieldCheck } from "lucide-react";
@@ -6,7 +5,7 @@ import { useApp } from "@/lib/context";
 import { cn } from "@/lib/utils";
 
 export default function BottomNav() {
-  const { activeTab, setActiveTab, allChatSessions, user, notifications, orders } = useApp();
+  const { activeTab, setActiveTab, allChatSessions, user, notifications, orders, theme } = useApp();
 
   const unreadChat = user?.isAdmin 
     ? allChatSessions.reduce((acc, s) => acc + (s.unreadCount || 0), 0)
@@ -25,7 +24,7 @@ export default function BottomNav() {
 
   return (
     <div className="fixed bottom-5 left-0 right-0 z-40 flex justify-center px-4 pointer-events-none">
-      <nav className="w-full max-w-[500px] h-16 bg-white rounded-[40px] shadow-[0_8px_30px_rgba(0,0,0,0.12)] flex items-center justify-around px-2 py-2 pointer-events-auto border border-gray-50/50">
+      <nav className="w-full max-w-[500px] h-16 bg-white dark:bg-slate-900/90 dark:backdrop-blur-xl rounded-[40px] shadow-[0_8px_30px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.4)] flex items-center justify-around px-2 py-2 pointer-events-auto border border-gray-50/50 dark:border-white/5">
         {navItems.map((item) => {
           const isActive = activeTab === item.id;
           const Icon = item.icon;
@@ -40,8 +39,8 @@ export default function BottomNav() {
                 className={cn(
                   "flex items-center justify-center gap-2 transition-all duration-250 ease-in-out",
                   isActive 
-                    ? "bg-[#7C3AED] text-white rounded-[30px] py-[10px] px-4 shadow-md shadow-[#7C3AED]/20" 
-                    : "text-[#9CA3AF] p-2"
+                    ? "bg-primary text-white rounded-[30px] py-[10px] px-4 shadow-md shadow-primary/20" 
+                    : "text-[#9CA3AF] dark:text-gray-500 p-2"
                 )}
               >
                 <div className="relative">
@@ -49,8 +48,8 @@ export default function BottomNav() {
                   
                   {item.badge !== undefined && item.badge > 0 && (
                     <span className={cn(
-                      "absolute -top-1 -right-1 bg-[#F97316] text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold border border-white",
-                      isActive ? "bg-white text-[#F97316]" : ""
+                      "absolute -top-1 -right-1 bg-[#F97316] text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold border border-white dark:border-slate-900",
+                      isActive ? "bg-white text-[#F97316] dark:bg-white dark:text-[#F97316]" : ""
                     )}>
                       {item.badge > 9 ? '9+' : item.badge}
                     </span>

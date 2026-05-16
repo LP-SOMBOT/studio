@@ -193,6 +193,8 @@ type AppContextType = {
   sendMessage: (text?: string, imageUrl?: string, targetUserId?: string) => Promise<void>;
   markMessagesAsRead: (targetUserId?: string) => Promise<void>;
   refreshAdminData: () => void;
+  theme: 'light' | 'dark';
+  toggleTheme: () => void;
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -202,6 +204,7 @@ const SETTINGS_CACHE_KEY = 'oskar_settings_cache';
 const PRODUCTS_CACHE_KEY = 'oskar_products_cache';
 const EVENTS_CACHE_KEY = 'oskar_events_cache';
 const BANNERS_CACHE_KEY = 'oskar_banners_cache';
+const THEME_CACHE_KEY = 'oskar_theme_cache';
 
 const getCache = (key: string, fallback: any = null) => {
   if (typeof window === 'undefined') return fallback;
@@ -224,7 +227,7 @@ const setCache = (key: string, data: any) => {
         localStorage.removeItem(EVENTS_CACHE_KEY);
         localStorage.removeItem(BANNERS_CACHE_KEY);
         try {
-          if (key === SETTINGS_CACHE_KEY || key === USER_CACHE_KEY) {
+          if (key === SETTINGS_CACHE_KEY || key === USER_CACHE_KEY || key === THEME_CACHE_KEY) {
             localStorage.setItem(key, JSON.stringify(data));
           }
         } catch {}
@@ -242,6 +245,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   
   const [activeTab, setActiveTabState] = useState('home');
   const [isGlobalLoading, setIsGlobalLoading] = useState(false);
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => getCache(THEME_CACHE_KEY, 'light'));
   
   const [syncStatus, setSyncStatus] = useState({
     settings: false,
@@ -266,6 +270,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [chatTargetId, setChatTargetId] = useState<string | null>(null);
   const [messages, setMessages] = useState<any[]>([]);
   const [allChatSessions, setAllChatSessions] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const root = window.document.documentElement;
+      root.classList.remove('light', 'dark');
+      root.classList.add(theme);
+      setCache(THEME_CACHE_KEY, theme);
+    }
+  }, [theme]);
+
+  const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
 
   const isInitialLoading = useMemo(() => {
     return !syncStatus.settings || !syncStatus.products || !syncStatus.banners || !syncStatus.events;
@@ -666,7 +681,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       login, signup, logout, buyNow, orders, allOrders, products, allUsers, accountPosts, notifications, events, banners,
       createOrder, postAccount, updateAccountPost, deleteAccountPost, buyAccountPost, markNotificationsAsRead, updateOrderStatus, updateAccountPostStatus, 
       updateUserProfile, manageUser, deleteUser, saveProduct, deleteProduct, saveEvent, deleteEvent, saveBanner, deleteBanner, storeSettings, updateStoreSettings, 
-      broadcastNotification, messages, allChatSessions, chatTargetId, setChatTargetId, sendMessage, markMessagesAsRead, refreshAdminData
+      broadcastNotification, messages, allChatSessions, chatTargetId, setChatTargetId, sendMessage, markMessagesAsRead, refreshAdminData,
+      theme, toggleTheme
     }}>
       {children}
     </AppContext.Provider>

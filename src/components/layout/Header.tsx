@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -13,7 +12,7 @@ export default function Header() {
   const unreadNotifs = (notifications || []).filter(n => !n.read).length;
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-white border-b border-gray-100 shadow-sm">
+    <header className="sticky top-0 z-40 w-full bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-gray-100 dark:border-white/5 shadow-sm">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <div onClick={() => setActiveTab('home')} className="flex items-center gap-2 cursor-pointer">
           <div className="relative w-10 h-10 overflow-hidden rounded-xl">
@@ -31,7 +30,7 @@ export default function Header() {
               </div>
             )}
           </div>
-          <span className="font-headline font-bold text-2xl tracking-tight text-gray-900">
+          <span className="font-headline font-bold text-2xl tracking-tight">
             Oskar<span className="text-primary">Shop</span>
           </span>
         </div>
@@ -47,11 +46,11 @@ export default function Header() {
 
           <button 
             onClick={() => setActiveTab('notifications')}
-            className="relative p-2 text-gray-500 hover:text-primary transition-colors"
+            className="relative p-2 text-gray-500 dark:text-gray-400 hover:text-primary transition-colors"
           >
             <Bell className="w-6 h-6" />
             {unreadNotifs > 0 && (
-              <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center border-2 border-white">
+              <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center border-2 border-white dark:border-slate-900">
                 {unreadNotifs > 9 ? '9+' : unreadNotifs}
               </span>
             )}
