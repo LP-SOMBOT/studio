@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { 
   useUser, 
@@ -114,7 +114,7 @@ type StoreSettings = {
   announcementTicker?: string;
   logo?: string;
   onboardingImages?: string[];
-  sliderImages?: string[]; // Legacy, moving to banners node
+  sliderImages?: string[]; 
   appStatus?: {
     offline: boolean;
     offlineTitle?: string;
@@ -197,7 +197,26 @@ type AppContextType = {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-const CACHE_KEY = 'oskar_user_cache';
+// Cache Keys
+const USER_CACHE_KEY = 'oskar_user_cache';
+const SETTINGS_CACHE_KEY = 'oskar_settings_cache';
+const PRODUCTS_CACHE_KEY = 'oskar_products_cache';
+const ACC_POSTS_CACHE_KEY = 'oskar_acc_posts_cache';
+const EVENTS_CACHE_KEY = 'oskar_events_cache';
+const BANNERS_CACHE_KEY = 'oskar_banners_cache';
+const ALL_USERS_CACHE_KEY = 'oskar_all_users_cache';
+
+const getCache = (key: string, fallback: any = null) => {
+  if (typeof window === 'undefined') return fallback;
+  const data = localStorage.getItem(key);
+  return data ? JSON.parse(data) : fallback;
+};
+
+const setCache = (key: string, data: any) => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(key, JSON.stringify(data));
+  }
+};
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const { user, loading } = useUser();
@@ -208,26 +227,37 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   
   const [activeTab, setActiveTabState] = useState('home');
   const [isGlobalLoading, setIsGlobalLoading] = useState(false);
-  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  
+  // Track sync status of each critical stream
+  const [syncStatus, setSyncStatus] = useState({
+    settings: false,
+    products: false,
+    accPosts: false,
+    events: false,
+    banners: false,
+    allUsers: false
+  });
+
+  // Initialize from cache
+  const [storeSettings, setStoreSettings] = useState<StoreSettings>(() => getCache(SETTINGS_CACHE_KEY, {}));
+  const [products, setProducts] = useState<GamePackage[]>(() => getCache(PRODUCTS_CACHE_KEY, []));
+  const [accountPosts, setAccountPosts] = useState<AccountPost[]>(() => getCache(ACC_POSTS_CACHE_KEY, []));
+  const [events, setEvents] = useState<GameEvent[]>(() => getCache(EVENTS_CACHE_KEY, []));
+  const [banners, setBanners] = useState<Banner[]>(() => getCache(BANNERS_CACHE_KEY, []));
+  const [allUsers, setAllUsers] = useState<UserProfile[]>(() => getCache(ALL_USERS_CACHE_KEY, []));
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(() => getCache(USER_CACHE_KEY));
+  
   const [orders, setOrders] = useState<Order[]>([]);
   const [allOrders, setAllOrders] = useState<Order[]>([]);
-  const [products, setProducts] = useState<GamePackage[]>([]);
-  const [accountPosts, setAccountPosts] = useState<AccountPost[]>([]);
-  const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
-  const [events, setEvents] = useState<GameEvent[]>([]);
-  const [banners, setBanners] = useState<Banner[]>([]);
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(() => {
-    if (typeof window !== 'undefined') {
-      const cached = localStorage.getItem(CACHE_KEY);
-      return cached ? JSON.parse(cached) : null;
-    }
-    return null;
-  });
-  const [storeSettings, setStoreSettings] = useState<StoreSettings>({});
   const [chatTargetId, setChatTargetId] = useState<string | null>(null);
   const [messages, setMessages] = useState<any[]>([]);
   const [allChatSessions, setAllChatSessions] = useState<any[]>([]);
+
+  const isInitialLoading = useMemo(() => {
+    // Initial loading is complete only when all essential nodes have synced at least once
+    return !syncStatus.settings || !syncStatus.products || !syncStatus.banners || !syncStatus.events;
+  }, [syncStatus]);
 
   useEffect(() => {
     const handleHash = () => {
@@ -240,7 +270,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener('hashchange', handleHash);
   }, []);
 
-  const setActiveTab = (tab: string) => {
+  const setActiveTab = useCallback((tab: string) => {
     setActiveTabState(tab);
     if (typeof window !== 'undefined') {
       const isSpecialFlow = pathname === "/checkout" || pathname === "/checkout-account" || pathname.startsWith("/accounts/");
@@ -250,10 +280,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         window.location.hash = tab === 'home' ? '' : tab;
       }
     }
-  };
+  }, [pathname, router]);
 
+  // Global Listeners with Caching
   useEffect(() => {
     if (!rtdb) return;
+    
     const settingsRef = ref(rtdb, 'settings');
     const productsRef = ref(rtdb, 'products');
     const accPostsRef = ref(rtdb, 'accountPosts');
@@ -261,24 +293,54 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const bannersRef = ref(rtdb, 'banners');
     const usersRef = ref(rtdb, 'users');
 
-    onValue(settingsRef, (s) => setStoreSettings(s.val() || {}));
-    onValue(productsRef, (s) => setProducts(s.val() ? Object.entries(s.val()).map(([id, v]: any) => ({ ...v, id })) : []));
-    onValue(accPostsRef, (s) => setAccountPosts(s.val() ? Object.entries(s.val()).map(([id, v]: any) => ({ ...v, id })) : []));
-    onValue(eventsRef, (s) => setEvents(s.val() ? Object.entries(s.val()).map(([id, v]: any) => ({ ...v, id })) : []));
-    onValue(bannersRef, (s) => setBanners(s.val() ? Object.entries(s.val()).map(([id, v]: any) => ({ ...v, id })) : []));
-    onValue(usersRef, (s) => {
+    const unsubSettings = onValue(settingsRef, (s) => {
+      const data = s.val() || {};
+      setStoreSettings(data);
+      setCache(SETTINGS_CACHE_KEY, data);
+      setSyncStatus(prev => ({ ...prev, settings: true }));
+    });
+
+    const unsubProducts = onValue(productsRef, (s) => {
+      const data = s.val() ? Object.entries(s.val()).map(([id, v]: any) => ({ ...v, id })) : [];
+      setProducts(data);
+      setCache(PRODUCTS_CACHE_KEY, data);
+      setSyncStatus(prev => ({ ...prev, products: true }));
+    });
+
+    const unsubAccPosts = onValue(accPostsRef, (s) => {
+      const data = s.val() ? Object.entries(s.val()).map(([id, v]: any) => ({ ...v, id })) : [];
+      setAccountPosts(data);
+      setCache(ACC_POSTS_CACHE_KEY, data);
+      setSyncStatus(prev => ({ ...prev, accPosts: true }));
+    });
+
+    const unsubEvents = onValue(eventsRef, (s) => {
+      const data = s.val() ? Object.entries(s.val()).map(([id, v]: any) => ({ ...v, id })) : [];
+      setEvents(data);
+      setCache(EVENTS_CACHE_KEY, data);
+      setSyncStatus(prev => ({ ...prev, events: true }));
+    });
+
+    const unsubBanners = onValue(bannersRef, (s) => {
+      const data = s.val() ? Object.entries(s.val()).map(([id, v]: any) => ({ ...v, id })) : [];
+      setBanners(data);
+      setCache(BANNERS_CACHE_KEY, data);
+      setSyncStatus(prev => ({ ...prev, banners: true }));
+    });
+
+    const unsubUsers = onValue(usersRef, (s) => {
       if (s.val()) {
         const users = Object.entries(s.val()).map(([uid, v]: any) => ({
           ...v,
           uid: v.uid || uid
         }));
         setAllUsers(users);
+        setCache(ALL_USERS_CACHE_KEY, users);
       } else {
         setAllUsers([]);
       }
+      setSyncStatus(prev => ({ ...prev, allUsers: true }));
     });
-
-    const timer = setTimeout(() => setIsInitialLoading(false), 1500);
 
     return () => {
       off(settingsRef);
@@ -287,10 +349,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       off(eventsRef);
       off(bannersRef);
       off(usersRef);
-      clearTimeout(timer);
     };
   }, [rtdb]);
 
+  // User-Specific Listeners
   useEffect(() => {
     if (!rtdb || !user) {
       setUserProfile(null);
@@ -305,14 +367,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     onValue(profileRef, (s) => {
       const data = s.val();
       setUserProfile(data);
-      if (data) localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+      if (data) setCache(USER_CACHE_KEY, data);
       if (data?.banned) {
         toast({ title: "Account Banned", description: "Your account has been suspended.", variant: "destructive" });
         logout();
       }
     });
-    onValue(notifsRef, (s) => setNotifications(s.val() ? Object.entries(s.val()).map(([id, v]: any) => ({ ...v, id })).sort((a,b) => b.createdAt - a.createdAt) : []));
-    onValue(userOrdersRef, (s) => setOrders(s.val() ? Object.entries(s.val()).map(([id, v]: any) => ({ ...v, id })).sort((a,b) => b.createdAt - a.createdAt) : []));
+
+    onValue(notifsRef, (s) => {
+      const data = s.val() ? Object.entries(s.val()).map(([id, v]: any) => ({ ...v, id })).sort((a,b) => b.createdAt - a.createdAt) : [];
+      setNotifications(data);
+    });
+
+    onValue(userOrdersRef, (s) => {
+      const data = s.val() ? Object.entries(s.val()).map(([id, v]: any) => ({ ...v, id })).sort((a,b) => b.createdAt - a.createdAt) : [];
+      setOrders(data);
+    });
 
     return () => {
       off(profileRef);
@@ -382,14 +452,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         createdAt: Date.now()
       };
       await set(ref(rtdb, `users/${cred.user.uid}`), profile);
-      localStorage.setItem(CACHE_KEY, JSON.stringify(profile));
+      setCache(USER_CACHE_KEY, profile);
     } finally { setIsGlobalLoading(false); }
   };
 
   const logout = async () => {
     setIsGlobalLoading(true);
     try { 
-      localStorage.removeItem(CACHE_KEY);
+      localStorage.removeItem(USER_CACHE_KEY);
       await signOut(auth); 
       router.push('/login');
     } finally { setIsGlobalLoading(false); }

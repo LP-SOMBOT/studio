@@ -11,14 +11,18 @@ import { useEffect, useState } from "react";
  * 
  * Provides a branded entry experience for the application.
  * Stays visible while the app is in its initial loading state.
+ * 
+ * Update: The splash screen now strictly adheres to isInitialLoading,
+ * which tracks complete database synchronization across all critical nodes.
  */
 export default function SplashScreen() {
   const { isInitialLoading, storeSettings } = useApp();
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
+    // When synchronization is complete, we add a tiny aesthetic delay 
+    // to allow React to paint the first frame of the hydrated app.
     if (!isInitialLoading) {
-      // Smooth delay before removing to let data settle
       const timer = setTimeout(() => setIsVisible(false), 800);
       return () => clearTimeout(timer);
     } else {
@@ -63,6 +67,10 @@ export default function SplashScreen() {
            <div className="w-2.5 h-2.5 bg-primary/60 rounded-full animate-bounce [animation-delay:-0.15s]" />
            <div className="w-2.5 h-2.5 bg-primary rounded-full animate-bounce" />
         </div>
+        
+        <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest mt-4">
+          Synchronizing Realtime Data...
+        </p>
       </div>
 
       <div className="absolute bottom-12 text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">
