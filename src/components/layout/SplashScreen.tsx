@@ -70,7 +70,7 @@ export default function SplashScreen() {
         </div>
         
         <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest mt-4">
-          Synchronizing Realtime Data...
+          Adeeg deg deg ah iyo Qiimo jaban
         </p>
       </div>
 
