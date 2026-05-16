@@ -86,10 +86,11 @@ function OrderCard({ order }: { order: any }) {
   return (
     <Card className="rounded-[2.5rem] border-none shadow-xl bg-white dark:bg-slate-900 overflow-hidden group hover:shadow-2xl transition-all duration-300">
        <div className="p-6 h-full flex flex-col">
-          <div className="flex justify-between items-start mb-6">
-             <div className="flex gap-4">
+          {/* Header section - Responsive Layout */}
+          <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-6">
+             <div className="flex gap-4 min-w-0">
                 <div className={cn(
-                  "w-16 h-16 rounded-2xl flex items-center justify-center relative overflow-hidden shrink-0 shadow-inner",
+                  "w-16 h-16 md:w-20 md:h-20 rounded-2xl flex items-center justify-center relative overflow-hidden shrink-0 shadow-inner transition-all",
                   isAccount ? "bg-amber-50 dark:bg-amber-500/10" : "bg-primary/5 dark:bg-primary/10"
                 )}>
                    {item?.thumbnail ? (
@@ -101,76 +102,80 @@ function OrderCard({ order }: { order: any }) {
                    )}
                 </div>
                 <div className="min-w-0">
-                   <h3 className="font-bold text-slate-900 dark:text-white text-lg leading-tight mb-1 truncate">{item?.title || "Game Package"}</h3>
-                   <div className="flex items-center gap-2">
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{order.paymentMethod || 'Mobile'}</p>
+                   <h3 className="font-bold text-slate-900 dark:text-white text-lg md:text-xl leading-tight mb-1 truncate">{item?.title || "Game Package"}</h3>
+                   <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-[10px] md:text-[11px] font-bold text-muted-foreground uppercase tracking-widest">{order.paymentMethod || 'Mobile'}</p>
                       <span className="w-1 h-1 rounded-full bg-slate-200 dark:bg-slate-800" />
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">ID: #{order.id.toUpperCase()}</p>
+                      <p className="text-[10px] md:text-[11px] font-bold text-muted-foreground uppercase tracking-widest">ID: #{order.id.toUpperCase()}</p>
                    </div>
-                   <p className="text-[10px] text-muted-foreground font-medium mt-1">
+                   <p className="text-[10px] md:text-[11px] text-muted-foreground font-medium mt-1">
                       {format(new Date(order.createdAt), 'PPpp')}
                    </p>
                 </div>
              </div>
-             <Badge className={cn("rounded-full px-3 py-1 font-bold text-[9px] border-none shadow-sm", statusColors[order.status as keyof typeof statusColors])}>
-                <StatusIcon className={cn("w-3 h-3 mr-1", order.status === 'processing' && "animate-spin")} /> 
-                {order.status.toUpperCase()}
+             <Badge className={cn(
+               "rounded-full px-4 py-1.5 font-bold text-[10px] md:text-xs border-none shadow-sm shrink-0 uppercase tracking-wider", 
+               statusColors[order.status as keyof typeof statusColors]
+             )}>
+                <StatusIcon className={cn("w-3.5 h-3.5 mr-1.5 inline-block", order.status === 'processing' && "animate-spin")} /> 
+                {order.status}
              </Badge>
           </div>
 
-          <div className="bg-slate-50/80 dark:bg-slate-800/40 rounded-[2rem] p-5 space-y-3 border border-slate-100 dark:border-white/5 flex-1">
+          {/* Details Section */}
+          <div className="bg-slate-50/80 dark:bg-slate-800/40 rounded-[2rem] p-5 md:p-6 space-y-4 border border-slate-100 dark:border-white/5 flex-1">
              {isAccount ? (
                <>
-                 <div className="flex justify-between items-center text-xs">
+                 <div className="flex justify-between items-center text-xs md:text-sm">
                     <span className="text-muted-foreground font-bold flex items-center gap-1.5"><User size={14} /> Seller</span>
                     <span className="font-bold text-slate-900 dark:text-white">{order.gameDetails?.sellerName || "N/A"}</span>
                  </div>
-                 <div className="flex justify-between items-center text-xs">
+                 <div className="flex justify-between items-center text-xs md:text-sm">
                     <span className="text-muted-foreground font-bold flex items-center gap-1.5"><ShieldCheck size={14} /> Platform</span>
                     <Badge variant="outline" className="border-slate-200 dark:border-slate-700 font-bold text-[10px]">{order.gameDetails?.platform || "Google"}</Badge>
                  </div>
                </>
              ) : (
-               <div className="flex justify-between items-center text-xs">
+               <div className="flex justify-between items-center text-xs md:text-sm">
                   <span className="text-muted-foreground font-bold flex items-center gap-1.5"><Gamepad2 size={14} /> Player ID</span>
-                  <span className="font-mono font-bold text-slate-900 dark:text-white tracking-wider bg-white dark:bg-slate-900 px-2 py-0.5 rounded border border-slate-100 dark:border-white/5">
+                  <span className="font-mono font-bold text-slate-900 dark:text-white tracking-wider bg-white dark:bg-slate-900 px-3 py-1 rounded-xl border border-slate-100 dark:border-white/5 shadow-sm">
                     {order.gameDetails?.playerID || "N/A"}
                   </span>
                </div>
              )}
              
-             <div className="pt-2 border-t border-slate-200/50 dark:border-white/5 flex justify-between items-center">
-                <span className="text-muted-foreground font-bold text-xs uppercase tracking-widest">Order Amount</span>
-                <span className="font-headline font-bold text-primary text-xl">${order.total.toFixed(2)}</span>
+             <div className="pt-3 border-t border-slate-200/50 dark:border-white/5 flex justify-between items-center">
+                <span className="text-muted-foreground font-bold text-[10px] md:text-xs uppercase tracking-widest">Order Amount</span>
+                <span className="font-headline font-bold text-primary text-xl md:text-2xl">${order.total.toFixed(2)}</span>
              </div>
           </div>
           
-          {/* Real-time Status Notes */}
-          <div className="mt-4">
+          {/* Responsive Status Feedback Messages */}
+          <div className="mt-5">
              {order.status === 'pending' && (
-               <div className="p-4 bg-amber-50 dark:bg-amber-500/10 rounded-2xl flex gap-3 items-center text-amber-700 dark:text-amber-400 text-[11px] font-bold border border-amber-100 dark:border-amber-500/20 shadow-sm animate-pulse">
-                  <Clock size={18} className="shrink-0" />
+               <div className="p-4 md:p-5 bg-amber-50 dark:bg-amber-500/10 rounded-2xl flex gap-3 items-center text-amber-700 dark:text-amber-400 text-[11px] md:text-[13px] font-bold border border-amber-100 dark:border-amber-500/20 shadow-sm animate-pulse">
+                  <Clock size={20} className="shrink-0" />
                   <p className="leading-relaxed">Dalabkaaga waa la diray, Mahadsanid!</p>
                </div>
              )}
 
              {order.status === 'processing' && (
-               <div className="p-4 bg-blue-50 dark:bg-blue-500/10 rounded-2xl flex gap-3 items-center text-blue-700 dark:text-blue-400 text-[11px] font-bold border border-blue-100 dark:border-blue-500/20 shadow-sm">
-                  <RefreshCw size={18} className="shrink-0 animate-spin" />
+               <div className="p-4 md:p-5 bg-blue-50 dark:bg-blue-500/10 rounded-2xl flex gap-3 items-center text-blue-700 dark:text-blue-400 text-[11px] md:text-[13px] font-bold border border-blue-100 dark:border-blue-500/20 shadow-sm">
+                  <RefreshCw size={20} className="shrink-0 animate-spin" />
                   <p className="leading-relaxed">Dalabkaaga waa la xaqiijinooyaa fadlan dulqaadka badi, Waxey qadaneysa kaliya 5 daqiiqo, Mahadsanid!</p>
                </div>
              )}
 
              {order.status === 'successful' && (
-               <div className="p-4 bg-green-50 dark:bg-green-500/10 rounded-2xl flex gap-3 items-center text-green-700 dark:text-green-400 text-[11px] font-bold border border-green-100 dark:border-green-500/20 shadow-sm">
-                  <CheckCircle2 size={18} className="shrink-0" />
+               <div className="p-4 md:p-5 bg-green-50 dark:bg-green-500/10 rounded-2xl flex gap-3 items-center text-green-700 dark:text-green-400 text-[11px] md:text-[13px] font-bold border border-green-100 dark:border-green-500/20 shadow-sm">
+                  <CheckCircle2 size={20} className="shrink-0" />
                   <p className="leading-relaxed">Dalabkaaga waa laguu Soo diray, Mahadsanid!</p>
                </div>
              )}
 
              {order.status === 'cancelled' && (
-               <div className="p-4 bg-red-50 dark:bg-red-500/10 rounded-2xl flex gap-3 items-center text-red-700 dark:text-red-400 text-[11px] font-bold border border-red-100 dark:border-red-500/20 shadow-sm">
-                  <ShieldAlert size={18} className="shrink-0" />
+               <div className="p-4 md:p-5 bg-red-50 dark:bg-red-500/10 rounded-2xl flex gap-3 items-center text-red-700 dark:text-red-400 text-[11px] md:text-[13px] font-bold border border-red-100 dark:border-red-500/20 shadow-sm">
+                  <ShieldAlert size={20} className="shrink-0" />
                   <p className="leading-relaxed text-left">
                     Dalabkaaga Waa Lagu guuldareystay fadlan hubi inaad bixisay lacagta, ama inuu saxanyahay Xogta aad Gelisay, Ama laxariir WhatsApp 613982172, Mahadsanid!
                   </p>
