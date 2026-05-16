@@ -64,7 +64,7 @@ export default function HomeView() {
         </section>
 
         {isVisible && (
-          <section className="relative bg-white rounded-[2.5rem] p-6 border border-gray-100 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden animate-in fade-in slide-in-from-top-4 duration-500">
+          <section className="relative bg-white dark:bg-slate-900/80 dark:backdrop-blur-md rounded-[2.5rem] p-6 border border-gray-100 dark:border-white/5 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden animate-in fade-in slide-in-from-top-4 duration-500">
             <Button 
               variant="ghost" 
               size="icon" 
@@ -76,15 +76,15 @@ export default function HomeView() {
             
             <div className="flex items-center gap-4">
               <div className="relative">
-                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+                <div className="w-16 h-16 bg-red-100 dark:bg-red-500/20 rounded-full flex items-center justify-center">
                   <Radio className="w-8 h-8 text-red-500 animate-pulse" />
                 </div>
-                <div className="absolute -bottom-1 -right-1 bg-red-500 text-white text-[8px] px-1.5 py-0.5 rounded-full font-bold uppercase border-2 border-white">
+                <div className="absolute -bottom-1 -right-1 bg-red-500 text-white text-[8px] px-1.5 py-0.5 rounded-full font-bold uppercase border-2 border-white dark:border-slate-900">
                   Live
                 </div>
               </div>
               <div>
-                <h3 className="font-headline font-bold text-xl">Oskar Shop is LIVE on TikTok</h3>
+                <h3 className="font-headline font-bold text-xl text-slate-900 dark:text-white">Oskar Shop is LIVE on TikTok</h3>
                 <p className="text-sm text-muted-foreground">Join the challenge now and win exclusive diamonds!</p>
               </div>
             </div>
@@ -101,10 +101,10 @@ export default function HomeView() {
         <section>
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
-              <div className="p-2 bg-orange-100 rounded-xl">
+              <div className="p-2 bg-orange-100 dark:bg-orange-500/10 rounded-xl">
                 <Flame className="w-5 h-5 text-orange-500" />
               </div>
-              <h2 className="text-2xl font-headline font-bold">Trending Top Ups</h2>
+              <h2 className="text-2xl font-headline font-bold text-slate-900 dark:text-white">Trending Top Ups</h2>
             </div>
             <Button variant="link" className="text-primary font-bold" onClick={() => setActiveTab('games')}>View All</Button>
           </div>
@@ -120,16 +120,16 @@ export default function HomeView() {
           <section className="space-y-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 rounded-xl">
+                <div className="p-2 bg-blue-100 dark:bg-blue-500/10 rounded-xl">
                   <Gamepad2 className="w-5 h-5 text-blue-500" />
                 </div>
-                <h2 className="text-2xl font-headline font-bold">Live Events 🔥</h2>
+                <h2 className="text-2xl font-headline font-bold text-slate-900 dark:text-white">Live Events 🔥</h2>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {activeEvents.map((event) => (
-                <Card key={event.id} className="group overflow-hidden rounded-[2.5rem] border-none shadow-xl bg-white transition-all hover:shadow-2xl hover:-translate-y-1">
+                <Card key={event.id} className="group overflow-hidden rounded-[2.5rem] border-none shadow-xl bg-white dark:bg-slate-900 transition-all hover:shadow-2xl hover:-translate-y-1">
                   <div className="relative aspect-[16/9] w-full">
                     <Image 
                       src={event.thumbnailUrl || 'https://picsum.photos/seed/event/600/400'} 
@@ -150,7 +150,7 @@ export default function HomeView() {
                     <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed mb-4">
                       {event.description}
                     </p>
-                    <div className="flex items-center justify-between pt-4 border-t border-slate-50">
+                    <div className="flex items-center justify-between pt-4 border-t border-slate-50 dark:border-white/5">
                       <div className="flex items-center gap-2 text-xs font-bold text-primary">
                         <Calendar className="w-4 h-4" />
                         Active Now
@@ -170,7 +170,7 @@ export default function HomeView() {
         <section className="pt-6">
           <div 
             onClick={() => setActiveTab('ranking')}
-            className="w-full p-8 rounded-[2.5rem] bg-gradient-to-r from-primary to-blue-600 text-white flex items-center justify-between group cursor-pointer shadow-2xl shadow-primary/30 active:scale-95 transition-all overflow-hidden relative"
+            className="w-full p-8 rounded-[2.5rem] bg-gradient-to-r from-primary to-blue-600 dark:from-cyan-600 dark:to-blue-800 text-white flex items-center justify-between group cursor-pointer shadow-2xl shadow-primary/30 active:scale-95 transition-all overflow-hidden relative"
           >
             <div className="absolute right-0 top-0 -mr-10 -mt-10 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:bg-white/20 transition-all duration-500" />
             <div className="relative z-10 flex items-center gap-6">

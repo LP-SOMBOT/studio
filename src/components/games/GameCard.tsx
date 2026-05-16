@@ -1,4 +1,3 @@
-
 "use client";
 
 import Image from "next/image";
@@ -31,8 +30,8 @@ export default function GameCard({ id, title, description, thumbnail, price, dis
   const discountPercent = hasDiscount ? Math.round(((price - discountedPrice!) / price) * 100) : 0;
 
   return (
-    <Card className="group overflow-hidden bg-white border-gray-100 hover:shadow-xl hover:shadow-primary/10 transition-all duration-500 rounded-[2rem] flex flex-col h-full">
-      <div className="relative aspect-square w-full overflow-hidden bg-gray-50">
+    <Card className="group overflow-hidden bg-white dark:bg-slate-900 border-gray-100 dark:border-white/5 hover:shadow-xl hover:shadow-primary/10 transition-all duration-500 rounded-[2rem] flex flex-col h-full">
+      <div className="relative aspect-square w-full overflow-hidden bg-gray-50 dark:bg-slate-800">
         {thumbnail ? (
           <Image
             src={thumbnail}
@@ -54,7 +53,7 @@ export default function GameCard({ id, title, description, thumbnail, price, dis
         )}
       </div>
       <CardContent className="p-5 flex flex-col flex-grow">
-        <h3 className="font-headline font-bold text-lg mb-1 line-clamp-1">{title}</h3>
+        <h3 className="font-headline font-bold text-lg mb-1 line-clamp-1 text-slate-900 dark:text-white">{title}</h3>
         <p className="text-xs text-muted-foreground mb-4 line-clamp-2 leading-relaxed flex-grow">{description}</p>
         <div className="flex items-center gap-2 mt-auto">
           {hasDiscount ? (

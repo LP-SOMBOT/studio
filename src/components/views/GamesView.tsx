@@ -40,14 +40,14 @@ export default function GamesView() {
       <main className="container mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
           <div>
-            <h1 className="text-3xl font-headline font-bold mb-2 text-[#1A1A1A]">Game Store</h1>
+            <h1 className="text-3xl font-headline font-bold mb-2 text-[#1A1A1A] dark:text-white">Game Store</h1>
             <p className="text-muted-foreground">Find the best deals for your favorite games.</p>
           </div>
           
           <div className="relative w-full md:w-96">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input 
-              className="pl-12 h-14 rounded-2xl border-none shadow-lg shadow-gray-100 bg-white" 
+              className="pl-12 h-14 rounded-2xl border-none shadow-lg shadow-gray-100 dark:shadow-none dark:bg-slate-900 bg-white" 
               placeholder="Search games or packages..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -72,7 +72,7 @@ export default function GamesView() {
           <Tabs defaultValue="all" className="space-y-8" onValueChange={setActiveTab}>
             <div className="flex flex-col gap-4">
               <div className="flex items-center justify-between overflow-x-auto pb-2 scrollbar-hide">
-                <TabsList className="bg-white p-1.5 rounded-2xl border border-gray-100 shadow-sm">
+                <TabsList className="bg-white dark:bg-slate-900 p-1.5 rounded-2xl border border-gray-100 dark:border-white/5 shadow-sm">
                   {categories.map((cat) => (
                     <TabsTrigger 
                       key={cat.id} 
@@ -94,11 +94,11 @@ export default function GamesView() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-20 bg-white rounded-[2.5rem] border border-dashed border-gray-200">
-                  <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Search className="w-10 h-10 text-gray-300" />
+                <div className="text-center py-20 bg-white dark:bg-slate-900/40 rounded-[2.5rem] border border-dashed border-gray-200 dark:border-white/10">
+                  <div className="w-20 h-20 bg-gray-50 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Search className="w-10 h-10 text-gray-300 dark:text-slate-600" />
                   </div>
-                  <h3 className="text-xl font-headline font-bold">No packages found</h3>
+                  <h3 className="text-xl font-headline font-bold text-slate-900 dark:text-white">No packages found</h3>
                   <p className="text-muted-foreground">Try adjusting your search or filters.</p>
                 </div>
               )}

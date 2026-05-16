@@ -124,7 +124,7 @@ export default function ProfileView() {
             {user.photoURL ? (
               <Image src={user.photoURL} alt="" fill className="object-cover" unoptimized />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-slate-300">
+              <div className="w-full h-full flex items-center justify-center text-slate-300 dark:text-slate-700">
                 <User size={60} />
               </div>
             )}
@@ -144,7 +144,7 @@ export default function ProfileView() {
 
         <div className="space-y-2">
           <div className="flex items-center justify-center gap-2">
-            <h2 className="text-3xl font-headline font-bold">{user.name}</h2>
+            <h2 className="text-3xl font-headline font-bold text-slate-900 dark:text-white">{user.name}</h2>
             {user.isAdmin && <ShieldCheck size={24} className="text-primary fill-primary/10" />}
           </div>
           <div className="flex items-center justify-center gap-2">
@@ -232,7 +232,7 @@ export default function ProfileView() {
          <DialogContent className="rounded-[3.5rem] p-0 border-none shadow-2xl max-w-md bg-white dark:bg-slate-900 max-h-[90vh] overflow-y-auto scrollbar-hide">
             <div className="h-2 bg-primary w-full" />
             <DialogHeader className="p-8 pb-0">
-               <DialogTitle className="text-2xl font-headline font-bold">Update Profile</DialogTitle>
+               <DialogTitle className="text-2xl font-headline font-bold text-slate-900 dark:text-white">Update Profile</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleUpdate} className="p-8 space-y-6">
                <div className="flex justify-center mb-6">
@@ -241,7 +241,7 @@ export default function ProfileView() {
                      {editData.photoURL ? (
                        <Image src={editData.photoURL} alt="" fill className="object-cover" unoptimized />
                      ) : (
-                       <div className="w-full h-full flex flex-col items-center justify-center text-slate-300">
+                       <div className="w-full h-full flex flex-col items-center justify-center text-slate-300 dark:text-slate-700">
                           <User size={50} />
                        </div>
                      )}
@@ -308,12 +308,12 @@ function ProfileOption({ icon: Icon, label, onClick, variant }: { icon: any, lab
       <div className="flex items-center gap-4">
          <div className={cn(
            "w-10 h-10 rounded-xl flex items-center justify-center shadow-sm",
-           variant === 'admin' ? "bg-white/10" : variant === 'danger' ? "bg-red-50 dark:bg-red-500/10 text-red-500" : "bg-primary/10 text-primary"
+           variant === 'admin' ? "bg-white/10" : variant === 'danger' ? "bg-red-50 dark:bg-red-500/10 text-red-500" : "bg-primary/10 dark:bg-primary/20 text-primary"
          )}>
             <Icon size={20} />
          </div>
          <span className={cn(
-           "font-bold text-sm",
+           "font-bold text-sm text-slate-900 dark:text-white",
            variant === 'danger' ? "text-red-500" : ""
          )}>{label}</span>
       </div>

@@ -44,7 +44,7 @@
     --secondary-foreground: 210 40% 98%;
     --muted: 217.2 32.6% 12%;
     --muted-foreground: 215 20.2% 65.1%;
-    --accent: 191 100% 50%;
+    --accent: 263 70% 50%;
     --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
@@ -59,7 +59,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground antialiased selection:bg-sky-200 selection:text-sky-900;
+    @apply bg-background text-foreground antialiased selection:bg-sky-200 selection:text-sky-900 dark:selection:bg-cyan-900 dark:selection:text-cyan-100;
   }
 }
 

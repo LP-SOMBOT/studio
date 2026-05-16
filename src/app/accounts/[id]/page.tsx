@@ -42,7 +42,7 @@ export default function AccountDetailPage() {
 
   if (!post) {
     return (
-      <div className="min-h-screen pb-24 space-y-6 bg-slate-50">
+      <div className="min-h-screen pb-24 space-y-6 bg-slate-50 dark:bg-slate-950">
         <Skeleton className="h-64 w-full" />
         <div className="px-6 space-y-4">
            <Skeleton className="h-10 w-3/4 rounded-xl" />
@@ -55,16 +55,16 @@ export default function AccountDetailPage() {
   const images = (post.imageUrls && post.imageUrls.length > 0) ? post.imageUrls : [post.thumbnailUrl];
 
   return (
-    <div className="min-h-screen pb-32 bg-slate-50 page-transition">
+    <div className="min-h-screen pb-32 bg-slate-50 dark:bg-transparent page-transition">
       {/* Custom Sticky Header */}
-      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100 h-16 flex items-center px-4 gap-4">
+      <header className="sticky top-0 z-50 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-gray-100 dark:border-white/5 h-16 flex items-center px-4 gap-4">
          <button 
            onClick={() => router.push('/#accounts')} 
-           className="p-2 text-slate-900 rounded-full hover:bg-slate-100 transition-colors"
+           className="p-2 text-slate-900 dark:text-white rounded-full hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors"
          >
             <ArrowLeft size={24} />
          </button>
-         <h1 className="text-lg font-headline font-bold text-slate-900">Faahfaahinta Account</h1>
+         <h1 className="text-lg font-headline font-bold text-slate-900 dark:text-white">Faahfaahinta Account</h1>
       </header>
 
       <main className="max-w-2xl mx-auto">
@@ -129,7 +129,7 @@ export default function AccountDetailPage() {
            <div className="flex justify-between items-start">
               <div>
                  <div className="flex items-center gap-3 mb-2">
-                   <h2 className="text-3xl font-headline font-bold text-slate-900">{post.authorName}</h2>
+                   <h2 className="text-3xl font-headline font-bold text-slate-900 dark:text-white">{post.authorName}</h2>
                    <Badge className="rounded-full bg-blue-500 text-white border-none text-[10px] font-bold">{post.platform}</Badge>
                  </div>
                  <p className="text-sm text-muted-foreground font-medium">{format(new Date(post.createdAt), 'PPpp')}</p>
@@ -147,10 +147,10 @@ export default function AccountDetailPage() {
            </div>
 
            <div className="space-y-4">
-              <h3 className="text-xl font-headline font-bold">Premium Items</h3>
+              <h3 className="text-xl font-headline font-bold text-slate-900 dark:text-white">Premium Items</h3>
               <div className="flex flex-wrap gap-2">
                  {post.items.map((item: string, i: number) => (
-                   <Badge key={i} className="bg-white text-slate-600 border border-slate-100 rounded-xl px-4 py-2 text-xs font-bold shadow-sm">
+                   <Badge key={i} className="bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-100 dark:border-white/5 rounded-xl px-4 py-2 text-xs font-bold shadow-sm">
                       {item}
                    </Badge>
                  ))}
@@ -158,23 +158,23 @@ export default function AccountDetailPage() {
            </div>
 
            {/* Comments Section placeholder */}
-           <section className="space-y-6 pt-10 border-t border-slate-100">
-              <h3 className="text-xl font-headline font-bold">Faallooyinka</h3>
+           <section className="space-y-6 pt-10 border-t border-slate-100 dark:border-white/5">
+              <h3 className="text-xl font-headline font-bold text-slate-900 dark:text-white">Faallooyinka</h3>
               <div className="space-y-6">
                  {/* Empty state for comments */}
                  <div className="py-10 text-center opacity-20">
-                    <MessageSquare size={40} className="mx-auto mb-2" />
-                    <p className="text-sm font-bold">Wali wax faallo ah looma reebin</p>
+                    <MessageSquare size={40} className="mx-auto mb-2 dark:text-white" />
+                    <p className="text-sm font-bold dark:text-white">Wali wax faallo ah looma reebin</p>
                  </div>
               </div>
               
               <div className="flex gap-3 items-center">
-                 <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden relative shrink-0">
+                 <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden relative shrink-0">
                     {user?.photoURL && <Image src={user.photoURL} alt="" fill className="object-cover" />}
                  </div>
                  <Input 
                    placeholder="Ku qor faalladaada..." 
-                   className="rounded-full h-12 bg-white border-none shadow-sm"
+                   className="rounded-full h-12 bg-white dark:bg-slate-900 border-none shadow-sm dark:shadow-none"
                    value={commentInput}
                    onChange={e => setCommentInput(e.target.value)}
                  />
@@ -185,7 +185,7 @@ export default function AccountDetailPage() {
       </main>
 
       {/* Floating Buy Button */}
-      <div className="fixed bottom-0 left-0 right-0 p-6 bg-white/60 backdrop-blur-xl border-t border-slate-100 flex items-center justify-center z-50">
+      <div className="fixed bottom-0 left-0 right-0 p-6 bg-white/60 dark:bg-slate-950/60 backdrop-blur-xl border-t border-slate-100 dark:border-white/5 flex items-center justify-center z-50">
          <Button 
            onClick={() => buyAccountPost(post)}
            disabled={post.sold}
@@ -225,10 +225,10 @@ export default function AccountDetailPage() {
 
 function StatItem({ label, value, icon: Icon, color }: { label: string, value: any, icon: any, color: string }) {
   return (
-    <div className="bg-white p-4 rounded-3xl flex flex-col items-center text-center gap-2 border border-slate-50 shadow-sm">
+    <div className="bg-white dark:bg-slate-900 p-4 rounded-3xl flex flex-col items-center text-center gap-2 border border-slate-50 dark:border-white/5 shadow-sm">
        <Icon size={20} className={color} />
        <div>
-         <p className="text-sm font-bold text-slate-900 leading-none">{value}</p>
+         <p className="text-sm font-bold text-slate-900 dark:text-white leading-none">{value}</p>
          <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mt-1">{label}</p>
        </div>
     </div>

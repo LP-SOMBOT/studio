@@ -79,13 +79,13 @@ export default function AccountsView() {
   }
 
   return (
-    <div className="min-h-screen pb-24 page-transition bg-slate-50">
-      <header className="sticky top-0 z-50 bg-white shadow-sm border-b border-gray-100 h-16 flex items-center justify-between px-6">
-        <h1 className="text-xl font-headline font-bold text-slate-900 tracking-tight">Marketplace</h1>
-        <button onClick={() => setIsActivityModalOpen(true)} className="relative p-2 text-slate-400 bg-slate-50 rounded-full">
+    <div className="min-h-screen pb-24 page-transition bg-slate-50 dark:bg-transparent">
+      <header className="sticky top-0 z-50 bg-white dark:bg-slate-950/80 dark:backdrop-blur-md shadow-sm border-b border-gray-100 dark:border-white/5 h-16 flex items-center justify-between px-6">
+        <h1 className="text-xl font-headline font-bold text-slate-900 dark:text-white tracking-tight">Marketplace</h1>
+        <button onClick={() => setIsActivityModalOpen(true)} className="relative p-2 text-slate-400 bg-slate-50 dark:bg-slate-900 rounded-full">
            <Activity size={20} />
            {myActivity.some(p => p.status === 'pending') && (
-             <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-amber-500 rounded-full border-2 border-white" />
+             <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-amber-500 rounded-full border-2 border-white dark:border-slate-900" />
            )}
         </button>
       </header>
@@ -95,7 +95,7 @@ export default function AccountsView() {
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input 
             placeholder="Search accounts or sellers..." 
-            className="pl-12 h-14 rounded-2xl bg-white border-none shadow-sm"
+            className="pl-12 h-14 rounded-2xl bg-white dark:bg-slate-900 border-none shadow-sm dark:shadow-none"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -103,11 +103,11 @@ export default function AccountsView() {
 
         {approvedPosts.length === 0 ? (
           <div className="py-20 text-center space-y-6 opacity-30 flex flex-col items-center">
-            <div className="w-24 h-24 bg-slate-200 rounded-full flex items-center justify-center">
-              <ShieldCheck size={40} />
+            <div className="w-24 h-24 bg-slate-200 dark:bg-slate-800 rounded-full flex items-center justify-center">
+              <ShieldCheck size={40} className="text-slate-400 dark:text-slate-600" />
             </div>
             <div>
-               <h3 className="font-bold text-xl">No active listings</h3>
+               <h3 className="font-bold text-xl text-slate-900 dark:text-white">No active listings</h3>
                <p className="text-sm">Be the first to sell your account!</p>
             </div>
           </div>
@@ -144,9 +144,9 @@ export default function AccountsView() {
       />
       
       <Dialog open={isActivityModalOpen} onOpenChange={setIsActivityModalOpen}>
-         <DialogContent className="max-w-md rounded-[2.5rem] p-0 border-none shadow-2xl bg-white">
+         <DialogContent className="max-w-md rounded-[2.5rem] p-0 border-none shadow-2xl bg-white dark:bg-slate-900">
             <DialogHeader className="p-8 pb-4">
-               <DialogTitle className="text-2xl font-headline font-bold">Account Activity</DialogTitle>
+               <DialogTitle className="text-2xl font-headline font-bold text-slate-900 dark:text-white">Account Activity</DialogTitle>
             </DialogHeader>
             <div className="p-6 pt-0 space-y-4 max-h-[60vh] overflow-y-auto">
                {myActivity.length === 0 ? (
@@ -156,19 +156,19 @@ export default function AccountsView() {
                  </div>
                ) : (
                  myActivity.map(p => (
-                   <Card key={p.id} className="p-4 rounded-2xl border-none bg-slate-50 flex items-center justify-between">
+                   <Card key={p.id} className="p-4 rounded-2xl border-none bg-slate-50 dark:bg-slate-800 flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                         <div className="w-10 h-10 rounded-lg overflow-hidden bg-slate-200 relative">
+                         <div className="w-10 h-10 rounded-lg overflow-hidden bg-slate-200 dark:bg-slate-700 relative">
                             {p.thumbnailUrl && <Image src={p.thumbnailUrl} alt="" fill className="object-cover" />}
                          </div>
                          <div>
-                            <p className="text-xs font-bold text-slate-900">Lv {p.level} Account</p>
+                            <p className="text-xs font-bold text-slate-900 dark:text-white">Lv {p.level} Account</p>
                             <p className="text-[9px] font-bold text-muted-foreground uppercase">{p.platform}</p>
                          </div>
                       </div>
                       <Badge className={cn(
                         "rounded-full text-[8px] font-bold",
-                        p.status === 'approved' ? "bg-green-100 text-green-700" : p.status === 'pending' ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"
+                        p.status === 'approved' ? "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400" : p.status === 'pending' ? "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400" : "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400"
                       )}>
                         {p.status.toUpperCase()}
                       </Badge>
@@ -180,7 +180,7 @@ export default function AccountsView() {
       </Dialog>
 
       <Dialog open={!!deletingPostId} onOpenChange={(open) => !open && setDeletingPostId(null)}>
-        <DialogContent className="max-w-sm rounded-[2rem]">
+        <DialogContent className="max-w-sm rounded-[2rem] bg-white dark:bg-slate-900">
            <DialogHeader>
              <DialogTitle>Confirm Delete</DialogTitle>
              <DialogDescription>Ma hubtaa inaad tirtirto post-kan? Tani lagama noqon karo.</DialogDescription>
@@ -201,20 +201,20 @@ function AccountPostCard({ post, onClick, onEdit, onDelete, isOwner }: { post: a
   return (
     <Card 
       onClick={onClick}
-      className="rounded-[2.5rem] border-none shadow-xl bg-white overflow-hidden transition-all active:scale-[0.98] group cursor-pointer"
+      className="rounded-[2.5rem] border-none shadow-xl bg-white dark:bg-slate-900 overflow-hidden transition-all active:scale-[0.98] group cursor-pointer"
     >
-      <div className="p-5 flex items-center justify-between bg-slate-50/50">
+      <div className="p-5 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/40">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden relative border border-white">
+          <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden relative border border-white dark:border-white/10">
             {post.authorAvatar ? (
               <Image src={post.authorAvatar} alt="" fill className="object-cover" />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-slate-300"><User size={20} /></div>
+              <div className="w-full h-full flex items-center justify-center text-slate-300 dark:text-slate-600"><User size={20} /></div>
             )}
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <p className="font-bold text-sm text-slate-900">{post.authorName}</p>
+              <p className="font-bold text-sm text-slate-900 dark:text-white">{post.authorName}</p>
               <Badge className={cn(
                 "rounded-full text-[8px] font-bold px-2 py-0 border-none",
                 isGoogle ? "bg-blue-500 text-white" : "bg-[#1877F2] text-white"
@@ -249,23 +249,23 @@ function AccountPostCard({ post, onClick, onEdit, onDelete, isOwner }: { post: a
 
       <div className="p-6 space-y-4">
         <div className="grid grid-cols-2 gap-4">
-           <div className="flex items-center gap-2 text-xs font-bold text-slate-600">
+           <div className="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-400">
              <Star className="w-4 h-4 text-amber-500" /> Lv {post.level || 0}
            </div>
-           <div className="flex items-center gap-2 text-xs font-bold text-slate-600">
+           <div className="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-400">
              <Calendar className="w-4 h-4 text-blue-500" /> {post.age || 'N/A'}
            </div>
         </div>
 
         <div className="flex gap-2 overflow-x-auto scrollbar-hide">
            {(post.items || []).slice(0, 3).map((item: string, i: number) => (
-             <Badge key={i} className="bg-amber-100 text-amber-700 border-none rounded-full px-3 py-1 text-[10px] font-bold whitespace-nowrap">
+             <Badge key={i} className="bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 border-none rounded-full px-3 py-1 text-[10px] font-bold whitespace-nowrap">
                 {item}
              </Badge>
            ))}
         </div>
 
-        <div className="flex items-center justify-between pt-4 border-t border-slate-50">
+        <div className="flex items-center justify-between pt-4 border-t border-slate-50 dark:border-white/5">
            <div>
              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Price</p>
              <p className="text-2xl font-headline font-bold text-primary">${post.price?.toFixed(2)}</p>
@@ -410,13 +410,13 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
 
   return (
     <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if(!v) setHasTriggeredUssd(false); }}>
-      <DialogContent className="max-w-xl h-[92vh] overflow-y-auto rounded-[3.5rem] p-0 border-none shadow-2xl bg-white scrollbar-hide">
-        <div className="sticky top-0 z-20 bg-white/80 backdrop-blur-md px-8 pt-8 pb-4 flex items-center justify-between">
+      <DialogContent className="max-w-xl h-[92vh] overflow-y-auto rounded-[3.5rem] p-0 border-none shadow-2xl bg-white dark:bg-slate-900 scrollbar-hide">
+        <div className="sticky top-0 z-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md px-8 pt-8 pb-4 flex items-center justify-between">
            <div>
-              <DialogTitle className="text-3xl font-headline font-bold">{editingPost ? 'Update' : 'Iibi'} Account</DialogTitle>
+              <DialogTitle className="text-3xl font-headline font-bold text-slate-900 dark:text-white">{editingPost ? 'Update' : 'Iibi'} Account</DialogTitle>
               <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">Marketplace Listing</p>
            </div>
-           <button onClick={() => onOpenChange(false)} className="p-2 bg-slate-100 rounded-full text-slate-400 hover:bg-slate-200">
+           <button onClick={() => onOpenChange(false)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-400 hover:bg-slate-200">
               <X size={20} />
            </button>
         </div>
@@ -424,8 +424,8 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
         <form onSubmit={handleSubmit} className="px-8 space-y-10 pb-20 mt-4">
           <div className="space-y-6">
             <div className="flex items-center gap-3">
-               <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-primary"><ShieldCheck size={18} /></div>
-               <h3 className="font-headline font-bold text-lg">Connection Details</h3>
+               <div className="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-primary"><ShieldCheck size={18} /></div>
+               <h3 className="font-headline font-bold text-lg dark:text-white">Connection Details</h3>
             </div>
             
             <div className="space-y-3">
@@ -437,8 +437,8 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
                   className={cn(
                     "flex-1 h-20 rounded-[1.5rem] flex flex-col items-center justify-center gap-1 transition-all border-2",
                     formData.platform === "Google" 
-                      ? "bg-blue-50 border-blue-500 text-blue-600 shadow-lg shadow-blue-500/10" 
-                      : "bg-slate-50 border-transparent text-slate-400 opacity-60"
+                      ? "bg-blue-50 border-blue-500 text-blue-600 shadow-lg shadow-blue-500/10 dark:bg-blue-500/20 dark:border-blue-400 dark:text-blue-300" 
+                      : "bg-slate-50 border-transparent text-slate-400 opacity-60 dark:bg-slate-800"
                   )}
                 >
                   <Chrome size={24} />
@@ -451,7 +451,7 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
                     "flex-1 h-20 rounded-[1.5rem] flex flex-col items-center justify-center gap-1 transition-all border-2",
                     formData.platform === "Facebook" 
                       ? "bg-blue-600 border-blue-700 text-white shadow-lg shadow-blue-600/20 scale-105" 
-                      : "bg-slate-50 border-transparent text-slate-400 opacity-60"
+                      : "bg-slate-50 border-transparent text-slate-400 opacity-60 dark:bg-slate-800"
                   )}
                 >
                   <Facebook size={24} />
@@ -463,8 +463,8 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
 
           <div className="space-y-6">
             <div className="flex items-center gap-3">
-               <div className="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center text-amber-500"><Star size={18} /></div>
-               <h3 className="font-headline font-bold text-lg">Account Statistics</h3>
+               <div className="w-8 h-8 rounded-full bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center text-amber-500"><Star size={18} /></div>
+               <h3 className="font-headline font-bold text-lg dark:text-white">Account Statistics</h3>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -476,16 +476,16 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
                   required 
                   value={formData.level} 
                   onChange={e => setFormData({...formData, level: e.target.value})} 
-                  className="h-14 rounded-2xl bg-slate-50 border-none px-6 font-bold focus-visible:ring-primary shadow-inner" 
+                  className="h-14 rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-6 font-bold focus-visible:ring-primary shadow-inner" 
                 />
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1">Prime level</label>
                 <Select value={formData.primeLevel} onValueChange={(val) => setFormData({...formData, primeLevel: val})}>
-                  <SelectTrigger className="h-14 rounded-2xl bg-slate-50 border-none px-6 font-bold shadow-inner">
+                  <SelectTrigger className="h-14 rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-6 font-bold shadow-inner">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="rounded-2xl">
+                  <SelectContent className="rounded-2xl dark:bg-slate-900">
                     {[1, 2, 3, 4, 5, 6, 7, 8].map(l => <SelectItem key={l} value={l.toString()} className="rounded-xl">Level {l}</SelectItem>)}
                   </SelectContent>
                 </Select>
@@ -495,10 +495,10 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
             <div className="space-y-2">
                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1">Account Age</label>
                <Select value={formData.age} onValueChange={(val) => setFormData({...formData, age: val})}>
-                  <SelectTrigger className="h-14 rounded-2xl bg-slate-50 border-none px-6 font-bold shadow-inner">
+                  <SelectTrigger className="h-14 rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-6 font-bold shadow-inner">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="rounded-2xl">
+                  <SelectContent className="rounded-2xl dark:bg-slate-900">
                     {["Less than 1 year", "1-2 Years", "2-3 Years", "3-5 Years", "OG (5+ Years)"].map(a => <SelectItem key={a} value={a} className="rounded-xl">{a}</SelectItem>)}
                   </SelectContent>
                 </Select>
@@ -507,11 +507,11 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
 
           <div className="space-y-6">
             <div className="flex items-center gap-3">
-               <div className="w-8 h-8 rounded-full bg-purple-50 flex items-center justify-center text-purple-500"><LayoutGrid size={18} /></div>
-               <h3 className="font-headline font-bold text-lg">Exclusive Items</h3>
+               <div className="w-8 h-8 rounded-full bg-purple-50 dark:bg-purple-500/10 flex items-center justify-center text-purple-500"><LayoutGrid size={18} /></div>
+               <h3 className="font-headline font-bold text-lg dark:text-white">Exclusive Items</h3>
             </div>
             
-            <div className="p-5 bg-slate-50 rounded-[2rem] border border-slate-100">
+            <div className="p-5 bg-slate-50 dark:bg-slate-800/40 rounded-[2rem] border border-slate-100 dark:border-white/5">
                <div className="flex flex-wrap gap-2">
                   {popularItems.map(item => (
                     <Badge 
@@ -521,7 +521,7 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
                         "cursor-pointer px-4 py-2 rounded-xl text-[10px] font-bold transition-all border-none shadow-sm",
                         formData.items.includes(item) 
                           ? "bg-primary text-white scale-110 shadow-primary/20" 
-                          : "bg-white text-slate-500 hover:bg-slate-100"
+                          : "bg-white dark:bg-slate-800 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700"
                       )}
                     >
                       {item}
@@ -533,13 +533,13 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
 
           <div className="space-y-4">
             <div className="flex items-center gap-3 mb-2">
-               <div className="w-8 h-8 rounded-full bg-cyan-50 flex items-center justify-center text-cyan-500"><Gamepad2 size={18} /></div>
-               <h3 className="font-headline font-bold text-lg">Account Gallery</h3>
+               <div className="w-8 h-8 rounded-full bg-cyan-50 dark:bg-cyan-500/10 flex items-center justify-center text-cyan-500"><Gamepad2 size={18} /></div>
+               <h3 className="font-headline font-bold text-lg dark:text-white">Account Gallery</h3>
             </div>
             
             <div className="grid grid-cols-3 gap-3 mb-4">
                {previews.map((url, idx) => (
-                 <div key={idx} className="relative aspect-square rounded-2xl overflow-hidden group shadow-sm bg-slate-100 border border-slate-200">
+                 <div key={idx} className="relative aspect-square rounded-2xl overflow-hidden group shadow-sm bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-white/5">
                     <Image src={url} alt="" fill className="object-cover" unoptimized />
                     <button 
                       type="button"
@@ -553,7 +553,7 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
                     )}
                  </div>
                ))}
-               <label className="aspect-square rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 hover:bg-slate-100 hover:border-primary/50 transition-all flex flex-col items-center justify-center gap-1 cursor-pointer text-slate-400">
+               <label className="aspect-square rounded-2xl border-2 border-dashed border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800/40 hover:bg-slate-100 dark:hover:bg-slate-800 hover:border-primary/50 transition-all flex flex-col items-center justify-center gap-1 cursor-pointer text-slate-400">
                   <Plus size={24} />
                   <span className="text-[8px] font-bold uppercase">Add Photo</span>
                   <input type="file" accept="image/*" multiple onChange={handleFileChange} className="hidden" />
@@ -565,11 +565,11 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
 
           <div className="space-y-6">
             <div className="flex items-center gap-3">
-               <div className="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center text-green-500"><DollarSign size={18} /></div>
-               <h3 className="font-headline font-bold text-lg">Pricing Information</h3>
+               <div className="w-8 h-8 rounded-full bg-green-50 dark:bg-green-500/10 flex items-center justify-center text-green-500"><DollarSign size={18} /></div>
+               <h3 className="font-headline font-bold text-lg dark:text-white">Pricing Information</h3>
             </div>
 
-            <div className="p-6 bg-slate-900 rounded-[2.5rem] text-white space-y-6 shadow-2xl shadow-slate-900/20">
+            <div className="p-6 bg-slate-900 dark:bg-black/40 rounded-[2.5rem] text-white space-y-6 shadow-2xl shadow-slate-900/20">
                <div className="space-y-2">
                   <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest ml-2">Sale Price (Buyer Pays Exact)</label>
                   <div className="relative">
@@ -585,13 +585,13 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
                </div>
             </div>
             
-            <div className="bg-amber-50 p-6 rounded-[2rem] border border-amber-100 space-y-3">
-               <div className="flex items-center gap-2 text-amber-800">
+            <div className="bg-amber-50 dark:bg-amber-500/10 p-6 rounded-[2rem] border border-amber-100 dark:border-amber-500/20 space-y-3">
+               <div className="flex items-center gap-2 text-amber-800 dark:text-amber-400">
                   <Info size={16} />
                   <p className="text-xs font-bold uppercase tracking-wider">Account Listing Charge</p>
                </div>
-               <p className="text-[11px] font-medium text-amber-700 leading-relaxed">
-                  Marketplace-ka Oskar Shop waxaad ku iibin kartaa account-kaaga. Si account-ka loo soo geliyo, waxaa lagaa rabaa inaad bixiso listing fee dhan <span className="font-bold">${listingFee.toFixed(2)}</span>.
+               <p className="text-[11px] font-medium text-amber-700 dark:text-amber-500/80 leading-relaxed">
+                  Marketplace-ka Oskar Shop waxaad ku iibin kartaa account-kaaga. Si account-ka loo soo geliyo, waxaa lagaa rabaa inaad bixiso listing fee dhan <span className="font-bold text-amber-900 dark:text-amber-300">${listingFee.toFixed(2)}</span>.
                </p>
             </div>
           </div>
