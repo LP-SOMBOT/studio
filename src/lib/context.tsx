@@ -201,20 +201,41 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 const USER_CACHE_KEY = 'oskar_user_cache';
 const SETTINGS_CACHE_KEY = 'oskar_settings_cache';
 const PRODUCTS_CACHE_KEY = 'oskar_products_cache';
-const ACC_POSTS_CACHE_KEY = 'oskar_acc_posts_cache';
 const EVENTS_CACHE_KEY = 'oskar_events_cache';
 const BANNERS_CACHE_KEY = 'oskar_banners_cache';
-const ALL_USERS_CACHE_KEY = 'oskar_all_users_cache';
 
 const getCache = (key: string, fallback: any = null) => {
   if (typeof window === 'undefined') return fallback;
-  const data = localStorage.getItem(key);
-  return data ? JSON.parse(data) : fallback;
+  try {
+    const data = localStorage.getItem(key);
+    return data ? JSON.parse(data) : fallback;
+  } catch {
+    return fallback;
+  }
 };
 
 const setCache = (key: string, data: any) => {
   if (typeof window !== 'undefined') {
-    localStorage.setItem(key, JSON.stringify(data));
+    try {
+      localStorage.setItem(key, JSON.stringify(data));
+    } catch (e: any) {
+      console.warn("Storage quota exceeded, clearing cache to make room.");
+      if (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
+        // Remove non-critical caches
+        localStorage.removeItem(PRODUCTS_CACHE_KEY);
+        localStorage.removeItem(EVENTS_CACHE_KEY);
+        localStorage.removeItem(BANNERS_CACHE_KEY);
+        
+        // Try saving again if it's highly critical
+        try {
+          if (key === SETTINGS_CACHE_KEY || key === USER_CACHE_KEY) {
+            localStorage.setItem(key, JSON.stringify(data));
+          }
+        } catch {
+          // If still fails, give up
+        }
+      }
+    }
   }
 };
 
@@ -241,10 +262,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   // Initialize from cache
   const [storeSettings, setStoreSettings] = useState<StoreSettings>(() => getCache(SETTINGS_CACHE_KEY, {}));
   const [products, setProducts] = useState<GamePackage[]>(() => getCache(PRODUCTS_CACHE_KEY, []));
-  const [accountPosts, setAccountPosts] = useState<AccountPost[]>(() => getCache(ACC_POSTS_CACHE_KEY, []));
+  const [accountPosts, setAccountPosts] = useState<AccountPost[]>([]);
   const [events, setEvents] = useState<GameEvent[]>(() => getCache(EVENTS_CACHE_KEY, []));
   const [banners, setBanners] = useState<Banner[]>(() => getCache(BANNERS_CACHE_KEY, []));
-  const [allUsers, setAllUsers] = useState<UserProfile[]>(() => getCache(ALL_USERS_CACHE_KEY, []));
+  const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(() => getCache(USER_CACHE_KEY));
   
   const [orders, setOrders] = useState<Order[]>([]);
@@ -310,7 +331,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const unsubAccPosts = onValue(accPostsRef, (s) => {
       const data = s.val() ? Object.entries(s.val()).map(([id, v]: any) => ({ ...v, id })) : [];
       setAccountPosts(data);
-      setCache(ACC_POSTS_CACHE_KEY, data);
       setSyncStatus(prev => ({ ...prev, accPosts: true }));
     });
 
@@ -335,7 +355,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           uid: v.uid || uid
         }));
         setAllUsers(users);
-        setCache(ALL_USERS_CACHE_KEY, users);
       } else {
         setAllUsers([]);
       }
