@@ -432,7 +432,7 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1">Current Level</label>
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1">Account level</label>
                 <Input 
                   type="number" 
                   placeholder="e.g. 75"
@@ -443,7 +443,7 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1">Prime Status</label>
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1">Prime level</label>
                 <Select value={formData.primeLevel} onValueChange={(val) => setFormData({...formData, primeLevel: val})}>
                   <SelectTrigger className="h-14 rounded-2xl bg-slate-50 border-none px-6 font-bold shadow-inner">
                     <SelectValue />
