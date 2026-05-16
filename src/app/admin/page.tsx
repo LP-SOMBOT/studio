@@ -54,7 +54,8 @@ import {
   Phone,
   MessageCircle,
   SmartphoneIcon,
-  Home
+  Home,
+  ShieldAlert
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -146,12 +147,18 @@ export default function AdminPage() {
   const [isBannerDialogOpen, setIsBannerDialogOpen] = useState(false);
   const [isUserManageOpen, setIsUserManageOpen] = useState(false);
   const [isOrderDetailOpen, setIsOrderDetailOpen] = useState(false);
+  const [isAccountDetailOpen, setIsAccountDetailOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [editingEvent, setEditingEvent] = useState<any>(null);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [selectedAccount, setSelectedAccount] = useState<any>(null);
   const [pendingOrderStatus, setPendingStatus] = useState<string>("");
+  const [pendingAccountStatus, setPendingAccountStatus] = useState<string>("");
+
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string, type: 'user' | 'product' | 'event' | 'banner' | 'account' } | null>(null);
 
   const [productForm, setProductForm] = useState({ title: "", gameId: "freefire", category: "top-up", description: "", price: "", discountedPrice: "", thumbnail: "" });
   const [eventForm, setEventForm] = useState({ title: "", description: "", thumbnailUrl: "", type: "freefire_event", active: true });
@@ -209,6 +216,31 @@ export default function AdminPage() {
     setSelectedOrder(order);
     setPendingStatus(order.status);
     setIsOrderDetailOpen(true);
+  };
+
+  const handleOpenAccountDialog = (acc: any) => {
+    setSelectedAccount(acc);
+    setPendingAccountStatus(acc.status);
+    setIsAccountDetailOpen(true);
+  };
+
+  const confirmDelete = (id: string, type: 'user' | 'product' | 'event' | 'banner' | 'account') => {
+    setDeleteTarget({ id, type });
+    setIsDeleteDialogOpen(true);
+  };
+
+  const executeDelete = async () => {
+    if (!deleteTarget) return;
+    try {
+      if (deleteTarget.type === 'user') await deleteUser(deleteTarget.id);
+      if (deleteTarget.type === 'product') await deleteProduct(deleteTarget.id);
+      if (deleteTarget.type === 'event') await deleteEvent(deleteTarget.id);
+      if (deleteTarget.type === 'banner') await deleteBanner(deleteTarget.id);
+      toast({ title: "Deleted Successfully" });
+    } finally {
+      setDeleteTarget(null);
+      setIsDeleteDialogOpen(false);
+    }
   };
 
   const handleSaveProduct = async (e: React.FormEvent) => {
@@ -284,6 +316,18 @@ export default function AdminPage() {
     }
   };
 
+  const handleAccountStatusSave = async () => {
+    if (!selectedAccount || !pendingAccountStatus) return;
+    setIsSavingStatus(true);
+    try {
+      await updateAccountPostStatus(selectedAccount.id, pendingAccountStatus);
+      toast({ title: `Listing set to ${pendingAccountStatus}` });
+      setIsAccountDetailOpen(false);
+    } finally {
+      setIsSavingStatus(false);
+    }
+  };
+
   const handleImageUpload = async (file: File, target: 'product' | 'event' | 'banner' | 'offline' | 'logo') => {
     setIsUploading(true);
     try {
@@ -346,6 +390,15 @@ export default function AdminPage() {
     return matchesSearch && matchesStatus;
   });
 
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'approved': case 'successful': return "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400";
+      case 'pending': return "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400";
+      case 'processing': return "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400";
+      default: return "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400";
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex overflow-hidden">
       <aside className={cn("h-screen bg-white dark:bg-slate-900 border-r border-slate-100 dark:border-white/5 flex flex-col transition-all duration-300 z-40", isSidebarExpanded ? "w-64" : "w-20")}>
@@ -354,21 +407,12 @@ export default function AdminPage() {
           <button onClick={() => setIsSidebarExpanded(!isSidebarExpanded)} className="p-2 text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl"><Menu size={20} /></button>
         </div>
         <nav className="flex-1 px-4 py-6 space-y-2">
-          {/* Quick Return Link */}
-          <SideNavItem 
-            active={false} 
-            expanded={isSidebarExpanded} 
-            onClick={() => router.push('/')} 
-            icon={Home} 
-            label="Back to Store" 
-            className="text-primary hover:bg-primary/5 mb-4"
-          />
+          <SideNavItem active={false} expanded={isSidebarExpanded} onClick={() => router.push('/')} icon={Home} label="Back to Store" className="text-primary hover:bg-primary/5 mb-4" />
           <div className="h-px bg-slate-50 dark:bg-white/5 my-4 mx-2" />
-          
           <SideNavItem active={activeView === 'dashboard'} expanded={isSidebarExpanded} onClick={() => setActiveView('dashboard')} icon={LayoutDashboard} label="Dashboard" />
           <SideNavItem active={activeView === 'orders'} expanded={isSidebarExpanded} onClick={() => setActiveView('orders')} icon={ShoppingBag} label="Orders" />
           <SideNavItem active={activeView === 'products'} expanded={isSidebarExpanded} onClick={() => setActiveView('products')} icon={Package} label="Inventory" />
-          <SideNavItem active={activeView === 'account-posts'} expanded={isSidebarExpanded} onClick={() => setActiveView('account-posts')} icon={Gamepad2} label="Suuqa Listings" />
+          <SideNavItem active={activeView === 'account-posts'} expanded={isSidebarExpanded} onClick={() => setActiveView('account-posts')} icon={Gamepad2} label="Marketplace" />
           <SideNavItem active={activeView === 'events'} expanded={isSidebarExpanded} onClick={() => setActiveView('events')} icon={Calendar} label="Live Events" />
           <SideNavItem active={activeView === 'users'} expanded={isSidebarExpanded} onClick={() => setActiveView('users')} icon={Users} label="Users" />
           <SideNavItem active={activeView === 'settings'} expanded={isSidebarExpanded} onClick={() => setActiveView('settings')} icon={SettingsIcon} label="Settings" />
@@ -408,10 +452,7 @@ export default function AdminPage() {
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" opacity={0.1} />
                       <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{fill: '#94A3B8', fontSize: 10}} />
                       <YAxis axisLine={false} tickLine={false} tick={{fill: '#94A3B8', fontSize: 10}} />
-                      <Tooltip 
-                        contentStyle={{backgroundColor: '#1E293B', border: 'none', borderRadius: '12px', color: '#fff'}}
-                        itemStyle={{color: '#0EA5E9'}}
-                      />
+                      <Tooltip contentStyle={{backgroundColor: '#1E293B', border: 'none', borderRadius: '12px', color: '#fff'}} itemStyle={{color: '#0EA5E9'}} />
                       <Area type="monotone" dataKey="value" stroke="#0EA5E9" fillOpacity={0.1} fill="#0EA5E9" strokeWidth={4} />
                     </AreaChart>
                  </ResponsiveContainer>
@@ -451,12 +492,8 @@ export default function AdminPage() {
                            </div>
                         </TableCell>
                         <TableCell className="font-bold text-slate-900 dark:text-white">${o.total?.toFixed(2)}</TableCell>
-                        <TableCell>
-                           <Badge className={cn("rounded-full uppercase text-[8px] font-bold border-none", o.status === 'successful' ? "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400" : o.status === 'pending' ? "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400" : "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400")}>{o.status}</Badge>
-                        </TableCell>
-                        <TableCell className="text-right px-8">
-                           <Button size="sm" onClick={() => handleOpenOrderDialog(o)} className="rounded-full h-8 px-4 font-bold text-[10px] gap-2"><Eye size={12} /> Details</Button>
-                        </TableCell>
+                        <TableCell><Badge className={cn("rounded-full uppercase text-[8px] font-bold border-none", getStatusBadge(o.status))}>{o.status}</Badge></TableCell>
+                        <TableCell className="text-right px-8"><Button size="sm" onClick={() => handleOpenOrderDialog(o)} className="rounded-full h-8 px-4 font-bold text-[10px] gap-2"><Eye size={12} /> Details</Button></TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -472,16 +509,14 @@ export default function AdminPage() {
                 <Button onClick={() => handleOpenProductDialog()} className="h-12 rounded-xl gap-2 font-bold shadow-lg shadow-primary/20"><PlusCircle size={20} /> Add Item</Button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {products.length === 0 ? (
-                   <div className="col-span-full py-20 text-center text-slate-400 italic">No inventory items found.</div>
-                ) : products.map(p => (
+                {products.map(p => (
                   <Card key={p.id} className="p-6 rounded-[2rem] border-none shadow-xl bg-white dark:bg-slate-900 flex gap-4">
                     <div className="w-20 h-20 rounded-2xl bg-slate-100 dark:bg-slate-800 overflow-hidden relative shadow-inner">
                       {p.thumbnail ? <Image src={p.thumbnail} alt="" fill className="object-cover" /> : <ImageIcon className="m-auto absolute inset-0 text-slate-200 dark:text-slate-700" />}
                     </div>
                     <div className="flex-1 flex flex-col justify-between">
                        <div><h4 className="font-bold text-slate-900 dark:text-white leading-tight">{p.title}</h4><p className="text-[10px] font-bold text-primary uppercase">{p.gameId}</p></div>
-                       <div className="flex justify-between items-end"><span className="font-bold text-lg text-primary">${p.price}</span><div className="flex gap-2"><Button size="icon" variant="ghost" className="h-8 w-8 text-blue-500" onClick={() => handleOpenProductDialog(p)}><Edit size={16} /></Button><Button size="icon" variant="ghost" className="h-8 w-8 text-red-500" onClick={() => deleteProduct(p.id)}><Trash2 size={16} /></Button></div></div>
+                       <div className="flex justify-between items-end"><span className="font-bold text-lg text-primary">${p.price}</span><div className="flex gap-2"><Button size="icon" variant="ghost" className="h-8 w-8 text-blue-500" onClick={() => handleOpenProductDialog(p)}><Edit size={16} /></Button><Button size="icon" variant="ghost" className="h-8 w-8 text-red-500" onClick={() => confirmDelete(p.id, 'product')}><Trash2 size={16} /></Button></div></div>
                     </div>
                   </Card>
                 ))}
@@ -489,61 +524,36 @@ export default function AdminPage() {
             </div>
           )}
 
-          {activeView === 'events' && (
-             <div className="space-y-6">
-                <div className="flex justify-between items-center">
-                   <h3 className="text-xl font-bold text-slate-900 dark:text-white">Manage Free Fire Events</h3>
-                   <Button onClick={() => handleOpenEventDialog()} className="h-12 rounded-xl font-bold gap-2"><Sparkles size={20} /> New Event</Button>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                   {events.length === 0 ? (
-                      <div className="col-span-full py-20 text-center text-slate-400 italic border-2 border-dashed rounded-[2.5rem] dark:border-white/5">No events published yet.</div>
-                   ) : events.map(ev => (
-                      <Card key={ev.id} className="rounded-[2.5rem] overflow-hidden border-none shadow-xl bg-white dark:bg-slate-900">
-                         <div className="aspect-video relative bg-slate-100 dark:bg-slate-800">
-                            {ev.thumbnailUrl && <Image src={ev.thumbnailUrl} alt="" fill className="object-cover" />}
-                            {!ev.active && <div className="absolute inset-0 bg-black/60 flex items-center justify-center"><Badge variant="destructive">INACTIVE</Badge></div>}
-                         </div>
-                         <div className="p-6 space-y-4">
-                            <div><h4 className="text-lg font-bold text-slate-900 dark:text-white">{ev.title}</h4><p className="text-xs text-muted-foreground line-clamp-2">{ev.description}</p></div>
-                            <div className="flex justify-between items-center pt-4 border-t dark:border-white/5"><Badge variant="outline" className="rounded-full px-3 dark:border-white/10">{ev.type}</Badge><div className="flex gap-2"><Button size="sm" variant="ghost" className="text-blue-500" onClick={() => handleOpenEventDialog(ev)}><Edit size={16} /></Button><Button size="sm" variant="ghost" className="text-red-500" onClick={() => deleteEvent(ev.id)}><Trash2 size={16} /></Button></div></div>
-                         </div>
-                      </Card>
-                   ))}
-                </div>
-             </div>
-          )}
-
           {activeView === 'account-posts' && (
-            <Card className="rounded-[2rem] overflow-hidden border-none shadow-xl bg-white dark:bg-slate-900">
-               <Table>
-                  <TableHeader className="bg-slate-50/50 dark:bg-slate-800/40">
-                     <TableRow className="border-none">
-                        <TableHead className="px-8">Seller</TableHead>
-                        <TableHead>Details</TableHead>
-                        <TableHead>Price</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-right px-8">Actions</TableHead>
-                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                     {accountPosts.length === 0 ? (
-                        <TableRow><TableCell colSpan={5} className="h-40 text-center text-slate-400 italic">No account listings found.</TableCell></TableRow>
-                     ) : accountPosts.map(p => (
-                        <TableRow key={p.id} className="border-slate-50 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-slate-800/30">
-                           <TableCell className="px-8"><div className="flex items-center gap-3"><div className="w-8 h-8 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800 relative">{p.authorAvatar && <Image src={p.authorAvatar} alt="" fill className="object-cover" />}</div><span className="font-bold text-xs text-slate-900 dark:text-white">{p.authorName}</span></div></TableCell>
-                           <TableCell><div className="flex flex-col"><span className="text-xs font-bold text-slate-900 dark:text-white">Lv {p.level}</span><span className="text-[9px] uppercase font-bold text-slate-400 dark:text-slate-500">{p.platform}</span></div></TableCell>
-                           <TableCell className="font-bold text-primary">${p.price}</TableCell>
-                           <TableCell><Badge className={cn("rounded-full text-[8px] font-bold uppercase border-none", p.status === 'approved' ? "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400" : p.status === 'pending' ? "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400" : "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400")}>{p.status}</Badge></TableCell>
-                           <TableCell className="text-right px-8"><div className="flex justify-end gap-2">
-                             <Button size="icon" variant="ghost" className="h-8 w-8 text-green-500" onClick={() => updateAccountPostStatus(p.id, 'approved')}><CheckCircle2 size={16} /></Button>
-                             <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500" onClick={() => updateAccountPostStatus(p.id, 'rejected')}><XCircle size={16} /></Button>
-                           </div></TableCell>
+            <div className="space-y-6">
+               <Card className="rounded-[2rem] overflow-hidden border-none shadow-xl bg-white dark:bg-slate-900">
+                  <Table>
+                     <TableHeader className="bg-slate-50/50 dark:bg-slate-800/40">
+                        <TableRow className="border-none">
+                           <TableHead className="px-8">Seller</TableHead>
+                           <TableHead>Details</TableHead>
+                           <TableHead>Price</TableHead>
+                           <TableHead>Status</TableHead>
+                           <TableHead className="text-right px-8">Actions</TableHead>
                         </TableRow>
-                     ))}
-                  </TableBody>
-               </Table>
-            </Card>
+                     </TableHeader>
+                     <TableBody>
+                        {accountPosts.map(p => (
+                           <TableRow key={p.id} className="border-slate-50 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-slate-800/30">
+                              <TableCell className="px-8"><div className="flex items-center gap-3"><div className="w-8 h-8 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800 relative">{p.authorAvatar && <Image src={p.authorAvatar} alt="" fill className="object-cover" />}</div><span className="font-bold text-xs text-slate-900 dark:text-white">{p.authorName}</span></div></TableCell>
+                              <TableCell><div className="flex flex-col"><span className="text-xs font-bold text-slate-900 dark:text-white">Lv {p.level}</span><span className="text-[9px] uppercase font-bold text-slate-400 dark:text-slate-500">{p.platform}</span></div></TableCell>
+                              <TableCell className="font-bold text-primary">${p.price}</TableCell>
+                              <TableCell><Badge className={cn("rounded-full text-[8px] font-bold uppercase border-none", getStatusBadge(p.status))}>{p.status}</Badge></TableCell>
+                              <TableCell className="text-right px-8"><div className="flex justify-end gap-2">
+                                <Button size="sm" onClick={() => handleOpenAccountDialog(p)} className="rounded-full h-8 px-4 font-bold text-[10px] gap-2"><Eye size={12} /> View</Button>
+                                <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500" onClick={() => confirmDelete(p.id, 'account')}><Trash2 size={16} /></Button>
+                              </div></TableCell>
+                           </TableRow>
+                        ))}
+                     </TableBody>
+                  </Table>
+               </Card>
+            </div>
           )}
 
           {activeView === 'users' && (
@@ -564,13 +574,8 @@ export default function AdminPage() {
                         <TableCell className="px-8"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800 relative">{u.photoURL && <Image src={u.photoURL} alt="" fill className="object-cover" />}</div><div className="flex flex-col"><span className="font-bold text-slate-900 dark:text-white text-xs">{u.name}</span>{u.banned && <Badge variant="destructive" className="h-4 text-[8px]">BANNED</Badge>}</div></div></TableCell>
                         <TableCell><div className="flex flex-col"><span className="text-[10px] font-bold text-slate-600 dark:text-slate-400">{u.email}</span><span className="text-[9px] text-slate-400 dark:text-slate-500">{u.phoneNumber}</span></div></TableCell>
                         <TableCell><Badge variant="secondary" className="rounded-full text-[9px] uppercase font-bold dark:bg-slate-800 dark:text-slate-300 border-none">{u.role}</Badge></TableCell>
-                        <TableCell>
-                           <div className="flex items-center gap-1.5">
-                             <Star size={12} className="text-amber-500 fill-amber-500" />
-                             <span className="font-bold text-slate-900 dark:text-white">{u.points || 0}</span>
-                           </div>
-                        </TableCell>
-                        <TableCell className="text-right px-8"><div className="flex justify-end gap-2"><Button size="icon" variant="ghost" onClick={() => { setSelectedUser(u); setIsUserManageOpen(true); }} className="text-primary hover:bg-primary/5 rounded-xl"><UserCog size={18} /></Button><Button size="icon" variant="ghost" onClick={() => deleteUser(u.uid)} className="text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl"><Trash2 size={18} /></Button></div></TableCell>
+                        <TableCell><div className="flex items-center gap-1.5"><Star size={12} className="text-amber-500 fill-amber-500" /><span className="font-bold text-slate-900 dark:text-white">{u.points || 0}</span></div></TableCell>
+                        <TableCell className="text-right px-8"><div className="flex justify-end gap-2"><Button size="icon" variant="ghost" onClick={() => { setSelectedUser(u); setIsUserManageOpen(true); }} className="text-primary hover:bg-primary/5 rounded-xl"><UserCog size={18} /></Button><Button size="icon" variant="ghost" onClick={() => confirmDelete(u.uid, 'user')} className="text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl"><Trash2 size={18} /></Button></div></TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -583,269 +588,121 @@ export default function AdminPage() {
               <Accordion type="single" collapsible className="w-full space-y-4">
                  <AccordionItem value="ticker" className="border-none bg-white dark:bg-slate-900 rounded-[2rem] px-8 shadow-lg">
                     <AccordionTrigger className="hover:no-underline"><div className="flex items-center gap-4 text-left"><div className="p-3 bg-blue-50 dark:bg-blue-500/10 text-primary rounded-2xl"><Sparkles size={20} /></div><div><h4 className="font-bold text-slate-900 dark:text-white">Announcement Ticker</h4><p className="text-xs text-muted-foreground">Manage the homepage scrolling note</p></div></div></AccordionTrigger>
-                    <AccordionContent className="pb-8 space-y-4">
-                       <Label className="text-[10px] font-bold uppercase tracking-widest ml-1 text-slate-400">Ticker Text Content</Label>
-                       <Textarea 
-                        defaultValue={storeSettings.announcementTicker}
-                        onBlur={e => updateStoreSettings({ announcementTicker: e.target.value })}
-                        className="rounded-2xl bg-slate-50 dark:bg-slate-800 border-none min-h-[100px] text-sm font-bold shadow-inner"
-                        placeholder="Welcome to Oskar Shop..."
-                       />
-                       <p className="text-[10px] text-muted-foreground italic">* Changes reflect immediately on refresh for all users.</p>
-                    </AccordionContent>
+                    <AccordionContent className="pb-8 space-y-4"><Label className="text-[10px] font-bold uppercase tracking-widest ml-1 text-slate-400">Ticker Text Content</Label><Textarea defaultValue={storeSettings.announcementTicker} onBlur={e => updateStoreSettings({ announcementTicker: e.target.value })} className="rounded-2xl bg-slate-50 dark:bg-slate-800 border-none min-h-[100px] text-sm font-bold shadow-inner" placeholder="Welcome to Oskar Shop..." /><p className="text-[10px] text-muted-foreground italic">* Changes reflect immediately on refresh for all users.</p></AccordionContent>
                  </AccordionItem>
-
                  <AccordionItem value="banners" className="border-none bg-white dark:bg-slate-900 rounded-[2rem] px-8 shadow-lg">
                     <AccordionTrigger className="hover:no-underline"><div className="flex items-center gap-4 text-left"><div className="p-3 bg-amber-50 dark:bg-amber-500/10 text-amber-500 rounded-2xl"><Layers size={20} /></div><div><h4 className="font-bold text-slate-900 dark:text-white">Homepage Banners</h4><p className="text-xs text-muted-foreground">Manage slider images and promotions</p></div></div></AccordionTrigger>
-                    <AccordionContent className="pb-8 space-y-6">
-                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {banners.map(b => (
-                             <div key={b.id} className="relative aspect-[21/9] rounded-2xl overflow-hidden shadow-md group">
-                                <Image src={b.imageUrl} alt="" fill className="object-cover" />
-                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                   <Button size="icon" variant="destructive" className="rounded-full" onClick={() => deleteBanner(b.id)}><Trash2 size={16} /></Button>
-                                </div>
-                             </div>
-                          ))}
-                          <button onClick={() => setIsBannerDialogOpen(true)} className="aspect-[21/9] rounded-2xl border-3 border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center text-slate-300 dark:text-slate-700 hover:border-primary hover:text-primary transition-all gap-2 bg-slate-50 dark:bg-slate-800/40">
-                             <PlusCircle size={32} />
-                             <span className="text-xs font-bold uppercase">Add New Banner</span>
-                          </button>
-                       </div>
-                    </AccordionContent>
+                    <AccordionContent className="pb-8 space-y-6"><div className="grid grid-cols-1 md:grid-cols-2 gap-4">{banners.map(b => (<div key={b.id} className="relative aspect-[21/9] rounded-2xl overflow-hidden shadow-md group"><Image src={b.imageUrl} alt="" fill className="object-cover" /><div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2"><Button size="icon" variant="destructive" className="rounded-full" onClick={() => confirmDelete(b.id, 'banner')}><Trash2 size={16} /></Button></div></div>))}<button onClick={() => setIsBannerDialogOpen(true)} className="aspect-[21/9] rounded-2xl border-3 border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center text-slate-300 dark:text-slate-700 hover:border-primary hover:text-primary transition-all gap-2 bg-slate-50 dark:bg-slate-800/40"><PlusCircle size={32} /><span className="text-xs font-bold uppercase">Add New Banner</span></button></div></AccordionContent>
                  </AccordionItem>
-
-                 <AccordionItem value="maintenance" className="border-none bg-white dark:bg-slate-900 rounded-[2rem] px-8 shadow-lg">
-                    <AccordionTrigger className="hover:no-underline"><div className="flex items-center gap-4 text-left"><div className="p-3 bg-red-50 dark:bg-red-500/10 text-red-500 rounded-2xl"><MonitorOff size={20} /></div><div><h4 className="font-bold text-slate-900 dark:text-white">Maintenance & Kill-Switch</h4><p className="text-xs text-muted-foreground">Take the store offline for updates</p></div></div></AccordionTrigger>
-                    <AccordionContent className="pb-8 space-y-6">
-                       <div className="flex items-center justify-between p-6 bg-slate-900 dark:bg-black/40 text-white rounded-[1.5rem]">
-                          <div><p className="font-bold">Maintenance Mode</p><p className="text-xs text-white/40">Only admins can browse when active</p></div>
-                          <Switch checked={storeSettings.appStatus?.offline} onCheckedChange={val => updateStoreSettings({ appStatus: { ...storeSettings.appStatus, offline: val } })} />
-                       </div>
-                       <div className="space-y-4">
-                          <div className="space-y-2"><Label className="text-[10px] font-bold uppercase tracking-widest ml-1 text-slate-400">Offline Title</Label><Input defaultValue={storeSettings.appStatus?.offlineTitle} onBlur={e => updateStoreSettings({ appStatus: { ...storeSettings.appStatus, offlineTitle: e.target.value } })} className="h-12 rounded-xl bg-slate-50 dark:bg-slate-800 border-none shadow-inner" /></div>
-                          <div className="space-y-2"><Label className="text-[10px] font-bold uppercase tracking-widest ml-1 text-slate-400">Offline Hero Media</Label><div className="relative h-40 w-full rounded-[1.5rem] overflow-hidden bg-slate-100 dark:bg-slate-800 group border-2 border-dashed dark:border-white/5 flex flex-col items-center justify-center">{storeSettings.appStatus?.offlineImageUrl ? <Image src={storeSettings.appStatus.offlineImageUrl} alt="" fill className="object-cover opacity-50" /> : <ImageIcon size={32} className="text-slate-300 dark:text-slate-700" />}<Button variant="secondary" className="relative z-10 rounded-full h-10 px-6 font-bold shadow-lg"><input type="file" accept="image/*" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'offline')} className="absolute inset-0 opacity-0 cursor-pointer" />{isUploading ? <Loader2 className="animate-spin mr-2" /> : <Plus size={16} className="mr-2" />}Change Media</Button></div></div>
-                       </div>
-                    </AccordionContent>
-                 </AccordionItem>
-
-                 <AccordionItem value="security" className="border-none bg-white dark:bg-slate-900 rounded-[2rem] px-8 shadow-lg">
-                    <AccordionTrigger className="hover:no-underline"><div className="flex items-center gap-4 text-left"><div className="p-3 bg-purple-50 dark:bg-purple-500/10 text-purple-500 rounded-2xl"><Shield size={20} /></div><div><h4 className="font-bold text-slate-900 dark:text-white">Marketplace & Security</h4><p className="text-xs text-muted-foreground">Fees, access control and global configuration</p></div></div></AccordionTrigger>
-                    <AccordionContent className="pb-8 space-y-6">
-                       <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2"><Label className="text-[10px] font-bold uppercase tracking-widest ml-1 text-slate-400">Control Panel PIN</Label><Input type="password" maxLength={6} defaultValue={storeSettings.config?.adminSettings?.pin} onBlur={e => updateStoreSettings({ config: { ...storeSettings.config, adminSettings: { ...storeSettings.config?.adminSettings, pin: e.target.value } } })} className="h-12 rounded-xl bg-slate-50 dark:bg-slate-800 border-none shadow-inner" /></div>
-                          <div className="space-y-2"><Label className="text-[10px] font-bold uppercase tracking-widest ml-1 text-slate-400">Account Listing Fee ($)</Label><Input type="number" defaultValue={storeSettings.config?.shop?.listingFee || 1} onBlur={e => updateStoreSettings({ config: { ...storeSettings.config, shop: { ...storeSettings.config?.shop, listingFee: parseFloat(e.target.value) } } })} className="h-12 rounded-xl bg-slate-50 dark:bg-slate-800 border-none shadow-inner" /></div>
-                       </div>
-                    </AccordionContent>
-                 </AccordionItem>
-
-                 <AccordionItem value="branding" className="border-none bg-white dark:bg-slate-900 rounded-[2rem] px-8 shadow-lg">
-                    <AccordionTrigger className="hover:no-underline"><div className="flex items-center gap-4 text-left"><div className="p-3 bg-cyan-50 dark:bg-cyan-500/10 text-cyan-500 rounded-2xl"><ImageIcon size={20} /></div><div><h4 className="font-bold text-slate-900 dark:text-white">Identity & Branding</h4><p className="text-xs text-muted-foreground">Manage store logo and themes</p></div></div></AccordionTrigger>
-                    <AccordionContent className="pb-8 space-y-6">
-                       <div className="flex items-center gap-6">
-                          <div className="w-24 h-24 rounded-2xl bg-slate-100 dark:bg-slate-800 relative overflow-hidden flex items-center justify-center">
-                             {storeSettings.logo ? <Image src={storeSettings.logo} alt="Logo" fill className="object-cover" /> : <p className="text-[10px] font-bold opacity-30">NO LOGO</p>}
-                          </div>
-                          <div className="flex-1 space-y-3">
-                             <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Store Official Logo</Label>
-                             <div className="relative">
-                               <Button variant="outline" className="w-full h-12 rounded-xl border-dashed dark:border-white/10 dark:bg-slate-800">Upload New Logo</Button>
-                               <input type="file" accept="image/*" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'logo')} className="absolute inset-0 opacity-0 cursor-pointer" />
-                             </div>
-                             <p className="text-[10px] text-muted-foreground uppercase">Recommended: Square PNG Transparent</p>
-                          </div>
-                       </div>
-                    </AccordionContent>
-                 </AccordionItem>
-
               </Accordion>
             </div>
           )}
-
         </main>
       </div>
 
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="max-w-sm rounded-[2rem] bg-white dark:bg-slate-900">
+           <DialogHeader>
+             <DialogTitle className="flex items-center gap-2 text-red-500"><ShieldAlert /> Warning</DialogTitle>
+             <DialogDescription className="font-bold">Ma hubtaa inaad tirtirto shaygan? Tallaabadan lagama noqon karo.</DialogDescription>
+           </DialogHeader>
+           <DialogFooter className="gap-2 pt-4">
+             <Button variant="ghost" onClick={() => setIsDeleteDialogOpen(false)} className="rounded-xl flex-1">Dib u noqo</Button>
+             <Button variant="destructive" onClick={executeDelete} className="rounded-xl flex-1">Haa, Tirtir</Button>
+           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={isUserManageOpen} onOpenChange={setIsUserManageOpen}>
         <DialogContent className="max-w-md w-[95vw] rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl bg-white dark:bg-slate-900 max-h-[90vh] overflow-y-auto scrollbar-hide">
-          <DialogHeader className="sr-only">
-            <DialogTitle>User Management: {selectedUser?.name || 'User'}</DialogTitle>
-          </DialogHeader>
+          <DialogHeader className="sr-only"><DialogTitle>User Management</DialogTitle></DialogHeader>
           {selectedUser && (
             <div className="flex flex-col">
               <div className="bg-slate-900 p-8 text-white"><div className="flex items-center gap-4"><div className="w-16 h-16 rounded-full overflow-hidden border-2 border-white/20 relative">{selectedUser.photoURL ? <Image src={selectedUser.photoURL} alt="" fill className="object-cover" /> : <User size={32} className="m-4 text-white/40" />}</div><div><h2 className="text-2xl font-bold font-headline">{selectedUser.name}</h2><p className="text-xs text-white/40">{selectedUser.email}</p></div></div></div>
               <div className="p-8 space-y-8">
                 <div className="space-y-4"><h3 className="text-xs font-bold uppercase text-slate-400 flex items-center gap-2"><Shield size={14} /> Permissions</h3><div className="grid grid-cols-2 gap-2">{['user', 'staff', 'admin'].map(r => <Button key={r} variant={selectedUser.role === r ? "default" : "outline"} onClick={() => manageUser(selectedUser.uid, { role: r as any })} className="h-11 rounded-2xl text-[10px] uppercase font-bold dark:border-white/5">{r}</Button>)}</div></div>
                 <div className="space-y-4"><h3 className="text-xs font-bold uppercase text-slate-400 flex items-center gap-2"><Star size={14} /> Points Balance</h3><div className="bg-slate-50 dark:bg-slate-800 rounded-[2rem] p-6 text-center shadow-inner"><p className="text-4xl font-headline font-bold mb-6 text-slate-900 dark:text-white">{selectedUser.points || 0}</p><div className="flex gap-2"><Input type="number" placeholder="Amount" value={pointAdjustment} onChange={e => setPointAdjustment(e.target.value)} className="h-12 rounded-xl border-none bg-white dark:bg-slate-700 shadow-sm text-center font-bold" /><Button onClick={() => handleAdjustPoints('credit')} className="bg-green-600"><ArrowUpCircle /></Button><Button onClick={() => handleAdjustPoints('debit')} className="bg-red-600"><ArrowDownCircle /></Button></div></div></div>
-                <div className="pt-6 border-t dark:border-white/5 flex flex-col gap-3"><Button variant={selectedUser.banned ? "outline" : "destructive"} onClick={handleBanUser} className="w-full h-14 rounded-2xl gap-2 font-bold">{selectedUser.banned ? <CheckCircle2 /> : <Ban />} {selectedUser.banned ? "Unban Account" : "Ban Account"}</Button><p className="text-[9px] text-center text-slate-400 font-bold uppercase">Actions recorded for audit logs</p></div>
+                <div className="pt-6 border-t dark:border-white/5 flex flex-col gap-3"><Button variant={selectedUser.banned ? "outline" : "destructive"} onClick={handleBanUser} className="w-full h-14 rounded-2xl gap-2 font-bold">{selectedUser.banned ? <CheckCircle2 /> : <Ban />} {selectedUser.banned ? "Unban Account" : "Ban Account"}</Button></div>
               </div>
             </div>
           )}
         </DialogContent>
       </Dialog>
 
-      <Dialog open={isProductDialogOpen} onOpenChange={setIsProductDialogOpen}>
-        <DialogContent className="max-w-xl w-[95vw] rounded-[3rem] p-8 border-none bg-white dark:bg-slate-900 max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle className="text-2xl font-headline font-bold text-slate-900 dark:text-white">Manage Inventory Item</DialogTitle></DialogHeader>
-          <form onSubmit={handleSaveProduct} className="space-y-6 pt-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2"><Label className="text-slate-400">Title</Label><Input required value={productForm.title} onChange={e => setProductForm({...productForm, title: e.target.value})} className="h-12 dark:bg-slate-800 dark:border-none" /></div>
-              <div className="space-y-2">
-                <Label className="text-slate-400">Game Category</Label>
-                <Select value={productForm.gameId} onValueChange={val => setProductForm({...productForm, gameId: val})}>
-                  <SelectTrigger className="h-12 rounded-xl dark:bg-slate-800 dark:border-none">
-                    <SelectValue placeholder="Select Game" />
-                  </SelectTrigger>
-                  <SelectContent className="dark:bg-slate-900">
-                    <SelectItem value="freefire" className="rounded-lg">Free Fire</SelectItem>
-                    <SelectItem value="bloodstrike" className="rounded-lg">Blood Strike</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2"><Label className="text-slate-400">Price ($)</Label><Input type="number" required value={productForm.price} onChange={e => setProductForm({...productForm, price: e.target.value})} className="h-12 dark:bg-slate-800 dark:border-none" /></div>
-              <div className="space-y-2"><Label className="text-slate-400">Discount Price</Label><Input type="number" value={productForm.discountedPrice} onChange={e => setProductForm({...productForm, discountedPrice: e.target.value})} className="h-12 dark:bg-slate-800 dark:border-none" /></div>
-            </div>
-            <div className="space-y-2"><Label className="text-slate-400">Description</Label><Textarea required value={productForm.description} onChange={e => setProductForm({...productForm, description: e.target.value})} className="min-h-[80px] dark:bg-slate-800 dark:border-none" /></div>
-            <div className="relative h-32 w-full rounded-2xl border-2 border-dashed dark:border-white/5 bg-slate-50 dark:bg-slate-800/40 flex items-center justify-center overflow-hidden">{productForm.thumbnail ? <Image src={productForm.thumbnail} alt="" fill className="object-cover" /> : <ImageIcon size={24} className="text-slate-300 dark:text-slate-700" />}<Button variant="outline" className="relative z-10" type="button"><input type="file" accept="image/*" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'product')} className="absolute inset-0 opacity-0 cursor-pointer" />Upload</Button></div>
-            <Button type="submit" disabled={isUploading} className="w-full h-14 rounded-2xl font-bold">{isUploading ? <Loader2 className="animate-spin" /> : "Save Changes"}</Button>
-          </form>
-        </DialogContent>
-      </Dialog>
-      
-      <Dialog open={isEventDialogOpen} onOpenChange={setIsEventDialogOpen}>
-        <DialogContent className="max-w-xl w-[95vw] rounded-[3rem] p-8 border-none bg-white dark:bg-slate-900 max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle className="text-2xl font-headline font-bold text-slate-900 dark:text-white">Live Event Hub</DialogTitle></DialogHeader>
-          <form onSubmit={handleSaveEvent} className="space-y-6 pt-4">
-            <div className="space-y-2"><Label className="text-slate-400">Event Title</Label><Input required value={eventForm.title} onChange={e => setEventForm({...eventForm, title: e.target.value})} className="h-12 dark:bg-slate-800 dark:border-none" /></div>
-            <div className="space-y-2"><Label className="text-slate-400">Short Description</Label><Textarea required value={eventForm.description} onChange={e => setEventForm({...eventForm, description: e.target.value})} className="min-h-[100px] dark:bg-slate-800 dark:border-none" /></div>
-            <div className="relative h-40 w-full rounded-2xl border-2 border-dashed dark:border-white/5 bg-slate-50 dark:bg-slate-800/40 flex items-center justify-center overflow-hidden">{eventForm.thumbnailUrl ? <Image src={eventForm.thumbnailUrl} alt="" fill className="object-cover" /> : <ImageIcon size={24} className="text-slate-300 dark:text-slate-700" />}<Button variant="outline" className="relative z-10" type="button"><input type="file" accept="image/*" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'event')} className="absolute inset-0 opacity-0 cursor-pointer" />Upload Poster</Button></div>
-            <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl"><Label className="text-slate-900 dark:text-white">Event Active Status</Label><Switch checked={eventForm.active} onCheckedChange={val => setEventForm({...eventForm, active: val})} /></div>
-            <Button type="submit" disabled={isUploading} className="w-full h-14 rounded-2xl font-bold">{isUploading ? <Loader2 className="animate-spin" /> : "Publish Event"}</Button>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={isBannerDialogOpen} onOpenChange={setIsBannerDialogOpen}>
-        <DialogContent className="max-w-md w-[95vw] rounded-[3rem] p-8 border-none bg-white dark:bg-slate-900 max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle className="text-2xl font-headline font-bold text-slate-900 dark:text-white">New Promotion Banner</DialogTitle></DialogHeader>
-          <div className="space-y-6 pt-4">
-            <div className="relative h-48 w-full rounded-2xl border-2 border-dashed dark:border-white/5 bg-slate-50 dark:bg-slate-800/40 flex items-center justify-center overflow-hidden">{bannerForm.imageUrl ? <Image src={bannerForm.imageUrl} alt="" fill className="object-cover" /> : <ImageIcon size={24} className="text-slate-300 dark:text-slate-700" />}<Button variant="outline" className="relative z-10" type="button"><input type="file" accept="image/*" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'banner')} className="absolute inset-0 opacity-0 cursor-pointer" />Upload Banner</Button></div>
-            <div className="space-y-2"><Label className="text-slate-400">Redirect Hash (Optional)</Label><Input value={bannerForm.linkTo || ""} onChange={e => setBannerForm({...bannerForm, linkTo: e.target.value})} placeholder="#games" className="h-12 dark:bg-slate-800 dark:border-none" /></div>
-            <Button onClick={handleSaveBanner} disabled={isUploading || !bannerForm.imageUrl} className="w-full h-14 rounded-2xl font-bold">Add Banner ✓</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
       <Dialog open={isOrderDetailOpen} onOpenChange={setIsOrderDetailOpen}>
         <DialogContent className="max-w-3xl w-[95vw] rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl bg-white dark:bg-slate-900 max-h-[90vh] overflow-y-auto">
-          <DialogHeader className="sr-only">
-            <DialogTitle>Order Details: {selectedOrder?.id || 'Order'}</DialogTitle>
-          </DialogHeader>
+          <DialogHeader className="sr-only"><DialogTitle>Order Details</DialogTitle></DialogHeader>
           {selectedOrder && (
             <div className="flex flex-col">
               <div className="bg-slate-900 p-10 text-white relative">
                  <Badge className="bg-primary text-white mb-2 font-mono border-none">ORDER {selectedOrder.id.toUpperCase()}</Badge>
                  <h2 className="text-3xl font-headline font-bold">Order Verification</h2>
-                 <button onClick={() => setIsOrderDetailOpen(false)} className="absolute top-8 right-8 text-white/20 hover:text-white transition-colors">
-                    <X size={24} />
-                 </button>
+                 <button onClick={() => setIsOrderDetailOpen(false)} className="absolute top-8 right-8 text-white/20 hover:text-white"><X size={24} /></button>
               </div>
-              
+              <div className="p-10 space-y-10">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                  <div><h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Customer</h4><Card className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800 border-none flex flex-col gap-4 shadow-inner"><div className="flex items-center gap-4"><div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary"><User size={24} /></div><div className="min-w-0"><p className="text-sm font-bold text-slate-900 dark:text-white truncate">{selectedOrder.gameDetails?.playerName || "N/A"}</p><p className="text-[10px] text-muted-foreground uppercase font-mono tracking-tight">{selectedOrder.gameDetails?.playerID || "N/A"}</p></div></div><div className="space-y-2 pt-2 border-t dark:border-white/5"><div className="flex justify-between items-center"><span className="text-[10px] font-bold text-slate-400">Sender:</span><span className="text-xs font-bold text-primary">{selectedOrder.gameDetails?.senderNumber || "N/A"}</span></div></div></Card></div>
+                  <div><h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Item</h4><Card className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800 border-none flex items-center gap-4 shadow-inner h-full"><div className="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center text-amber-500"><Package size={24} /></div><div><p className="text-sm font-bold text-slate-900 dark:text-white">{selectedOrder.items?.[0]?.title}</p><p className="text-[10px] text-primary font-bold uppercase">${selectedOrder.total?.toFixed(2)}</p></div></Card></div>
+                </div>
+                <div className="pt-8 border-t dark:border-white/5 space-y-6">
+                   <div className="flex flex-col gap-2"><Label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest ml-1">Process Action</Label><Select value={pendingOrderStatus} onValueChange={setPendingStatus}><SelectTrigger className="h-16 rounded-2xl font-bold text-lg bg-slate-50 dark:bg-slate-800 border-none"><SelectValue /></SelectTrigger><SelectContent className="rounded-2xl dark:bg-slate-900">{["pending", "processing", "successful", "cancelled"].map(s => <SelectItem key={s} value={s} className="rounded-xl uppercase font-bold">{s}</SelectItem>)}</SelectContent></Select></div>
+                   <div className="flex gap-3"><Button variant="outline" onClick={() => setIsOrderDetailOpen(false)} className="flex-1 h-16 rounded-2xl font-bold">Cancel</Button><Button onClick={handleStatusSave} disabled={isSavingStatus || pendingOrderStatus === selectedOrder.status} className="flex-[2] h-16 rounded-2xl font-bold text-lg shadow-xl shadow-primary/20">{isSavingStatus ? <Loader2 className="animate-spin" /> : "Save Changes"}</Button></div>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isAccountDetailOpen} onOpenChange={setIsAccountDetailOpen}>
+        <DialogContent className="max-w-3xl w-[95vw] rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl bg-white dark:bg-slate-900 max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="sr-only"><DialogTitle>Marketplace Listing Verification</DialogTitle></DialogHeader>
+          {selectedAccount && (
+            <div className="flex flex-col">
+              <div className="bg-slate-900 p-10 text-white relative">
+                 <Badge className="bg-amber-500 text-white mb-2 font-mono border-none">LISTING {selectedAccount.id.toUpperCase()}</Badge>
+                 <h2 className="text-3xl font-headline font-bold">Listing Verification</h2>
+                 <button onClick={() => setIsAccountDetailOpen(false)} className="absolute top-8 right-8 text-white/20 hover:text-white"><X size={24} /></button>
+              </div>
               <div className="p-10 space-y-10">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                   <div>
-                    <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Customer Details</h4>
+                    <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Seller Details</h4>
                     <Card className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800 border-none flex flex-col gap-4 shadow-inner">
                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                             <User size={24} />
+                          <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600 relative overflow-hidden">
+                             {selectedAccount.authorAvatar ? <Image src={selectedAccount.authorAvatar} alt="" fill className="object-cover" /> : <User size={24} />}
                           </div>
-                          <div className="min-w-0">
-                             <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{selectedOrder.gameDetails?.playerName || "N/A"}</p>
-                             <p className="text-[10px] text-muted-foreground dark:text-slate-500 uppercase font-mono tracking-tight">{selectedOrder.gameDetails?.playerID || "N/A"}</p>
-                          </div>
-                       </div>
-                       
-                       <div className="space-y-2 pt-2 border-t border-slate-200/50 dark:border-white/5">
-                          <div className="flex items-center justify-between">
-                             <span className="text-[10px] font-bold text-slate-400 uppercase">Sender Number:</span>
-                             <span className="text-xs font-bold text-primary flex items-center gap-1.5"><Phone size={10} /> {selectedOrder.gameDetails?.senderNumber || "N/A"}</span>
-                          </div>
-                          {selectedOrder.gameDetails?.whatsappNumber && (
-                            <div className="flex items-center justify-between">
-                               <span className="text-[10px] font-bold text-slate-400 uppercase">WhatsApp:</span>
-                               <span className="text-xs font-bold text-green-600 dark:text-green-400 flex items-center gap-1.5"><MessageCircle size={10} /> {selectedOrder.gameDetails.whatsappNumber}</span>
-                            </div>
-                          )}
+                          <div><p className="text-sm font-bold text-slate-900 dark:text-white">{selectedAccount.authorName}</p><p className="text-[10px] text-muted-foreground uppercase font-mono">{selectedAccount.platform}</p></div>
                        </div>
                     </Card>
                   </div>
                   <div>
-                    <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Item Data</h4>
-                    <Card className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800 border-none flex items-center gap-4 shadow-inner h-full">
-                       <div className="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center text-amber-500">
-                          <Package size={24} />
-                       </div>
-                       <div>
-                          <p className="text-sm font-bold text-slate-900 dark:text-white">{selectedOrder.items?.[0]?.title}</p>
-                          <p className="text-[10px] text-primary font-bold uppercase">${selectedOrder.total?.toFixed(2)}</p>
-                          <Badge variant="outline" className="mt-1 text-[8px] border-slate-200 dark:border-white/10 dark:text-slate-400">{selectedOrder.paymentMethod}</Badge>
-                       </div>
+                    <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Listing Data</h4>
+                    <Card className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800 border-none space-y-2 shadow-inner">
+                       <div className="flex justify-between items-center"><span className="text-xs font-bold text-slate-400">Level:</span><span className="font-bold text-slate-900 dark:text-white">Lv {selectedAccount.level}</span></div>
+                       <div className="flex justify-between items-center"><span className="text-xs font-bold text-slate-400">Price:</span><span className="font-bold text-primary">${selectedAccount.price}</span></div>
                     </Card>
                   </div>
                 </div>
-
                 <div className="pt-8 border-t dark:border-white/5 space-y-6">
                    <div className="flex flex-col gap-2">
-                      <Label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest ml-1">Process Action</Label>
-                      <Select value={pendingOrderStatus} onValueChange={setPendingStatus}>
-                        <SelectTrigger className="h-16 rounded-2xl font-bold text-lg bg-slate-50 dark:bg-slate-800 border-none focus:ring-primary shadow-inner text-slate-900 dark:text-white">
+                      <Label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest ml-1">Marketplace Status</Label>
+                      <Select value={pendingAccountStatus} onValueChange={setPendingAccountStatus}>
+                        <SelectTrigger className="h-16 rounded-2xl font-bold text-lg bg-slate-50 dark:bg-slate-800 border-none shadow-inner">
                            <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="rounded-2xl dark:bg-slate-900">
-                           <SelectItem value="pending" className="rounded-xl">
-                             <div className="flex items-center gap-2">
-                               <Clock className="w-4 h-4 text-amber-500" />
-                               <span>Pending (Waiting)</span>
-                             </div>
-                           </SelectItem>
-                           <SelectItem value="processing" className="rounded-xl">
-                             <div className="flex items-center gap-2">
-                               <RefreshCw className="w-4 h-4 text-blue-500 animate-spin" />
-                               <span>Processing (In-Queue)</span>
-                             </div>
-                           </SelectItem>
-                           <SelectItem value="successful" className="rounded-xl">
-                             <div className="flex items-center gap-2">
-                               <CheckCircle2 className="w-4 h-4 text-green-500" />
-                               <span>Successful (Delivered)</span>
-                             </div>
-                           </SelectItem>
-                           <SelectItem value="cancelled" className="rounded-xl">
-                             <div className="flex items-center gap-2">
-                               <XCircle className="w-4 h-4 text-red-500" />
-                               <span>Cancelled (Refund/Issue)</span>
-                             </div>
-                           </SelectItem>
+                           {["pending", "processing", "approved", "rejected"].map(s => (
+                             <SelectItem key={s} value={s} className="rounded-xl uppercase font-bold">{s}</SelectItem>
+                           ))}
                         </SelectContent>
                       </Select>
                    </div>
-
                    <div className="flex gap-3">
-                      <Button 
-                        variant="outline" 
-                        onClick={() => setIsOrderDetailOpen(false)}
-                        className="flex-1 h-16 rounded-2xl font-bold border-slate-100 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-slate-800"
-                      >
-                         Cancel
-                      </Button>
-                      <Button 
-                        onClick={handleStatusSave}
-                        disabled={isSavingStatus || pendingOrderStatus === selectedOrder.status}
-                        className="flex-[2] h-16 rounded-2xl font-bold text-lg shadow-xl shadow-primary/20"
-                      >
-                         {isSavingStatus ? <Loader2 className="animate-spin" /> : "Save Changes"}
+                      <Button variant="outline" onClick={() => setIsAccountDetailOpen(false)} className="flex-1 h-16 rounded-2xl font-bold">Cancel</Button>
+                      <Button onClick={handleAccountStatusSave} disabled={isSavingStatus || pendingAccountStatus === selectedAccount.status} className="flex-[2] h-16 rounded-2xl font-bold text-lg shadow-xl shadow-primary/20">
+                         {isSavingStatus ? <Loader2 className="animate-spin" /> : "Xaqiiji Listing-ka"}
                       </Button>
                    </div>
                 </div>
