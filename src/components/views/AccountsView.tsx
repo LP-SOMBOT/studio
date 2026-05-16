@@ -458,7 +458,7 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
           <div className="space-y-6">
             <div className="flex items-center gap-3">
                <div className="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-primary"><ShieldCheck size={18} /></div>
-               <h3 className="font-headline font-bold text-lg dark:text-white">Connection Details</h3>
+               <h3 className="font-headline font-bold text-lg dark:text-white">Account ka platform ka Ku xeran</h3>
             </div>
             
             <div className="space-y-3">
