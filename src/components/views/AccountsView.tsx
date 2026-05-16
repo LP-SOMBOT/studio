@@ -567,7 +567,7 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
           <div className="space-y-4">
             <div className="flex items-center gap-3 mb-2">
                <div className="w-8 h-8 rounded-full bg-cyan-50 dark:bg-cyan-500/10 flex items-center justify-center text-cyan-500"><Gamepad2 size={18} /></div>
-               <h3 className="font-headline font-bold text-lg dark:text-white">Account Gallery</h3>
+               <h3 className="font-headline font-bold text-lg dark:text-white">Sawirada account ka</h3>
             </div>
             
             <div className="grid grid-cols-3 md:grid-cols-4 gap-3 mb-4">
@@ -593,7 +593,7 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
                </label>
             </div>
             
-            <p className="text-[9px] text-muted-foreground italic px-1">* The first image will be used as the lobby thumbnail.</p>
+            <p className="text-[9px] text-muted-foreground italic px-1">* Sawirka ugu horeye waa midka postinga kasoo muuqanaayo</p>
           </div>
 
           <div className="space-y-6">
