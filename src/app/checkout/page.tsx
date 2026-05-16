@@ -367,7 +367,7 @@ function CheckoutContent() {
             <PartyPopper className="absolute -top-3 -right-3 w-8 h-8 text-yellow-500 animate-bounce" />
           </div>
           
-          <h1 className="text-4xl font-headline font-bold mb-4 text-slate-900 dark:text-white">Boom! Success.</h1>
+          <h1 className="text-4xl font-headline font-bold mb-4 text-slate-900 dark:text-white">Waa Lagu guuleystay!</h1>
           <p className="text-base text-muted-foreground dark:text-slate-400 max-w-sm mb-10 leading-relaxed">
             Your order is now being processed. We'll send the diamonds to <span className="font-bold text-foreground dark:text-white">@{gameDetails.playerName || "your account"}</span> shortly!
           </p>
