@@ -615,6 +615,37 @@ export default function AdminPage() {
           {activeView === 'settings' && (
             <div className="max-w-3xl space-y-8 animate-in slide-in-from-bottom-8">
               <Accordion type="single" collapsible className="w-full space-y-4">
+                 <AccordionItem value="general" className="border-none bg-white dark:bg-slate-900 rounded-[2rem] px-8 shadow-lg">
+                    <AccordionTrigger className="hover:no-underline"><div className="flex items-center gap-4 text-left"><div className="p-3 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-500 rounded-2xl"><SettingsIcon size={20} /></div><div><h4 className="font-bold text-slate-900 dark:text-white">General Store Config</h4><p className="text-xs text-muted-foreground">Logo, Live Status, and Fees</p></div></div></AccordionTrigger>
+                    <AccordionContent className="pb-8 space-y-6">
+                       <div className="space-y-4">
+                          <Label className="text-[10px] font-bold uppercase text-slate-400">Store Logo</Label>
+                          <div className="flex items-center gap-6">
+                             <div className="w-20 h-20 rounded-2xl bg-slate-100 dark:bg-slate-800 relative overflow-hidden border-2 border-dashed border-slate-200 dark:border-white/5 flex items-center justify-center">
+                                {storeSettings.logo ? <Image src={storeSettings.logo} alt="" fill className="object-contain p-2" unoptimized /> : <ImageIcon className="text-slate-300" />}
+                             </div>
+                             <div className="flex-1 space-y-2">
+                                <Input type="file" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'logo')} className="h-10 rounded-xl dark:bg-slate-800 border-none" />
+                                <p className="text-[9px] text-muted-foreground italic">Recommended: Transparent PNG (Square)</p>
+                             </div>
+                          </div>
+                       </div>
+                       <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl">
+                          <div><p className="text-sm font-bold text-slate-900 dark:text-white">TikTok Live Mode</p><p className="text-[10px] text-muted-foreground">Show "Live Now" banner on homepage</p></div>
+                          <Switch checked={storeSettings.isLive} onCheckedChange={val => updateStoreSettings({ isLive: val })} />
+                       </div>
+                       <div className="space-y-2">
+                          <Label className="text-[10px] font-bold uppercase text-slate-400">Account Listing Fee ($)</Label>
+                          <Input 
+                            type="number" 
+                            step="0.01"
+                            defaultValue={storeSettings?.config?.shop?.listingFee} 
+                            onBlur={e => updateStoreSettings({ config: { ...storeSettings.config, shop: { ...storeSettings.config?.shop, listingFee: parseFloat(e.target.value) } } })} 
+                            className="rounded-xl dark:bg-slate-800 border-none font-bold" 
+                          />
+                       </div>
+                    </AccordionContent>
+                 </AccordionItem>
                  <AccordionItem value="ticker" className="border-none bg-white dark:bg-slate-900 rounded-[2rem] px-8 shadow-lg">
                     <AccordionTrigger className="hover:no-underline"><div className="flex items-center gap-4 text-left"><div className="p-3 bg-blue-50 dark:bg-blue-500/10 text-primary rounded-2xl"><Sparkles size={20} /></div><div><h4 className="font-bold text-slate-900 dark:text-white">Announcement Ticker</h4><p className="text-xs text-muted-foreground">Manage the homepage scrolling note</p></div></div></AccordionTrigger>
                     <AccordionContent className="pb-8 space-y-4"><Label className="text-[10px] font-bold uppercase tracking-widest ml-1 text-slate-400">Ticker Text Content</Label><Textarea defaultValue={storeSettings.announcementTicker} onBlur={e => updateStoreSettings({ announcementTicker: e.target.value })} className="rounded-2xl bg-slate-50 dark:bg-slate-800 border-none min-h-[100px] text-sm font-bold shadow-inner" placeholder="Welcome to Oskar Shop..." /><p className="text-[10px] text-muted-foreground italic">* Changes reflect immediately on refresh for all users.</p></AccordionContent>
@@ -660,6 +691,50 @@ export default function AdminPage() {
                        </div>
                     </AccordionContent>
                  </AccordionItem>
+                 <AccordionItem value="maintenance" className="border-none bg-white dark:bg-slate-900 rounded-[2rem] px-8 shadow-lg">
+                    <AccordionTrigger className="hover:no-underline"><div className="flex items-center gap-4 text-left"><div className="p-3 bg-red-50 dark:bg-red-500/10 text-red-500 rounded-2xl"><MonitorOff size={20} /></div><div><h4 className="font-bold text-slate-900 dark:text-white">Maintenance Mode</h4><p className="text-xs text-muted-foreground">Put store offline for updates</p></div></div></AccordionTrigger>
+                    <AccordionContent className="pb-8 space-y-6">
+                       <div className="flex items-center justify-between p-4 bg-red-50 dark:bg-red-950/20 rounded-2xl border border-red-100 dark:border-red-900/20">
+                          <div><p className="text-sm font-bold text-red-600 dark:text-red-400">Offline Mode</p><p className="text-[10px] text-red-400/80">Only admins can access the store</p></div>
+                          <Switch checked={storeSettings.appStatus?.offline} onCheckedChange={val => updateStoreSettings({ appStatus: { ...storeSettings.appStatus, offline: val } })} />
+                       </div>
+                       <div className="space-y-4">
+                          <div className="space-y-2"><Label className="text-[10px] font-bold text-slate-400 uppercase">Offline Title</Label><Input defaultValue={storeSettings.appStatus?.offlineTitle} onBlur={e => updateStoreSettings({ appStatus: { ...storeSettings.appStatus, offlineTitle: e.target.value } })} className="rounded-xl dark:bg-slate-800 border-none font-bold" /></div>
+                          <div className="space-y-2"><Label className="text-[10px] font-bold text-slate-400 uppercase">Offline Message</Label><Textarea defaultValue={storeSettings.appStatus?.offlineBody} onBlur={e => updateStoreSettings({ appStatus: { ...storeSettings.appStatus, offlineBody: e.target.value } })} className="rounded-xl dark:bg-slate-800 border-none font-bold" /></div>
+                          <div className="space-y-2">
+                             <Label className="text-[10px] font-bold text-slate-400 uppercase">Maintenance Image</Label>
+                             <div className="flex items-center gap-4">
+                                <div className="w-32 aspect-video rounded-xl bg-slate-100 dark:bg-slate-800 relative overflow-hidden">
+                                   {storeSettings.appStatus?.offlineImageUrl && <Image src={storeSettings.appStatus.offlineImageUrl} alt="" fill className="object-cover" unoptimized />}
+                                </div>
+                                <Input type="file" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'offline')} className="h-10 flex-1 rounded-xl dark:bg-slate-800 border-none" />
+                             </div>
+                          </div>
+                       </div>
+                    </AccordionContent>
+                 </AccordionItem>
+                 <AccordionItem value="security" className="border-none bg-white dark:bg-slate-900 rounded-[2rem] px-8 shadow-lg">
+                    <AccordionTrigger className="hover:no-underline"><div className="flex items-center gap-4 text-left"><div className="p-3 bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300 rounded-2xl"><Lock size={20} /></div><div><h4 className="font-bold text-slate-900 dark:text-white">Security & Access</h4><p className="text-xs text-muted-foreground">Manage Admin PIN code</p></div></div></AccordionTrigger>
+                    <AccordionContent className="pb-8 space-y-4">
+                       <div className="space-y-2">
+                          <Label className="text-[10px] font-bold uppercase text-slate-400">Update Admin PIN</Label>
+                          <Input 
+                            type="password" 
+                            maxLength={6} 
+                            placeholder="Enter 6-digit PIN"
+                            defaultValue={storeSettings?.config?.adminSettings?.pin}
+                            onBlur={e => {
+                               if (e.target.value.length === 6) {
+                                  updateStoreSettings({ config: { ...storeSettings.config, adminSettings: { ...storeSettings.config?.adminSettings, pin: e.target.value } } });
+                                  toast({ title: "PIN Updated Successfully" });
+                               }
+                            }} 
+                            className="rounded-xl dark:bg-slate-800 border-none font-bold" 
+                          />
+                          <p className="text-[9px] text-muted-foreground italic">* PIN must be exactly 6 digits.</p>
+                       </div>
+                    </AccordionContent>
+                 </AccordionItem>
               </Accordion>
             </div>
           )}
@@ -684,7 +759,7 @@ export default function AdminPage() {
           <DialogHeader className="sr-only"><DialogTitle>User Management</DialogTitle></DialogHeader>
           {selectedUser && (
             <div className="flex flex-col">
-              <div className="bg-slate-900 p-8 text-white"><div className="flex items-center gap-4"><div className="w-16 h-16 rounded-full overflow-hidden border-2 border-white/20 relative">{selectedUser.photoURL ? <Image src={selectedUser.photoURL} alt="" fill className="object-cover" /> : <User size={32} className="m-4 text-white/40" />}</div><div><h2 className="text-2xl font-bold font-headline">{selectedUser.name}</h2><p className="text-xs text-white/40">{selectedUser.email}</p></div></div></div>
+              <div className="bg-slate-900 p-8 text-white"><div className="flex items-center gap-4"><div className="w-16 h-16 rounded-full overflow-hidden border-2 border-white/20 relative">{selectedUser.photoURL ? <Image src={selectedUser.photoURL} alt="" fill className="object-cover" unoptimized /> : <User size={32} className="m-4 text-white/40" />}</div><div><h2 className="text-2xl font-bold font-headline">{selectedUser.name}</h2><p className="text-xs text-white/40">{selectedUser.email}</p></div></div></div>
               <div className="p-8 space-y-8">
                 <div className="space-y-4"><h3 className="text-xs font-bold uppercase text-slate-400 flex items-center gap-2"><Shield size={14} /> Permissions</h3><div className="grid grid-cols-2 gap-2">{['user', 'staff', 'admin'].map(r => <Button key={r} variant={selectedUser.role === r ? "default" : "outline"} onClick={() => manageUser(selectedUser.uid, { role: r as any })} className="h-11 rounded-2xl text-[10px] uppercase font-bold dark:border-white/5">{r}</Button>)}</div></div>
                 <div className="space-y-4"><h3 className="text-xs font-bold uppercase text-slate-400 flex items-center gap-2"><Star size={14} /> Points Balance</h3><div className="bg-slate-50 dark:bg-slate-800 rounded-[2rem] p-6 text-center shadow-inner"><p className="text-4xl font-headline font-bold mb-6 text-slate-900 dark:text-white">{selectedUser.points || 0}</p><div className="flex gap-2"><Input type="number" placeholder="Amount" value={pointAdjustment} onChange={e => setPointAdjustment(e.target.value)} className="h-12 rounded-xl border-none bg-white dark:bg-slate-700 shadow-sm text-center font-bold" /><Button onClick={() => handleAdjustPoints('credit')} className="bg-green-600"><ArrowUpCircle /></Button><Button onClick={() => handleAdjustPoints('debit')} className="bg-red-600"><ArrowDownCircle /></Button></div></div></div>
@@ -737,7 +812,7 @@ export default function AdminPage() {
                     <Card className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800 border-none flex flex-col gap-4 shadow-inner">
                        <div className="flex items-center gap-4">
                           <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600 relative overflow-hidden">
-                             {selectedAccount.authorAvatar ? <Image src={selectedAccount.authorAvatar} alt="" fill className="object-cover" /> : <User size={24} />}
+                             {selectedAccount.authorAvatar ? <Image src={selectedAccount.authorAvatar} alt="" fill className="object-cover" unoptimized /> : <User size={24} />}
                           </div>
                           <div><p className="text-sm font-bold text-slate-900 dark:text-white">{selectedAccount.authorName}</p><p className="text-[10px] text-muted-foreground uppercase font-mono">{selectedAccount.platform}</p></div>
                        </div>
