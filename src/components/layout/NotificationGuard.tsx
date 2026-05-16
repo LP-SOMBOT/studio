@@ -52,8 +52,8 @@ export default function NotificationGuard({ children }: { children: React.ReactN
         if (result === 'granted') {
           setStatus('granted');
           new Notification("Notifications Enabled!", {
-            body: "You'll now receive live updates from Oskar Shop.",
-            icon: "https://placehold.co/192x192/7C3AED/FFFFFF/png?text=O"
+            body: "You'll now receive real-time updates from Oskar Shop.",
+            icon: "https://placehold.co/192x192/0EA5E9/FFFFFF/png?text=O"
           });
         } else {
           setStatus('denied');
@@ -66,7 +66,7 @@ export default function NotificationGuard({ children }: { children: React.ReactN
 
   if (status === 'loading') {
     return (
-      <div className="fixed inset-0 z-[100001] bg-white flex items-center justify-center">
+      <div className="fixed inset-0 z-[100001] bg-white dark:bg-slate-950 flex items-center justify-center">
         <Loader2 className="w-10 h-10 animate-spin text-primary opacity-20" />
       </div>
     );
@@ -78,35 +78,35 @@ export default function NotificationGuard({ children }: { children: React.ReactN
   }
 
   return (
-    <div className="fixed inset-0 z-[100001] bg-white flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-500 overflow-y-auto">
+    <div className="fixed inset-0 z-[100001] bg-white dark:bg-slate-950 flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-500 overflow-y-auto">
       <div className="relative mb-10">
         <div className="absolute inset-0 bg-primary/20 rounded-full blur-3xl animate-pulse" />
-        <div className="relative w-32 h-32 bg-white rounded-full flex items-center justify-center text-primary shadow-2xl border border-primary/5">
+        <div className="relative w-32 h-32 bg-white dark:bg-slate-900 rounded-full flex items-center justify-center text-primary shadow-2xl border border-primary/5">
           <Bell className="w-16 h-16 animate-bounce" />
         </div>
       </div>
       
-      <h2 className="text-4xl font-headline font-bold mb-4 text-gray-900 leading-tight">
+      <h2 className="text-4xl font-headline font-bold mb-4 text-slate-900 dark:text-white leading-tight">
         Stay in <br /> the Game
       </h2>
       
-      <p className="text-muted-foreground max-w-xs mb-12 text-[16px] leading-relaxed">
-        Enable notifications to receive instant diamond deliveries, flash sale alerts, and <strong>Live Rewards</strong> when we are online.
+      <p className="text-muted-foreground dark:text-slate-400 max-w-xs mb-12 text-[16px] leading-relaxed">
+        Enable notifications to receive instant diamond deliveries, flash sale alerts, and <strong>Live Rewards</strong> even when the app is closed.
       </p>
       
       <Button 
         onClick={requestPermission} 
-        className="w-full max-w-[300px] h-16 rounded-[2rem] font-bold text-xl shadow-2xl shadow-primary/30 transition-all active:scale-95 bg-primary hover:bg-primary/90 text-white gap-3"
+        className="w-full max-w-[300px] h-16 rounded-[2rem] font-bold text-xl shadow-2xl shadow-primary/30 transition-all active:scale-95 bg-primary hover:bg-primary/90 text-white gap-3 border-none"
       >
         <Bell className="w-6 h-6" /> Allow Notifications
       </Button>
 
-      <p className="mt-8 text-[11px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+      <p className="mt-8 text-[11px] font-bold text-gray-400 dark:text-slate-600 uppercase tracking-widest flex items-center gap-2">
          <Smartphone className="w-3 h-3" /> Mandatory for Oskar Shop PWA
       </p>
 
       {status === 'denied' && (
-        <div className="mt-12 p-6 bg-red-50 rounded-[2.5rem] border border-red-100 flex flex-col items-center gap-4 text-red-600 max-w-sm animate-in slide-in-from-bottom-4">
+        <div className="mt-12 p-6 bg-red-50 dark:bg-red-950/20 rounded-[2.5rem] border border-red-100 dark:border-red-900/20 flex flex-col items-center gap-4 text-red-600 dark:text-red-400 max-w-sm animate-in slide-in-from-bottom-4">
           <div className="flex items-center gap-3">
             <ShieldAlert className="w-6 h-6" />
             <span className="font-bold text-base">Action Required</span>
@@ -116,7 +116,7 @@ export default function NotificationGuard({ children }: { children: React.ReactN
           </p>
           <Button 
             variant="outline" 
-            className="w-full h-12 rounded-2xl border-red-200 text-red-600 hover:bg-red-100/50 mt-2 font-bold text-sm"
+            className="w-full h-12 rounded-2xl border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-100/50 mt-2 font-bold text-sm"
             onClick={() => window.location.reload()}
           >
             I've enabled them, Refresh Now

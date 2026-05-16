@@ -66,9 +66,9 @@ export default function PWAInstaller() {
 
   return (
     <div className="fixed bottom-24 left-4 right-4 z-[100] animate-in slide-in-from-bottom-full duration-700 md:bottom-8 md:left-auto md:right-8 md:w-96">
-      <Card className="p-5 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.15)] border-primary/10 bg-white/95 backdrop-blur-xl relative overflow-hidden group">
+      <Card className="p-5 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.2)] border-primary/20 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl relative overflow-hidden group">
         {/* Decorative background element */}
-        <div className="absolute top-0 right-0 -mt-8 -mr-8 w-24 h-24 bg-primary/5 rounded-full blur-2xl group-hover:bg-primary/10 transition-colors duration-500" />
+        <div className="absolute top-0 right-0 -mt-8 -mr-8 w-24 h-24 bg-primary/10 rounded-full blur-2xl group-hover:bg-primary/20 transition-colors duration-500" />
         
         <div className="flex items-start gap-4 relative z-10">
           <div className="w-14 h-14 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center text-white shrink-0 shadow-lg shadow-primary/20">
@@ -76,17 +76,17 @@ export default function PWAInstaller() {
           </div>
           <div className="flex-1 pr-6">
             <div className="flex items-center gap-2 mb-1">
-              <h3 className="font-headline font-bold text-base text-foreground">Install Oskar Shop</h3>
+              <h3 className="font-headline font-bold text-base text-slate-900 dark:text-white">Install Oskar Shop</h3>
               <Zap className="w-3 h-3 text-yellow-500 fill-yellow-500" />
             </div>
-            <p className="text-xs text-muted-foreground leading-relaxed">
+            <p className="text-xs text-muted-foreground dark:text-slate-400 leading-relaxed">
               Get the full app experience! Install now for faster access to top-ups and exclusive mobile rewards.
             </p>
             <div className="flex gap-3 mt-4">
               <Button 
                 onClick={handleInstallClick}
                 size="sm" 
-                className="rounded-full h-10 px-6 gap-2 font-bold bg-primary hover:bg-primary/90 text-white shadow-md shadow-primary/10 transition-transform active:scale-95"
+                className="rounded-full h-10 px-6 gap-2 font-bold bg-primary hover:bg-primary/90 text-white shadow-md shadow-primary/10 transition-transform active:scale-95 border-none"
               >
                 <Download className="w-4 h-4" /> Install Now
               </Button>
@@ -94,7 +94,7 @@ export default function PWAInstaller() {
                 onClick={handleDismiss}
                 variant="ghost" 
                 size="sm" 
-                className="rounded-full h-10 px-4 text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-gray-100"
+                className="rounded-full h-10 px-4 text-xs font-bold text-muted-foreground hover:text-foreground dark:hover:bg-white/5"
               >
                 Maybe Later
               </Button>

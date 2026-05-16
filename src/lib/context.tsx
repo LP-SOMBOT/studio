@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { 
   useUser, 
@@ -280,6 +280,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [messages, setMessages] = useState<any[]>([]);
   const [allChatSessions, setAllChatSessions] = useState<any[]>([]);
 
+  // Push Notification Tracking
+  const lastNotifiedRef = useRef<Set<string>>(new Set());
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const root = window.document.documentElement;
@@ -294,6 +297,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const isInitialLoading = useMemo(() => {
     return !syncStatus.settings || !syncStatus.products || !syncStatus.banners || !syncStatus.events;
   }, [syncStatus]);
+
+  // Push Notification Trigger Logic
+  const showPushNotification = useCallback((title: string, body: string, id: string) => {
+    if (typeof window === 'undefined' || !('Notification' in window)) return;
+    if (Notification.permission !== 'granted') return;
+    
+    // Uniqueness check
+    if (lastNotifiedRef.current.has(id)) return;
+    lastNotifiedRef.current.add(id);
+
+    try {
+      const logo = storeSettings.logo || "https://placehold.co/192x192/0EA5E9/FFFFFF/png?text=O";
+      new Notification(title, { body, icon: logo });
+    } catch (e) {
+      console.warn("Failed to trigger native notification:", e);
+    }
+  }, [storeSettings.logo]);
 
   useEffect(() => {
     const handleHash = () => {
@@ -330,6 +350,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     const unsubSettings = onValue(settingsRef, (s) => {
       const data = s.val() || {};
+      
+      // Watch for Live/Online changes for notifications
+      if (syncStatus.settings) {
+        if (data.isLive && !storeSettings.isLive) {
+          showPushNotification("Oskar is LIVE Now! 🔴", "Join us on TikTok for exclusive rewards and diamonds!", "live-ticker-" + Date.now());
+        }
+        if (!data.appStatus?.offline && storeSettings.appStatus?.offline) {
+          showPushNotification("Oskar Shop is Online! ✅", "We are back! You can now resume your top-ups and purchases.", "online-alert-" + Date.now());
+        }
+      }
+
       setStoreSettings(data);
       setCache(SETTINGS_CACHE_KEY, data);
       setSyncStatus(prev => ({ ...prev, settings: true }));
@@ -383,7 +414,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       off(bannersRef);
       off(usersRef);
     };
-  }, [rtdb]);
+  }, [rtdb, syncStatus.settings, storeSettings, showPushNotification]);
 
   useEffect(() => {
     if (!rtdb || !user) {
@@ -408,6 +439,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     onValue(notifsRef, (s) => {
       const data = s.val() ? Object.entries(s.val()).map(([id, v]: any) => ({ ...v, id })).sort((a,b) => b.createdAt - a.createdAt) : [];
+      
+      // Trigger native notification for newest unread system notification
+      if (data.length > 0) {
+        const latest = data[0];
+        if (!latest.read) {
+          showPushNotification(latest.title, latest.body, "system-notif-" + latest.id);
+        }
+      }
+
       setNotifications(data);
     });
 
@@ -421,7 +461,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       off(notifsRef);
       off(userOrdersRef);
     };
-  }, [rtdb, user]);
+  }, [rtdb, user, showPushNotification]);
 
   const enhancedUser = useMemo(() => {
     if (!user) return null;
