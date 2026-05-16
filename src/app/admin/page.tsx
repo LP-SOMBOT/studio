@@ -53,7 +53,8 @@ import {
   Info,
   Phone,
   MessageCircle,
-  SmartphoneIcon
+  SmartphoneIcon,
+  Home
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -95,6 +96,7 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { 
   AreaChart, 
   Area, 
@@ -133,6 +135,7 @@ export default function AdminPage() {
     refreshAdminData
   } = useApp();
 
+  const router = useRouter();
   const [pin, setPin] = useState("");
   const [isPinAuthenticated, setIsPinAuthenticated] = useState(false);
   const [activeView, setActiveView] = useState<'dashboard' | 'orders' | 'products' | 'account-posts' | 'events' | 'users' | 'settings'>('dashboard');
@@ -351,6 +354,17 @@ export default function AdminPage() {
           <button onClick={() => setIsSidebarExpanded(!isSidebarExpanded)} className="p-2 text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl"><Menu size={20} /></button>
         </div>
         <nav className="flex-1 px-4 py-6 space-y-2">
+          {/* Quick Return Link */}
+          <SideNavItem 
+            active={false} 
+            expanded={isSidebarExpanded} 
+            onClick={() => router.push('/')} 
+            icon={Home} 
+            label="Back to Store" 
+            className="text-primary hover:bg-primary/5 mb-4"
+          />
+          <div className="h-px bg-slate-50 dark:bg-white/5 my-4 mx-2" />
+          
           <SideNavItem active={activeView === 'dashboard'} expanded={isSidebarExpanded} onClick={() => setActiveView('dashboard')} icon={LayoutDashboard} label="Dashboard" />
           <SideNavItem active={activeView === 'orders'} expanded={isSidebarExpanded} onClick={() => setActiveView('orders')} icon={ShoppingBag} label="Orders" />
           <SideNavItem active={activeView === 'products'} expanded={isSidebarExpanded} onClick={() => setActiveView('products')} icon={Package} label="Inventory" />
@@ -846,9 +860,9 @@ export default function AdminPage() {
 
 const chartData = [ { day: 'MON', value: 400 }, { day: 'TUE', value: 300 }, { day: 'WED', value: 500 }, { day: 'THU', value: 450 }, { day: 'FRI', value: 700 }, { day: 'SAT', value: 650 }, { day: 'SUN', value: 800 } ];
 
-function SideNavItem({ active, expanded, onClick, icon: Icon, label }: { active: boolean, expanded: boolean, onClick: () => void, icon: any, label: string }) {
+function SideNavItem({ active, expanded, onClick, icon: Icon, label, className }: { active: boolean, expanded: boolean, onClick: () => void, icon: any, label: string, className?: string }) {
   return (
-    <button onClick={onClick} className={cn("w-full h-12 flex items-center transition-all duration-300 rounded-xl relative group", active ? "bg-primary text-white shadow-lg" : "text-slate-400 dark:text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800", expanded ? "px-4 gap-4" : "justify-center")}>
+    <button onClick={onClick} className={cn("w-full h-12 flex items-center transition-all duration-300 rounded-xl relative group", active ? "bg-primary text-white shadow-lg" : "text-slate-400 dark:text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800", expanded ? "px-4 gap-4" : "justify-center", className)}>
       <Icon size={20} />
       {expanded && <span className="font-bold text-sm whitespace-nowrap">{label}</span>}
     </button>
