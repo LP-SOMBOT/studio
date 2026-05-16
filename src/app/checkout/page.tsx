@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo, Suspense } from "react";
@@ -25,7 +26,7 @@ import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 
 function CheckoutContent() {
-  const { products, createOrder, setGlobalLoading, setActiveTab, user, loading } = useApp();
+  const { products, createOrder, setGlobalLoading, setActiveTab, user, loading, storeSettings } = useApp();
   const router = useRouter();
   const searchParams = useSearchParams();
   const productId = searchParams.get('id');
@@ -63,7 +64,9 @@ function CheckoutContent() {
   };
 
   const handlePaymentInitiation = () => {
-    const ussd = `*712*613982172*${total}*#`;
+    const paymentNum = storeSettings.paymentNumber || "613982172";
+    const formattedPrice = total.toString().replace('.', '*');
+    const ussd = `*712*${paymentNum}*${formattedPrice}#`;
     
     toast({
       title: "Opening Dialer",

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -86,7 +87,7 @@ export default function AccountsView() {
         <h1 className="text-xl font-headline font-bold text-slate-900 dark:text-white tracking-tight">Marketplace</h1>
         <button onClick={() => setIsActivityModalOpen(true)} className="relative p-2 text-slate-400 bg-slate-50 dark:bg-slate-900 rounded-full">
            <Activity size={20} />
-           {myActivity.some(p => p.status === 'pending') && (
+           {myActivity.some(p => p.status === 'pending' || p.status === 'processing') && (
              <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-amber-500 rounded-full border-2 border-white dark:border-slate-900" />
            )}
         </button>
@@ -170,7 +171,7 @@ export default function AccountsView() {
                       </div>
                       <Badge className={cn(
                         "rounded-full text-[8px] font-bold",
-                        p.status === 'approved' ? "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400" : p.status === 'pending' ? "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400" : "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400"
+                        p.status === 'approved' ? "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400" : (p.status === 'pending' || p.status === 'processing') ? "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400" : "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400"
                       )}>
                         {p.status.toUpperCase()}
                       </Badge>
@@ -337,7 +338,10 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
   };
 
   const handleUssdPay = () => {
-    const ussdCode = `*712*613982172*${listingFee}*#`;
+    const paymentNum = storeSettings.paymentNumber || "613982172";
+    const formattedFee = listingFee.toString().replace('.', '*');
+    const ussdCode = `*712*${paymentNum}*${formattedFee}#`;
+    
     toast({ title: "Opening Dialer", description: "Please complete the listing fee payment." });
     window.location.href = `tel:${ussdCode.replace(/#/g, '%23')}`;
     setHasTriggeredUssd(true);

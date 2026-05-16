@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -27,7 +28,7 @@ export default function CheckoutAccountPage() {
   const router = useRouter();
   const params = useSearchParams();
   const id = params.get('id');
-  const { accountPosts, user, loading, setActiveTab, createOrder, setGlobalLoading } = useApp();
+  const { accountPosts, user, loading, setActiveTab, createOrder, setGlobalLoading, storeSettings } = useApp();
   const [step, setStep] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
   const [whatsappNumber, setWhatsappNumber] = useState("");
@@ -36,6 +37,10 @@ export default function CheckoutAccountPage() {
   const post = useMemo(() => {
     return (accountPosts || []).find(p => p.id === id);
   }, [accountPosts, id]);
+
+  const paymentNum = storeSettings.paymentNumber || "613982172";
+  const formattedPrice = post ? post.price.toString().replace('.', '*') : "0";
+  const ussdCode = `*712*${paymentNum}*${formattedPrice}#`;
 
   useEffect(() => {
     if (!loading && !user && step < 4) {
@@ -49,14 +54,12 @@ export default function CheckoutAccountPage() {
   if (!post && step < 4) return null;
 
   const handleProceed = () => {
-    const ussd = `*712*613982172*${post?.price}*#`;
-    
     toast({
       title: "Opening Dialer",
       description: "Please complete the transaction in the phone dialer.",
     });
 
-    window.location.href = `tel:${ussd.replace(/#/g, '%23')}`;
+    window.location.href = `tel:${ussdCode.replace(/#/g, '%23')}`;
     setStep(3);
   };
 
@@ -195,9 +198,9 @@ export default function CheckoutAccountPage() {
               <div className="p-8 bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-white/5 space-y-4">
                  <p className="text-[10px] font-bold text-muted-foreground dark:text-slate-500 uppercase tracking-widest">USSD Code</p>
                  <div className="flex items-center justify-center gap-3">
-                    <code className="text-2xl font-mono font-bold text-slate-900 dark:text-white">*712*613982172*{post?.price}#</code>
+                    <code className="text-2xl font-mono font-bold text-slate-900 dark:text-white">{ussdCode}</code>
                     <button 
-                      onClick={() => copyToClipboard(`*712*613982172*${post?.price}#`)}
+                      onClick={() => copyToClipboard(ussdCode)}
                       className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors text-primary active:scale-90"
                       title="Copy Code"
                     >

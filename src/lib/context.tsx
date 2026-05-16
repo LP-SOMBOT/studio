@@ -74,7 +74,7 @@ type AccountPost = {
   thumbnailUrl: string;
   imageUrls: string[];
   phone: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'pending' | 'approved' | 'rejected' | 'processing';
   createdAt: number;
   views: number;
   sold: boolean;
@@ -114,6 +114,7 @@ type StoreSettings = {
   isLive: boolean;
   announcementTicker?: string;
   logo?: string;
+  paymentNumber?: string;
   onboardingImages?: string[];
   sliderImages?: string[]; 
   appStatus?: {

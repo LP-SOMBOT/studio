@@ -438,7 +438,7 @@ export default function AdminPage() {
         <nav className="flex-1 px-4 py-6 space-y-2">
           <SideNavItem active={false} expanded={isSidebarExpanded} onClick={() => router.push('/')} icon={Home} label="Back to Store" className="text-primary hover:bg-primary/5 mb-4" />
           <div className="h-px bg-slate-50 dark:bg-white/5 my-4 mx-2" />
-          <SideNavItem active={activeView === 'dashboard'} expanded={isSidebarExpanded} onClick={() => setActiveTab('dashboard')} icon={LayoutDashboard} label="Dashboard" />
+          <SideNavItem active={activeView === 'dashboard'} expanded={isSidebarExpanded} onClick={() => setActiveView('dashboard')} icon={LayoutDashboard} label="Dashboard" />
           <SideNavItem active={activeView === 'orders'} expanded={isSidebarExpanded} onClick={() => setActiveView('orders')} icon={ShoppingBag} label="Orders" />
           <SideNavItem active={activeView === 'products'} expanded={isSidebarExpanded} onClick={() => setActiveView('products')} icon={Package} label="Inventory" />
           <SideNavItem active={activeView === 'account-posts'} expanded={isSidebarExpanded} onClick={() => setActiveView('account-posts')} icon={Gamepad2} label="Marketplace" />
@@ -644,6 +644,35 @@ export default function AdminPage() {
                             className="rounded-xl dark:bg-slate-800 border-none font-bold" 
                           />
                        </div>
+                    </AccordionContent>
+                 </AccordionItem>
+                 <AccordionItem value="payment" className="border-none bg-white dark:bg-slate-900 rounded-[2rem] px-8 shadow-lg">
+                    <AccordionTrigger className="hover:no-underline">
+                      <div className="flex items-center gap-4 text-left">
+                        <div className="p-3 bg-primary/10 text-primary rounded-2xl">
+                          <CreditCard size={20} />
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-slate-900 dark:text-white">Payment Details</h4>
+                          <p className="text-xs text-muted-foreground">Manage merchant number & USSD logic</p>
+                        </div>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pb-8 space-y-6 pt-2">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-bold uppercase text-slate-400 flex items-center gap-2">
+                          <Smartphone size={12}/> Merchant Payment Number
+                        </Label>
+                        <Input 
+                          defaultValue={storeSettings.paymentNumber || "613982172"} 
+                          onBlur={e => updateStoreSettings({ paymentNumber: e.target.value })} 
+                          className="rounded-xl dark:bg-slate-800 border-none font-bold"
+                          placeholder="e.g. 6187542920"
+                        />
+                        <p className="text-[9px] text-muted-foreground italic">
+                          * This number will be used in generated USSD codes for all payments.
+                        </p>
+                      </div>
                     </AccordionContent>
                  </AccordionItem>
                  <AccordionItem value="ticker" className="border-none bg-white dark:bg-slate-900 rounded-[2rem] px-8 shadow-lg">
