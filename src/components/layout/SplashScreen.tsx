@@ -75,7 +75,7 @@ export default function SplashScreen() {
       </div>
 
       <div className="absolute bottom-12 text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">
-        Premium Gaming Service
+        Top up games
       </div>
     </div>
   );
