@@ -146,6 +146,7 @@ export default function AdminPage() {
   const [editingEvent, setEditingEvent] = useState<any>(null);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [pendingOrderStatus, setPendingStatus] = useState<string>("");
 
   const [productForm, setProductForm] = useState({ title: "", gameId: "freefire", category: "top-up", description: "", price: "", discountedPrice: "", thumbnail: "" });
   const [eventForm, setEventForm] = useState({ title: "", description: "", thumbnailUrl: "", type: "freefire_event", active: true });
@@ -197,6 +198,12 @@ export default function AdminPage() {
       setEventForm({ title: "", description: "", thumbnailUrl: "", type: "freefire_event", active: true });
     }
     setIsEventDialogOpen(true);
+  };
+
+  const handleOpenOrderDialog = (order: any) => {
+    setSelectedOrder(order);
+    setPendingStatus(order.status);
+    setIsOrderDetailOpen(true);
   };
 
   const handleSaveProduct = async (e: React.FormEvent) => {
@@ -260,10 +267,11 @@ export default function AdminPage() {
     toast({ title: isBanned ? "User Banned" : "User Unbanned", variant: isBanned ? "destructive" : "default" });
   };
 
-  const handleStatusChange = async (orderId: string, status: string) => {
-    await updateOrderStatus(orderId, status);
-    toast({ title: `Order ${status}` });
-    if (selectedOrder?.id === orderId) setSelectedOrder({ ...selectedOrder, status });
+  const handleStatusSave = async () => {
+    if (!selectedOrder || !pendingOrderStatus) return;
+    await updateOrderStatus(selectedOrder.id, pendingOrderStatus);
+    toast({ title: `Order set to ${pendingOrderStatus}` });
+    setIsOrderDetailOpen(false);
   };
 
   const handleImageUpload = async (file: File, target: 'product' | 'event' | 'banner' | 'offline' | 'logo') => {
@@ -330,7 +338,7 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex overflow-hidden">
-      {/* Sidebar - z-40 ensures Dialog (z-50) is above it */}
+      {/* Sidebar */}
       <aside className={cn("h-screen bg-white border-r border-slate-100 flex flex-col transition-all duration-300 z-40", isSidebarExpanded ? "w-64" : "w-20")}>
         <div className="h-20 px-6 flex items-center justify-between">
           {isSidebarExpanded && <span className="font-headline font-bold text-lg text-slate-900">Oskar Control</span>}
@@ -426,7 +434,7 @@ export default function AdminPage() {
                            <Badge className={cn("rounded-full uppercase text-[8px] font-bold", o.status === 'successful' ? "bg-green-100 text-green-700" : o.status === 'pending' ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700")}>{o.status}</Badge>
                         </TableCell>
                         <TableCell className="text-right px-8">
-                           <Button size="sm" onClick={() => { setSelectedOrder(o); setIsOrderDetailOpen(true); }} className="rounded-full h-8 px-4 font-bold text-[10px] gap-2"><Eye size={12} /> Details</Button>
+                           <Button size="sm" onClick={() => handleOpenOrderDialog(o)} className="rounded-full h-8 px-4 font-bold text-[10px] gap-2"><Eye size={12} /> Details</Button>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -702,27 +710,87 @@ export default function AdminPage() {
           </DialogHeader>
           {selectedOrder && (
             <div className="flex flex-col">
-              <div className="bg-slate-900 p-10 text-white"><Badge className="bg-primary text-white mb-2">REF #{selectedOrder.id.slice(0, 12).toUpperCase()}</Badge><h2 className="text-3xl font-headline font-bold">Order Verification</h2></div>
-              <div className="p-10 space-y-8">
+              <div className="bg-slate-900 p-10 text-white relative">
+                 <Badge className="bg-primary text-white mb-2 font-mono">order {selectedOrder.id}</Badge>
+                 <h2 className="text-3xl font-headline font-bold">Order Verification</h2>
+                 <button onClick={() => setIsOrderDetailOpen(false)} className="absolute top-8 right-8 text-white/20 hover:text-white transition-colors">
+                    <X size={24} />
+                 </button>
+              </div>
+              
+              <div className="p-10 space-y-10">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                   <div>
                     <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Customer Intel</h4>
-                    <Card className="p-4 rounded-2xl bg-slate-50 border-none flex items-center gap-3"><User size={20} className="text-primary" /><div><p className="text-sm font-bold">{selectedOrder.gameDetails?.playerName || "N/A"}</p><p className="text-[10px] text-muted-foreground uppercase">{selectedOrder.gameDetails?.playerID || "N/A"}</p></div></Card>
+                    <Card className="p-5 rounded-2xl bg-slate-50 border-none flex items-center gap-4 shadow-inner">
+                       <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                          <User size={24} />
+                       </div>
+                       <div>
+                          <p className="text-sm font-bold text-slate-900">{selectedOrder.gameDetails?.playerName || "N/A"}</p>
+                          <p className="text-[10px] text-muted-foreground uppercase font-mono tracking-tight">{selectedOrder.gameDetails?.playerID || "N/A"}</p>
+                       </div>
+                    </Card>
                   </div>
                   <div>
                     <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Item Data</h4>
-                    <Card className="p-4 rounded-2xl bg-slate-50 border-none flex items-center gap-3"><Package size={20} className="text-amber-500" /><div><p className="text-sm font-bold">{selectedOrder.items?.[0]?.title}</p><p className="text-[10px] text-primary font-bold uppercase">${selectedOrder.total?.toFixed(2)}</p></div></Card>
+                    <Card className="p-5 rounded-2xl bg-slate-50 border-none flex items-center gap-4 shadow-inner">
+                       <div className="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center text-amber-500">
+                          <Package size={24} />
+                       </div>
+                       <div>
+                          <p className="text-sm font-bold text-slate-900">{selectedOrder.items?.[0]?.title}</p>
+                          <p className="text-[10px] text-primary font-bold uppercase">${selectedOrder.total?.toFixed(2)}</p>
+                       </div>
+                    </Card>
                   </div>
                 </div>
-                <div className="pt-6 border-t flex flex-col sm:flex-row items-center justify-between gap-4">
-                  <div className="flex items-center gap-3"><div className="p-2 bg-blue-100 text-blue-600 rounded-lg animate-spin"><RefreshCw size={18} /></div><p className="text-xs font-bold text-slate-400 uppercase">Live Processor Active</p></div>
-                  <div className="flex flex-wrap gap-2 justify-center">
-                    <Select defaultValue={selectedOrder.status} onValueChange={v => handleStatusChange(selectedOrder.id, v)}>
-                      <SelectTrigger className="h-14 w-40 rounded-2xl font-bold"><SelectValue /></SelectTrigger>
-                      <SelectContent><SelectItem value="pending">Pending</SelectItem><SelectItem value="processing">Processing</SelectItem><SelectItem value="successful">Success ✓</SelectItem><SelectItem value="cancelled">Cancel ✕</SelectItem></SelectContent>
-                    </Select>
-                    <Button onClick={() => handleStatusChange(selectedOrder.id, 'successful')} disabled={selectedOrder.status === 'successful'} className="h-14 px-8 rounded-2xl font-bold bg-green-600 hover:bg-green-700">Set Successful</Button>
-                  </div>
+
+                <div className="bg-blue-50 p-6 rounded-[2rem] border border-blue-100 flex items-center justify-between">
+                   <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 animate-spin">
+                         <RefreshCw size={18} />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-blue-900 uppercase">Live Transaction Engine</p>
+                        <p className="text-[10px] text-blue-600 font-medium">Verified by Oskar Payment Node</p>
+                      </div>
+                   </div>
+                   <Badge variant="outline" className="bg-white border-blue-200 text-blue-700 rounded-full h-8 px-4 font-bold">{selectedOrder.paymentMethod}</Badge>
+                </div>
+
+                <div className="pt-8 border-t space-y-6">
+                   <div className="flex flex-col gap-2">
+                      <Label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest ml-1">Process Action</Label>
+                      <Select value={pendingOrderStatus} onValueChange={setPendingStatus}>
+                        <SelectTrigger className="h-16 rounded-2xl font-bold text-lg bg-slate-50 border-none focus:ring-primary shadow-inner">
+                           <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-2xl">
+                           <SelectItem value="pending" className="rounded-xl">⏳ Pending (Waiting)</SelectItem>
+                           <SelectItem value="processing" className="rounded-xl">⚙️ Processing (In-Queue)</SelectItem>
+                           <SelectItem value="successful" className="rounded-xl">✅ Successful (Delivered)</SelectItem>
+                           <SelectItem value="cancelled" className="rounded-xl">❌ Cancelled (Refund/Issue)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                   </div>
+
+                   <div className="flex gap-3">
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setIsOrderDetailOpen(false)}
+                        className="flex-1 h-16 rounded-2xl font-bold border-slate-100 hover:bg-slate-50"
+                      >
+                         Cancel
+                      </Button>
+                      <Button 
+                        onClick={handleStatusSave}
+                        disabled={pendingOrderStatus === selectedOrder.status}
+                        className="flex-[2] h-16 rounded-2xl font-bold text-lg shadow-xl shadow-primary/20"
+                      >
+                         Save Changes
+                      </Button>
+                   </div>
                 </div>
               </div>
             </div>
@@ -754,3 +822,4 @@ function StatCard({ label, value, icon: Icon, color }: { label: string, value: s
     </Card>
   );
 }
+
