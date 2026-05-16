@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -721,7 +722,7 @@ export default function AdminPage() {
               <div className="p-10 space-y-10">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                   <div>
-                    <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Customer Intel</h4>
+                    <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Customer Details</h4>
                     <Card className="p-5 rounded-2xl bg-slate-50 border-none flex items-center gap-4 shadow-inner">
                        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
                           <User size={24} />
