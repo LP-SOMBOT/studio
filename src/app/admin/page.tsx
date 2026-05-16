@@ -300,9 +300,9 @@ export default function AdminPage() {
 
   if (isInitialLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center gap-6">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center gap-6">
         <Loader2 className="w-10 h-10 animate-spin text-primary" />
-        <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Waking Oskar Control...</p>
+        <p className="text-sm font-bold text-slate-400 dark:text-slate-600 uppercase tracking-widest">Waking Oskar Control...</p>
       </div>
     );
   }
@@ -310,19 +310,19 @@ export default function AdminPage() {
   if (!isPinAuthenticated && !user?.isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-900 p-4">
-        <Card className="max-w-md w-full p-10 rounded-[3rem] bg-white shadow-2xl text-center">
+        <Card className="max-w-md w-full p-10 rounded-[3rem] bg-white dark:bg-slate-900 shadow-2xl text-center border-none">
           <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto mb-6 text-primary">
             <Lock size={40} />
           </div>
-          <h2 className="text-2xl font-headline font-bold mb-2">OskarShop Admin</h2>
+          <h2 className="text-2xl font-headline font-bold mb-2 text-slate-900 dark:text-white">OskarShop Admin</h2>
           <p className="text-muted-foreground text-sm mb-8">Enter Admin PIN to continue</p>
           <div className="flex justify-center gap-3 mb-10">
-            {[...Array(6)].map((_, i) => <div key={i} className={cn("w-4 h-4 rounded-full border-2 transition-all", pin.length > i ? "bg-primary border-primary scale-110 shadow-lg" : "border-slate-200")} />)}
+            {[...Array(6)].map((_, i) => <div key={i} className={cn("w-4 h-4 rounded-full border-2 transition-all", pin.length > i ? "bg-primary border-primary scale-110 shadow-lg" : "border-slate-200 dark:border-slate-800")} />)}
           </div>
           <div className="grid grid-cols-3 gap-4 max-w-[280px] mx-auto">
-            {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map(n => <Button key={n} variant="outline" className="h-16 rounded-2xl text-xl font-bold" onClick={() => pin.length < 6 && setPin(p => p + n)}>{n}</Button>)}
-            <Button variant="outline" className="h-16 rounded-2xl" onClick={() => setPin(p => p.slice(0, -1))}><Delete /></Button>
-            <Button variant="outline" className="h-16 rounded-2xl text-xl font-bold" onClick={() => pin.length < 6 && setPin(p => p + "0")}>0</Button>
+            {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map(n => <Button key={n} variant="outline" className="h-16 rounded-2xl text-xl font-bold dark:border-slate-800" onClick={() => pin.length < 6 && setPin(p => p + n)}>{n}</Button>)}
+            <Button variant="outline" className="h-16 rounded-2xl dark:border-slate-800" onClick={() => setPin(p => p.slice(0, -1))}><Delete /></Button>
+            <Button variant="outline" className="h-16 rounded-2xl text-xl font-bold dark:border-slate-800" onClick={() => pin.length < 6 && setPin(p => p + "0")}>0</Button>
             <Button className="h-16 rounded-2xl" onClick={handlePinSubmit}><CheckCircle2 /></Button>
           </div>
         </Card>
@@ -344,11 +344,11 @@ export default function AdminPage() {
   });
 
   return (
-    <div className="min-h-screen bg-slate-50 flex overflow-hidden">
-      <aside className={cn("h-screen bg-white border-r border-slate-100 flex flex-col transition-all duration-300 z-40", isSidebarExpanded ? "w-64" : "w-20")}>
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex overflow-hidden">
+      <aside className={cn("h-screen bg-white dark:bg-slate-900 border-r border-slate-100 dark:border-white/5 flex flex-col transition-all duration-300 z-40", isSidebarExpanded ? "w-64" : "w-20")}>
         <div className="h-20 px-6 flex items-center justify-between">
-          {isSidebarExpanded && <span className="font-headline font-bold text-lg text-slate-900">Oskar Control</span>}
-          <button onClick={() => setIsSidebarExpanded(!isSidebarExpanded)} className="p-2 text-slate-400 hover:bg-slate-50 rounded-xl"><Menu size={20} /></button>
+          {isSidebarExpanded && <span className="font-headline font-bold text-lg text-slate-900 dark:text-white">Oskar Control</span>}
+          <button onClick={() => setIsSidebarExpanded(!isSidebarExpanded)} className="p-2 text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl"><Menu size={20} /></button>
         </div>
         <nav className="flex-1 px-4 py-6 space-y-2">
           <SideNavItem active={activeView === 'dashboard'} expanded={isSidebarExpanded} onClick={() => setActiveView('dashboard')} icon={LayoutDashboard} label="Dashboard" />
@@ -359,21 +359,21 @@ export default function AdminPage() {
           <SideNavItem active={activeView === 'users'} expanded={isSidebarExpanded} onClick={() => setActiveView('users')} icon={Users} label="Users" />
           <SideNavItem active={activeView === 'settings'} expanded={isSidebarExpanded} onClick={() => setActiveView('settings')} icon={SettingsIcon} label="Settings" />
         </nav>
-        <div className="p-4 border-t"><button onClick={logout} className="w-full h-12 flex items-center gap-4 text-red-500 rounded-xl hover:bg-red-50 px-4"><LogOut size={20} /><span className="font-bold text-sm">Logout</span></button></div>
+        <div className="p-4 border-t dark:border-white/5"><button onClick={logout} className="w-full h-12 flex items-center gap-4 text-red-500 rounded-xl hover:bg-red-50 dark:hover:bg-red-950/20 px-4"><LogOut size={20} /><span className="font-bold text-sm">Logout</span></button></div>
       </aside>
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-20 bg-white/60 backdrop-blur-md border-b flex items-center justify-between px-10 shrink-0">
-          <h2 className="text-xl font-headline font-bold uppercase tracking-tight">{activeView}</h2>
+        <header className="h-20 bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border-b dark:border-white/5 flex items-center justify-between px-10 shrink-0">
+          <h2 className="text-xl font-headline font-bold uppercase tracking-tight text-slate-900 dark:text-white">{activeView}</h2>
           <div className="flex items-center gap-4">
-             <div className="flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-600 rounded-full cursor-pointer hover:bg-green-100 transition-colors" onClick={refreshAdminData}>
+             <div className="flex items-center gap-1.5 px-3 py-1 bg-green-50 dark:bg-green-950/20 text-green-600 dark:text-green-400 rounded-full cursor-pointer hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors" onClick={refreshAdminData}>
                <RefreshCw size={12} className="animate-spin" />
                <span className="text-[10px] font-bold uppercase">Live Sync Active</span>
             </div>
             <div className="flex items-center gap-3">
-               <div className="text-right"><p className="text-sm font-bold">{user?.name}</p><p className="text-[10px] text-primary uppercase font-bold">{user?.role}</p></div>
-               <div className="w-10 h-10 rounded-full bg-slate-100 border-2 border-white shadow-sm overflow-hidden relative">
-                 {user?.photoURL ? <Image src={user.photoURL} alt="" fill className="object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-300"><User size={20} /></div>}
+               <div className="text-right"><p className="text-sm font-bold text-slate-900 dark:text-white">{user?.name}</p><p className="text-[10px] text-primary uppercase font-bold">{user?.role}</p></div>
+               <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 border-2 border-white dark:border-slate-700 shadow-sm overflow-hidden relative">
+                 {user?.photoURL ? <Image src={user.photoURL} alt="" fill className="object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-300 dark:text-slate-600"><User size={20} /></div>}
                </div>
             </div>
           </div>
@@ -388,13 +388,16 @@ export default function AdminPage() {
                 <StatCard label="Registered Users" value={metrics.users.toString()} icon={Users} color="emerald" />
                 <StatCard label="Inventory Items" value={metrics.inventory.toString()} icon={Package} color="indigo" />
               </div>
-              <Card className="rounded-[2.5rem] p-10 border-none shadow-xl bg-white h-[400px]">
+              <Card className="rounded-[2.5rem] p-10 border-none shadow-xl bg-white dark:bg-slate-900 h-[400px]">
                  <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={chartData}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                      <XAxis dataKey="day" axisLine={false} tickLine={false} />
-                      <YAxis axisLine={false} tickLine={false} />
-                      <Tooltip />
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" opacity={0.1} />
+                      <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{fill: '#94A3B8', fontSize: 10}} />
+                      <YAxis axisLine={false} tickLine={false} tick={{fill: '#94A3B8', fontSize: 10}} />
+                      <Tooltip 
+                        contentStyle={{backgroundColor: '#1E293B', border: 'none', borderRadius: '12px', color: '#fff'}}
+                        itemStyle={{color: '#0EA5E9'}}
+                      />
                       <Area type="monotone" dataKey="value" stroke="#0EA5E9" fillOpacity={0.1} fill="#0EA5E9" strokeWidth={4} />
                     </AreaChart>
                  </ResponsiveContainer>
@@ -404,16 +407,16 @@ export default function AdminPage() {
 
           {activeView === 'orders' && (
             <div className="space-y-6">
-              <div className="flex gap-4">
-                <Input placeholder="Search Order ID or Player..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="max-w-md h-12 rounded-xl" />
-                <div className="flex gap-2">
-                  {["all", "pending", "processing", "successful", "cancelled"].map(s => <Button key={s} variant={orderStatusFilter === s ? "default" : "outline"} onClick={() => setOrderStatusFilter(s)} className="rounded-full h-12 px-6 uppercase font-bold text-xs">{s}</Button>)}
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Input placeholder="Search Order ID or Player..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="max-w-md h-12 rounded-xl dark:bg-slate-900 dark:border-white/5" />
+                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                  {["all", "pending", "processing", "successful", "cancelled"].map(s => <Button key={s} variant={orderStatusFilter === s ? "default" : "outline"} onClick={() => setOrderStatusFilter(s)} className="rounded-full h-12 px-6 uppercase font-bold text-xs shrink-0 dark:border-white/5">{s}</Button>)}
                 </div>
               </div>
-              <Card className="rounded-[2rem] border-none shadow-xl overflow-hidden">
+              <Card className="rounded-[2rem] border-none shadow-xl overflow-hidden bg-white dark:bg-slate-900">
                 <Table>
-                  <TableHeader className="bg-slate-50/50">
-                    <TableRow>
+                  <TableHeader className="bg-slate-50/50 dark:bg-slate-800/40">
+                    <TableRow className="border-none">
                       <TableHead className="font-bold px-8">Reference</TableHead>
                       <TableHead className="font-bold">Player & Item</TableHead>
                       <TableHead className="font-bold">Amount</TableHead>
@@ -425,17 +428,17 @@ export default function AdminPage() {
                     {filteredOrders.length === 0 ? (
                       <TableRow><TableCell colSpan={5} className="h-40 text-center text-slate-400 italic">No orders matching filters.</TableCell></TableRow>
                     ) : filteredOrders.map(o => (
-                      <TableRow key={o.id}>
-                        <TableCell className="px-8 font-mono text-[10px] font-bold text-primary">#{o.id.slice(0, 8).toUpperCase()}</TableCell>
+                      <TableRow key={o.id} className="border-slate-50 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-slate-800/30">
+                        <TableCell className="px-8 font-mono text-[10px] font-bold text-primary">#{o.id.toUpperCase()}</TableCell>
                         <TableCell>
                            <div className="flex flex-col">
-                              <span className="font-bold text-slate-900">{o.gameDetails?.playerName || "Client"}</span>
-                              <span className="text-[10px] text-slate-400 font-bold uppercase">{o.items?.[0]?.title}</span>
+                              <span className="font-bold text-slate-900 dark:text-white">{o.gameDetails?.playerName || "Client"}</span>
+                              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase">{o.items?.[0]?.title}</span>
                            </div>
                         </TableCell>
-                        <TableCell className="font-bold">${o.total?.toFixed(2)}</TableCell>
+                        <TableCell className="font-bold text-slate-900 dark:text-white">${o.total?.toFixed(2)}</TableCell>
                         <TableCell>
-                           <Badge className={cn("rounded-full uppercase text-[8px] font-bold", o.status === 'successful' ? "bg-green-100 text-green-700" : o.status === 'pending' ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700")}>{o.status}</Badge>
+                           <Badge className={cn("rounded-full uppercase text-[8px] font-bold border-none", o.status === 'successful' ? "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400" : o.status === 'pending' ? "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400" : "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400")}>{o.status}</Badge>
                         </TableCell>
                         <TableCell className="text-right px-8">
                            <Button size="sm" onClick={() => handleOpenOrderDialog(o)} className="rounded-full h-8 px-4 font-bold text-[10px] gap-2"><Eye size={12} /> Details</Button>
@@ -451,19 +454,19 @@ export default function AdminPage() {
           {activeView === 'products' && (
             <div className="space-y-6">
               <div className="flex justify-between items-center">
-                <Input placeholder="Search items..." className="max-w-xs h-12 rounded-xl" />
+                <Input placeholder="Search items..." className="max-w-xs h-12 rounded-xl dark:bg-slate-900 dark:border-white/5" />
                 <Button onClick={() => handleOpenProductDialog()} className="h-12 rounded-xl gap-2 font-bold shadow-lg shadow-primary/20"><PlusCircle size={20} /> Add Item</Button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {products.length === 0 ? (
                    <div className="col-span-full py-20 text-center text-slate-400 italic">No inventory items found.</div>
                 ) : products.map(p => (
-                  <Card key={p.id} className="p-6 rounded-[2rem] border-none shadow-xl bg-white flex gap-4">
-                    <div className="w-20 h-20 rounded-2xl bg-slate-100 overflow-hidden relative shadow-inner">
-                      {p.thumbnail ? <Image src={p.thumbnail} alt="" fill className="object-cover" /> : <ImageIcon className="m-auto absolute inset-0 text-slate-200" />}
+                  <Card key={p.id} className="p-6 rounded-[2rem] border-none shadow-xl bg-white dark:bg-slate-900 flex gap-4">
+                    <div className="w-20 h-20 rounded-2xl bg-slate-100 dark:bg-slate-800 overflow-hidden relative shadow-inner">
+                      {p.thumbnail ? <Image src={p.thumbnail} alt="" fill className="object-cover" /> : <ImageIcon className="m-auto absolute inset-0 text-slate-200 dark:text-slate-700" />}
                     </div>
                     <div className="flex-1 flex flex-col justify-between">
-                       <div><h4 className="font-bold text-slate-900 leading-tight">{p.title}</h4><p className="text-[10px] font-bold text-primary uppercase">{p.gameId}</p></div>
+                       <div><h4 className="font-bold text-slate-900 dark:text-white leading-tight">{p.title}</h4><p className="text-[10px] font-bold text-primary uppercase">{p.gameId}</p></div>
                        <div className="flex justify-between items-end"><span className="font-bold text-lg text-primary">${p.price}</span><div className="flex gap-2"><Button size="icon" variant="ghost" className="h-8 w-8 text-blue-500" onClick={() => handleOpenProductDialog(p)}><Edit size={16} /></Button><Button size="icon" variant="ghost" className="h-8 w-8 text-red-500" onClick={() => deleteProduct(p.id)}><Trash2 size={16} /></Button></div></div>
                     </div>
                   </Card>
@@ -475,21 +478,21 @@ export default function AdminPage() {
           {activeView === 'events' && (
              <div className="space-y-6">
                 <div className="flex justify-between items-center">
-                   <h3 className="text-xl font-bold">Manage Free Fire Events</h3>
+                   <h3 className="text-xl font-bold text-slate-900 dark:text-white">Manage Free Fire Events</h3>
                    <Button onClick={() => handleOpenEventDialog()} className="h-12 rounded-xl font-bold gap-2"><Sparkles size={20} /> New Event</Button>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                    {events.length === 0 ? (
-                      <div className="col-span-full py-20 text-center text-slate-400 italic border-2 border-dashed rounded-[2.5rem]">No events published yet.</div>
+                      <div className="col-span-full py-20 text-center text-slate-400 italic border-2 border-dashed rounded-[2.5rem] dark:border-white/5">No events published yet.</div>
                    ) : events.map(ev => (
-                      <Card key={ev.id} className="rounded-[2.5rem] overflow-hidden border-none shadow-xl bg-white">
-                         <div className="aspect-video relative bg-slate-100">
+                      <Card key={ev.id} className="rounded-[2.5rem] overflow-hidden border-none shadow-xl bg-white dark:bg-slate-900">
+                         <div className="aspect-video relative bg-slate-100 dark:bg-slate-800">
                             {ev.thumbnailUrl && <Image src={ev.thumbnailUrl} alt="" fill className="object-cover" />}
                             {!ev.active && <div className="absolute inset-0 bg-black/60 flex items-center justify-center"><Badge variant="destructive">INACTIVE</Badge></div>}
                          </div>
                          <div className="p-6 space-y-4">
-                            <div><h4 className="text-lg font-bold">{ev.title}</h4><p className="text-xs text-muted-foreground line-clamp-2">{ev.description}</p></div>
-                            <div className="flex justify-between items-center pt-4 border-t"><Badge variant="outline" className="rounded-full px-3">{ev.type}</Badge><div className="flex gap-2"><Button size="sm" variant="ghost" className="text-blue-500" onClick={() => handleOpenEventDialog(ev)}><Edit size={16} /></Button><Button size="sm" variant="ghost" className="text-red-500" onClick={() => deleteEvent(ev.id)}><Trash2 size={16} /></Button></div></div>
+                            <div><h4 className="text-lg font-bold text-slate-900 dark:text-white">{ev.title}</h4><p className="text-xs text-muted-foreground line-clamp-2">{ev.description}</p></div>
+                            <div className="flex justify-between items-center pt-4 border-t dark:border-white/5"><Badge variant="outline" className="rounded-full px-3 dark:border-white/10">{ev.type}</Badge><div className="flex gap-2"><Button size="sm" variant="ghost" className="text-blue-500" onClick={() => handleOpenEventDialog(ev)}><Edit size={16} /></Button><Button size="sm" variant="ghost" className="text-red-500" onClick={() => deleteEvent(ev.id)}><Trash2 size={16} /></Button></div></div>
                          </div>
                       </Card>
                    ))}
@@ -498,10 +501,10 @@ export default function AdminPage() {
           )}
 
           {activeView === 'account-posts' && (
-            <Card className="rounded-[2rem] overflow-hidden border-none shadow-xl">
+            <Card className="rounded-[2rem] overflow-hidden border-none shadow-xl bg-white dark:bg-slate-900">
                <Table>
-                  <TableHeader className="bg-slate-50/50">
-                     <TableRow>
+                  <TableHeader className="bg-slate-50/50 dark:bg-slate-800/40">
+                     <TableRow className="border-none">
                         <TableHead className="px-8">Seller</TableHead>
                         <TableHead>Details</TableHead>
                         <TableHead>Price</TableHead>
@@ -513,11 +516,11 @@ export default function AdminPage() {
                      {accountPosts.length === 0 ? (
                         <TableRow><TableCell colSpan={5} className="h-40 text-center text-slate-400 italic">No account listings found.</TableCell></TableRow>
                      ) : accountPosts.map(p => (
-                        <TableRow key={p.id}>
-                           <TableCell className="px-8"><div className="flex items-center gap-3"><div className="w-8 h-8 rounded-full overflow-hidden bg-slate-100 relative">{p.authorAvatar && <Image src={p.authorAvatar} alt="" fill className="object-cover" />}</div><span className="font-bold text-xs">{p.authorName}</span></div></TableCell>
-                           <TableCell><div className="flex flex-col"><span className="text-xs font-bold">Lv {p.level}</span><span className="text-[9px] uppercase font-bold text-slate-400">{p.platform}</span></div></TableCell>
+                        <TableRow key={p.id} className="border-slate-50 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-slate-800/30">
+                           <TableCell className="px-8"><div className="flex items-center gap-3"><div className="w-8 h-8 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800 relative">{p.authorAvatar && <Image src={p.authorAvatar} alt="" fill className="object-cover" />}</div><span className="font-bold text-xs text-slate-900 dark:text-white">{p.authorName}</span></div></TableCell>
+                           <TableCell><div className="flex flex-col"><span className="text-xs font-bold text-slate-900 dark:text-white">Lv {p.level}</span><span className="text-[9px] uppercase font-bold text-slate-400 dark:text-slate-500">{p.platform}</span></div></TableCell>
                            <TableCell className="font-bold text-primary">${p.price}</TableCell>
-                           <TableCell><Badge className={cn("rounded-full text-[8px] font-bold uppercase", p.status === 'approved' ? "bg-green-100 text-green-700" : p.status === 'pending' ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700")}>{p.status}</Badge></TableCell>
+                           <TableCell><Badge className={cn("rounded-full text-[8px] font-bold uppercase border-none", p.status === 'approved' ? "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400" : p.status === 'pending' ? "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400" : "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400")}>{p.status}</Badge></TableCell>
                            <TableCell className="text-right px-8"><div className="flex justify-end gap-2">
                              <Button size="icon" variant="ghost" className="h-8 w-8 text-green-500" onClick={() => updateAccountPostStatus(p.id, 'approved')}><CheckCircle2 size={16} /></Button>
                              <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500" onClick={() => updateAccountPostStatus(p.id, 'rejected')}><XCircle size={16} /></Button>
@@ -530,10 +533,10 @@ export default function AdminPage() {
           )}
 
           {activeView === 'users' && (
-            <Card className="rounded-[2rem] border-none shadow-xl overflow-hidden">
+            <Card className="rounded-[2rem] border-none shadow-xl overflow-hidden bg-white dark:bg-slate-900">
                <Table>
-                  <TableHeader className="bg-slate-50/50">
-                    <TableRow>
+                  <TableHeader className="bg-slate-50/50 dark:bg-slate-800/40">
+                    <TableRow className="border-none">
                       <TableHead className="font-bold px-8">Profile</TableHead>
                       <TableHead className="font-bold">Contact</TableHead>
                       <TableHead className="font-bold">Role</TableHead>
@@ -543,17 +546,17 @@ export default function AdminPage() {
                   </TableHeader>
                   <TableBody>
                     {allUsers.map(u => (
-                      <TableRow key={u.uid} className={cn(u.banned && "bg-red-50/50 opacity-70")}>
-                        <TableCell className="px-8"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100 relative">{u.photoURL && <Image src={u.photoURL} alt="" fill className="object-cover" />}</div><div className="flex flex-col"><span className="font-bold text-slate-900 text-xs">{u.name}</span>{u.banned && <Badge variant="destructive" className="h-4 text-[8px]">BANNED</Badge>}</div></div></TableCell>
-                        <TableCell><div className="flex flex-col"><span className="text-[10px] font-bold text-slate-600">{u.email}</span><span className="text-[9px] text-slate-400">{u.phoneNumber}</span></div></TableCell>
-                        <TableCell><Badge variant="secondary" className="rounded-full text-[9px] uppercase font-bold">{u.role}</Badge></TableCell>
+                      <TableRow key={u.uid} className={cn("border-slate-50 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-slate-800/30", u.banned && "bg-red-50/50 dark:bg-red-950/20 opacity-70")}>
+                        <TableCell className="px-8"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800 relative">{u.photoURL && <Image src={u.photoURL} alt="" fill className="object-cover" />}</div><div className="flex flex-col"><span className="font-bold text-slate-900 dark:text-white text-xs">{u.name}</span>{u.banned && <Badge variant="destructive" className="h-4 text-[8px]">BANNED</Badge>}</div></div></TableCell>
+                        <TableCell><div className="flex flex-col"><span className="text-[10px] font-bold text-slate-600 dark:text-slate-400">{u.email}</span><span className="text-[9px] text-slate-400 dark:text-slate-500">{u.phoneNumber}</span></div></TableCell>
+                        <TableCell><Badge variant="secondary" className="rounded-full text-[9px] uppercase font-bold dark:bg-slate-800 dark:text-slate-300 border-none">{u.role}</Badge></TableCell>
                         <TableCell>
                            <div className="flex items-center gap-1.5">
                              <Star size={12} className="text-amber-500 fill-amber-500" />
-                             <span className="font-bold text-slate-900">{u.points || 0}</span>
+                             <span className="font-bold text-slate-900 dark:text-white">{u.points || 0}</span>
                            </div>
                         </TableCell>
-                        <TableCell className="text-right px-8"><div className="flex justify-end gap-2"><Button size="icon" variant="ghost" onClick={() => { setSelectedUser(u); setIsUserManageOpen(true); }} className="text-primary hover:bg-primary/5 rounded-xl"><UserCog size={18} /></Button><Button size="icon" variant="ghost" onClick={() => deleteUser(u.uid)} className="text-red-500 hover:bg-red-50 rounded-xl"><Trash2 size={18} /></Button></div></TableCell>
+                        <TableCell className="text-right px-8"><div className="flex justify-end gap-2"><Button size="icon" variant="ghost" onClick={() => { setSelectedUser(u); setIsUserManageOpen(true); }} className="text-primary hover:bg-primary/5 rounded-xl"><UserCog size={18} /></Button><Button size="icon" variant="ghost" onClick={() => deleteUser(u.uid)} className="text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl"><Trash2 size={18} /></Button></div></TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -564,22 +567,22 @@ export default function AdminPage() {
           {activeView === 'settings' && (
             <div className="max-w-3xl space-y-8 animate-in slide-in-from-bottom-8">
               <Accordion type="single" collapsible className="w-full space-y-4">
-                 <AccordionItem value="ticker" className="border-none bg-white rounded-[2rem] px-8 shadow-lg">
-                    <AccordionTrigger className="hover:no-underline"><div className="flex items-center gap-4 text-left"><div className="p-3 bg-blue-50 text-primary rounded-2xl"><Sparkles size={20} /></div><div><h4 className="font-bold text-slate-900">Announcement Ticker</h4><p className="text-xs text-muted-foreground">Manage the homepage scrolling note</p></div></div></AccordionTrigger>
+                 <AccordionItem value="ticker" className="border-none bg-white dark:bg-slate-900 rounded-[2rem] px-8 shadow-lg">
+                    <AccordionTrigger className="hover:no-underline"><div className="flex items-center gap-4 text-left"><div className="p-3 bg-blue-50 dark:bg-blue-500/10 text-primary rounded-2xl"><Sparkles size={20} /></div><div><h4 className="font-bold text-slate-900 dark:text-white">Announcement Ticker</h4><p className="text-xs text-muted-foreground">Manage the homepage scrolling note</p></div></div></AccordionTrigger>
                     <AccordionContent className="pb-8 space-y-4">
-                       <Label className="text-[10px] font-bold uppercase tracking-widest ml-1">Ticker Text Content</Label>
+                       <Label className="text-[10px] font-bold uppercase tracking-widest ml-1 text-slate-400">Ticker Text Content</Label>
                        <Textarea 
                         defaultValue={storeSettings.announcementTicker}
                         onBlur={e => updateStoreSettings({ announcementTicker: e.target.value })}
-                        className="rounded-2xl bg-slate-50 border-none min-h-[100px] text-sm font-bold shadow-inner"
+                        className="rounded-2xl bg-slate-50 dark:bg-slate-800 border-none min-h-[100px] text-sm font-bold shadow-inner"
                         placeholder="Welcome to Oskar Shop..."
                        />
                        <p className="text-[10px] text-muted-foreground italic">* Changes reflect immediately on refresh for all users.</p>
                     </AccordionContent>
                  </AccordionItem>
 
-                 <AccordionItem value="banners" className="border-none bg-white rounded-[2rem] px-8 shadow-lg">
-                    <AccordionTrigger className="hover:no-underline"><div className="flex items-center gap-4 text-left"><div className="p-3 bg-amber-50 text-amber-500 rounded-2xl"><Layers size={20} /></div><div><h4 className="font-bold text-slate-900">Homepage Banners</h4><p className="text-xs text-muted-foreground">Manage slider images and promotions</p></div></div></AccordionTrigger>
+                 <AccordionItem value="banners" className="border-none bg-white dark:bg-slate-900 rounded-[2rem] px-8 shadow-lg">
+                    <AccordionTrigger className="hover:no-underline"><div className="flex items-center gap-4 text-left"><div className="p-3 bg-amber-50 dark:bg-amber-500/10 text-amber-500 rounded-2xl"><Layers size={20} /></div><div><h4 className="font-bold text-slate-900 dark:text-white">Homepage Banners</h4><p className="text-xs text-muted-foreground">Manage slider images and promotions</p></div></div></AccordionTrigger>
                     <AccordionContent className="pb-8 space-y-6">
                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {banners.map(b => (
@@ -590,7 +593,7 @@ export default function AdminPage() {
                                 </div>
                              </div>
                           ))}
-                          <button onClick={() => setIsBannerDialogOpen(true)} className="aspect-[21/9] rounded-2xl border-3 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-300 hover:border-primary hover:text-primary transition-all gap-2 bg-slate-50">
+                          <button onClick={() => setIsBannerDialogOpen(true)} className="aspect-[21/9] rounded-2xl border-3 border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center text-slate-300 dark:text-slate-700 hover:border-primary hover:text-primary transition-all gap-2 bg-slate-50 dark:bg-slate-800/40">
                              <PlusCircle size={32} />
                              <span className="text-xs font-bold uppercase">Add New Banner</span>
                           </button>
@@ -598,41 +601,41 @@ export default function AdminPage() {
                     </AccordionContent>
                  </AccordionItem>
 
-                 <AccordionItem value="maintenance" className="border-none bg-white rounded-[2rem] px-8 shadow-lg">
-                    <AccordionTrigger className="hover:no-underline"><div className="flex items-center gap-4 text-left"><div className="p-3 bg-red-50 text-red-500 rounded-2xl"><MonitorOff size={20} /></div><div><h4 className="font-bold text-slate-900">Maintenance & Kill-Switch</h4><p className="text-xs text-muted-foreground">Take the store offline for updates</p></div></div></AccordionTrigger>
+                 <AccordionItem value="maintenance" className="border-none bg-white dark:bg-slate-900 rounded-[2rem] px-8 shadow-lg">
+                    <AccordionTrigger className="hover:no-underline"><div className="flex items-center gap-4 text-left"><div className="p-3 bg-red-50 dark:bg-red-500/10 text-red-500 rounded-2xl"><MonitorOff size={20} /></div><div><h4 className="font-bold text-slate-900 dark:text-white">Maintenance & Kill-Switch</h4><p className="text-xs text-muted-foreground">Take the store offline for updates</p></div></div></AccordionTrigger>
                     <AccordionContent className="pb-8 space-y-6">
-                       <div className="flex items-center justify-between p-6 bg-slate-900 text-white rounded-[1.5rem]">
+                       <div className="flex items-center justify-between p-6 bg-slate-900 dark:bg-black/40 text-white rounded-[1.5rem]">
                           <div><p className="font-bold">Maintenance Mode</p><p className="text-xs text-white/40">Only admins can browse when active</p></div>
                           <Switch checked={storeSettings.appStatus?.offline} onCheckedChange={val => updateStoreSettings({ appStatus: { ...storeSettings.appStatus, offline: val } })} />
                        </div>
                        <div className="space-y-4">
-                          <div className="space-y-2"><Label className="text-[10px] font-bold uppercase tracking-widest ml-1">Offline Title</Label><Input defaultValue={storeSettings.appStatus?.offlineTitle} onBlur={e => updateStoreSettings({ appStatus: { ...storeSettings.appStatus, offlineTitle: e.target.value } })} className="h-12 rounded-xl bg-slate-50 border-none shadow-inner" /></div>
-                          <div className="space-y-2"><Label className="text-[10px] font-bold uppercase tracking-widest ml-1">Offline Hero Media</Label><div className="relative h-40 w-full rounded-[1.5rem] overflow-hidden bg-slate-100 group border-2 border-dashed flex flex-col items-center justify-center">{storeSettings.appStatus?.offlineImageUrl ? <Image src={storeSettings.appStatus.offlineImageUrl} alt="" fill className="object-cover opacity-50" /> : <ImageIcon size={32} className="text-slate-300" />}<Button variant="secondary" className="relative z-10 rounded-full h-10 px-6 font-bold shadow-lg"><input type="file" accept="image/*" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'offline')} className="absolute inset-0 opacity-0 cursor-pointer" />{isUploading ? <Loader2 className="animate-spin mr-2" /> : <Plus size={16} className="mr-2" />}Change Media</Button></div></div>
+                          <div className="space-y-2"><Label className="text-[10px] font-bold uppercase tracking-widest ml-1 text-slate-400">Offline Title</Label><Input defaultValue={storeSettings.appStatus?.offlineTitle} onBlur={e => updateStoreSettings({ appStatus: { ...storeSettings.appStatus, offlineTitle: e.target.value } })} className="h-12 rounded-xl bg-slate-50 dark:bg-slate-800 border-none shadow-inner" /></div>
+                          <div className="space-y-2"><Label className="text-[10px] font-bold uppercase tracking-widest ml-1 text-slate-400">Offline Hero Media</Label><div className="relative h-40 w-full rounded-[1.5rem] overflow-hidden bg-slate-100 dark:bg-slate-800 group border-2 border-dashed dark:border-white/5 flex flex-col items-center justify-center">{storeSettings.appStatus?.offlineImageUrl ? <Image src={storeSettings.appStatus.offlineImageUrl} alt="" fill className="object-cover opacity-50" /> : <ImageIcon size={32} className="text-slate-300 dark:text-slate-700" />}<Button variant="secondary" className="relative z-10 rounded-full h-10 px-6 font-bold shadow-lg"><input type="file" accept="image/*" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'offline')} className="absolute inset-0 opacity-0 cursor-pointer" />{isUploading ? <Loader2 className="animate-spin mr-2" /> : <Plus size={16} className="mr-2" />}Change Media</Button></div></div>
                        </div>
                     </AccordionContent>
                  </AccordionItem>
 
-                 <AccordionItem value="security" className="border-none bg-white rounded-[2rem] px-8 shadow-lg">
-                    <AccordionTrigger className="hover:no-underline"><div className="flex items-center gap-4 text-left"><div className="p-3 bg-purple-50 text-purple-500 rounded-2xl"><Shield size={20} /></div><div><h4 className="font-bold text-slate-900">Marketplace & Security</h4><p className="text-xs text-muted-foreground">Fees, access control and global configuration</p></div></div></AccordionTrigger>
+                 <AccordionItem value="security" className="border-none bg-white dark:bg-slate-900 rounded-[2rem] px-8 shadow-lg">
+                    <AccordionTrigger className="hover:no-underline"><div className="flex items-center gap-4 text-left"><div className="p-3 bg-purple-50 dark:bg-purple-500/10 text-purple-500 rounded-2xl"><Shield size={20} /></div><div><h4 className="font-bold text-slate-900 dark:text-white">Marketplace & Security</h4><p className="text-xs text-muted-foreground">Fees, access control and global configuration</p></div></div></AccordionTrigger>
                     <AccordionContent className="pb-8 space-y-6">
                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2"><Label className="text-[10px] font-bold uppercase tracking-widest ml-1">Control Panel PIN</Label><Input type="password" maxLength={6} defaultValue={storeSettings.config?.adminSettings?.pin} onBlur={e => updateStoreSettings({ config: { ...storeSettings.config, adminSettings: { ...storeSettings.config?.adminSettings, pin: e.target.value } } })} className="h-12 rounded-xl bg-slate-50 border-none shadow-inner" /></div>
-                          <div className="space-y-2"><Label className="text-[10px] font-bold uppercase tracking-widest ml-1">Account Listing Fee ($)</Label><Input type="number" defaultValue={storeSettings.config?.shop?.listingFee || 1} onBlur={e => updateStoreSettings({ config: { ...storeSettings.config, shop: { ...storeSettings.config?.shop, listingFee: parseFloat(e.target.value) } } })} className="h-12 rounded-xl bg-slate-50 border-none shadow-inner" /></div>
+                          <div className="space-y-2"><Label className="text-[10px] font-bold uppercase tracking-widest ml-1 text-slate-400">Control Panel PIN</Label><Input type="password" maxLength={6} defaultValue={storeSettings.config?.adminSettings?.pin} onBlur={e => updateStoreSettings({ config: { ...storeSettings.config, adminSettings: { ...storeSettings.config?.adminSettings, pin: e.target.value } } })} className="h-12 rounded-xl bg-slate-50 dark:bg-slate-800 border-none shadow-inner" /></div>
+                          <div className="space-y-2"><Label className="text-[10px] font-bold uppercase tracking-widest ml-1 text-slate-400">Account Listing Fee ($)</Label><Input type="number" defaultValue={storeSettings.config?.shop?.listingFee || 1} onBlur={e => updateStoreSettings({ config: { ...storeSettings.config, shop: { ...storeSettings.config?.shop, listingFee: parseFloat(e.target.value) } } })} className="h-12 rounded-xl bg-slate-50 dark:bg-slate-800 border-none shadow-inner" /></div>
                        </div>
                     </AccordionContent>
                  </AccordionItem>
 
-                 <AccordionItem value="branding" className="border-none bg-white rounded-[2rem] px-8 shadow-lg">
-                    <AccordionTrigger className="hover:no-underline"><div className="flex items-center gap-4 text-left"><div className="p-3 bg-cyan-50 text-cyan-500 rounded-2xl"><ImageIcon size={20} /></div><div><h4 className="font-bold text-slate-900">Identity & Branding</h4><p className="text-xs text-muted-foreground">Manage store logo and themes</p></div></div></AccordionTrigger>
+                 <AccordionItem value="branding" className="border-none bg-white dark:bg-slate-900 rounded-[2rem] px-8 shadow-lg">
+                    <AccordionTrigger className="hover:no-underline"><div className="flex items-center gap-4 text-left"><div className="p-3 bg-cyan-50 dark:bg-cyan-500/10 text-cyan-500 rounded-2xl"><ImageIcon size={20} /></div><div><h4 className="font-bold text-slate-900 dark:text-white">Identity & Branding</h4><p className="text-xs text-muted-foreground">Manage store logo and themes</p></div></div></AccordionTrigger>
                     <AccordionContent className="pb-8 space-y-6">
                        <div className="flex items-center gap-6">
-                          <div className="w-24 h-24 rounded-2xl bg-slate-100 relative overflow-hidden flex items-center justify-center">
+                          <div className="w-24 h-24 rounded-2xl bg-slate-100 dark:bg-slate-800 relative overflow-hidden flex items-center justify-center">
                              {storeSettings.logo ? <Image src={storeSettings.logo} alt="Logo" fill className="object-cover" /> : <p className="text-[10px] font-bold opacity-30">NO LOGO</p>}
                           </div>
                           <div className="flex-1 space-y-3">
-                             <Label className="text-[10px] font-bold uppercase tracking-widest">Store Official Logo</Label>
+                             <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Store Official Logo</Label>
                              <div className="relative">
-                               <Button variant="outline" className="w-full h-12 rounded-xl border-dashed">Upload New Logo</Button>
+                               <Button variant="outline" className="w-full h-12 rounded-xl border-dashed dark:border-white/10 dark:bg-slate-800">Upload New Logo</Button>
                                <input type="file" accept="image/*" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'logo')} className="absolute inset-0 opacity-0 cursor-pointer" />
                              </div>
                              <p className="text-[10px] text-muted-foreground uppercase">Recommended: Square PNG Transparent</p>
@@ -649,7 +652,7 @@ export default function AdminPage() {
       </div>
 
       <Dialog open={isUserManageOpen} onOpenChange={setIsUserManageOpen}>
-        <DialogContent className="max-w-md w-[95vw] rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl bg-white max-h-[90vh] overflow-y-auto scrollbar-hide">
+        <DialogContent className="max-w-md w-[95vw] rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl bg-white dark:bg-slate-900 max-h-[90vh] overflow-y-auto scrollbar-hide">
           <DialogHeader className="sr-only">
             <DialogTitle>User Management: {selectedUser?.name || 'User'}</DialogTitle>
           </DialogHeader>
@@ -657,9 +660,9 @@ export default function AdminPage() {
             <div className="flex flex-col">
               <div className="bg-slate-900 p-8 text-white"><div className="flex items-center gap-4"><div className="w-16 h-16 rounded-full overflow-hidden border-2 border-white/20 relative">{selectedUser.photoURL ? <Image src={selectedUser.photoURL} alt="" fill className="object-cover" /> : <User size={32} className="m-4 text-white/40" />}</div><div><h2 className="text-2xl font-bold font-headline">{selectedUser.name}</h2><p className="text-xs text-white/40">{selectedUser.email}</p></div></div></div>
               <div className="p-8 space-y-8">
-                <div className="space-y-4"><h3 className="text-xs font-bold uppercase text-slate-400 flex items-center gap-2"><Shield size={14} /> Permissions</h3><div className="grid grid-cols-2 gap-2">{['user', 'staff', 'admin'].map(r => <Button key={r} variant={selectedUser.role === r ? "default" : "outline"} onClick={() => manageUser(selectedUser.uid, { role: r as any })} className="h-11 rounded-2xl text-[10px] uppercase font-bold">{r}</Button>)}</div></div>
-                <div className="space-y-4"><h3 className="text-xs font-bold uppercase text-slate-400 flex items-center gap-2"><Star size={14} /> Points Balance</h3><div className="bg-slate-50 rounded-[2rem] p-6 text-center"><p className="text-4xl font-headline font-bold mb-6">{selectedUser.points || 0}</p><div className="flex gap-2"><Input type="number" placeholder="Amount" value={pointAdjustment} onChange={e => setPointAdjustment(e.target.value)} className="h-12 rounded-xl border-none shadow-sm text-center font-bold" /><Button onClick={() => handleAdjustPoints('credit')} className="bg-green-600"><ArrowUpCircle /></Button><Button onClick={() => handleAdjustPoints('debit')} className="bg-red-600"><ArrowDownCircle /></Button></div></div></div>
-                <div className="pt-6 border-t flex flex-col gap-3"><Button variant={selectedUser.banned ? "outline" : "destructive"} onClick={handleBanUser} className="w-full h-14 rounded-2xl gap-2 font-bold">{selectedUser.banned ? <CheckCircle2 /> : <Ban />} {selectedUser.banned ? "Unban Account" : "Ban Account"}</Button><p className="text-[9px] text-center text-slate-400 font-bold uppercase">Actions recorded for audit logs</p></div>
+                <div className="space-y-4"><h3 className="text-xs font-bold uppercase text-slate-400 flex items-center gap-2"><Shield size={14} /> Permissions</h3><div className="grid grid-cols-2 gap-2">{['user', 'staff', 'admin'].map(r => <Button key={r} variant={selectedUser.role === r ? "default" : "outline"} onClick={() => manageUser(selectedUser.uid, { role: r as any })} className="h-11 rounded-2xl text-[10px] uppercase font-bold dark:border-white/5">{r}</Button>)}</div></div>
+                <div className="space-y-4"><h3 className="text-xs font-bold uppercase text-slate-400 flex items-center gap-2"><Star size={14} /> Points Balance</h3><div className="bg-slate-50 dark:bg-slate-800 rounded-[2rem] p-6 text-center shadow-inner"><p className="text-4xl font-headline font-bold mb-6 text-slate-900 dark:text-white">{selectedUser.points || 0}</p><div className="flex gap-2"><Input type="number" placeholder="Amount" value={pointAdjustment} onChange={e => setPointAdjustment(e.target.value)} className="h-12 rounded-xl border-none bg-white dark:bg-slate-700 shadow-sm text-center font-bold" /><Button onClick={() => handleAdjustPoints('credit')} className="bg-green-600"><ArrowUpCircle /></Button><Button onClick={() => handleAdjustPoints('debit')} className="bg-red-600"><ArrowDownCircle /></Button></div></div></div>
+                <div className="pt-6 border-t dark:border-white/5 flex flex-col gap-3"><Button variant={selectedUser.banned ? "outline" : "destructive"} onClick={handleBanUser} className="w-full h-14 rounded-2xl gap-2 font-bold">{selectedUser.banned ? <CheckCircle2 /> : <Ban />} {selectedUser.banned ? "Unban Account" : "Ban Account"}</Button><p className="text-[9px] text-center text-slate-400 font-bold uppercase">Actions recorded for audit logs</p></div>
               </div>
             </div>
           )}
@@ -667,65 +670,68 @@ export default function AdminPage() {
       </Dialog>
 
       <Dialog open={isProductDialogOpen} onOpenChange={setIsProductDialogOpen}>
-        <DialogContent className="max-w-xl w-[95vw] rounded-[3rem] p-8 border-none bg-white max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle className="text-2xl font-headline font-bold">Manage Inventory Item</DialogTitle></DialogHeader>
+        <DialogContent className="max-w-xl w-[95vw] rounded-[3rem] p-8 border-none bg-white dark:bg-slate-900 max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle className="text-2xl font-headline font-bold text-slate-900 dark:text-white">Manage Inventory Item</DialogTitle></DialogHeader>
           <form onSubmit={handleSaveProduct} className="space-y-6 pt-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div><Label>Title</Label><Input required value={productForm.title} onChange={e => setProductForm({...productForm, title: e.target.value})} className="h-12" /></div>
-              <div>
-                <Label>Game Category</Label>
+              <div className="space-y-2"><Label className="text-slate-400">Title</Label><Input required value={productForm.title} onChange={e => setProductForm({...productForm, title: e.target.value})} className="h-12 dark:bg-slate-800 dark:border-none" /></div>
+              <div className="space-y-2">
+                <Label className="text-slate-400">Game Category</Label>
                 <Select value={productForm.gameId} onValueChange={val => setProductForm({...productForm, gameId: val})}>
-                  <SelectTrigger className="h-12 rounded-xl">
+                  <SelectTrigger className="h-12 rounded-xl dark:bg-slate-800 dark:border-none">
                     <SelectValue placeholder="Select Game" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="freefire">Free Fire</SelectItem>
-                    <SelectItem value="bloodstrike">Blood Strike</SelectItem>
+                  <SelectContent className="dark:bg-slate-900">
+                    <SelectItem value="freefire" className="rounded-lg">Free Fire</SelectItem>
+                    <SelectItem value="bloodstrike" className="rounded-lg">Blood Strike</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4"><div><Label>Price ($)</Label><Input type="number" required value={productForm.price} onChange={e => setProductForm({...productForm, price: e.target.value})} className="h-12" /></div><div><Label>Discount Price</Label><Input type="number" value={productForm.discountedPrice} onChange={e => setProductForm({...productForm, discountedPrice: e.target.value})} className="h-12" /></div></div>
-            <div className="space-y-2"><Label>Description</Label><Textarea required value={productForm.description} onChange={e => setProductForm({...productForm, description: e.target.value})} className="min-h-[80px]" /></div>
-            <div className="relative h-32 w-full rounded-2xl border-2 border-dashed bg-slate-50 flex items-center justify-center overflow-hidden">{productForm.thumbnail ? <Image src={productForm.thumbnail} alt="" fill className="object-cover" /> : <ImageIcon size={24} className="text-slate-300" />}<Button variant="outline" className="relative z-10" type="button"><input type="file" accept="image/*" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'product')} className="absolute inset-0 opacity-0 cursor-pointer" />Upload</Button></div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2"><Label className="text-slate-400">Price ($)</Label><Input type="number" required value={productForm.price} onChange={e => setProductForm({...productForm, price: e.target.value})} className="h-12 dark:bg-slate-800 dark:border-none" /></div>
+              <div className="space-y-2"><Label className="text-slate-400">Discount Price</Label><Input type="number" value={productForm.discountedPrice} onChange={e => setProductForm({...productForm, discountedPrice: e.target.value})} className="h-12 dark:bg-slate-800 dark:border-none" /></div>
+            </div>
+            <div className="space-y-2"><Label className="text-slate-400">Description</Label><Textarea required value={productForm.description} onChange={e => setProductForm({...productForm, description: e.target.value})} className="min-h-[80px] dark:bg-slate-800 dark:border-none" /></div>
+            <div className="relative h-32 w-full rounded-2xl border-2 border-dashed dark:border-white/5 bg-slate-50 dark:bg-slate-800/40 flex items-center justify-center overflow-hidden">{productForm.thumbnail ? <Image src={productForm.thumbnail} alt="" fill className="object-cover" /> : <ImageIcon size={24} className="text-slate-300 dark:text-slate-700" />}<Button variant="outline" className="relative z-10" type="button"><input type="file" accept="image/*" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'product')} className="absolute inset-0 opacity-0 cursor-pointer" />Upload</Button></div>
             <Button type="submit" disabled={isUploading} className="w-full h-14 rounded-2xl font-bold">{isUploading ? <Loader2 className="animate-spin" /> : "Save Changes"}</Button>
           </form>
         </DialogContent>
       </Dialog>
       
       <Dialog open={isEventDialogOpen} onOpenChange={setIsEventDialogOpen}>
-        <DialogContent className="max-w-xl w-[95vw] rounded-[3rem] p-8 border-none bg-white max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle className="text-2xl font-headline font-bold">Live Event Hub</DialogTitle></DialogHeader>
+        <DialogContent className="max-w-xl w-[95vw] rounded-[3rem] p-8 border-none bg-white dark:bg-slate-900 max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle className="text-2xl font-headline font-bold text-slate-900 dark:text-white">Live Event Hub</DialogTitle></DialogHeader>
           <form onSubmit={handleSaveEvent} className="space-y-6 pt-4">
-            <div className="space-y-2"><Label>Event Title</Label><Input required value={eventForm.title} onChange={e => setEventForm({...eventForm, title: e.target.value})} className="h-12" /></div>
-            <div className="space-y-2"><Label>Short Description</Label><Textarea required value={eventForm.description} onChange={e => setEventForm({...eventForm, description: e.target.value})} className="min-h-[100px]" /></div>
-            <div className="relative h-40 w-full rounded-2xl border-2 border-dashed bg-slate-50 flex items-center justify-center overflow-hidden">{eventForm.thumbnailUrl ? <Image src={eventForm.thumbnailUrl} alt="" fill className="object-cover" /> : <ImageIcon size={24} className="text-slate-300" />}<Button variant="outline" className="relative z-10" type="button"><input type="file" accept="image/*" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'event')} className="absolute inset-0 opacity-0 cursor-pointer" />Upload Poster</Button></div>
-            <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl"><Label>Event Active Status</Label><Switch checked={eventForm.active} onCheckedChange={val => setEventForm({...eventForm, active: val})} /></div>
+            <div className="space-y-2"><Label className="text-slate-400">Event Title</Label><Input required value={eventForm.title} onChange={e => setEventForm({...eventForm, title: e.target.value})} className="h-12 dark:bg-slate-800 dark:border-none" /></div>
+            <div className="space-y-2"><Label className="text-slate-400">Short Description</Label><Textarea required value={eventForm.description} onChange={e => setEventForm({...eventForm, description: e.target.value})} className="min-h-[100px] dark:bg-slate-800 dark:border-none" /></div>
+            <div className="relative h-40 w-full rounded-2xl border-2 border-dashed dark:border-white/5 bg-slate-50 dark:bg-slate-800/40 flex items-center justify-center overflow-hidden">{eventForm.thumbnailUrl ? <Image src={eventForm.thumbnailUrl} alt="" fill className="object-cover" /> : <ImageIcon size={24} className="text-slate-300 dark:text-slate-700" />}<Button variant="outline" className="relative z-10" type="button"><input type="file" accept="image/*" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'event')} className="absolute inset-0 opacity-0 cursor-pointer" />Upload Poster</Button></div>
+            <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl"><Label className="text-slate-900 dark:text-white">Event Active Status</Label><Switch checked={eventForm.active} onCheckedChange={val => setEventForm({...eventForm, active: val})} /></div>
             <Button type="submit" disabled={isUploading} className="w-full h-14 rounded-2xl font-bold">{isUploading ? <Loader2 className="animate-spin" /> : "Publish Event"}</Button>
           </form>
         </DialogContent>
       </Dialog>
 
       <Dialog open={isBannerDialogOpen} onOpenChange={setIsBannerDialogOpen}>
-        <DialogContent className="max-w-md w-[95vw] rounded-[3rem] p-8 border-none bg-white max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle className="text-2xl font-headline font-bold">New Promotion Banner</DialogTitle></DialogHeader>
+        <DialogContent className="max-w-md w-[95vw] rounded-[3rem] p-8 border-none bg-white dark:bg-slate-900 max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle className="text-2xl font-headline font-bold text-slate-900 dark:text-white">New Promotion Banner</DialogTitle></DialogHeader>
           <div className="space-y-6 pt-4">
-            <div className="relative h-48 w-full rounded-2xl border-2 border-dashed bg-slate-50 flex items-center justify-center overflow-hidden">{bannerForm.imageUrl ? <Image src={bannerForm.imageUrl} alt="" fill className="object-cover" /> : <ImageIcon size={24} className="text-slate-300" />}<Button variant="outline" className="relative z-10" type="button"><input type="file" accept="image/*" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'banner')} className="absolute inset-0 opacity-0 cursor-pointer" />Upload Banner</Button></div>
-            <div className="space-y-2"><Label>Redirect Hash (Optional)</Label><Input value={bannerForm.linkTo || ""} onChange={e => setBannerForm({...bannerForm, linkTo: e.target.value})} placeholder="#games" className="h-12" /></div>
+            <div className="relative h-48 w-full rounded-2xl border-2 border-dashed dark:border-white/5 bg-slate-50 dark:bg-slate-800/40 flex items-center justify-center overflow-hidden">{bannerForm.imageUrl ? <Image src={bannerForm.imageUrl} alt="" fill className="object-cover" /> : <ImageIcon size={24} className="text-slate-300 dark:text-slate-700" />}<Button variant="outline" className="relative z-10" type="button"><input type="file" accept="image/*" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'banner')} className="absolute inset-0 opacity-0 cursor-pointer" />Upload Banner</Button></div>
+            <div className="space-y-2"><Label className="text-slate-400">Redirect Hash (Optional)</Label><Input value={bannerForm.linkTo || ""} onChange={e => setBannerForm({...bannerForm, linkTo: e.target.value})} placeholder="#games" className="h-12 dark:bg-slate-800 dark:border-none" /></div>
             <Button onClick={handleSaveBanner} disabled={isUploading || !bannerForm.imageUrl} className="w-full h-14 rounded-2xl font-bold">Add Banner ✓</Button>
           </div>
         </DialogContent>
       </Dialog>
 
       <Dialog open={isOrderDetailOpen} onOpenChange={setIsOrderDetailOpen}>
-        <DialogContent className="max-w-3xl w-[95vw] rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl bg-white max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl w-[95vw] rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl bg-white dark:bg-slate-900 max-h-[90vh] overflow-y-auto">
           <DialogHeader className="sr-only">
             <DialogTitle>Order Details: {selectedOrder?.id || 'Order'}</DialogTitle>
           </DialogHeader>
           {selectedOrder && (
             <div className="flex flex-col">
               <div className="bg-slate-900 p-10 text-white relative">
-                 <Badge className="bg-primary text-white mb-2 font-mono">order {selectedOrder.id}</Badge>
+                 <Badge className="bg-primary text-white mb-2 font-mono border-none">ORDER {selectedOrder.id.toUpperCase()}</Badge>
                  <h2 className="text-3xl font-headline font-bold">Order Verification</h2>
                  <button onClick={() => setIsOrderDetailOpen(false)} className="absolute top-8 right-8 text-white/20 hover:text-white transition-colors">
                     <X size={24} />
@@ -736,18 +742,18 @@ export default function AdminPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                   <div>
                     <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Customer Details</h4>
-                    <Card className="p-5 rounded-2xl bg-slate-50 border-none flex flex-col gap-4 shadow-inner">
+                    <Card className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800 border-none flex flex-col gap-4 shadow-inner">
                        <div className="flex items-center gap-4">
                           <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
                              <User size={24} />
                           </div>
                           <div className="min-w-0">
-                             <p className="text-sm font-bold text-slate-900 truncate">{selectedOrder.gameDetails?.playerName || "N/A"}</p>
-                             <p className="text-[10px] text-muted-foreground uppercase font-mono tracking-tight">{selectedOrder.gameDetails?.playerID || "N/A"}</p>
+                             <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{selectedOrder.gameDetails?.playerName || "N/A"}</p>
+                             <p className="text-[10px] text-muted-foreground dark:text-slate-500 uppercase font-mono tracking-tight">{selectedOrder.gameDetails?.playerID || "N/A"}</p>
                           </div>
                        </div>
                        
-                       <div className="space-y-2 pt-2 border-t border-slate-200/50">
+                       <div className="space-y-2 pt-2 border-t border-slate-200/50 dark:border-white/5">
                           <div className="flex items-center justify-between">
                              <span className="text-[10px] font-bold text-slate-400 uppercase">Sender Number:</span>
                              <span className="text-xs font-bold text-primary flex items-center gap-1.5"><Phone size={10} /> {selectedOrder.gameDetails?.senderNumber || "N/A"}</span>
@@ -755,7 +761,7 @@ export default function AdminPage() {
                           {selectedOrder.gameDetails?.whatsappNumber && (
                             <div className="flex items-center justify-between">
                                <span className="text-[10px] font-bold text-slate-400 uppercase">WhatsApp:</span>
-                               <span className="text-xs font-bold text-green-600 flex items-center gap-1.5"><MessageCircle size={10} /> {selectedOrder.gameDetails.whatsappNumber}</span>
+                               <span className="text-xs font-bold text-green-600 dark:text-green-400 flex items-center gap-1.5"><MessageCircle size={10} /> {selectedOrder.gameDetails.whatsappNumber}</span>
                             </div>
                           )}
                        </div>
@@ -763,27 +769,27 @@ export default function AdminPage() {
                   </div>
                   <div>
                     <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Item Data</h4>
-                    <Card className="p-5 rounded-2xl bg-slate-50 border-none flex items-center gap-4 shadow-inner h-full">
-                       <div className="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center text-amber-500">
+                    <Card className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800 border-none flex items-center gap-4 shadow-inner h-full">
+                       <div className="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center text-amber-500">
                           <Package size={24} />
                        </div>
                        <div>
-                          <p className="text-sm font-bold text-slate-900">{selectedOrder.items?.[0]?.title}</p>
+                          <p className="text-sm font-bold text-slate-900 dark:text-white">{selectedOrder.items?.[0]?.title}</p>
                           <p className="text-[10px] text-primary font-bold uppercase">${selectedOrder.total?.toFixed(2)}</p>
-                          <Badge variant="outline" className="mt-1 text-[8px] border-slate-200">{selectedOrder.paymentMethod}</Badge>
+                          <Badge variant="outline" className="mt-1 text-[8px] border-slate-200 dark:border-white/10 dark:text-slate-400">{selectedOrder.paymentMethod}</Badge>
                        </div>
                     </Card>
                   </div>
                 </div>
 
-                <div className="pt-8 border-t space-y-6">
+                <div className="pt-8 border-t dark:border-white/5 space-y-6">
                    <div className="flex flex-col gap-2">
                       <Label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest ml-1">Process Action</Label>
                       <Select value={pendingOrderStatus} onValueChange={setPendingStatus}>
-                        <SelectTrigger className="h-16 rounded-2xl font-bold text-lg bg-slate-50 border-none focus:ring-primary shadow-inner">
+                        <SelectTrigger className="h-16 rounded-2xl font-bold text-lg bg-slate-50 dark:bg-slate-800 border-none focus:ring-primary shadow-inner text-slate-900 dark:text-white">
                            <SelectValue />
                         </SelectTrigger>
-                        <SelectContent className="rounded-2xl">
+                        <SelectContent className="rounded-2xl dark:bg-slate-900">
                            <SelectItem value="pending" className="rounded-xl">
                              <div className="flex items-center gap-2">
                                <Clock className="w-4 h-4 text-amber-500" />
@@ -816,7 +822,7 @@ export default function AdminPage() {
                       <Button 
                         variant="outline" 
                         onClick={() => setIsOrderDetailOpen(false)}
-                        className="flex-1 h-16 rounded-2xl font-bold border-slate-100 hover:bg-slate-50"
+                        className="flex-1 h-16 rounded-2xl font-bold border-slate-100 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-slate-800"
                       >
                          Cancel
                       </Button>
@@ -842,7 +848,7 @@ const chartData = [ { day: 'MON', value: 400 }, { day: 'TUE', value: 300 }, { da
 
 function SideNavItem({ active, expanded, onClick, icon: Icon, label }: { active: boolean, expanded: boolean, onClick: () => void, icon: any, label: string }) {
   return (
-    <button onClick={onClick} className={cn("w-full h-12 flex items-center transition-all duration-300 rounded-xl relative group", active ? "bg-primary text-white shadow-lg" : "text-slate-400 hover:bg-slate-50", expanded ? "px-4 gap-4" : "justify-center")}>
+    <button onClick={onClick} className={cn("w-full h-12 flex items-center transition-all duration-300 rounded-xl relative group", active ? "bg-primary text-white shadow-lg" : "text-slate-400 dark:text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800", expanded ? "px-4 gap-4" : "justify-center")}>
       <Icon size={20} />
       {expanded && <span className="font-bold text-sm whitespace-nowrap">{label}</span>}
     </button>
@@ -850,12 +856,17 @@ function SideNavItem({ active, expanded, onClick, icon: Icon, label }: { active:
 }
 
 function StatCard({ label, value, icon: Icon, color }: { label: string, value: string, icon: any, color: string }) {
-  const colors: Record<string, string> = { blue: "bg-blue-50 text-blue-500", amber: "bg-amber-50 text-amber-500", emerald: "bg-emerald-50 text-emerald-500", indigo: "bg-indigo-50 text-indigo-500" };
+  const colors: Record<string, string> = { 
+    blue: "bg-blue-50 dark:bg-blue-500/10 text-blue-500", 
+    amber: "bg-amber-50 dark:bg-amber-500/10 text-amber-500", 
+    emerald: "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-500", 
+    indigo: "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-500" 
+  };
   return (
-    <Card className="rounded-[2.5rem] p-6 border-none shadow-lg bg-white">
+    <Card className="rounded-[2.5rem] p-6 border-none shadow-lg bg-white dark:bg-slate-900">
       <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center mb-6", colors[color])}><Icon size={24} /></div>
-      <h3 className="text-3xl font-headline font-bold text-slate-900 mb-1">{value}</h3>
-      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">{label}</p>
+      <h3 className="text-3xl font-headline font-bold text-slate-900 dark:text-white mb-1">{value}</h3>
+      <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">{label}</p>
     </Card>
   );
 }
