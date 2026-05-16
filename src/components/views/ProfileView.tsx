@@ -185,7 +185,7 @@ export default function ProfileView() {
                   </div>
                 </div>
                 <div className="w-10 h-10 lg:w-14 lg:h-14 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
-                  <ChevronRight size={post.id ? 24 : 20} />
+                  <ChevronRight size={24} />
                 </div>
               </button>
            </div>
