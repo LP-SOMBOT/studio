@@ -5,8 +5,8 @@ import { useApp } from "@/lib/context";
 
 /**
  * DynamicHead Component
- * Updates the browser favicon and apple-touch-icon dynamically 
- * based on the logo stored in the database.
+ * Updates the browser favicon, apple-touch-icon, and theme 
+ * based on the admin settings stored in the database.
  */
 export default function DynamicHead() {
   const { storeSettings, theme } = useApp();
@@ -22,7 +22,7 @@ export default function DynamicHead() {
 
     const logo = storeSettings.logo;
 
-    // Update Favicon (Standard and Shortcuts)
+    // Update Browser Favicon and Touch Icons
     const updateIcon = (rel: string) => {
       let icon = document.querySelector(`link[rel="${rel}"]`) as HTMLLinkElement;
       if (!icon) {
@@ -36,6 +36,13 @@ export default function DynamicHead() {
     updateIcon('icon');
     updateIcon('shortcut icon');
     updateIcon('apple-touch-icon');
+    
+    // Attempt to update standard manifest link (browser support varies)
+    const manifestLink = document.querySelector('link[rel="manifest"]') as HTMLLinkElement;
+    if (manifestLink) {
+      // Browsers don't often refetch manifest on URL change, but it helps for initial load consistency
+      manifestLink.setAttribute('data-logo', logo);
+    }
 
   }, [storeSettings?.logo, theme]);
 

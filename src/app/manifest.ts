@@ -1,10 +1,24 @@
 import { MetadataRoute } from 'next';
 
 /**
- * Updated PWA Manifest
- * Matched with Oskar Shop primary brand colors (Electric Blue #0EA5E9)
+ * Dynamic PWA Manifest
+ * Fetches the admin-uploaded logo from Firebase RTDB to ensure 
+ * the PWA icon matches the brand globally.
  */
-export default function manifest(): MetadataRoute.Manifest {
+export default async function manifest(): Promise<MetadataRoute.Manifest> {
+  const dbUrl = "https://connectnexus-a9acf-default-rtdb.firebaseio.com";
+  let logoUrl = 'https://placehold.co/192x192/0EA5E9/FFFFFF/png?text=O';
+
+  try {
+    const res = await fetch(`${dbUrl}/settings.json`, { next: { revalidate: 60 } });
+    const settings = await res.json();
+    if (settings?.logo) {
+      logoUrl = settings.logo;
+    }
+  } catch (e) {
+    console.error("Failed to fetch dynamic manifest logo:", e);
+  }
+
   return {
     name: 'Oskar Shop',
     short_name: 'Oskar',
@@ -15,13 +29,13 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: '#0EA5E9',
     icons: [
       {
-        src: 'https://placehold.co/192x192/0EA5E9/FFFFFF/png?text=O',
+        src: logoUrl,
         sizes: '192x192',
         type: 'image/png',
         purpose: 'maskable',
       },
       {
-        src: 'https://placehold.co/512x512/0EA5E9/FFFFFF/png?text=Oskar',
+        src: logoUrl,
         sizes: '512x512',
         type: 'image/png',
         purpose: 'any',

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
+import Image from "next/image";
 import { Mail, Lock, EyeOff, Eye, Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
@@ -15,7 +16,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { login } = useApp();
+  const { login, storeSettings } = useApp();
   const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -38,6 +39,14 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex flex-col bg-[#7C3AED] overflow-x-hidden page-transition">
       <div className="pt-20 pb-16 px-10 shrink-0">
+        {/* Dynamic Branded Logo */}
+        <div className="w-20 h-20 bg-white rounded-2xl mb-8 flex items-center justify-center overflow-hidden shadow-2xl p-2">
+           {storeSettings?.logo ? (
+             <Image src={storeSettings.logo} alt="Logo" width={80} height={80} className="object-contain" unoptimized />
+           ) : (
+             <span className="text-4xl font-headline font-bold text-primary">O</span>
+           )}
+        </div>
         <h1 className="text-4xl font-headline font-bold text-white leading-tight">
           Welcome to <br /> Oskar Shop
         </h1>
