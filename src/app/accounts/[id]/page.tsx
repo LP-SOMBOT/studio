@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -16,7 +15,9 @@ import {
   ChevronRight,
   User,
   CheckCircle2,
-  Gamepad2
+  Gamepad2,
+  X,
+  Maximize2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +34,7 @@ export default function AccountDetailPage() {
   const { accountPosts, user, buyAccountPost } = useApp();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [commentInput, setCommentInput] = useState("");
+  const [fullScreenImage, setFullScreenImage] = useState<string | null>(null);
 
   const post = useMemo(() => {
     return (accountPosts || []).find(p => p.id === id);
@@ -50,7 +52,7 @@ export default function AccountDetailPage() {
     );
   }
 
-  const images = post.imageUrls || [post.thumbnailUrl];
+  const images = (post.imageUrls && post.imageUrls.length > 0) ? post.imageUrls : [post.thumbnailUrl];
 
   return (
     <div className="min-h-screen pb-32 bg-slate-50 page-transition">
@@ -64,16 +66,29 @@ export default function AccountDetailPage() {
 
       <main className="max-w-2xl mx-auto">
         {/* Image Carousel */}
-        <section className="relative aspect-[4/3] w-full bg-slate-900 overflow-hidden">
+        <section className="relative aspect-[4/3] w-full bg-slate-900 overflow-hidden shadow-xl">
            {images.map((url, idx) => (
              <div 
                key={idx} 
                className={cn(
-                 "absolute inset-0 transition-opacity duration-500",
-                 idx === currentImageIndex ? "opacity-100" : "opacity-0"
+                 "absolute inset-0 transition-opacity duration-500 flex items-center justify-center",
+                 idx === currentImageIndex ? "opacity-100 z-10" : "opacity-0 z-0"
                )}
              >
-               <Image src={url} alt="" fill className="object-contain" unoptimized />
+               <Image 
+                src={url} 
+                alt="" 
+                fill 
+                className="object-contain cursor-pointer" 
+                unoptimized 
+                onClick={() => setFullScreenImage(url)}
+               />
+               <button 
+                 onClick={(e) => { e.stopPropagation(); setFullScreenImage(url); }}
+                 className="absolute bottom-4 right-4 w-10 h-10 rounded-full bg-black/40 text-white flex items-center justify-center backdrop-blur-md z-20 hover:bg-black/60 transition-colors"
+               >
+                 <Maximize2 size={18} />
+               </button>
              </div>
            ))}
            
@@ -81,19 +96,25 @@ export default function AccountDetailPage() {
              <>
                <button 
                  onClick={() => setCurrentImageIndex((prev) => (prev > 0 ? prev - 1 : images.length - 1))}
-                 className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/30 text-white rounded-full flex items-center justify-center backdrop-blur-sm"
+                 className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-black/30 text-white rounded-full flex items-center justify-center backdrop-blur-sm z-20 active:scale-90 transition-transform"
                >
-                 <ChevronLeft size={24} />
+                 <ChevronLeft size={28} />
                </button>
                <button 
                  onClick={() => setCurrentImageIndex((prev) => (prev < images.length - 1 ? prev + 1 : 0))}
-                 className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/30 text-white rounded-full flex items-center justify-center backdrop-blur-sm"
+                 className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-black/30 text-white rounded-full flex items-center justify-center backdrop-blur-sm z-20 active:scale-90 transition-transform"
                >
-                 <ChevronRight size={24} />
+                 <ChevronRight size={28} />
                </button>
-               <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5">
+               <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-20">
                  {images.map((_, i) => (
-                   <div key={i} className={cn("w-2 h-2 rounded-full", i === currentImageIndex ? "bg-white" : "bg-white/40")} />
+                   <div 
+                    key={i} 
+                    className={cn(
+                      "h-1.5 rounded-full transition-all duration-300", 
+                      i === currentImageIndex ? "bg-primary w-6" : "bg-white/40 w-1.5"
+                    )} 
+                   />
                  ))}
                </div>
              </>
@@ -170,6 +191,31 @@ export default function AccountDetailPage() {
             {post.sold ? "Waa la iibiyay" : `IIBSO ACCOUNT-KA — $${post.price.toFixed(2)}`}
          </Button>
       </div>
+
+      {/* Full Screen Image Viewer */}
+      {fullScreenImage && (
+        <div 
+          className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center animate-in fade-in duration-300"
+          onClick={() => setFullScreenImage(null)}
+        >
+           <button 
+            className="absolute top-10 right-6 p-3 bg-white/10 rounded-full text-white hover:bg-white/20 transition-colors z-[110]"
+            onClick={() => setFullScreenImage(null)}
+           >
+              <X size={32} />
+           </button>
+           <div className="relative w-full h-[90vh]">
+              <Image 
+                src={fullScreenImage} 
+                alt="Full View" 
+                fill 
+                className="object-contain" 
+                unoptimized 
+              />
+           </div>
+           <p className="mt-4 text-white/60 font-bold text-sm uppercase tracking-widest">Tap anywhere to close</p>
+        </div>
+      )}
     </div>
   );
 }

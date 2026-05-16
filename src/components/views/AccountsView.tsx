@@ -27,7 +27,8 @@ import {
   DollarSign,
   SmartphoneIcon,
   Facebook,
-  Chrome
+  Chrome,
+  ImageIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -233,14 +234,14 @@ function AccountPostCard({ post, onClick, onEdit, onDelete, isOwner }: { post: a
         )}
       </div>
 
-      <div className="aspect-[16/9] relative bg-slate-100 overflow-hidden">
+      <div className="aspect-[16/9] relative bg-slate-900 overflow-hidden flex items-center justify-center">
         {post.thumbnailUrl ? (
-          <Image src={post.thumbnailUrl} alt="" fill className="object-cover group-hover:scale-105 transition-transform duration-700" unoptimized />
+          <Image src={post.thumbnailUrl} alt="" fill className="object-contain group-hover:scale-105 transition-transform duration-700" unoptimized />
         ) : (
           <div className="w-full h-full flex items-center justify-center opacity-10"><Gamepad2 size={60} /></div>
         )}
         {post.sold && (
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-10">
              <div className="px-6 py-2 bg-red-600 text-white font-headline font-bold text-xl rounded-full transform -rotate-12 shadow-2xl">WAA LA IIBIYAY</div>
           </div>
         )}
@@ -291,10 +292,12 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
     items: [] as string[],
     price: "",
     phone: "",
-    thumbnailUrl: ""
+    thumbnailUrl: "",
+    imageUrls: [] as string[]
   });
 
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<string[]>([]);
 
   useEffect(() => {
     if (editingPost) {
@@ -306,18 +309,21 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
         items: editingPost.items || [],
         price: editingPost.price.toString(),
         phone: editingPost.phone,
-        thumbnailUrl: editingPost.thumbnailUrl
+        thumbnailUrl: editingPost.thumbnailUrl,
+        imageUrls: editingPost.imageUrls || []
       });
+      setPreviews(editingPost.imageUrls || [editingPost.thumbnailUrl]);
     } else {
-      setFormData({ platform: "Google", level: "", age: "1-2 Years", primeLevel: "1", items: [], price: "", phone: "", thumbnailUrl: "" });
+      setFormData({ platform: "Google", level: "", age: "1-2 Years", primeLevel: "1", items: [], price: "", phone: "", thumbnailUrl: "", imageUrls: [] });
+      setPreviews([]);
+      setImageFiles([]);
     }
   }, [editingPost, open]);
 
   const listingFee = storeSettings?.config?.shop?.listingFee || 1.00;
   const numPrice = parseFloat(formData.price) || 0;
 
-  // Validation
-  const isFormValid = !!(formData.level && formData.price && (imageFile || formData.thumbnailUrl));
+  const isFormValid = !!(formData.level && formData.price && (imageFiles.length > 0 || formData.thumbnailUrl));
 
   const popularItems = ["Evo AK", "Evo MP40", "M1014 Dragon", "Sakura Bundle", "Hip Hop Bundle", "Crimson Bundle", "Angel Wings", "Elite Pass S1", "Magic Cube"];
 
@@ -335,28 +341,59 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
     setHasTriggeredUssd(true);
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length > 0) {
+      setImageFiles(prev => [...prev, ...files]);
+      const newPreviews = files.map(f => URL.createObjectURL(f));
+      setPreviews(prev => [...prev, ...newPreviews]);
+    }
+  };
+
+  const removeImage = (index: number) => {
+    const isExisting = index < (formData.imageUrls?.length || 0);
+    if (isExisting) {
+       setFormData(prev => ({
+         ...prev,
+         imageUrls: prev.imageUrls.filter((_, i) => i !== index)
+       }));
+    } else {
+       const fileIdx = index - (formData.imageUrls?.length || 0);
+       setImageFiles(prev => prev.filter((_, i) => i !== fileIdx));
+    }
+    setPreviews(prev => prev.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
-      let finalUrl = formData.thumbnailUrl;
-      if (imageFile) {
-        finalUrl = await uploadToImgbb(imageFile);
+      let finalUrls = [...(formData.imageUrls || [])];
+      
+      // Upload new files
+      if (imageFiles.length > 0) {
+        const uploadPromises = imageFiles.map(f => uploadToImgbb(f));
+        const newUrls = await Promise.all(uploadPromises);
+        finalUrls = [...finalUrls, ...newUrls];
       }
+
+      const mainThumbnail = finalUrls[0] || "";
 
       if (editingPost) {
         await updateAccountPost(editingPost.id, {
           ...formData,
           level: parseInt(formData.level),
           primeLevel: parseInt(formData.primeLevel),
-          thumbnailUrl: finalUrl
+          thumbnailUrl: mainThumbnail,
+          imageUrls: finalUrls
         });
       } else {
         await postAccount({
           ...formData,
           level: parseInt(formData.level),
           primeLevel: parseInt(formData.primeLevel),
-          thumbnailUrl: finalUrl,
+          thumbnailUrl: mainThumbnail,
+          imageUrls: finalUrls,
           totalCharge: numPrice, 
           price: numPrice,
           listingFeePaid: listingFee
@@ -374,7 +411,7 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
   return (
     <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if(!v) setHasTriggeredUssd(false); }}>
       <DialogContent className="max-w-xl h-[92vh] overflow-y-auto rounded-[3.5rem] p-0 border-none shadow-2xl bg-white scrollbar-hide">
-        <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-md px-8 pt-8 pb-4 flex items-center justify-between">
+        <div className="sticky top-0 z-20 bg-white/80 backdrop-blur-md px-8 pt-8 pb-4 flex items-center justify-between">
            <div>
               <DialogTitle className="text-3xl font-headline font-bold">{editingPost ? 'Update' : 'Iibi'} Account</DialogTitle>
               <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">Marketplace Listing</p>
@@ -497,34 +534,33 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
           <div className="space-y-4">
             <div className="flex items-center gap-3 mb-2">
                <div className="w-8 h-8 rounded-full bg-cyan-50 flex items-center justify-center text-cyan-500"><Gamepad2 size={18} /></div>
-               <h3 className="font-headline font-bold text-lg">Account Screenshot</h3>
+               <h3 className="font-headline font-bold text-lg">Account Gallery</h3>
             </div>
-            <div className="relative h-60 w-full group">
-               <div className={cn(
-                 "absolute inset-0 rounded-[2.5rem] border-3 border-dashed transition-all flex flex-col items-center justify-center gap-4 overflow-hidden shadow-inner",
-                 imageFile || formData.thumbnailUrl ? "border-transparent bg-slate-100" : "border-slate-200 bg-slate-50 hover:bg-slate-100 hover:border-primary/50"
-               )}>
-                  {imageFile || formData.thumbnailUrl ? (
-                    <>
-                       <Image src={imageFile ? URL.createObjectURL(imageFile) : formData.thumbnailUrl} alt="Preview" fill className="object-cover" />
-                       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                          <Button variant="outline" className="rounded-full bg-white/20 border-white text-white hover:bg-white hover:text-primary">Change Image</Button>
-                       </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center text-slate-300 shadow-xl border border-slate-100">
-                         <Plus size={32} />
-                      </div>
-                      <div className="text-center">
-                         <p className="text-sm font-bold text-slate-900">Upload Lobby Image</p>
-                         <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1">PNG, JPG up to 5MB</p>
-                      </div>
-                    </>
-                  )}
-                  <input type="file" accept="image/*" onChange={e => setImageFile(e.target.files?.[0] || null)} className="absolute inset-0 opacity-0 cursor-pointer" />
-               </div>
+            
+            <div className="grid grid-cols-3 gap-3 mb-4">
+               {previews.map((url, idx) => (
+                 <div key={idx} className="relative aspect-square rounded-2xl overflow-hidden group shadow-sm bg-slate-100 border border-slate-200">
+                    <Image src={url} alt="" fill className="object-cover" unoptimized />
+                    <button 
+                      type="button"
+                      onClick={() => removeImage(idx)}
+                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X size={12} />
+                    </button>
+                    {idx === 0 && (
+                      <div className="absolute bottom-0 left-0 right-0 bg-primary text-[8px] font-bold text-white text-center py-0.5">LOBBY</div>
+                    )}
+                 </div>
+               ))}
+               <label className="aspect-square rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 hover:bg-slate-100 hover:border-primary/50 transition-all flex flex-col items-center justify-center gap-1 cursor-pointer text-slate-400">
+                  <Plus size={24} />
+                  <span className="text-[8px] font-bold uppercase">Add Photo</span>
+                  <input type="file" accept="image/*" multiple onChange={handleFileChange} className="hidden" />
+               </label>
             </div>
+            
+            <p className="text-[9px] text-muted-foreground italic px-1">* The first image will be used as the lobby thumbnail.</p>
           </div>
 
           <div className="space-y-6">
@@ -594,17 +630,5 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
         </form>
       </DialogContent>
     </Dialog>
-  );
-}
-
-function StatItem({ label, value, icon: Icon, color }: { label: string, value: any, icon: any, color: string }) {
-  return (
-    <div className="bg-slate-50 p-4 rounded-3xl flex flex-col items-center text-center gap-2 border border-white">
-       <Icon size={20} className={color} />
-       <div>
-         <p className="text-xs font-bold text-slate-900 leading-none">{value}</p>
-         <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mt-1">{label}</p>
-       </div>
-    </div>
   );
 }
