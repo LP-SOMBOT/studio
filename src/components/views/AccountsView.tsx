@@ -497,7 +497,7 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
           <div className="space-y-6">
             <div className="flex items-center gap-3">
                <div className="w-8 h-8 rounded-full bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center text-amber-500"><Star size={18} /></div>
-               <h3 className="font-headline font-bold text-lg dark:text-white">Account Statistics</h3>
+               <h3 className="font-headline font-bold text-lg dark:text-white">Xogta account-ga</h3>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
