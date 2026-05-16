@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -640,10 +639,12 @@ export default function AdminPage() {
 
       {/* User Management Modal */}
       <Dialog open={isUserManageOpen} onOpenChange={setIsUserManageOpen}>
-        <DialogContent className="max-w-md rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl bg-white">
+        <DialogContent className="max-w-md w-[95vw] rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl bg-white max-h-[90vh] overflow-y-auto scrollbar-hide">
+          <DialogHeader className="sr-only">
+            <DialogTitle>User Management: {selectedUser?.name || 'User'}</DialogTitle>
+          </DialogHeader>
           {selectedUser && (
             <div className="flex flex-col">
-              <DialogHeader className="sr-only"><DialogTitle>{selectedUser.name}</DialogTitle></DialogHeader>
               <div className="bg-slate-900 p-8 text-white"><div className="flex items-center gap-4"><div className="w-16 h-16 rounded-full overflow-hidden border-2 border-white/20 relative">{selectedUser.photoURL ? <Image src={selectedUser.photoURL} alt="" fill className="object-cover" /> : <User size={32} className="m-4 text-white/40" />}</div><div><h2 className="text-2xl font-bold font-headline">{selectedUser.name}</h2><p className="text-xs text-white/40">{selectedUser.email}</p></div></div></div>
               <div className="p-8 space-y-8">
                 <div className="space-y-4"><h3 className="text-xs font-bold uppercase text-slate-400 flex items-center gap-2"><Shield size={14} /> Permissions</h3><div className="grid grid-cols-2 gap-2">{['user', 'staff', 'admin'].map(r => <Button key={r} variant={selectedUser.role === r ? "default" : "outline"} onClick={() => manageUser(selectedUser.uid, { role: r as any })} className="h-11 rounded-2xl text-[10px] uppercase font-bold">{r}</Button>)}</div></div>
@@ -657,25 +658,25 @@ export default function AdminPage() {
 
       {/* Product & Event Modals */}
       <Dialog open={isProductDialogOpen} onOpenChange={setIsProductDialogOpen}>
-        <DialogContent className="max-w-xl rounded-[3rem] p-8 border-none bg-white">
+        <DialogContent className="max-w-xl w-[95vw] rounded-[3rem] p-8 border-none bg-white max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle className="text-2xl font-headline font-bold">Manage Inventory Item</DialogTitle></DialogHeader>
           <form onSubmit={handleSaveProduct} className="space-y-6 pt-4">
-            <div className="grid grid-cols-2 gap-4"><div><Label>Title</Label><Input required value={productForm.title} onChange={e => setProductForm({...productForm, title: e.target.value})} className="h-12" /></div><div><Label>Game ID</Label><Input required value={productForm.gameId} onChange={e => setProductForm({...productForm, gameId: e.target.value})} className="h-12" /></div></div>
-            <div className="grid grid-cols-2 gap-4"><div><Label>Price ($)</Label><Input type="number" required value={productForm.price} onChange={e => setProductForm({...productForm, price: e.target.value})} className="h-12" /></div><div><Label>Discount Price</Label><Input type="number" value={productForm.discountedPrice} onChange={e => setProductForm({...productForm, discountedPrice: e.target.value})} className="h-12" /></div></div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4"><div><Label>Title</Label><Input required value={productForm.title} onChange={e => setProductForm({...productForm, title: e.target.value})} className="h-12" /></div><div><Label>Game ID</Label><Input required value={productForm.gameId} onChange={e => setProductForm({...productForm, gameId: e.target.value})} className="h-12" /></div></div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4"><div><Label>Price ($)</Label><Input type="number" required value={productForm.price} onChange={e => setProductForm({...productForm, price: e.target.value})} className="h-12" /></div><div><Label>Discount Price</Label><Input type="number" value={productForm.discountedPrice} onChange={e => setProductForm({...productForm, discountedPrice: e.target.value})} className="h-12" /></div></div>
             <div className="space-y-2"><Label>Description</Label><Textarea required value={productForm.description} onChange={e => setProductForm({...productForm, description: e.target.value})} className="min-h-[80px]" /></div>
-            <div className="relative h-32 w-full rounded-2xl border-2 border-dashed bg-slate-50 flex items-center justify-center overflow-hidden">{productForm.thumbnail ? <Image src={productForm.thumbnail} alt="" fill className="object-cover" /> : <ImageIcon size={24} className="text-slate-300" />}<Button variant="outline" className="relative z-10" type="button"><input type="file" accept="image/*" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'product')} className="absolute inset-0 opacity-0" />Upload</Button></div>
+            <div className="relative h-32 w-full rounded-2xl border-2 border-dashed bg-slate-50 flex items-center justify-center overflow-hidden">{productForm.thumbnail ? <Image src={productForm.thumbnail} alt="" fill className="object-cover" /> : <ImageIcon size={24} className="text-slate-300" />}<Button variant="outline" className="relative z-10" type="button"><input type="file" accept="image/*" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'product')} className="absolute inset-0 opacity-0 cursor-pointer" />Upload</Button></div>
             <Button type="submit" disabled={isUploading} className="w-full h-14 rounded-2xl font-bold">{isUploading ? <Loader2 className="animate-spin" /> : "Save Changes"}</Button>
           </form>
         </DialogContent>
       </Dialog>
       
       <Dialog open={isEventDialogOpen} onOpenChange={setIsEventDialogOpen}>
-        <DialogContent className="max-w-xl rounded-[3rem] p-8 border-none bg-white">
+        <DialogContent className="max-w-xl w-[95vw] rounded-[3rem] p-8 border-none bg-white max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle className="text-2xl font-headline font-bold">Live Event Hub</DialogTitle></DialogHeader>
           <form onSubmit={handleSaveEvent} className="space-y-6 pt-4">
             <div className="space-y-2"><Label>Event Title</Label><Input required value={eventForm.title} onChange={e => setEventForm({...eventForm, title: e.target.value})} className="h-12" /></div>
             <div className="space-y-2"><Label>Short Description</Label><Textarea required value={eventForm.description} onChange={e => setEventForm({...eventForm, description: e.target.value})} className="min-h-[100px]" /></div>
-            <div className="relative h-40 w-full rounded-2xl border-2 border-dashed bg-slate-50 flex items-center justify-center overflow-hidden">{eventForm.thumbnailUrl ? <Image src={eventForm.thumbnailUrl} alt="" fill className="object-cover" /> : <ImageIcon size={24} className="text-slate-300" />}<Button variant="outline" className="relative z-10" type="button"><input type="file" accept="image/*" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'event')} className="absolute inset-0 opacity-0" />Upload Poster</Button></div>
+            <div className="relative h-40 w-full rounded-2xl border-2 border-dashed bg-slate-50 flex items-center justify-center overflow-hidden">{eventForm.thumbnailUrl ? <Image src={eventForm.thumbnailUrl} alt="" fill className="object-cover" /> : <ImageIcon size={24} className="text-slate-300" />}<Button variant="outline" className="relative z-10" type="button"><input type="file" accept="image/*" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'event')} className="absolute inset-0 opacity-0 cursor-pointer" />Upload Poster</Button></div>
             <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl"><Label>Event Active Status</Label><Switch checked={eventForm.active} onCheckedChange={val => setEventForm({...eventForm, active: val})} /></div>
             <Button type="submit" disabled={isUploading} className="w-full h-14 rounded-2xl font-bold">{isUploading ? <Loader2 className="animate-spin" /> : "Publish Event"}</Button>
           </form>
@@ -683,10 +684,10 @@ export default function AdminPage() {
       </Dialog>
 
       <Dialog open={isBannerDialogOpen} onOpenChange={setIsBannerDialogOpen}>
-        <DialogContent className="max-w-md rounded-[3rem] p-8 border-none bg-white">
+        <DialogContent className="max-w-md w-[95vw] rounded-[3rem] p-8 border-none bg-white max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle className="text-2xl font-headline font-bold">New Promotion Banner</DialogTitle></DialogHeader>
           <div className="space-y-6 pt-4">
-            <div className="relative h-48 w-full rounded-2xl border-2 border-dashed bg-slate-50 flex items-center justify-center overflow-hidden">{bannerForm.imageUrl ? <Image src={bannerForm.imageUrl} alt="" fill className="object-cover" /> : <ImageIcon size={24} className="text-slate-300" />}<Button variant="outline" className="relative z-10" type="button"><input type="file" accept="image/*" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'banner')} className="absolute inset-0 opacity-0" />Upload Banner</Button></div>
+            <div className="relative h-48 w-full rounded-2xl border-2 border-dashed bg-slate-50 flex items-center justify-center overflow-hidden">{bannerForm.imageUrl ? <Image src={bannerForm.imageUrl} alt="" fill className="object-cover" /> : <ImageIcon size={24} className="text-slate-300" />}<Button variant="outline" className="relative z-10" type="button"><input type="file" accept="image/*" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'banner')} className="absolute inset-0 opacity-0 cursor-pointer" />Upload Banner</Button></div>
             <div className="space-y-2"><Label>Redirect Hash (Optional)</Label><Input value={bannerForm.linkTo || ""} onChange={e => setBannerForm({...bannerForm, linkTo: e.target.value})} placeholder="#games" className="h-12" /></div>
             <Button onClick={handleSaveBanner} disabled={isUploading || !bannerForm.imageUrl} className="w-full h-14 rounded-2xl font-bold">Add Banner ✓</Button>
           </div>
@@ -695,13 +696,15 @@ export default function AdminPage() {
 
       {/* Order Detail Modal */}
       <Dialog open={isOrderDetailOpen} onOpenChange={setIsOrderDetailOpen}>
-        <DialogContent className="max-w-3xl rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl bg-white">
+        <DialogContent className="max-w-3xl w-[95vw] rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl bg-white max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Order Details: {selectedOrder?.id || 'Order'}</DialogTitle>
+          </DialogHeader>
           {selectedOrder && (
             <div className="flex flex-col">
-              <DialogHeader className="sr-only"><DialogTitle>Order Verification</DialogTitle></DialogHeader>
               <div className="bg-slate-900 p-10 text-white"><Badge className="bg-primary text-white mb-2">REF #{selectedOrder.id.slice(0, 12).toUpperCase()}</Badge><h2 className="text-3xl font-headline font-bold">Order Verification</h2></div>
               <div className="p-10 space-y-8">
-                <div className="grid grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                   <div>
                     <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Customer Intel</h4>
                     <Card className="p-4 rounded-2xl bg-slate-50 border-none flex items-center gap-3"><User size={20} className="text-primary" /><div><p className="text-sm font-bold">{selectedOrder.gameDetails?.playerName || "N/A"}</p><p className="text-[10px] text-muted-foreground uppercase">{selectedOrder.gameDetails?.playerID || "N/A"}</p></div></Card>
@@ -711,9 +714,9 @@ export default function AdminPage() {
                     <Card className="p-4 rounded-2xl bg-slate-50 border-none flex items-center gap-3"><Package size={20} className="text-amber-500" /><div><p className="text-sm font-bold">{selectedOrder.items?.[0]?.title}</p><p className="text-[10px] text-primary font-bold uppercase">${selectedOrder.total?.toFixed(2)}</p></div></Card>
                   </div>
                 </div>
-                <div className="pt-6 border-t flex items-center justify-between">
+                <div className="pt-6 border-t flex flex-col sm:flex-row items-center justify-between gap-4">
                   <div className="flex items-center gap-3"><div className="p-2 bg-blue-100 text-blue-600 rounded-lg animate-spin"><RefreshCw size={18} /></div><p className="text-xs font-bold text-slate-400 uppercase">Live Processor Active</p></div>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2 justify-center">
                     <Select defaultValue={selectedOrder.status} onValueChange={v => handleStatusChange(selectedOrder.id, v)}>
                       <SelectTrigger className="h-14 w-40 rounded-2xl font-bold"><SelectValue /></SelectTrigger>
                       <SelectContent><SelectItem value="pending">Pending</SelectItem><SelectItem value="processing">Processing</SelectItem><SelectItem value="successful">Success ✓</SelectItem><SelectItem value="cancelled">Cancel ✕</SelectItem></SelectContent>
