@@ -1,9 +1,10 @@
+
 import { MetadataRoute } from 'next';
 
 /**
  * Dynamic PWA Manifest
- * Fetches the admin-uploaded logo from Firebase RTDB to ensure 
- * the PWA icon matches the brand globally.
+ * Standardized for modern mobile browsers to ensure "Add to Home Screen"
+ * works perfectly on both iOS and Android.
  */
 export default async function manifest(): Promise<MetadataRoute.Manifest> {
   const dbUrl = "https://connectnexus-a9acf-default-rtdb.firebaseio.com";
@@ -20,8 +21,8 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
   }
 
   return {
-    name: 'Oskar Shop',
-    short_name: 'Oskar',
+    name: 'Oskar Shop - Game Top-Up',
+    short_name: 'OskarShop',
     description: 'The best gaming top-up service and accounts store in Somalia.',
     start_url: '/',
     display: 'standalone',

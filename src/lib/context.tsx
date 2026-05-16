@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef } from 'react';
@@ -278,7 +279,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [messages, setMessages] = useState<any[]>([]);
   const [allChatSessions, setAllChatSessions] = useState<any[]>([]);
 
-  // Push Notification Tracking
+  // Internal Session Management for Notifications
+  const sessionStartTime = useRef(Date.now());
   const lastNotifiedRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
@@ -296,20 +298,37 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return !syncStatus.settings || !syncStatus.products || !syncStatus.banners || !syncStatus.events;
   }, [syncStatus]);
 
-  // Push Notification Trigger Logic
+  // Robust Push Notification Implementation using Service Worker
   const showPushNotification = useCallback((title: string, body: string, id: string) => {
-    if (typeof window === 'undefined' || !('Notification' in window)) return;
-    if (Notification.permission !== 'granted') return;
+    if (typeof window === 'undefined') return;
     
-    // Uniqueness check
+    // Uniqueness check for current session
     if (lastNotifiedRef.current.has(id)) return;
     lastNotifiedRef.current.add(id);
 
-    try {
-      const logo = storeSettings.logo || "https://placehold.co/192x192/0EA5E9/FFFFFF/png?text=O";
+    // Standard Browser Notification check
+    if (!('Notification' in window)) return;
+    if (Notification.permission !== 'granted') return;
+
+    const logo = storeSettings.logo || "https://placehold.co/192x192/0EA5E9/FFFFFF/png?text=O";
+
+    // Attempt to use Service Worker registration (Better for background/minimized state)
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready.then((registration) => {
+        registration.showNotification(title, {
+          body,
+          icon: logo,
+          badge: logo,
+          tag: id, // Prevent duplicate alerts for the same ID
+          vibrate: [200, 100, 200],
+          requireInteraction: true
+        });
+      }).catch(() => {
+        // Fallback to standard if SW is not ready
+        new Notification(title, { body, icon: logo });
+      });
+    } else {
       new Notification(title, { body, icon: logo });
-    } catch (e) {
-      console.warn("Failed to trigger native notification:", e);
     }
   }, [storeSettings.logo]);
 
@@ -349,13 +368,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const unsubSettings = onValue(settingsRef, (s) => {
       const data = s.val() || {};
       
-      // Watch for Live/Online changes for notifications
+      // Real-time Background Alerts for Live/Online Status
       if (syncStatus.settings) {
         if (data.isLive && !storeSettings.isLive) {
-          showPushNotification("Oskar is LIVE Now! 🔴", "Join us on TikTok for exclusive rewards and diamonds!", "live-ticker-session");
+          showPushNotification("Oskar is LIVE Now! 🔴", "Join us on TikTok for exclusive rewards and diamonds!", "live-ticker-" + Date.now());
         }
-        if (!data.appStatus?.offline && storeSettings.appStatus?.offline) {
-          showPushNotification("Oskar Shop is Online! ✅", "We are back! You can now resume your top-ups and purchases.", "online-alert-session");
+        if (data.appStatus?.offline === false && storeSettings.appStatus?.offline === true) {
+          showPushNotification("Oskar Shop is Online! ✅", "We are back! You can now resume your top-ups and purchases.", "online-alert-" + Date.now());
         }
       }
 
@@ -412,7 +431,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       off(bannersRef);
       off(usersRef);
     };
-  }, [rtdb, syncStatus.settings, storeSettings, showPushNotification]);
+  }, [rtdb, syncStatus.settings, storeSettings.isLive, storeSettings.appStatus?.offline, showPushNotification]);
 
   useEffect(() => {
     if (!rtdb || !user) {
@@ -422,7 +441,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     const profileRef = ref(rtdb, `users/${user.uid}`);
-    const notifsRef = query(ref(rtdb, `notifications/${user.uid}`), limitToLast(30));
+    const notifsRef = query(ref(rtdb, `notifications/${user.uid}`), limitToLast(20));
     const userOrdersRef = query(ref(rtdb, 'orders'), orderByChild('userId'), equalTo(user.uid));
 
     onValue(profileRef, (s) => {
@@ -435,13 +454,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
+    // Dedicated Real-time System Notification Listener
     onValue(notifsRef, (s) => {
       const data = s.val() ? Object.entries(s.val()).map(([id, v]: any) => ({ ...v, id })).sort((a,b) => b.createdAt - a.createdAt) : [];
       
+      // Trigger browser notification for fresh messages
       if (data.length > 0) {
         const latest = data[0];
-        if (!latest.read) {
-          showPushNotification(latest.title, latest.body, "system-notif-" + latest.id);
+        // Rules: Must be unread AND must be newer than the time the app session started
+        if (!latest.read && latest.createdAt > sessionStartTime.current) {
+          showPushNotification(latest.title, latest.body, "oskar-notif-" + latest.id);
         }
       }
 
@@ -656,7 +678,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
       if (userId && oldStatus !== 'successful') {
         await update(ref(rtdb, `users/${userId}`), { points: increment(1) });
-        broadcastNotification("Order Successful! ✅", "Your items have been delivered. You earned 1 point!", userId);
+        broadcastNotification("Order Successful! ✅", "Dalabkaaga waa lagu guuleystay. Waxaad heshay 1 point!", userId);
       }
     } else if (oldStatus === 'successful' && status !== 'successful') {
       if (accountItem && accountItem.id) {
@@ -665,7 +687,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
       if (userId) {
         await update(ref(rtdb, `users/${userId}`), { points: increment(-1) });
-        broadcastNotification("Order Update: Points Revoked ⚠️", `Order was marked as ${status}. 1 point reversed.`, userId);
+        broadcastNotification("Order Update: Points Revoked ⚠️", `Dalabkaaga waa la bedelay xaaladiisa.`, userId);
       }
     }
   };
