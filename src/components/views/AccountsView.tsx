@@ -316,6 +316,9 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
   const listingFee = storeSettings?.config?.shop?.listingFee || 1.00;
   const numPrice = parseFloat(formData.price) || 0;
 
+  // Validation
+  const isFormValid = !!(formData.level && formData.price && (imageFile || formData.thumbnailUrl));
+
   const popularItems = ["Evo AK", "Evo MP40", "M1014 Dragon", "Sakura Bundle", "Hip Hop Bundle", "Crimson Bundle", "Angel Wings", "Elite Pass S1", "Magic Cube"];
 
   const toggleItem = (item: string) => {
@@ -560,7 +563,7 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
           <div className="flex flex-col gap-3 pt-4">
              {editingPost ? (
                 <Button 
-                  disabled={loading} 
+                  disabled={loading || !isFormValid} 
                   type="submit" 
                   className="w-full h-18 rounded-[2rem] text-2xl font-headline font-bold shadow-2xl shadow-primary/30 active:scale-95 transition-all"
                 >
@@ -570,13 +573,14 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
                 <Button 
                   type="button" 
                   onClick={handleUssdPay}
+                  disabled={!isFormValid}
                   className="w-full h-18 rounded-[2rem] text-2xl font-headline font-bold shadow-2xl shadow-primary/30 active:scale-95 transition-all bg-primary hover:bg-primary/90"
                 >
-                   PAY $${listingFee.toFixed(2)}
+                   PAY ${listingFee.toFixed(2)}
                 </Button>
              ) : (
                 <Button 
-                  disabled={loading} 
+                  disabled={loading || !isFormValid} 
                   type="submit" 
                   className="w-full h-18 rounded-[2rem] text-2xl font-headline font-bold shadow-2xl shadow-green-500/30 active:scale-95 transition-all bg-green-600 hover:bg-green-700"
                 >
