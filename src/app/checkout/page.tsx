@@ -361,7 +361,7 @@ function CheckoutContent() {
         <div className="py-12 flex flex-col items-center text-center">
           <div className="relative mb-8">
             <div className="absolute inset-0 bg-green-400 rounded-full blur-3xl opacity-20 animate-pulse" />
-            <div className="relative w-24 h-24 bg-green-50 rounded-full flex items-center justify-center text-white shadow-2xl">
+            <div className="relative w-24 h-24 bg-green-50 dark:bg-green-500/20 rounded-full flex items-center justify-center text-green-600 dark:text-green-400 shadow-2xl">
               <CheckCircle2 className="w-14 h-14" />
             </div>
             <PartyPopper className="absolute -top-3 -right-3 w-8 h-8 text-yellow-500 animate-bounce" />
