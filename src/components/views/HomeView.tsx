@@ -38,15 +38,15 @@ export default function HomeView() {
     return (
       <div className="pb-24 animate-in fade-in duration-500">
         <AnnouncementTicker />
-        <main className="container mx-auto px-4 pt-6 space-y-12">
-          <Skeleton className="w-full aspect-[21/9] md:aspect-[3/1] rounded-[2rem]" />
+        <main className="container mx-auto px-4 pt-6 space-y-12 max-w-7xl">
+          <Skeleton className="w-full aspect-[21/9] md:aspect-[3/1] rounded-[2.5rem]" />
           <section>
             <div className="flex justify-between mb-6">
               <Skeleton className="h-8 w-48 rounded-lg" />
               <Skeleton className="h-6 w-20 rounded-lg" />
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-              {[1, 2, 3, 4, 5, 6].map((i) => <Skeleton key={i} className="aspect-[3/4] rounded-[2rem]" />)}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
+              {[1, 2, 3, 4, 5, 6].map((i) => <Skeleton key={i} className="aspect-[3/4] rounded-[2.5rem]" />)}
             </div>
           </section>
         </main>
@@ -58,104 +58,123 @@ export default function HomeView() {
     <div className="pb-24 page-transition">
       <AnnouncementTicker />
       
-      <main className="container mx-auto px-4 pt-6 space-y-12">
-        <section>
+      <main className="container mx-auto px-4 pt-6 lg:pt-10 space-y-12 lg:space-y-20 max-w-7xl">
+        {/* Main Hero Slider */}
+        <section className="relative">
           <HeroSlider />
         </section>
 
+        {/* Live TikTok Promo - Enhanced for Desktop */}
         {isVisible && (
-          <section className="relative bg-white dark:bg-slate-900/80 dark:backdrop-blur-md rounded-[2.5rem] p-6 border border-gray-100 dark:border-white/5 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden animate-in fade-in slide-in-from-top-4 duration-500">
+          <section className="relative bg-white dark:bg-slate-900/80 dark:backdrop-blur-xl rounded-[2.5rem] lg:rounded-[3.5rem] p-6 lg:p-10 border border-gray-100 dark:border-white/5 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-8 overflow-hidden animate-in fade-in slide-in-from-top-4 duration-700">
             <Button 
               variant="ghost" 
               size="icon" 
-              className="absolute top-4 right-4 h-8 w-8 rounded-full text-muted-foreground hover:bg-red-50 hover:text-red-500 transition-colors opacity-100"
+              className="absolute top-4 right-4 h-10 w-10 rounded-full text-muted-foreground hover:bg-red-50 hover:text-red-500 transition-colors z-10"
               onClick={() => setLocalDismiss(true)}
             >
-              <X className="w-4 h-4" />
+              <X className="w-5 h-5" />
             </Button>
             
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <div className="w-16 h-16 bg-red-100 dark:bg-red-500/20 rounded-full flex items-center justify-center">
-                  <Radio className="w-8 h-8 text-red-500 animate-pulse" />
+            <div className="flex items-center gap-6 lg:gap-10">
+              <div className="relative shrink-0">
+                <div className="w-20 h-20 lg:w-28 lg:h-28 bg-red-100 dark:bg-red-500/20 rounded-full flex items-center justify-center ring-8 ring-red-50 dark:ring-red-950/20">
+                  <Radio className="w-10 h-10 lg:w-14 lg:h-14 text-red-500 animate-pulse" />
                 </div>
-                <div className="absolute -bottom-1 -right-1 bg-red-500 text-white text-[8px] px-1.5 py-0.5 rounded-full font-bold uppercase border-2 border-white dark:border-slate-900">
+                <div className="absolute -bottom-1 -right-1 bg-red-500 text-white text-[10px] lg:text-[12px] px-3 py-1 rounded-full font-bold uppercase border-4 border-white dark:border-slate-900 shadow-lg">
                   Live
                 </div>
               </div>
-              <div>
-                <h3 className="font-headline font-bold text-xl text-slate-900 dark:text-white">Oskar Shop is LIVE on TikTok</h3>
-                <p className="text-sm text-muted-foreground">Join the challenge now and win exclusive diamonds!</p>
+              <div className="space-y-2">
+                <h3 className="font-headline font-bold text-2xl lg:text-4xl text-slate-900 dark:text-white leading-tight">Oskar Shop is LIVE on TikTok</h3>
+                <p className="text-sm lg:text-lg text-muted-foreground font-medium max-w-md">Join the challenge now and win exclusive diamonds & rewards!</p>
               </div>
             </div>
+            
             <Button 
-              className="bg-[#FE2C55] hover:bg-[#FE2C55]/90 rounded-full px-8 h-12 gap-2 font-bold w-full md:w-auto shadow-lg shadow-[#FE2C55]/20"
+              className="bg-[#FE2C55] hover:bg-[#FE2C55]/90 rounded-[1.5rem] lg:rounded-2xl px-10 h-14 lg:h-16 gap-3 font-bold w-full md:w-auto shadow-2xl shadow-[#FE2C55]/40 text-lg active:scale-95 transition-transform"
               onClick={() => window.open('https://tiktok.com/@Oskarshop', '_blank')}
             >
-              <ExternalLink className="w-4 h-4" /> Watch Now
+              <ExternalLink className="w-5 h-5" /> Watch Now
             </Button>
           </section>
         )}
 
-        {/* Trending */}
+        {/* Trending Top Ups - Dense Grid for Desktop */}
         <section>
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-2">
-              <div className="p-2 bg-orange-100 dark:bg-orange-500/10 rounded-xl">
-                <Flame className="w-5 h-5 text-orange-500" />
+          <div className="flex items-center justify-between mb-8 lg:mb-12">
+            <div className="flex items-center gap-3 lg:gap-4">
+              <div className="p-3 bg-orange-100 dark:bg-orange-500/10 rounded-2xl">
+                <Flame className="w-6 h-6 lg:w-8 lg:h-8 text-orange-500" />
               </div>
-              <h2 className="text-2xl font-headline font-bold text-slate-900 dark:text-white">Trending Top Ups</h2>
+              <div>
+                <h2 className="text-2xl lg:text-4xl font-headline font-bold text-slate-900 dark:text-white">Trending Top Ups</h2>
+                <p className="text-xs lg:text-sm text-muted-foreground font-medium uppercase tracking-widest mt-1">Most popular packages right now</p>
+              </div>
             </div>
-            <Button variant="link" className="text-primary font-bold" onClick={() => setActiveTab('games')}>View All</Button>
+            <Button 
+              variant="outline" 
+              className="rounded-full px-6 h-12 lg:h-14 font-bold border-gray-200 dark:border-white/10 hover:bg-primary hover:text-white transition-all text-sm lg:text-base shadow-sm" 
+              onClick={() => setActiveTab('games')}
+            >
+              View All Store <ChevronRight className="w-4 h-4 ml-1" />
+            </Button>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-            {products.filter(g => g.category === 'top-up').slice(0, 6).map((game) => (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6 lg:gap-8">
+            {products.filter(g => g.category === 'top-up').slice(0, 12).map((game) => (
               <GameCard key={game.id} {...game} />
             ))}
           </div>
         </section>
 
-        {/* Free Fire Active Events */}
+        {/* Live Events - Sophisticated Desktop Grid */}
         {activeEvents.length > 0 && (
-          <section className="space-y-6">
+          <section className="space-y-8 lg:space-y-12">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 dark:bg-blue-500/10 rounded-xl">
-                  <Gamepad2 className="w-5 h-5 text-blue-500" />
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-blue-100 dark:bg-blue-500/10 rounded-2xl">
+                  <Gamepad2 className="w-6 h-6 lg:w-8 lg:h-8 text-blue-500" />
                 </div>
-                <h2 className="text-2xl font-headline font-bold text-slate-900 dark:text-white">Live Events 🔥</h2>
+                <div>
+                  <h2 className="text-2xl lg:text-4xl font-headline font-bold text-slate-900 dark:text-white">Live Events 🔥</h2>
+                  <p className="text-xs lg:text-sm text-muted-foreground font-medium uppercase tracking-widest mt-1">Limited time game promotions</p>
+                </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
               {activeEvents.map((event) => (
-                <Card key={event.id} className="group overflow-hidden rounded-[2.5rem] border-none shadow-xl bg-white dark:bg-slate-900 transition-all hover:shadow-2xl hover:-translate-y-1">
+                <Card key={event.id} className="group overflow-hidden rounded-[2.5rem] lg:rounded-[3rem] border-none shadow-xl bg-white dark:bg-slate-900 transition-all hover:shadow-2xl hover:-translate-y-2">
                   <div className="relative aspect-[16/9] w-full">
                     <Image 
                       src={event.thumbnailUrl || 'https://picsum.photos/seed/event/600/400'} 
                       alt={event.title} 
                       fill 
-                      className="object-cover group-hover:scale-105 transition-transform duration-700"
+                      className="object-cover group-hover:scale-110 transition-transform duration-1000"
                       unoptimized 
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                    <div className="absolute bottom-4 left-4 right-4">
-                      <Badge className="bg-primary text-white border-none rounded-full px-3 py-1 text-[10px] font-bold mb-2 uppercase tracking-widest">
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+                    <div className="absolute bottom-6 left-6 right-6">
+                      <Badge className="bg-primary text-white border-none rounded-full px-4 py-1.5 text-[10px] lg:text-[11px] font-bold mb-3 uppercase tracking-[0.2em]">
                         FREE FIRE EVENT
                       </Badge>
-                      <h3 className="text-white font-headline font-bold text-lg leading-tight">{event.title}</h3>
+                      <h3 className="text-white font-headline font-bold text-xl lg:text-2xl leading-tight">{event.title}</h3>
                     </div>
                   </div>
-                  <div className="p-6">
-                    <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed mb-4">
+                  <div className="p-8">
+                    <p className="text-sm lg:text-base text-muted-foreground line-clamp-3 leading-relaxed mb-6 font-medium">
                       {event.description}
                     </p>
-                    <div className="flex items-center justify-between pt-4 border-t border-slate-50 dark:border-white/5">
-                      <div className="flex items-center gap-2 text-xs font-bold text-primary">
-                        <Calendar className="w-4 h-4" />
+                    <div className="flex items-center justify-between pt-6 border-t border-slate-50 dark:border-white/5">
+                      <div className="flex items-center gap-2 text-xs lg:text-sm font-bold text-primary">
+                        <Calendar className="w-5 h-5" />
                         Active Now
                       </div>
-                      <Button variant="ghost" className="rounded-full h-10 px-4 font-bold text-xs" onClick={() => setActiveTab('games')}>
+                      <Button 
+                        variant="ghost" 
+                        className="rounded-full h-10 lg:h-12 px-6 font-bold text-xs lg:text-sm hover:bg-primary/10" 
+                        onClick={() => setActiveTab('games')}
+                      >
                         Join Now <ChevronRight className="w-4 h-4 ml-1" />
                       </Button>
                     </div>
@@ -166,24 +185,27 @@ export default function HomeView() {
           </section>
         )}
 
-        {/* Action Quick Link for Ranking */}
+        {/* Global Ranking Quick Link - Premium Desktop View */}
         <section className="pt-6">
           <div 
             onClick={() => setActiveTab('ranking')}
-            className="w-full p-8 rounded-[2.5rem] bg-gradient-to-r from-primary to-blue-600 dark:from-cyan-600 dark:to-blue-800 text-white flex items-center justify-between group cursor-pointer shadow-2xl shadow-primary/30 active:scale-95 transition-all overflow-hidden relative"
+            className="w-full p-10 lg:p-16 rounded-[3rem] lg:rounded-[4.5rem] bg-gradient-to-r from-primary via-blue-600 to-blue-800 text-white flex items-center justify-between group cursor-pointer shadow-2xl shadow-primary/30 active:scale-[0.98] transition-all overflow-hidden relative"
           >
-            <div className="absolute right-0 top-0 -mr-10 -mt-10 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:bg-white/20 transition-all duration-500" />
-            <div className="relative z-10 flex items-center gap-6">
-               <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center">
-                  <Trophy className="w-8 h-8 text-white" />
+            {/* Animated Background Elements */}
+            <div className="absolute right-0 top-0 -mr-20 -mt-20 w-80 h-80 bg-white/10 rounded-full blur-[100px] group-hover:bg-white/20 transition-all duration-1000" />
+            <div className="absolute left-1/4 bottom-0 -mb-20 w-60 h-60 bg-blue-400/20 rounded-full blur-[80px]" />
+
+            <div className="relative z-10 flex items-center gap-8 lg:gap-12">
+               <div className="w-20 h-20 lg:w-32 lg:h-32 bg-white/20 backdrop-blur-xl rounded-[2rem] lg:rounded-[2.5rem] flex items-center justify-center border border-white/30 shadow-2xl group-hover:rotate-12 transition-transform duration-500">
+                  <Trophy className="w-10 h-10 lg:w-16 lg:h-16 text-white drop-shadow-lg" />
                </div>
-               <div>
-                  <h3 className="text-2xl font-headline font-bold mb-1">Global Ranking</h3>
-                  <p className="text-white/60 font-medium">See how you compare to the top players!</p>
+               <div className="space-y-2">
+                  <h3 className="text-3xl lg:text-5xl font-headline font-bold tracking-tight">Oskar Global Ranking</h3>
+                  <p className="text-white/70 text-lg lg:text-xl font-medium max-w-lg">Compete with thousands of players and reach the Hall of Fame!</p>
                </div>
             </div>
-            <div className="relative z-10 w-12 h-12 bg-white rounded-full flex items-center justify-center text-primary shadow-xl group-hover:translate-x-2 transition-transform">
-               <ChevronRight size={24} />
+            <div className="relative z-10 w-16 h-16 lg:w-20 lg:h-20 bg-white text-primary rounded-full flex items-center justify-center shadow-2xl group-hover:translate-x-4 transition-all duration-500">
+               <ChevronRight size={32} />
             </div>
           </div>
         </section>
