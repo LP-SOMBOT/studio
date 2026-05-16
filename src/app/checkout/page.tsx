@@ -311,7 +311,7 @@ function CheckoutContent() {
             <div className="mx-auto w-20 h-20 bg-green-100 dark:bg-green-500/20 rounded-full flex items-center justify-center mb-6 animate-bounce">
               <ShieldCheck className="w-10 h-10 text-green-500" />
             </div>
-            <h2 className="text-2xl font-headline font-bold mb-4 text-slate-900 dark:text-white">Confirm Your Payment</h2>
+            <h2 className="text-2xl font-headline font-bold mb-4 text-slate-900 dark:text-white">Xaqiiji Dalabkaaga</h2>
             <p className="text-muted-foreground dark:text-slate-400 mb-8 text-sm leading-relaxed px-2">
               Did you finish the USSD transaction on your phone? 
               Once confirmed, our system will immediately process your delivery.
