@@ -315,12 +315,12 @@ function CheckoutContent() {
             </p>
             <div className="bg-primary/5 dark:bg-primary/10 p-6 rounded-3xl mb-8 text-left border border-primary/10 dark:border-primary/20">
               <div className="flex justify-between font-bold text-lg mb-2 dark:text-white">
-                <span>Total Amount</span>
+                <span>Wadarta</span>
                 <span className="text-primary">${total.toFixed(2)}</span>
               </div>
               <div className="space-y-1 pt-2 border-t border-primary/10 dark:border-white/5 mt-2">
                 <div className="text-xs text-muted-foreground dark:text-slate-500 flex justify-between items-center">
-                  <span>Sender Number:</span>
+                  <span>Number ka lacagta Laga Soo diray:</span>
                   <span className="font-mono font-bold text-foreground dark:text-slate-200">{gameDetails.senderNumber || "N/A"}</span>
                 </div>
                 <div className="text-xs text-muted-foreground dark:text-slate-500 flex justify-between items-center">
@@ -328,7 +328,7 @@ function CheckoutContent() {
                   <span className="font-mono font-bold text-foreground dark:text-slate-200">{gameDetails.playerID || "N/A"}</span>
                 </div>
                 <div className="text-xs text-muted-foreground dark:text-slate-500 flex justify-between items-center">
-                  <span>Method:</span>
+                  <span>Lacag bixinta:</span>
                   <span className="font-bold text-foreground dark:text-slate-200">{paymentMethod}</span>
                 </div>
               </div>
