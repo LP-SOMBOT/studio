@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -8,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
-import { User, Lock, Mail, Phone, Loader2, ArrowLeft } from "lucide-react";
+import { User, Lock, Mail, Phone, Loader2, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 export default function SignupPage() {
@@ -16,6 +15,7 @@ export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { signup } = useApp();
   const router = useRouter();
@@ -63,7 +63,7 @@ export default function SignupPage() {
 
           <form onSubmit={handleSignup} className="space-y-5">
             <div className="relative group">
-              <div className="absolute left-5 top-1/2 -translate-y-1/2 text-[#7C3AED]">
+              <div className="absolute left-5 top-1/2 -translate-y-1/2 text-[#7C3AED] z-10">
                 <User className="w-5 h-5" />
               </div>
               <Input 
@@ -73,12 +73,12 @@ export default function SignupPage() {
                 required 
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="h-16 pl-14 rounded-full border-gray-100 bg-gray-50/50 focus-visible:ring-[#7C3AED] text-base font-medium placeholder:text-gray-400"
+                className="h-16 pl-14 rounded-full border-gray-200 bg-gray-50 focus:bg-white focus:border-[#7C3AED] focus-visible:ring-[#7C3AED] text-base font-bold text-gray-900 placeholder:text-gray-400 transition-all"
               />
             </div>
 
             <div className="relative group">
-              <div className="absolute left-5 top-1/2 -translate-y-1/2 text-[#7C3AED]">
+              <div className="absolute left-5 top-1/2 -translate-y-1/2 text-[#7C3AED] z-10">
                 <Mail className="w-5 h-5" />
               </div>
               <Input 
@@ -88,12 +88,12 @@ export default function SignupPage() {
                 required 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="h-16 pl-14 rounded-full border-gray-100 bg-gray-50/50 focus-visible:ring-[#7C3AED] text-base font-medium placeholder:text-gray-400"
+                className="h-16 pl-14 rounded-full border-gray-200 bg-gray-50 focus:bg-white focus:border-[#7C3AED] focus-visible:ring-[#7C3AED] text-base font-bold text-gray-900 placeholder:text-gray-400 transition-all"
               />
             </div>
 
             <div className="relative group">
-              <div className="absolute left-5 top-1/2 -translate-y-1/2 text-[#7C3AED]">
+              <div className="absolute left-5 top-1/2 -translate-y-1/2 text-[#7C3AED] z-10">
                 <Phone className="w-5 h-5" />
               </div>
               <Input 
@@ -103,24 +103,31 @@ export default function SignupPage() {
                 required 
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="h-16 pl-14 rounded-full border-gray-100 bg-gray-50/50 focus-visible:ring-[#7C3AED] text-base font-medium placeholder:text-gray-400"
+                className="h-16 pl-14 rounded-full border-gray-200 bg-gray-50 focus:bg-white focus:border-[#7C3AED] focus-visible:ring-[#7C3AED] text-base font-bold text-gray-900 placeholder:text-gray-400 transition-all"
               />
             </div>
 
             <div className="relative group">
-              <div className="absolute left-5 top-1/2 -translate-y-1/2 text-[#7C3AED]">
+              <div className="absolute left-5 top-1/2 -translate-y-1/2 text-[#7C3AED] z-10">
                 <Lock className="w-5 h-5" />
               </div>
               <Input 
                 id="password" 
-                type="password" 
+                type={showPassword ? "text" : "password"} 
                 placeholder="Password (min 6 chars)" 
                 required 
                 minLength={6}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="h-16 pl-14 rounded-full border-gray-100 bg-gray-50/50 focus-visible:ring-[#7C3AED] text-base font-medium placeholder:text-gray-400"
+                className="h-16 pl-14 pr-14 rounded-full border-gray-200 bg-gray-50 focus:bg-white focus:border-[#7C3AED] focus-visible:ring-[#7C3AED] text-base font-bold text-gray-900 placeholder:text-gray-400 transition-all"
               />
+              <button 
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#7C3AED] transition-colors p-1"
+              >
+                {showPassword ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
+              </button>
             </div>
 
             <Button 
