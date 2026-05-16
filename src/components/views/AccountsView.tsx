@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -579,7 +578,7 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
               type="submit" 
               className="w-full h-18 rounded-[2rem] text-2xl font-headline font-bold shadow-2xl shadow-primary/30 active:scale-95 transition-all"
              >
-                {loading ? <Loader2 className="animate-spin w-8 h-8" /> : editingPost ? 'SAVE CHANGES' : 'PUBLISH LISTING'}
+                {loading ? <Loader2 className="animate-spin w-8 h-8" /> : editingPost ? 'SAVE CHANGES' : 'CONTINUE'}
              </Button>
              <p className="text-center text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                 By publishing, you agree to Oskar Shop Seller Terms
