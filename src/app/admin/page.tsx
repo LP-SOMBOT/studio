@@ -44,7 +44,8 @@ import {
   UserCog,
   ArrowUpCircle,
   ArrowDownCircle,
-  Shield
+  Shield,
+  Star
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -162,7 +163,6 @@ export default function AdminPage() {
       setIsPinAuthenticated(true);
       sessionStorage.setItem("admin_pin_access", "granted");
       toast({ title: "PIN Accepted", description: "Admin access granted." });
-      // Force context to re-evaluate listeners
       window.location.reload();
     } else {
       toast({ title: "Wrong PIN", variant: "destructive" });
@@ -259,6 +259,32 @@ export default function AdminPage() {
     }
   };
 
+  const handleProductImageUpload = async (file: File) => {
+    setIsUploading(true);
+    try {
+      const url = await uploadToImgbb(file);
+      setProductForm(prev => ({ ...prev, thumbnail: url }));
+      toast({ title: "Image Uploaded" });
+    } catch (e) {
+      toast({ title: "Upload Failed", variant: "destructive" });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleOfflineImageUpload = async (file: File) => {
+    setIsUploading(true);
+    try {
+      const url = await uploadToImgbb(file);
+      await updateStoreSettings({ appStatus: { ...storeSettings.appStatus, offlineImageUrl: url } });
+      toast({ title: "Media Updated" });
+    } catch (e) {
+      toast({ title: "Upload Failed", variant: "destructive" });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   if (isInitialLoading) {
     return (
       <div className="min-h-screen bg-slate-50 p-10 flex flex-col items-center justify-center gap-6">
@@ -268,7 +294,6 @@ export default function AdminPage() {
     );
   }
 
-  // PIN entry screen
   if (!isPinAuthenticated && !user?.isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-900 p-4">
@@ -329,9 +354,8 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-slate-50 flex overflow-hidden">
       
-      {/* Sidebar */}
       <aside className={cn(
-        "h-screen bg-white border-r border-slate-100 flex flex-col transition-all duration-300 z-50",
+        "h-screen bg-white border-r border-slate-100 flex flex-col transition-all duration-300 z-[60]",
         isSidebarExpanded ? "w-64" : "w-20"
       )}>
         <div className="h-20 px-6 flex items-center justify-between">
@@ -371,7 +395,6 @@ export default function AdminPage() {
         </div>
       </aside>
 
-      {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="h-20 bg-white/60 backdrop-blur-md border-b border-slate-100 flex items-center justify-between px-10 shrink-0">
           <div className="flex items-center gap-4">
@@ -857,7 +880,6 @@ export default function AdminPage() {
         </main>
       </div>
 
-      {/* User Management Modal */}
       <Dialog open={isUserManageOpen} onOpenChange={setIsUserManageOpen}>
         <DialogContent className="max-w-md rounded-[3rem] p-0 border-none shadow-2xl bg-white overflow-hidden z-[100]">
           {selectedUser && (
@@ -880,7 +902,6 @@ export default function AdminPage() {
               </div>
 
               <div className="p-8 space-y-8">
-                {/* Role Section */}
                 <div className="space-y-4">
                   <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                     <Shield size={14} /> Permission Level
@@ -902,7 +923,6 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                {/* Points Section */}
                 <div className="space-y-4">
                   <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                     <Star size={14} /> Points Management
@@ -941,7 +961,6 @@ export default function AdminPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Advanced Order Detail Modal */}
       <Dialog open={isOrderDetailOpen} onOpenChange={setIsOrderDetailOpen}>
         <DialogContent className="max-w-3xl rounded-[3rem] p-0 border-none shadow-2xl bg-white overflow-hidden scrollbar-hide z-[100]">
           {selectedOrder && (
@@ -967,7 +986,6 @@ export default function AdminPage() {
               </div>
 
               <div className="p-10 space-y-10 max-h-[60vh] overflow-y-auto">
-                 {/* Section: Product Info */}
                  <div className="space-y-4">
                     <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                        <Package size={14} /> Item Details
@@ -987,7 +1005,6 @@ export default function AdminPage() {
                     </div>
                  </div>
 
-                 {/* Section: Delivery Target */}
                  <div className="space-y-4">
                     <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                        <Gamepad2 size={14} /> In-Game Destination
@@ -1059,7 +1076,6 @@ export default function AdminPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Product CRUD Dialog */}
       <Dialog open={isProductDialogOpen} onOpenChange={setIsProductDialogOpen}>
         <DialogContent className="max-w-2xl rounded-[3rem] p-0 border-none shadow-2xl bg-white overflow-hidden scrollbar-hide z-[100]">
           <form onSubmit={handleSaveProduct}>
