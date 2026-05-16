@@ -23,7 +23,8 @@ export default function GameCard({ id, title, description, thumbnail, price, dis
 
   const handleBuyNow = (e: React.MouseEvent) => {
     e.preventDefault();
-    buyNow({ id, title, price: discountedPrice || price, gameId, thumbnail });
+    // FIX: Always use the exact base price set by admin for charging
+    buyNow({ id, title, price: price, gameId, thumbnail });
   };
 
   const hasDiscount = discountedPrice && discountedPrice < price;

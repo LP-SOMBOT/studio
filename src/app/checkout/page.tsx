@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo, Suspense } from "react";
@@ -46,7 +45,8 @@ function CheckoutContent() {
     return (products || []).find(p => p.id === productId);
   }, [products, productId]);
 
-  const total = item ? (item.discountedPrice || item.price || 0) : 0;
+  // FIX: Always use base price as per admin requirements
+  const total = item ? (item.price || 0) : 0;
   const isFreeFire = item?.gameId === 'freefire';
 
   useEffect(() => {
@@ -65,6 +65,7 @@ function CheckoutContent() {
 
   const handlePaymentInitiation = () => {
     const paymentNum = storeSettings.paymentNumber || "613982172";
+    // Price formatting logic: '.' becomes '*' for USSD compatibility
     const formattedPrice = total.toString().replace('.', '*');
     const ussd = `*712*${paymentNum}*${formattedPrice}#`;
     
