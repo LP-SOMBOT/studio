@@ -361,7 +361,7 @@ function CheckoutContent() {
         <div className="py-12 flex flex-col items-center text-center">
           <div className="relative mb-8">
             <div className="absolute inset-0 bg-green-400 rounded-full blur-3xl opacity-20 animate-pulse" />
-            <div className="relative w-24 h-24 bg-green-500 rounded-full flex items-center justify-center text-white shadow-2xl">
+            <div className="relative w-24 h-24 bg-green-50 rounded-full flex items-center justify-center text-white shadow-2xl">
               <CheckCircle2 className="w-14 h-14" />
             </div>
             <PartyPopper className="absolute -top-3 -right-3 w-8 h-8 text-yellow-500 animate-bounce" />
@@ -369,7 +369,7 @@ function CheckoutContent() {
           
           <h1 className="text-4xl font-headline font-bold mb-4 text-slate-900 dark:text-white">Waa Lagu guuleystay!</h1>
           <p className="text-base text-muted-foreground dark:text-slate-400 max-w-sm mb-10 leading-relaxed">
-            Your order is now being processed. We'll send the diamonds to <span className="font-bold text-foreground dark:text-white">@{gameDetails.playerName || "your account"}</span> shortly!
+            Dalabkaaga waa la diray. Sida ugu dhaqsiyaha badan ayaa lagugu adeegi doonnaa i.a, fadlan dulqaadka badi mahadsanid. Dalabkaaga waxaad Kala socono kartaa halkaan <span onClick={() => setActiveTab('orders')} className="text-primary font-bold cursor-pointer hover:underline">dalabyada</span>.
           </p>
 
           <div className="grid grid-cols-1 gap-3 w-full max-w-sm">
