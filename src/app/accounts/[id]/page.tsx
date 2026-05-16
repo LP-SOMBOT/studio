@@ -56,9 +56,9 @@ export default function AccountDetailPage() {
     <div className="min-h-screen pb-32 bg-slate-50 page-transition">
       {/* Custom Sticky Header */}
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100 h-16 flex items-center px-4 gap-4">
-         <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full">
+         <button onClick={() => router.back()} className="p-2 text-slate-900 rounded-full hover:bg-slate-100">
             <ArrowLeft size={24} />
-         </Button>
+         </button>
          <h1 className="text-lg font-headline font-bold text-slate-900">Faahfaahinta Account</h1>
       </header>
 
@@ -119,7 +119,7 @@ export default function AccountDetailPage() {
            <div className="grid grid-cols-3 gap-4">
               <StatItem label="Lvl" value={post.level} icon={Star} color="text-amber-500" />
               <StatItem label="Age" value={post.age} icon={Calendar} color="text-blue-500" />
-              <StatItem label="Prime" value={`Lv ${post.primeLevel}`} icon={ShieldCheck} color="text-purple-500" />
+              <StatItem label="Level" value={`Prime ${post.primeLevel}`} icon={ShieldCheck} color="text-purple-500" />
            </div>
 
            <div className="space-y-4">
