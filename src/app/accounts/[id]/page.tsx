@@ -43,7 +43,7 @@ export default function AccountDetailPage() {
     if (!post) return;
     const shareUrl = `${window.location.origin}/accounts/${post.id}`;
     const shareTitle = `Oskar Shop - ${post.authorName}'s Account`;
-    const shareText = `Eeg account-kan Lv ${post.level} ee jooga Oskar Shop!`;
+    const shareText = `Account iib ah level ${post.level}, ${post.age}, Prime ${post.primeLevel}, ka iibso Oskarshop si amaan ah.`;
 
     if (navigator.share) {
       try {
@@ -57,7 +57,7 @@ export default function AccountDetailPage() {
       }
     } else {
       try {
-        await navigator.clipboard.writeText(shareUrl);
+        await navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
         toast({
           title: "URL-ka waa la koobiyey!",
           description: "Link-ga account-ka waa kuu diyaar.",

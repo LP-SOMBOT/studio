@@ -204,7 +204,7 @@ function AccountPostCard({ post, onClick, onEdit, onDelete, isOwner }: { post: a
   const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation();
     const shareUrl = `${window.location.origin}/accounts/${post.id}`;
-    const shareText = `Eeg account-kan Lv ${post.level} ee jooga Oskar Shop!`;
+    const shareText = `Account iib ah level ${post.level}, ${post.age}, Prime ${post.primeLevel}, ka iibso Oskarshop si amaan ah.`;
 
     if (navigator.share) {
       try {
@@ -215,8 +215,8 @@ function AccountPostCard({ post, onClick, onEdit, onDelete, isOwner }: { post: a
         });
       } catch (err) {}
     } else {
-      navigator.clipboard.writeText(shareUrl);
-      toast({ title: "URL copied!" });
+      navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
+      toast({ title: "Link-ga waa la koobiyey!" });
     }
   };
   
@@ -249,7 +249,12 @@ function AccountPostCard({ post, onClick, onEdit, onDelete, isOwner }: { post: a
         </div>
         
         <div className="flex gap-1">
-           <Button size="icon" variant="ghost" className="h-8 w-8 text-primary" onClick={handleShare}><Share2 size={16}/></Button>
+           <button 
+             onClick={handleShare}
+             className="w-8 h-8 rounded-full flex items-center justify-center text-primary bg-primary/10 hover:bg-primary/20 transition-colors active:scale-90"
+           >
+              <Share2 size={16} />
+           </button>
            {isOwner && (
              <>
                 <Button size="icon" variant="ghost" className="h-8 w-8 text-blue-500" onClick={onEdit}><Edit size={16}/></Button>
