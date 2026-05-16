@@ -585,6 +585,29 @@ export default function AdminPage() {
             </div>
           )}
 
+          {activeView === 'events' && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h3 className="font-headline font-bold text-xl text-slate-900 dark:text-white">Live Events</h3>
+                <Button onClick={() => handleOpenEventDialog()} className="h-10 rounded-xl gap-2 font-bold"><Plus size={18} /> New Event</Button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {events.map(ev => (
+                  <Card key={ev.id} className="rounded-[2rem] overflow-hidden border-none shadow-lg bg-white dark:bg-slate-900">
+                    <div className="aspect-[21/9] relative">
+                      <Image src={ev.thumbnailUrl} alt="" fill className="object-cover" />
+                      {!ev.active && <div className="absolute inset-0 bg-black/60 flex items-center justify-center font-bold text-white text-xs uppercase tracking-widest">Inactive</div>}
+                    </div>
+                    <div className="p-6 flex justify-between items-center">
+                      <div><h4 className="font-bold text-slate-900 dark:text-white">{ev.title}</h4><p className="text-[10px] text-muted-foreground uppercase font-bold">{ev.type}</p></div>
+                      <div className="flex gap-2"><Button size="icon" variant="ghost" onClick={() => handleOpenEventDialog(ev)} className="text-blue-500"><Edit size={16}/></Button><Button size="icon" variant="ghost" onClick={() => confirmDelete(ev.id, 'event')} className="text-red-500"><Trash2 size={16}/></Button></div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+
           {activeView === 'users' && (
             <Card className="rounded-[2rem] border-none shadow-xl overflow-hidden bg-white dark:bg-slate-900">
                <Table>
@@ -783,6 +806,109 @@ export default function AdminPage() {
           )}
         </main>
       </div>
+
+      <Dialog open={isProductDialogOpen} onOpenChange={setIsProductDialogOpen}>
+        <DialogContent className="max-w-xl rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl bg-white dark:bg-slate-900">
+          <div className="bg-primary p-8 text-white">
+            <DialogTitle className="text-2xl font-headline font-bold">{editingProduct ? 'Edit Item' : 'Add New Item'}</DialogTitle>
+          </div>
+          <form onSubmit={handleSaveProduct} className="p-8 space-y-6 max-h-[70vh] overflow-y-auto scrollbar-hide">
+            <div className="space-y-2">
+              <Label className="text-xs font-bold uppercase text-slate-400">Item Title</Label>
+              <Input value={productForm.title} onChange={e => setProductForm({...productForm, title: e.target.value})} required className="rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase text-slate-400">Game ID</Label>
+                <Select value={productForm.gameId} onValueChange={v => setProductForm({...productForm, gameId: v})}>
+                  <SelectTrigger className="rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold"><SelectValue /></SelectTrigger>
+                  <SelectContent className="rounded-xl"><SelectItem value="freefire">Free Fire</SelectItem><SelectItem value="bloodstrike">Blood Strike</SelectItem></SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase text-slate-400">Category</Label>
+                <Select value={productForm.category} onValueChange={(v:any) => setProductForm({...productForm, category: v})}>
+                  <SelectTrigger className="rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold"><SelectValue /></SelectTrigger>
+                  <SelectContent className="rounded-xl"><SelectItem value="top-up">Top-Up</SelectItem><SelectItem value="accounts">Accounts</SelectItem></SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase text-slate-400">Price ($)</Label>
+                <Input type="number" step="0.01" value={productForm.price} onChange={e => setProductForm({...productForm, price: e.target.value})} required className="rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase text-slate-400">Discount Price (Opt)</Label>
+                <Input type="number" step="0.01" value={productForm.discountedPrice} onChange={e => setProductForm({...productForm, discountedPrice: e.target.value})} className="rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold" />
+              </div>
+            </div>
+            <div className="space-y-2">
+               <Label className="text-xs font-bold uppercase text-slate-400">Description</Label>
+               <Textarea value={productForm.description} onChange={e => setProductForm({...productForm, description: e.target.value})} className="rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold min-h-[80px]" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-bold uppercase text-slate-400">Thumbnail Image</Label>
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-xl bg-slate-100 dark:bg-slate-800 relative overflow-hidden shrink-0 border border-dashed border-slate-300 dark:border-white/10">
+                  {productForm.thumbnail ? <Image src={productForm.thumbnail} alt="" fill className="object-cover" unoptimized /> : <ImageIcon className="m-auto absolute inset-0 text-slate-300" />}
+                </div>
+                <Input type="file" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'product')} className="flex-1 rounded-xl dark:bg-slate-800 border-none" />
+              </div>
+            </div>
+            <Button type="submit" disabled={isUploading} className="w-full h-14 rounded-2xl font-bold shadow-xl shadow-primary/20">
+              {isUploading ? <Loader2 className="animate-spin" /> : editingProduct ? 'Update Item' : 'Add Item'}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isEventDialogOpen} onOpenChange={setIsEventDialogOpen}>
+        <DialogContent className="max-w-xl rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl bg-white dark:bg-slate-900">
+          <div className="bg-blue-600 p-8 text-white">
+            <DialogTitle className="text-2xl font-headline font-bold">{editingEvent ? 'Edit Event' : 'Create Live Event'}</DialogTitle>
+          </div>
+          <form onSubmit={handleSaveEvent} className="p-8 space-y-6">
+            <div className="space-y-2"><Label className="text-xs font-bold text-slate-400">Event Title</Label><Input value={eventForm.title} onChange={e => setEventForm({...eventForm, title: e.target.value})} required className="rounded-xl" /></div>
+            <div className="space-y-2"><Label className="text-xs font-bold text-slate-400">Description</Label><Textarea value={eventForm.description} onChange={e => setEventForm({...eventForm, description: e.target.value})} className="rounded-xl" /></div>
+            <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
+               <div><p className="font-bold text-sm">Active Status</p><p className="text-[10px] text-muted-foreground">Is this event visible to users?</p></div>
+               <Switch checked={eventForm.active} onCheckedChange={v => setEventForm({...eventForm, active: v})} />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-bold text-slate-400">Event Banner</Label>
+              <div className="flex items-center gap-4">
+                <div className="w-20 aspect-video rounded-xl bg-slate-100 dark:bg-slate-800 relative overflow-hidden shrink-0">
+                  {eventForm.thumbnailUrl ? <Image src={eventForm.thumbnailUrl} alt="" fill className="object-cover" unoptimized /> : <ImageIcon className="m-auto absolute inset-0 text-slate-300" />}
+                </div>
+                <Input type="file" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'event')} className="flex-1 rounded-xl" />
+              </div>
+            </div>
+            <Button type="submit" disabled={isUploading} className="w-full h-14 rounded-2xl font-bold bg-blue-600 hover:bg-blue-700">
+              {isUploading ? <Loader2 className="animate-spin" /> : 'Save Event'}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isBannerDialogOpen} onOpenChange={setIsBannerDialogOpen}>
+        <DialogContent className="max-w-md rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl bg-white dark:bg-slate-900">
+          <div className="bg-amber-500 p-8 text-white"><DialogTitle className="text-2xl font-headline font-bold">New Banner</DialogTitle></div>
+          <div className="p-8 space-y-6">
+            <div className="space-y-2">
+               <Label className="text-xs font-bold text-slate-400">Slider Image</Label>
+               <div className="aspect-[21/9] rounded-xl bg-slate-50 dark:bg-slate-800 relative overflow-hidden mb-4 flex items-center justify-center">
+                  {bannerForm.imageUrl ? <Image src={bannerForm.imageUrl} alt="" fill className="object-cover" /> : <ImageIcon className="text-slate-300" size={40} />}
+               </div>
+               <Input type="file" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'banner')} className="rounded-xl" />
+            </div>
+            <div className="space-y-2"><Label className="text-xs font-bold text-slate-400">Action Link (Optional)</Label><Input value={bannerForm.linkTo} onChange={e => setBannerForm({...bannerForm, linkTo: e.target.value})} placeholder="e.g. #games" className="rounded-xl" /></div>
+            <Button onClick={handleSaveBanner} disabled={isUploading || !bannerForm.imageUrl} className="w-full h-14 rounded-2xl font-bold bg-amber-500 hover:bg-amber-600">
+              {isUploading ? <Loader2 className="animate-spin" /> : 'Publish Banner'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="max-w-sm rounded-[2rem] bg-white dark:bg-slate-900">
