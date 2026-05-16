@@ -71,8 +71,10 @@ export default function AccountsView() {
     return (
       <div className="min-h-screen pb-24 space-y-6">
         <Skeleton className="h-16 w-full sticky top-0 z-50 rounded-none" />
-        <div className="px-4 space-y-6">
-          {[1, 2, 3].map(i => <Skeleton key={i} className="h-96 rounded-[2.5rem] w-full" />)}
+        <div className="px-4 space-y-6 max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3].map(i => <Skeleton key={i} className="h-96 rounded-[2.5rem] w-full" />)}
+          </div>
         </div>
       </div>
     );
@@ -90,8 +92,8 @@ export default function AccountsView() {
         </button>
       </header>
 
-      <main className="px-4 py-6 space-y-6 max-w-2xl mx-auto">
-        <div className="relative">
+      <main className="px-4 py-6 space-y-6 max-w-7xl mx-auto">
+        <div className="relative max-w-2xl mx-auto mb-10">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input 
             placeholder="Search accounts or sellers..." 
@@ -112,7 +114,7 @@ export default function AccountsView() {
             </div>
           </div>
         ) : (
-          <div className="space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8">
             {approvedPosts.map((post) => (
               <AccountPostCard 
                 key={post.id} 
@@ -130,7 +132,7 @@ export default function AccountsView() {
       {user && (
         <button 
           onClick={() => setIsPostSheetOpen(true)}
-          className="fixed bottom-24 right-6 w-16 h-16 bg-amber-500 text-white rounded-full shadow-2xl shadow-amber-500/30 flex items-center justify-center active:scale-90 transition-transform z-[90]"
+          className="fixed bottom-24 right-6 lg:bottom-10 lg:right-10 w-16 h-16 bg-amber-500 text-white rounded-full shadow-2xl shadow-amber-500/30 flex items-center justify-center active:scale-90 transition-transform z-[90]"
         >
           <Plus size={32} strokeWidth={3} />
         </button>
@@ -201,7 +203,7 @@ function AccountPostCard({ post, onClick, onEdit, onDelete, isOwner }: { post: a
   return (
     <Card 
       onClick={onClick}
-      className="rounded-[2.5rem] border-none shadow-xl bg-white dark:bg-slate-900 overflow-hidden transition-all active:scale-[0.98] group cursor-pointer"
+      className="rounded-[2.5rem] border-none shadow-xl bg-white dark:bg-slate-900 overflow-hidden transition-all active:scale-[0.98] group cursor-pointer h-full flex flex-col"
     >
       <div className="p-5 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/40">
         <div className="flex items-center gap-3">
@@ -247,7 +249,7 @@ function AccountPostCard({ post, onClick, onEdit, onDelete, isOwner }: { post: a
         )}
       </div>
 
-      <div className="p-6 space-y-4">
+      <div className="p-6 space-y-4 flex-1 flex flex-col">
         <div className="grid grid-cols-2 gap-4">
            <div className="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-400">
              <Star className="w-4 h-4 text-amber-500" /> Lv {post.level || 0}
@@ -257,7 +259,7 @@ function AccountPostCard({ post, onClick, onEdit, onDelete, isOwner }: { post: a
            </div>
         </div>
 
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide py-1">
            {(post.items || []).slice(0, 3).map((item: string, i: number) => (
              <Badge key={i} className="bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 border-none rounded-full px-3 py-1 text-[10px] font-bold whitespace-nowrap">
                 {item}
@@ -265,7 +267,7 @@ function AccountPostCard({ post, onClick, onEdit, onDelete, isOwner }: { post: a
            ))}
         </div>
 
-        <div className="flex items-center justify-between pt-4 border-t border-slate-50 dark:border-white/5">
+        <div className="flex items-center justify-between pt-4 border-t border-slate-50 dark:border-white/5 mt-auto">
            <div>
              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Price</p>
              <p className="text-2xl font-headline font-bold text-primary">${post.price?.toFixed(2)}</p>
@@ -410,7 +412,7 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
 
   return (
     <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if(!v) setHasTriggeredUssd(false); }}>
-      <DialogContent className="max-w-xl h-[92vh] overflow-y-auto rounded-[3.5rem] p-0 border-none shadow-2xl bg-white dark:bg-slate-900 scrollbar-hide">
+      <DialogContent className="max-w-2xl h-[92vh] overflow-y-auto rounded-[3.5rem] p-0 border-none shadow-2xl bg-white dark:bg-slate-900 scrollbar-hide">
         <div className="sticky top-0 z-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md px-8 pt-8 pb-4 flex items-center justify-between">
            <div>
               <DialogTitle className="text-3xl font-headline font-bold text-slate-900 dark:text-white">{editingPost ? 'Update' : 'Iibi'} Account</DialogTitle>
@@ -537,7 +539,7 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
                <h3 className="font-headline font-bold text-lg dark:text-white">Account Gallery</h3>
             </div>
             
-            <div className="grid grid-cols-3 gap-3 mb-4">
+            <div className="grid grid-cols-3 md:grid-cols-4 gap-3 mb-4">
                {previews.map((url, idx) => (
                  <div key={idx} className="relative aspect-square rounded-2xl overflow-hidden group shadow-sm bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-white/5">
                     <Image src={url} alt="" fill className="object-cover" unoptimized />
@@ -565,7 +567,7 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
 
           <div className="space-y-6">
             <div className="flex items-center gap-3">
-               <div className="w-8 h-8 rounded-full bg-green-50 dark:bg-green-500/10 flex items-center justify-center text-green-500"><DollarSign size={18} /></div>
+               <div className="w-8 h-8 rounded-full bg-green-50 dark:bg-blue-500/10 flex items-center justify-center text-green-500"><DollarSign size={18} /></div>
                <h3 className="font-headline font-bold text-lg dark:text-white">Pricing Information</h3>
             </div>
 

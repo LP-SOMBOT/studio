@@ -35,15 +35,17 @@ export default function NotificationsView() {
 
   if (isInitialLoading) {
     return (
-      <div className="pb-24 px-4 py-8 max-w-lg mx-auto space-y-4">
-        {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-20 rounded-[2rem] w-full" />)}
+      <div className="pb-24 px-4 py-8 max-w-7xl mx-auto space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {[1, 2, 3, 4, 5, 6].map(i => <Skeleton key={i} className="h-20 rounded-[2rem] w-full" />)}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="pb-24 px-4 py-8 max-w-lg mx-auto page-transition">
-      <header className="flex justify-between items-center mb-8">
+    <div className="pb-24 px-4 py-8 max-w-7xl mx-auto page-transition">
+      <header className="flex justify-between items-center mb-8 max-w-lg mx-auto lg:max-w-none">
         <h1 className="text-3xl font-headline font-bold flex items-center gap-3 text-slate-900 dark:text-white">
           <Bell className="text-primary" /> Notifications
         </h1>
@@ -68,17 +70,17 @@ export default function NotificationsView() {
           <p className="text-sm max-w-[200px] mx-auto">We'll let you know when something important happens.</p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {notifications.map((notif) => (
             <Card 
               key={notif.id}
               onClick={() => handleNotifClick(notif)}
               className={cn(
-                "rounded-[2rem] border-none shadow-sm transition-all cursor-pointer group",
+                "rounded-[2rem] border-none shadow-sm transition-all cursor-pointer group h-full",
                 !notif.read ? "bg-white dark:bg-slate-900 shadow-md border-l-8 border-l-primary" : "bg-white/60 dark:bg-slate-900/40 opacity-70"
               )}
             >
-              <div className="p-5 flex gap-4">
+              <div className="p-5 flex gap-4 h-full items-center">
                 <div className="w-12 h-12 rounded-2xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                   {getIcon(notif.type)}
                 </div>

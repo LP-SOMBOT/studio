@@ -27,16 +27,18 @@ export default function OrdersView() {
 
   if (isInitialLoading) {
     return (
-      <div className="min-h-screen px-4 py-8 space-y-6">
+      <div className="min-h-screen px-4 py-8 max-w-7xl mx-auto space-y-6">
         <Skeleton className="h-10 w-48 rounded-lg mb-6" />
-        {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-32 w-full rounded-[2.5rem]" />)}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-32 w-full rounded-[2.5rem]" />)}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen pb-32 px-4 py-8 max-w-2xl mx-auto page-transition">
-      <header className="mb-10">
+    <div className="min-h-screen pb-32 px-4 py-8 max-w-7xl mx-auto page-transition">
+      <header className="mb-10 text-center lg:text-left">
         <h1 className="text-3xl font-headline font-bold text-slate-900 dark:text-white">Dalabyadayda</h1>
         <p className="text-muted-foreground font-medium text-sm mt-1">La soco xaalada iyo taariikhda iibsigaaga</p>
       </header>
@@ -58,7 +60,7 @@ export default function OrdersView() {
            </button>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-10">
            {orders.map((order) => (
              <OrderCard key={order.id} order={order} />
            ))}
@@ -83,7 +85,7 @@ function OrderCard({ order }: { order: any }) {
 
   return (
     <Card className="rounded-[2.5rem] border-none shadow-xl bg-white dark:bg-slate-900 overflow-hidden group hover:shadow-2xl transition-all duration-300">
-       <div className="p-6">
+       <div className="p-6 h-full flex flex-col">
           <div className="flex justify-between items-start mb-6">
              <div className="flex gap-4">
                 <div className={cn(
@@ -116,7 +118,7 @@ function OrderCard({ order }: { order: any }) {
              </Badge>
           </div>
 
-          <div className="bg-slate-50/80 dark:bg-slate-800/40 rounded-[2rem] p-5 space-y-3 border border-slate-100 dark:border-white/5">
+          <div className="bg-slate-50/80 dark:bg-slate-800/40 rounded-[2rem] p-5 space-y-3 border border-slate-100 dark:border-white/5 flex-1">
              {isAccount ? (
                <>
                  <div className="flex justify-between items-center text-xs">

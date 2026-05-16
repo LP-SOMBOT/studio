@@ -27,21 +27,21 @@ export default function RankingView() {
 
   if (isInitialLoading) {
     return (
-      <div className="pb-24 px-4 py-8 max-lg mx-auto space-y-8 animate-in fade-in duration-500">
+      <div className="pb-24 px-4 py-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
         <div className="flex justify-center items-end gap-4 h-48">
           <Skeleton className="w-24 h-32 rounded-2xl" />
           <Skeleton className="w-28 h-40 rounded-2xl" />
           <Skeleton className="w-24 h-32 rounded-2xl" />
         </div>
-        <div className="space-y-4">
-          {[1, 2, 3, 4, 5].map(i => <Skeleton key={`skeleton-${i}`} className="h-16 rounded-2xl w-full" />)}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {[1, 2, 3, 4, 5, 6].map(i => <Skeleton key={`skeleton-${i}`} className="h-16 rounded-2xl w-full" />)}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="pb-24 px-4 py-8 max-w-lg mx-auto page-transition">
+    <div className="pb-24 px-4 py-8 max-w-7xl mx-auto page-transition">
       <header className="text-center mb-12">
         <div className="inline-flex p-3 bg-amber-100 dark:bg-amber-500/10 rounded-[1.5rem] mb-4 text-amber-600">
            <Trophy className="w-8 h-8" />
@@ -53,7 +53,7 @@ export default function RankingView() {
       </header>
 
       {/* Podium */}
-      <div className="flex justify-center items-end gap-2 mb-12 h-64 relative">
+      <div className="flex justify-center items-end gap-2 mb-12 h-64 relative max-w-2xl mx-auto">
         {/* Silver #2 */}
         {top3[1] && (
           <div className="flex flex-col items-center flex-1 animate-in slide-in-from-bottom-8 duration-700 delay-100">
@@ -128,9 +128,9 @@ export default function RankingView() {
       </div>
 
       {/* List */}
-      <div className="space-y-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {others.length === 0 && top3.length < 1 && (
-           <Card className="p-12 text-center rounded-[2.5rem] border-dashed bg-white/40 dark:bg-slate-900/40 border-slate-200 dark:border-white/10">
+           <Card className="col-span-full p-12 text-center rounded-[2.5rem] border-dashed bg-white/40 dark:bg-slate-900/40 border-slate-200 dark:border-white/10">
               <p className="text-muted-foreground italic text-sm">More players coming soon...</p>
            </Card>
         )}
@@ -173,7 +173,7 @@ export default function RankingView() {
 
       {/* Sticky User Position if not in Top X */}
       {userRank > 3 + others.length && user && (
-         <div className="fixed bottom-24 left-4 right-4 z-50 animate-in slide-in-from-bottom-10">
+         <div className="fixed bottom-24 left-4 right-4 z-50 animate-in slide-in-from-bottom-10 lg:bottom-10 lg:left-auto lg:right-10 lg:w-96">
            <Card className="rounded-[2.5rem] bg-slate-900 dark:bg-slate-900 text-white p-4 flex items-center gap-4 shadow-2xl border-none ring-1 ring-white/10">
               <span className="w-8 text-center font-headline font-bold text-white/40 text-lg">{userRank}</span>
               <div className="w-12 h-12 rounded-2xl bg-white/10 overflow-hidden relative border border-white/20">

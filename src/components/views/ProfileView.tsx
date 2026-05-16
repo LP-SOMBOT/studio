@@ -99,13 +99,13 @@ export default function ProfileView() {
 
   if (isInitialLoading || loading) {
     return (
-      <div className="min-h-screen px-4 py-8 space-y-6">
+      <div className="min-h-screen px-4 py-8 space-y-6 max-w-7xl mx-auto">
         <div className="flex flex-col items-center">
           <Skeleton className="w-40 h-40 rounded-full mb-6" />
           <Skeleton className="h-8 w-48 mb-2" />
           <Skeleton className="h-6 w-32" />
         </div>
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
            {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-16 w-full rounded-2xl" />)}
         </div>
       </div>
@@ -115,17 +115,17 @@ export default function ProfileView() {
   if (!user) return null;
 
   return (
-    <div className="pb-32 px-4 py-8 max-w-2xl mx-auto space-y-10 page-transition">
+    <div className="pb-32 px-4 py-8 max-w-7xl mx-auto space-y-10 page-transition">
       {/* Header Profile Section */}
       <section className="flex flex-col items-center text-center">
         <div className="relative group mb-6">
           {/* Main Round Avatar */}
-          <div className="w-32 h-32 rounded-full border-[6px] border-white dark:border-slate-800 shadow-2xl overflow-hidden bg-slate-100 dark:bg-slate-900 ring-2 ring-primary/5 relative">
+          <div className="w-32 h-32 lg:w-48 lg:h-48 rounded-full border-[6px] border-white dark:border-slate-800 shadow-2xl overflow-hidden bg-slate-100 dark:bg-slate-900 ring-2 ring-primary/5 relative">
             {user.photoURL ? (
               <Image src={user.photoURL} alt="" fill className="object-cover" unoptimized />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-slate-300 dark:text-slate-700">
-                <User size={60} />
+                <User size={80} />
               </div>
             )}
             {isSaving && (
@@ -136,16 +136,16 @@ export default function ProfileView() {
           </div>
           <button 
             onClick={() => setIsEditModalOpen(true)} 
-            className="absolute bottom-1 right-1 w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center shadow-lg border-2 border-white dark:border-slate-800 active:scale-90 transition-transform"
+            className="absolute bottom-1 right-1 lg:bottom-4 lg:right-4 w-10 h-10 lg:w-14 lg:h-14 bg-primary text-white rounded-full flex items-center justify-center shadow-lg border-2 border-white dark:border-slate-800 active:scale-90 transition-transform"
           >
-            <Camera size={20} />
+            <Camera size={24} />
           </button>
         </div>
 
         <div className="space-y-2">
           <div className="flex items-center justify-center gap-2">
-            <h2 className="text-3xl font-headline font-bold text-slate-900 dark:text-white">{user.name}</h2>
-            {user.isAdmin && <ShieldCheck size={24} className="text-primary fill-primary/10" />}
+            <h2 className="text-3xl lg:text-4xl font-headline font-bold text-slate-900 dark:text-white">{user.name}</h2>
+            {user.isAdmin && <ShieldCheck size={28} className="text-primary fill-primary/10" />}
           </div>
           <div className="flex items-center justify-center gap-2">
             <Badge className="bg-amber-100 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border-none px-4 py-1.5 rounded-full flex gap-1.5 items-center font-bold text-xs shadow-sm">
@@ -173,58 +173,60 @@ export default function ProfileView() {
               </p>
               <button 
                 onClick={() => router.push('/admin')}
-                className="w-full p-6 bg-slate-900 dark:bg-slate-800 text-white rounded-[2.5rem] shadow-2xl shadow-slate-900/20 flex items-center justify-between group active:scale-[0.98] transition-all"
+                className="w-full p-6 lg:p-8 bg-slate-900 dark:bg-slate-800 text-white rounded-[2.5rem] shadow-2xl shadow-slate-900/20 flex items-center justify-between group active:scale-[0.98] transition-all"
               >
-                <div className="flex items-center gap-4 text-left">
-                  <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                    <LayoutDashboard size={28} />
+                <div className="flex items-center gap-4 lg:gap-6 text-left">
+                  <div className="w-14 h-14 lg:w-20 lg:h-20 bg-white/10 rounded-2xl flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                    <LayoutDashboard size={32} />
                   </div>
                   <div>
-                    <h3 className="font-headline font-bold text-lg">Oskar Control Panel</h3>
-                    <p className="text-white/40 text-xs font-medium">Manage orders, items & users</p>
+                    <h3 className="font-headline font-bold text-lg lg:text-2xl">Oskar Control Panel</h3>
+                    <p className="text-white/40 text-xs lg:text-sm font-medium">Manage orders, items & users</p>
                   </div>
                 </div>
-                <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
-                  <ChevronRight size={20} />
+                <div className="w-10 h-10 lg:w-14 lg:h-14 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
+                  <ChevronRight size={post.id ? 24 : 20} />
                 </div>
               </button>
            </div>
          )}
 
-         <ProfileGroup title="Marketplace & Activity">
-            <ProfileOption icon={ShoppingBag} label="My Orders (Purchases)" onClick={() => setActiveTab('orders')} />
-            <ProfileOption icon={Gamepad2} label="My Selling Accounts" onClick={() => setActiveTab('accounts')} />
-            <ProfileOption icon={Trophy} label="Global Leaderboard" onClick={() => setActiveTab('ranking')} />
-         </ProfileGroup>
+         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <ProfileGroup title="Marketplace & Activity">
+                <ProfileOption icon={ShoppingBag} label="My Orders (Purchases)" onClick={() => setActiveTab('orders')} />
+                <ProfileOption icon={Gamepad2} label="My Selling Accounts" onClick={() => setActiveTab('accounts')} />
+                <ProfileOption icon={Trophy} label="Global Leaderboard" onClick={() => setActiveTab('ranking')} />
+            </ProfileGroup>
 
-         <ProfileGroup title="Support & Social">
-            <ProfileOption icon={HelpCircle} label="How to use Oskar Shop" onClick={() => toast({ title: "Coming Soon", description: "Waxaan diyaarinaynaa muuqaalo iyo casharo." })} />
-            <ProfileOption 
-              icon={MessageCircle} 
-              label="Contact WhatsApp Support" 
-              onClick={() => window.open('https://wa.me/252613982172', '_blank')} 
-            />
-            <ProfileOption 
-              icon={Video} 
-              label="Join us on TikTok" 
-              onClick={() => window.open('https://tiktok.com/@Oskarshop', '_blank')} 
-            />
-         </ProfileGroup>
+            <ProfileGroup title="Support & Social">
+                <ProfileOption icon={HelpCircle} label="How to use Oskar Shop" onClick={() => toast({ title: "Coming Soon", description: "Waxaan diyaarinaynaa muuqaalo iyo casharo." })} />
+                <ProfileOption 
+                icon={MessageCircle} 
+                label="Contact WhatsApp Support" 
+                onClick={() => window.open('https://wa.me/252613982172', '_blank')} 
+                />
+                <ProfileOption 
+                icon={Video} 
+                label="Join us on TikTok" 
+                onClick={() => window.open('https://tiktok.com/@Oskarshop', '_blank')} 
+                />
+            </ProfileGroup>
 
-         <ProfileGroup title="Account Settings">
-            <ProfileOption 
-              icon={theme === 'light' ? Moon : Sun} 
-              label={theme === 'light' ? "Switch to Dark Mode" : "Switch to Light Mode"} 
-              onClick={toggleTheme} 
-            />
-            <ProfileOption icon={UserCircle} label="Update Profile Info" onClick={() => setIsEditModalOpen(true)} />
-            <ProfileOption 
-              icon={LogOut} 
-              label="Logout from Oskar Shop" 
-              onClick={logout} 
-              variant="danger" 
-            />
-         </ProfileGroup>
+            <ProfileGroup title="Account Settings">
+                <ProfileOption 
+                icon={theme === 'light' ? Moon : Sun} 
+                label={theme === 'light' ? "Switch to Dark Mode" : "Switch to Light Mode"} 
+                onClick={toggleTheme} 
+                />
+                <ProfileOption icon={UserCircle} label="Update Profile Info" onClick={() => setIsEditModalOpen(true)} />
+                <ProfileOption 
+                icon={LogOut} 
+                label="Logout from Oskar Shop" 
+                onClick={logout} 
+                variant="danger" 
+                />
+            </ProfileGroup>
+         </div>
       </div>
 
       {/* Edit Modal */}
@@ -285,10 +287,10 @@ export default function ProfileView() {
 
 function ProfileGroup({ title, children }: { title: string, children: React.ReactNode }) {
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 flex flex-col">
        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] ml-4">{title}</p>
-       <Card className="rounded-[2.5rem] border-none shadow-sm overflow-hidden glass">
-          <div className="divide-y divide-slate-50 dark:divide-white/5">
+       <Card className="rounded-[2.5rem] border-none shadow-sm overflow-hidden glass flex-1">
+          <div className="divide-y divide-slate-50 dark:divide-white/5 h-full">
              {children}
           </div>
        </Card>
@@ -301,19 +303,19 @@ function ProfileOption({ icon: Icon, label, onClick, variant }: { icon: any, lab
     <button 
       onClick={onClick}
       className={cn(
-        "w-full flex items-center justify-between p-5 transition-all active:bg-slate-50 dark:active:bg-white/5",
+        "w-full flex items-center justify-between p-5 lg:p-6 transition-all active:bg-slate-50 dark:active:bg-white/5",
         variant === 'admin' ? "bg-slate-900 dark:bg-slate-800 text-white hover:bg-black rounded-[2rem]" : ""
       )}
     >
       <div className="flex items-center gap-4">
          <div className={cn(
-           "w-10 h-10 rounded-xl flex items-center justify-center shadow-sm",
+           "w-10 h-10 lg:w-12 lg:h-12 rounded-xl flex items-center justify-center shadow-sm",
            variant === 'admin' ? "bg-white/10" : variant === 'danger' ? "bg-red-50 dark:bg-red-500/10 text-red-500" : "bg-primary/10 dark:bg-primary/20 text-primary"
          )}>
             <Icon size={20} />
          </div>
          <span className={cn(
-           "font-bold text-sm text-slate-900 dark:text-white",
+           "font-bold text-sm lg:text-base text-slate-900 dark:text-white",
            variant === 'danger' ? "text-red-500" : ""
          )}>{label}</span>
       </div>
