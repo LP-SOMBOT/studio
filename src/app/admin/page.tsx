@@ -32,7 +32,8 @@ import {
   Box,
   AlertCircle,
   RefreshCw,
-  Clock
+  Clock,
+  ArrowRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -94,7 +95,8 @@ export default function AdminPage() {
     saveProduct,
     deleteProduct,
     logout,
-    isInitialLoading
+    isInitialLoading,
+    refreshAdminData
   } = useApp();
 
   const [pin, setPin] = useState("");
@@ -128,6 +130,9 @@ export default function AdminPage() {
     if (pin === savedPin) {
       setIsPinAuthenticated(true);
       sessionStorage.setItem("admin_pin_access", "granted");
+      toast({ title: "PIN Accepted", description: "Admin access granted." });
+      // Force context to re-evaluate listeners
+      window.location.reload();
     } else {
       toast({ title: "Wrong PIN", variant: "destructive" });
       setPin("");
@@ -211,11 +216,11 @@ export default function AdminPage() {
     }
   };
 
-  if (isInitialLoading || (loading && !isPinAuthenticated)) {
+  if (isInitialLoading) {
     return (
       <div className="min-h-screen bg-slate-50 p-10 flex flex-col items-center justify-center gap-6">
         <Loader2 className="w-10 h-10 animate-spin text-primary" />
-        <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Loading Admin Space...</p>
+        <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Waking Oskar Control...</p>
       </div>
     );
   }
@@ -314,9 +319,9 @@ export default function AdminPage() {
             <h2 className="text-xl font-headline font-bold text-slate-900 uppercase tracking-tight">
               {activeView.replace('-', ' ')}
             </h2>
-            <div className="flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-600 rounded-full">
+            <div className="flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-600 rounded-full cursor-pointer hover:bg-green-100" onClick={refreshAdminData}>
                <RefreshCw size={12} className="animate-spin" />
-               <span className="text-[10px] font-bold uppercase tracking-widest">Live Sync</span>
+               <span className="text-[10px] font-bold uppercase tracking-widest">Live Sync Active</span>
             </div>
           </div>
           <div className="flex items-center gap-4">
@@ -451,6 +456,16 @@ export default function AdminPage() {
 
           {activeView === 'orders' && (
             <div className="space-y-6 animate-in fade-in">
+              <div className="flex justify-between items-center px-4">
+                 <div className="flex items-center gap-2">
+                   <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                   <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Real-time Stream</span>
+                 </div>
+                 <Button variant="outline" size="sm" onClick={refreshAdminData} className="rounded-full h-8 px-4 text-[10px] font-bold gap-2">
+                    <RefreshCw size={12} /> Force Refresh
+                 </Button>
+              </div>
+
               <Card className="rounded-[2rem] border-none shadow-xl bg-white overflow-hidden">
                  <Table>
                   <TableHeader className="bg-slate-50/50">
@@ -469,7 +484,7 @@ export default function AdminPage() {
                         <TableCell colSpan={6} className="h-80 text-center">
                            <div className="flex flex-col items-center justify-center opacity-20">
                               <ShoppingBag size={64} className="mb-4" />
-                              <h3 className="text-xl font-bold">No sales records yet</h3>
+                              <h3 className="text-xl font-bold">Waiting for orders...</h3>
                               <p className="text-sm">Real-time orders will appear here automatically.</p>
                            </div>
                         </TableCell>
@@ -485,7 +500,7 @@ export default function AdminPage() {
                           </TableCell>
                           <TableCell>
                             <div className="flex flex-col">
-                               <span className="font-bold text-slate-900">{o.gameDetails?.playerName || o.gameDetails?.sellerName || "Direct Order"}</span>
+                               <span className="font-bold text-slate-900">{o.gameDetails?.playerName || o.gameDetails?.sellerName || "Customer"}</span>
                                <span className="text-[10px] text-slate-400 font-bold uppercase">{o.items?.[0]?.title || "Unknown Product"}</span>
                             </div>
                           </TableCell>

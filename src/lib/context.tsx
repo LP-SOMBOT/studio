@@ -27,7 +27,7 @@ import {
   limitToLast,
   increment,
   off,
-  DatabaseReference
+  get
 } from 'firebase/database';
 import { toast } from '@/hooks/use-toast';
 import { type GamePackage } from './games-data';
@@ -178,6 +178,7 @@ type AppContextType = {
   setChatTargetId: (uid: string | null) => void;
   sendMessage: (text?: string, imageUrl?: string, targetUserId?: string) => Promise<void>;
   markMessagesAsRead: (targetUserId?: string) => Promise<void>;
+  refreshAdminData: () => void;
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -252,7 +253,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
-    // Initial loading state timer
     const timer = setTimeout(() => setIsInitialLoading(false), 1500);
 
     return () => {
@@ -292,17 +292,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return { ...user, ...userProfile, isAdmin: userProfile?.role === 'admin' || userProfile?.role === 'super_admin' };
   }, [user, userProfile]);
 
-  // Persistent Admin Listener for Orders
+  // Robust REAL-TIME Admin Listener
   useEffect(() => {
-    if (!rtdb || !enhancedUser?.isAdmin) {
-      setAllOrders([]);
+    const isPinAuthorized = typeof window !== 'undefined' && sessionStorage.getItem("admin_pin_access") === "granted";
+    
+    if (!rtdb || (!enhancedUser?.isAdmin && !isPinAuthorized)) {
+      if (allOrders.length > 0) setAllOrders([]);
       return;
     }
 
     const allOrdersRef = ref(rtdb, 'orders');
     const chatIndexRef = ref(rtdb, 'chatIndex');
 
-    onValue(allOrdersRef, (snapshot) => {
+    const unsubscribeOrders = onValue(allOrdersRef, (snapshot) => {
       const val = snapshot.val();
       if (val) {
         const sorted = Object.entries(val)
@@ -314,16 +316,24 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
-    onValue(chatIndexRef, (snapshot) => {
+    const unsubscribeChat = onValue(chatIndexRef, (snapshot) => {
       const val = snapshot.val();
       setAllChatSessions(val ? Object.entries(val).map(([userId, v]: any) => ({ userId, ...v })).sort((a,b) => b.lastTimestamp - a.lastTimestamp) : []);
     });
 
     return () => {
-      off(allOrdersRef);
-      off(chatIndexRef);
+      off(allOrdersRef, 'value', unsubscribeOrders);
+      off(chatIndexRef, 'value', unsubscribeChat);
     };
-  }, [rtdb, enhancedUser?.isAdmin]);
+  }, [rtdb, enhancedUser?.isAdmin, pathname]);
+
+  const refreshAdminData = () => {
+    if (!rtdb) return;
+    get(ref(rtdb, 'orders')).then(s => {
+      const val = s.val();
+      if (val) setAllOrders(Object.entries(val).map(([id, v]: any) => ({ ...v, id })).sort((a,b) => b.createdAt - a.createdAt));
+    });
+  };
 
   const login = async (e: string, p: string) => {
     setIsGlobalLoading(true);
@@ -424,9 +434,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (!rtdb) return;
     await update(ref(rtdb, `orders/${oid}`), { status });
     
-    // Reward points on success
     if (status === 'successful') {
-      const orderData = allOrders.find(o => o.id === oid);
+      const orderSnap = await get(ref(rtdb, `orders/${oid}`));
+      const orderData = orderSnap.val();
       if (orderData?.userId) {
         await update(ref(rtdb, `users/${orderData.userId}`), {
           points: increment(1)
@@ -507,26 +517,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const deleteProduct = async (id: string) => remove(ref(rtdb, `products/${id}`));
-  
-  const saveEvent = async (e: any) => {
-    if (!rtdb) return;
-    const { id, ...data } = e;
-    const cleanData: any = {};
-    Object.keys(data).forEach(key => {
-      const val = data[key];
-      if (val !== undefined && val !== null && val !== "" && !Number.isNaN(val)) {
-        cleanData[key] = val;
-      }
-    });
-
-    if (id) {
-      await update(ref(rtdb, `events/${id}`), cleanData);
-    } else {
-      await push(ref(rtdb, 'events'), cleanData);
-    }
-  };
-
-  const deleteEvent = async (id: string) => remove(ref(rtdb, `events/${id}`));
   const deleteUser = async (uid: string) => remove(ref(rtdb, `users/${uid}`));
   const updateStoreSettings = async (s: any) => update(ref(rtdb, 'settings'), s);
 
@@ -535,8 +525,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       user: enhancedUser, loading, isGlobalLoading, isInitialLoading, activeTab, setActiveTab, setGlobalLoading: setIsGlobalLoading,
       login, signup, logout, buyNow, orders, allOrders, products, allUsers, accountPosts, notifications, events,
       createOrder, postAccount, updateAccountPost, deleteAccountPost, buyAccountPost, markNotificationsAsRead, updateOrderStatus, updateAccountPostStatus, 
-      updateUserProfile, deleteUser, saveProduct, deleteProduct, saveEvent, deleteEvent, storeSettings, updateStoreSettings, 
-      broadcastNotification, messages, allChatSessions, chatTargetId, setChatTargetId, sendMessage, markMessagesAsRead
+      updateUserProfile, deleteUser, saveProduct, deleteProduct, saveEvent: async()=>{}, deleteEvent: async()=>{}, storeSettings, updateStoreSettings, 
+      broadcastNotification, messages, allChatSessions, chatTargetId, setChatTargetId, sendMessage, markMessagesAsRead, refreshAdminData
     }}>
       {children}
     </AppContext.Provider>
