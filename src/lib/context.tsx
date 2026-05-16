@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef } from 'react';
@@ -230,7 +229,6 @@ const setCache = (key: string, data: any) => {
     try {
       localStorage.setItem(key, JSON.stringify(data));
     } catch (e: any) {
-      console.warn("Storage quota exceeded, clearing cache to make room.");
       if (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
         localStorage.removeItem(PRODUCTS_CACHE_KEY);
         localStorage.removeItem(EVENTS_CACHE_KEY);
@@ -354,10 +352,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       // Watch for Live/Online changes for notifications
       if (syncStatus.settings) {
         if (data.isLive && !storeSettings.isLive) {
-          showPushNotification("Oskar is LIVE Now! 🔴", "Join us on TikTok for exclusive rewards and diamonds!", "live-ticker-" + Date.now());
+          showPushNotification("Oskar is LIVE Now! 🔴", "Join us on TikTok for exclusive rewards and diamonds!", "live-ticker-session");
         }
         if (!data.appStatus?.offline && storeSettings.appStatus?.offline) {
-          showPushNotification("Oskar Shop is Online! ✅", "We are back! You can now resume your top-ups and purchases.", "online-alert-" + Date.now());
+          showPushNotification("Oskar Shop is Online! ✅", "We are back! You can now resume your top-ups and purchases.", "online-alert-session");
         }
       }
 
@@ -440,7 +438,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     onValue(notifsRef, (s) => {
       const data = s.val() ? Object.entries(s.val()).map(([id, v]: any) => ({ ...v, id })).sort((a,b) => b.createdAt - a.createdAt) : [];
       
-      // Trigger native notification for newest unread system notification
       if (data.length > 0) {
         const latest = data[0];
         if (!latest.read) {
@@ -564,7 +561,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         sequenceId = result.snapshot.val();
       }
     } catch (e) {
-      console.error("Counter transaction failed, using timestamp fallback", e);
       sequenceId = Date.now();
     }
 
@@ -649,13 +645,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const userId = orderData.userId;
     const items = orderData.items || [];
     
-    // Check if any items are accounts
     const accountItem = items.find((i: any) => i.gameId === 'accounts' || i.gameId === 'account');
     
     await update(ref(rtdb, `orders/${oid}`), { status });
     
     if (status === 'successful') {
-      // If an account was purchased, mark the post as sold
       if (accountItem && accountItem.id) {
         await update(ref(rtdb, `accountPosts/${accountItem.id}`), { sold: true });
       }
@@ -665,7 +659,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         broadcastNotification("Order Successful! ✅", "Your items have been delivered. You earned 1 point!", userId);
       }
     } else if (oldStatus === 'successful' && status !== 'successful') {
-      // Revert sold status if order is moved back from successful
       if (accountItem && accountItem.id) {
         await update(ref(rtdb, `accountPosts/${accountItem.id}`), { sold: false });
       }

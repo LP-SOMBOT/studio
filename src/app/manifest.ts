@@ -25,6 +25,7 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
     description: 'The best gaming top-up service and accounts store in Somalia.',
     start_url: '/',
     display: 'standalone',
+    orientation: 'portrait',
     background_color: '#FFFFFF',
     theme_color: '#0EA5E9',
     icons: [

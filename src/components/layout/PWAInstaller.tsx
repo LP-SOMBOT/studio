@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -13,22 +12,17 @@ export default function PWAInstaller() {
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: Event) => {
-      // Prevent the mini-infobar from appearing on mobile
       e.preventDefault();
-      // Stash the event so it can be triggered later.
       setDeferredPrompt(e);
       
-      // Check if user has already dismissed it this session
       const isDismissed = sessionStorage.getItem("pwa_dismissed");
       if (!isDismissed) {
-        // Delay slightly for better UX
         setTimeout(() => setIsVisible(true), 2000);
       }
     };
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
 
-    // Also check if already installed
     window.addEventListener("appinstalled", () => {
       setDeferredPrompt(null);
       setIsVisible(false);
@@ -41,18 +35,11 @@ export default function PWAInstaller() {
 
   const handleInstallClick = async () => {
     if (!deferredPrompt) return;
-
-    // Show the install prompt
     deferredPrompt.prompt();
-
-    // Wait for the user to respond to the prompt
     const { outcome } = await deferredPrompt.userChoice;
-    
     if (outcome === "accepted") {
       console.log("User accepted the PWA install prompt");
     }
-
-    // We've used the prompt, and can't use it again
     setDeferredPrompt(null);
     setIsVisible(false);
   };
@@ -66,8 +53,7 @@ export default function PWAInstaller() {
 
   return (
     <div className="fixed bottom-24 left-4 right-4 z-[100] animate-in slide-in-from-bottom-full duration-700 md:bottom-8 md:left-auto md:right-8 md:w-96">
-      <Card className="p-5 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.2)] border-primary/20 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl relative overflow-hidden group">
-        {/* Decorative background element */}
+      <Card className="p-5 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.2)] border-primary/20 dark:border-primary/40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl relative overflow-hidden group dark:shadow-primary/5">
         <div className="absolute top-0 right-0 -mt-8 -mr-8 w-24 h-24 bg-primary/10 rounded-full blur-2xl group-hover:bg-primary/20 transition-colors duration-500" />
         
         <div className="flex items-start gap-4 relative z-10">

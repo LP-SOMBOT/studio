@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
-import Image from "next/image";
 import { User, Lock, Mail, Phone, Loader2, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
@@ -48,15 +47,7 @@ export default function SignupPage() {
         <Link href="/login" className="inline-flex items-center gap-2 text-white/80 font-bold hover:text-white mb-6 transition-colors">
           <ArrowLeft className="w-4 h-4" /> Back
         </Link>
-        {/* Dynamic Branded Logo */}
-        <div className="w-20 h-20 bg-white rounded-2xl mb-8 flex items-center justify-center overflow-hidden shadow-2xl p-2">
-           {storeSettings?.logo ? (
-             <Image src={storeSettings.logo} alt="Logo" width={80} height={80} className="object-contain" unoptimized />
-           ) : (
-             <span className="text-4xl font-headline font-bold text-primary">O</span>
-           )}
-        </div>
-        <h1 className="text-4xl font-headline font-bold text-white leading-tight">
+        <h1 className="text-4xl font-headline font-bold text-white leading-tight mt-6">
           Join <br /> Oskar Shop
         </h1>
         <p className="text-2xl font-headline text-white/80 mt-2 font-medium">
