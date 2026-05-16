@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useApp } from "@/lib/context";
@@ -40,18 +39,20 @@ export default function SplashScreen() {
       {/* Decorative Glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vw] bg-primary/10 rounded-full blur-[120px] pointer-events-none" />
 
-      <div className="relative w-28 h-28 animate-in zoom-in duration-700 ease-out">
+      <div className="relative w-32 h-32 animate-in zoom-in duration-700 ease-out">
         {storeSettings?.logo ? (
-          <Image 
-            src={storeSettings.logo} 
-            alt="Oskar Shop" 
-            fill 
-            className="object-contain"
-            priority
-            unoptimized
-          />
+          <div className="relative w-full h-full p-2 bg-white rounded-[2.5rem] shadow-2xl shadow-primary/10 flex items-center justify-center overflow-hidden border border-slate-50">
+            <Image 
+              src={storeSettings.logo} 
+              alt="Oskar Shop" 
+              fill 
+              className="object-contain p-4"
+              priority
+              unoptimized
+            />
+          </div>
         ) : (
-          <div className="w-full h-full bg-primary rounded-[2rem] flex items-center justify-center text-white text-5xl font-headline font-bold shadow-2xl shadow-primary/20">
+          <div className="w-full h-full bg-primary rounded-[2.5rem] flex items-center justify-center text-white text-6xl font-headline font-bold shadow-2xl shadow-primary/20">
             O
           </div>
         )}
