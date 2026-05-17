@@ -769,7 +769,22 @@ export default function AdminPage() {
                              <h4 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white leading-tight truncate">{p.title}</h4>
                              {p.category === 'booyah-pass' && <Badge className="bg-purple-100 text-purple-600 border-none text-[8px] px-1.5 py-0">WA PASS</Badge>}
                            </div>
-                           <div className="flex justify-between items-end"><span className="font-bold text-base sm:text-lg text-primary">${p.price}</span><div className="flex gap-1"><Button size="icon" variant="ghost" className="h-8 w-8 text-blue-500" onClick={() => handleOpenProductDialog(p)}><Edit size={16} /></Button><Button size="icon" variant="ghost" className="h-8 w-8 text-red-500" onClick={() => confirmDelete(p.id, 'product')}><Trash2 size={16} /></Button></div></div>
+                           <div className="flex justify-between items-end">
+                             <div className="flex flex-col">
+                                {p.discountedPrice ? (
+                                  <>
+                                    <span className="font-bold text-base sm:text-lg text-primary">${p.discountedPrice}</span>
+                                    <span className="text-[10px] text-slate-400 line-through">${p.price}</span>
+                                  </>
+                                ) : (
+                                  <span className="font-bold text-base sm:text-lg text-primary">${p.price}</span>
+                                )}
+                             </div>
+                             <div className="flex gap-1">
+                                <Button size="icon" variant="ghost" className="h-8 w-8 text-blue-500" onClick={() => handleOpenProductDialog(p)}><Edit size={16} /></Button>
+                                <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500" onClick={() => confirmDelete(p.id, 'product')}><Trash2 size={16} /></Button>
+                             </div>
+                           </div>
                         </div>
                       </Card>
                     ))}
@@ -1633,10 +1648,17 @@ export default function AdminPage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase text-slate-400">Price ($)</Label>
+                <Label className="text-xs font-bold uppercase text-slate-400">Base Price ($)</Label>
                 <Input type="number" step="0.01" value={productForm.price} onChange={e => setProductForm({...productForm, price: e.target.value})} required className="rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold h-12" />
               </div>
             </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs font-bold uppercase text-slate-400">Discounted Price ($) - Optional</Label>
+              <Input type="number" step="0.01" value={productForm.discountedPrice} onChange={e => setProductForm({...productForm, discountedPrice: e.target.value})} className="rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold h-12" />
+              <p className="text-[10px] text-muted-foreground italic">* Leave empty if no discount. This price will be charged to the user if set.</p>
+            </div>
+
             <div className="space-y-2"><Label className="text-xs font-bold uppercase text-slate-400">Description</Label><Textarea value={productForm.description} onChange={e => setProductForm({...productForm, description: e.target.value})} className="rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold min-h-[80px]" /></div>
             <div className="space-y-2">
               <Label className="text-xs font-bold uppercase text-slate-400">Item Image</Label>

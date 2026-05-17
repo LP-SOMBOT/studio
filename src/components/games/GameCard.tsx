@@ -1,3 +1,4 @@
+
 "use client";
 
 import Image from "next/image";
@@ -23,8 +24,9 @@ export default function GameCard({ id, title, description, thumbnail, price, dis
 
   const handleBuyNow = (e: React.MouseEvent) => {
     e.preventDefault();
-    // FIX: Always use the exact base price set by admin for charging
-    buyNow({ id, title, price: price, gameId, thumbnail });
+    // Use the discounted price if it's available and valid, otherwise use the base price.
+    const finalPrice = (discountedPrice && discountedPrice < price) ? discountedPrice : price;
+    buyNow({ id, title, price: finalPrice, gameId, thumbnail });
   };
 
   const hasDiscount = discountedPrice && discountedPrice < price;
