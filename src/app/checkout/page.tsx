@@ -208,16 +208,29 @@ function CheckoutContent() {
               <div className="space-y-4">
                 {/* Dedicated Full Name field for both FF and BS */}
                 {(isFreeFire || isBloodStrike) && (
-                  <div className="space-y-2">
-                    <Label className="text-sm font-bold dark:text-slate-200">Magacaaga oo buuxa</Label>
-                    <Input 
-                      placeholder="Geli magacaaga dhameystiran" 
-                      required 
-                      className="h-12 rounded-2xl bg-gray-50 dark:bg-slate-800 border-none px-5 font-bold"
-                      value={gameDetails.fullName}
-                      onChange={(e) => setGameDetails({...gameDetails, fullName: e.target.value})}
-                    />
-                  </div>
+                  <>
+                    <div className="space-y-2">
+                      <Label className="text-sm font-bold dark:text-slate-200">Magacaaga oo buuxa</Label>
+                      <Input 
+                        placeholder="Geli magacaaga dhameystiran" 
+                        required 
+                        className="h-12 rounded-2xl bg-gray-50 dark:bg-slate-800 border-none px-5 font-bold"
+                        value={gameDetails.fullName}
+                        onChange={(e) => setGameDetails({...gameDetails, fullName: e.target.value})}
+                      />
+                    </div>
+                    {/* In-Game Name for both as requested */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-bold dark:text-slate-200">in-Game name</Label>
+                      <Input 
+                        placeholder="Geli magaca game ka kugu qoran" 
+                        required 
+                        className="h-12 rounded-2xl bg-gray-50 dark:bg-slate-800 border-none px-5 font-bold"
+                        value={gameDetails.playerName}
+                        onChange={(e) => setGameDetails({...gameDetails, playerName: e.target.value})}
+                      />
+                    </div>
+                  </>
                 )}
 
                 {/* Game ID / UID Field */}
@@ -233,20 +246,6 @@ function CheckoutContent() {
                     onChange={(e) => setGameDetails({...gameDetails, playerID: e.target.value})}
                   />
                 </div>
-
-                {/* In-Game Name for Free Fire only */}
-                {isFreeFire && (
-                  <div className="space-y-2">
-                    <Label className="text-sm font-bold dark:text-slate-200">in-Game Name</Label>
-                    <Input 
-                      placeholder="Geli magaca game ka kugu qoran" 
-                      required 
-                      className="h-12 rounded-2xl bg-gray-50 dark:bg-slate-800 border-none px-5 font-bold"
-                      value={gameDetails.playerName}
-                      onChange={(e) => setGameDetails({...gameDetails, playerName: e.target.value})}
-                    />
-                  </div>
-                )}
 
                 {/* WhatsApp Number for both */}
                 {(isFreeFire || isBloodStrike) && (
