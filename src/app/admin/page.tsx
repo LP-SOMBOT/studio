@@ -1340,7 +1340,7 @@ export default function AdminPage() {
                   <span className={cn("text-[10px] font-bold uppercase", selectedOrder.status === 'successful' ? 'Completed At' : 'Cancelled At')}>
                     {selectedOrder.status === 'successful' ? 'Completed At' : 'Cancelled At'}
                   </span>
-                  <span className={cn("text-xs font-bold", selectedOrder.status === 'successful' ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400")}>
+                  <span className={cn("text-xs font-bold", selectedOrder.status === 'successful' ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-green-400")}>
                     {getSmartTimestamp(selectedOrder.completedAt)}
                   </span>
                 </div>
@@ -1656,7 +1656,7 @@ export default function AdminPage() {
             <div className="space-y-2">
               <Label className="text-xs font-bold uppercase text-slate-400">Discounted Price ($) - Optional</Label>
               <Input type="number" step="0.01" value={productForm.discountedPrice} onChange={e => setProductForm({...productForm, discountedPrice: e.target.value})} className="rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold h-12" />
-              <p className="text-[10px] text-muted-foreground italic">* Leave empty if no discount. This price will be charged to the user if set.</p>
+              <p className="text-[10px] text-muted-foreground italic">* Leave empty if no discount. This price is for display only and will NOT be charged to the user.</p>
             </div>
 
             <div className="space-y-2"><Label className="text-xs font-bold uppercase text-slate-400">Description</Label><Textarea value={productForm.description} onChange={e => setProductForm({...productForm, description: e.target.value})} className="rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold min-h-[80px]" /></div>

@@ -24,13 +24,13 @@ export default function GameCard({ id, title, description, thumbnail, price, dis
 
   const handleBuyNow = (e: React.MouseEvent) => {
     e.preventDefault();
-    // Use the discounted price if it's available and valid, otherwise use the base price.
-    const finalPrice = (discountedPrice && discountedPrice < price) ? discountedPrice : price;
-    buyNow({ id, title, price: finalPrice, gameId, thumbnail });
+    // PER USER REQUEST: Clients are NOT charged the discounted price.
+    // The discounted price is for display purposes ONLY.
+    buyNow({ id, title, price: price, gameId, thumbnail });
   };
 
-  const hasDiscount = discountedPrice && discountedPrice < price;
-  const discountPercent = hasDiscount ? Math.round(((price - discountedPrice!) / price) * 100) : 0;
+  const hasDiscount = !!(discountedPrice && Number(discountedPrice) < price);
+  const discountPercent = hasDiscount ? Math.round(((price - Number(discountedPrice)) / price) * 100) : 0;
 
   return (
     <Card className="group overflow-hidden bg-white dark:bg-slate-900 border-gray-100 dark:border-white/5 hover:shadow-xl hover:shadow-primary/10 transition-all duration-500 rounded-[2rem] flex flex-col h-full">
