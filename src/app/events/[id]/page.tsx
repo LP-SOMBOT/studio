@@ -150,7 +150,7 @@ export default function EventDetailPage() {
 
               <div className="p-6 bg-primary/5 rounded-[2.5rem] border border-primary/10">
                  <p className="text-xs font-bold text-primary uppercase tracking-widest text-center">
-                    Share this event with friends!
+                    OskarShop © 2026
                  </p>
               </div>
            </div>
