@@ -203,7 +203,7 @@ export default function AdminPage() {
   const [deleteTarget, setDeleteTarget] = useState<{ id: string, type: 'user' | 'game' | 'product' | 'event' | 'banner' | 'account' | 'order' | 'payment' } | null>(null);
 
   const [gameForm, setGameForm] = useState({ title: "", icon: "", category: "top-up" });
-  const [productForm, setProductForm] = useState({ title: "", gameId: "", category: "top-up", description: "", price: "", discountedPrice: "", thumbnail: "", whatsappNumber: "" });
+  const [productForm, setProductForm] = useState({ title: "", gameId: "", category: "top-up", description: "", price: "", thumbnail: "", whatsappNumber: "" });
   const [eventForm, setEventForm] = useState({ 
     title: "", 
     shortDescription: "", 
@@ -280,13 +280,12 @@ export default function AdminPage() {
       setProductForm({ 
         ...product, 
         price: product.price?.toString(), 
-        discountedPrice: product.discountedPrice?.toString() || "",
         category: product.category || "top-up",
         whatsappNumber: product.whatsappNumber || ""
       });
     } else {
       setEditingProduct(null);
-      setProductForm({ title: "", gameId: selectedGameId || "", category: "top-up", description: "", price: "", discountedPrice: "", thumbnail: "", whatsappNumber: "" });
+      setProductForm({ title: "", gameId: selectedGameId || "", category: "top-up", description: "", price: "", thumbnail: "", whatsappNumber: "" });
     }
     setIsProductDialogOpen(true);
   };
@@ -370,8 +369,7 @@ export default function AdminPage() {
     try {
       await saveProduct({ 
         ...productForm, 
-        price: parseFloat(productForm.price), 
-        discountedPrice: productForm.discountedPrice ? parseFloat(productForm.discountedPrice) : undefined 
+        price: parseFloat(productForm.price)
       });
       toast({ title: "Item Saved" });
       setIsProductDialogOpen(false);
@@ -772,14 +770,7 @@ export default function AdminPage() {
                            </div>
                            <div className="flex justify-between items-end">
                              <div className="flex flex-col">
-                                {p.discountedPrice ? (
-                                  <>
-                                    <span className="font-bold text-base sm:text-lg text-primary">${p.discountedPrice}</span>
-                                    <span className="text-[10px] text-slate-400 line-through">${p.price}</span>
-                                  </>
-                                ) : (
-                                  <span className="font-bold text-base sm:text-lg text-primary">${p.price}</span>
-                                )}
+                                <span className="font-bold text-base sm:text-lg text-primary">${p.price}</span>
                              </div>
                              <div className="flex gap-1">
                                 <Button size="icon" variant="ghost" className="h-8 w-8 text-blue-500" onClick={() => handleOpenProductDialog(p)}><Edit size={16} /></Button>
@@ -1649,20 +1640,9 @@ export default function AdminPage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase text-slate-400">Base Price (Payable $)</Label>
+                <Label className="text-xs font-bold uppercase text-slate-400">Price ($)</Label>
                 <Input type="number" step="0.01" value={productForm.price} onChange={e => setProductForm({...productForm, price: e.target.value})} required className="rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold h-12" />
               </div>
-            </div>
-
-            <div className="space-y-2 p-4 bg-amber-50 dark:bg-amber-950/20 rounded-2xl border border-amber-100 dark:border-amber-900/20">
-              <div className="flex items-center gap-2 mb-2 text-amber-600">
-                <Tag size={16} />
-                <Label className="text-xs font-bold uppercase tracking-widest">Visual Promo Price ($)</Label>
-              </div>
-              <Input type="number" step="0.01" value={productForm.discountedPrice} onChange={e => setProductForm({...productForm, discountedPrice: e.target.value})} className="rounded-xl bg-white dark:bg-slate-800 border-none font-bold h-12 shadow-sm" />
-              <p className="text-[10px] text-amber-700 dark:text-amber-400 font-medium italic mt-2">
-                * This price is for <strong>DISPLAY ONLY</strong>. It will show as the discounted price on the card, but users will still be charged the <strong>Base Price</strong> at checkout.
-              </p>
             </div>
 
             <div className="space-y-2"><Label className="text-xs font-bold uppercase text-slate-400">Description</Label><Textarea value={productForm.description} onChange={e => setProductForm({...productForm, description: e.target.value})} className="rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold min-h-[80px]" /></div>

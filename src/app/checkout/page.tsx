@@ -416,9 +416,6 @@ Fadlan ila soo xiriir.`;
                   </div>
                 </div>
               </div>
-              <p className="text-[9px] text-muted-foreground text-center mt-4 italic opacity-60">
-                * Note: Promotional display prices are visual only. This total reflects the official base price.
-              </p>
             </div>
 
             <div className="flex gap-4">
