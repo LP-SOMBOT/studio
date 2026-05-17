@@ -634,7 +634,7 @@ export default function AdminPage() {
                             </TableCell>
                             <TableCell>
                               <div className="flex flex-col">
-                                <span className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white truncate max-w-[120px]">{o.gameDetails?.playerName || "Client"}</span>
+                                <span className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white truncate max-w-[120px]">{o.gameDetails?.playerName || o.gameDetails?.name || "Client"}</span>
                                 <span className="text-[9px] sm:text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase truncate max-w-[120px]">{o.items?.[0]?.title}</span>
                               </div>
                             </TableCell>
@@ -1307,13 +1307,33 @@ export default function AdminPage() {
                 </div>
               )}
 
+              {selectedOrder?.buyerOutcome && (
+                <div className={cn(
+                  "p-4 rounded-2xl flex items-center gap-3 border animate-in slide-in-from-left-2",
+                  selectedOrder.buyerOutcome === 'bought' ? "bg-green-50 border-green-100 text-green-700" : "bg-red-50 border-red-100 text-red-700"
+                )}>
+                   {selectedOrder.buyerOutcome === 'bought' ? <CheckCircle2 size={18} /> : <XCircle size={18} />}
+                   <p className="text-xs font-bold uppercase tracking-tight">Buyer Report: {selectedOrder.buyerOutcome.replace('_', ' ')}</p>
+                </div>
+              )}
+
               <div className="space-y-4">
-                 <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2"><SmartphoneIcon size={14}/> Client Information</h4>
+                 <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2"><SmartphoneIcon size={14}/> Transaction Details</h4>
                  <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl space-y-3 border border-slate-100 dark:border-white/5">
-                    <div className="flex justify-between border-b dark:border-white/5 pb-2"><span className="text-xs text-muted-foreground">Player ID / Game ID</span><span className="text-xs font-bold font-mono tracking-wider">{selectedOrder?.gameDetails?.playerID || selectedOrder?.gameDetails?.postId || 'N/A'}</span></div>
-                    <div className="flex justify-between border-b dark:border-white/5 pb-2"><span className="text-xs text-muted-foreground">In-Game Name</span><span className="text-xs font-bold">{selectedOrder?.gameDetails?.playerName || selectedOrder?.gameDetails?.name || 'N/A'}</span></div>
-                    <div className="flex justify-between border-b dark:border-white/5 pb-2"><span className="text-xs text-muted-foreground">Sender Number</span><span className="text-xs font-bold text-primary">{selectedOrder?.gameDetails?.senderNumber || 'N/A'}</span></div>
-                    <div className="flex justify-between"><span className="text-xs text-muted-foreground">WhatsApp</span><span className="text-xs font-bold">{selectedOrder?.gameDetails?.whatsappNumber || 'N/A'}</span></div>
+                    {selectedOrder?.items?.[0]?.gameId === 'accounts' ? (
+                       <>
+                        <div className="flex justify-between border-b dark:border-white/5 pb-2"><span className="text-xs text-muted-foreground">Seller Phone</span><span className="text-xs font-bold">{selectedOrder?.gameDetails?.sellerPhone || 'N/A'}</span></div>
+                        <div className="flex justify-between border-b dark:border-white/5 pb-2"><span className="text-xs text-muted-foreground">Buyer WhatsApp</span><span className="text-xs font-bold text-primary">{selectedOrder?.gameDetails?.whatsappNumber || 'N/A'}</span></div>
+                        <div className="flex justify-between"><span className="text-xs text-muted-foreground">Game Mode</span><Badge className="text-[10px] rounded-full uppercase">{selectedOrder?.gameDetails?.gameType}</Badge></div>
+                       </>
+                    ) : (
+                      <>
+                        <div className="flex justify-between border-b dark:border-white/5 pb-2"><span className="text-xs text-muted-foreground">Player ID / Game ID</span><span className="text-xs font-bold font-mono tracking-wider">{selectedOrder?.gameDetails?.playerID || selectedOrder?.gameDetails?.postId || 'N/A'}</span></div>
+                        <div className="flex justify-between border-b dark:border-white/5 pb-2"><span className="text-xs text-muted-foreground">In-Game Name</span><span className="text-xs font-bold">{selectedOrder?.gameDetails?.playerName || selectedOrder?.gameDetails?.name || 'N/A'}</span></div>
+                        <div className="flex justify-between border-b dark:border-white/5 pb-2"><span className="text-xs text-muted-foreground">Sender Number</span><span className="text-xs font-bold text-primary">{selectedOrder?.gameDetails?.senderNumber || 'N/A'}</span></div>
+                        <div className="flex justify-between"><span className="text-xs text-muted-foreground">WhatsApp</span><span className="text-xs font-bold">{selectedOrder?.gameDetails?.whatsappNumber || 'N/A'}</span></div>
+                      </>
+                    )}
                  </div>
               </div>
 
@@ -1327,7 +1347,7 @@ export default function AdminPage() {
                        <div><p className="text-xs font-bold">{selectedOrder?.items?.[0]?.title}</p><p className="text-[10px] text-muted-foreground uppercase font-bold">{selectedOrder?.paymentMethod}</p></div>
                     </div>
                     <div className="text-right">
-                       <p className="text-[10px] text-muted-foreground uppercase font-bold">Paid</p>
+                       <p className="text-[10px] text-muted-foreground uppercase font-bold">Price</p>
                        <p className="text-lg font-headline font-bold text-primary">${selectedOrder?.total?.toFixed(2)}</p>
                     </div>
                  </div>
