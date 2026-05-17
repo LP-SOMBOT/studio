@@ -40,7 +40,6 @@ function CheckoutContent() {
   const [paymentMethod, setPaymentMethod] = useState("EVCPLUS");
   
   const [gameDetails, setGameDetails] = useState({
-    fullName: "",
     playerID: "",
     playerName: "",
     whatsappNumber: "",
@@ -233,18 +232,16 @@ Fadlan ila soo xiriir.`;
               </div>
 
               <div className="space-y-4">
-                {!isBooyahPass && (isFreeFire || isBloodStrike) && (
-                  <div className="space-y-2">
-                    <Label className="text-sm font-bold dark:text-slate-200">in-Game name</Label>
-                    <Input 
-                      placeholder="Geli magaca game ka kugu qoran" 
-                      required 
-                      className="h-12 rounded-2xl bg-gray-50 dark:bg-slate-800 border-none px-5 font-bold"
-                      value={gameDetails.playerName}
-                      onChange={(e) => setGameDetails({...gameDetails, playerName: e.target.value})}
-                    />
-                  </div>
-                )}
+                <div className="space-y-2">
+                  <Label className="text-sm font-bold dark:text-slate-200">in-game name</Label>
+                  <Input 
+                    placeholder="Geli magaca game ka kugu qoran" 
+                    required 
+                    className="h-12 rounded-2xl bg-gray-50 dark:bg-slate-800 border-none px-5 font-bold"
+                    value={gameDetails.playerName}
+                    onChange={(e) => setGameDetails({...gameDetails, playerName: e.target.value})}
+                  />
+                </div>
 
                 <div className="space-y-2">
                   <Label className="text-sm font-bold dark:text-slate-200">

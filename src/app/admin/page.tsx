@@ -518,14 +518,126 @@ export default function AdminPage() {
 
           {activeView === 'orders' && (
             <div className="space-y-6">
-              <div className="flex flex-col gap-4"><Input placeholder="Search ID or Player..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full max-w-md h-12 rounded-xl dark:bg-slate-900 dark:border-white/5" /><div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">{["all", "pending", "processing", "successful", "cancelled"].map(s => <Button key={s} variant={orderStatusFilter === s ? "default" : "outline"} onClick={() => setOrderStatusFilter(s)} className="rounded-full h-10 sm:h-12 px-4 sm:px-6 uppercase font-bold text-[10px] sm:text-xs shrink-0 dark:border-white/5">{s}</Button>)}</div></div>
-              <Card className="rounded-[1.5rem] sm:rounded-[2rem] border-none shadow-xl overflow-hidden bg-white dark:bg-slate-900"><div className="overflow-x-auto scrollbar-hide"><Table className="min-w-[600px]"><TableHeader className="bg-slate-50/50 dark:bg-slate-800/40"><TableRow className="border-none"><TableHead className="font-bold px-4 sm:px-8">Reference</TableHead><TableHead className="font-bold">Player & Item</TableHead><TableHead className="font-bold">Admin Handling</TableHead><TableHead className="font-bold">Status</TableHead><TableHead className="text-right px-4 sm:px-8">Actions</TableHead></TableRow></TableHeader><TableBody>{filteredOrders.length === 0 ? (<TableRow><TableCell colSpan={5} className="h-40 text-center text-slate-400 italic">No orders matching filters.</TableCell></TableRow>) : filteredOrders.map(o => (<TableRow key={o.id} className="border-slate-50 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-slate-800/30"><TableCell className="px-4 sm:px-8 font-mono text-[10px] font-bold text-primary relative">{o.status === 'pending' && <div className="absolute left-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />}#{o.id.toUpperCase()}</TableCell><TableCell><div className="flex flex-col"><span className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white truncate max-w-[120px]">{o.gameDetails?.playerName || "Client"}</span><span className="text-[9px] sm:text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase truncate max-w-[120px]">{o.items?.[0]?.title}</span></div></TableCell><TableCell>{o.processedBy ? (<div className="flex items-center gap-2"><div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden relative border border-white dark:border-white/10">{o.processedBy.photoURL ? <Image src={o.processedBy.photoURL} alt="" fill className="object-cover" /> : <User size={12} className="m-auto mt-1" />}</div><span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 truncate max-w-[80px]">{o.processedBy.name}</span></div>) : <span className="text-[10px] text-slate-300 italic">Unassigned</span>}</TableCell><TableCell><Badge className={cn("rounded-full uppercase text-[8px] font-bold border-none", getStatusBadge(o.status))}>{o.status}</Badge></TableCell><TableCell className="text-right px-4 sm:px-8"><div className="flex justify-end gap-1 sm:gap-2"><Button size="sm" onClick={() => handleOpenOrderDialog(o)} className="rounded-full h-8 px-2 sm:px-4 font-bold text-[9px] sm:text-[10px] gap-1 sm:gap-2 shrink-0"><Eye size={12} /> <span className="hidden xs:inline">Details</span></Button><Button size="icon" variant="ghost" className="h-8 w-8 text-red-500 shrink-0" onClick={() => confirmDelete(o.id, 'order')}><Trash2 size={16} /></Button></div></TableCell></TableRow>))}</TableBody></Table></div></Card>
+              <div className="flex flex-col gap-4">
+                <Input placeholder="Search ID or Player..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full max-w-md h-12 rounded-xl dark:bg-slate-900 dark:border-white/5" />
+                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                  {["all", "pending", "processing", "successful", "cancelled"].map(s => (
+                    <Button key={s} variant={orderStatusFilter === s ? "default" : "outline"} onClick={() => setOrderStatusFilter(s)} className="rounded-full h-10 sm:h-12 px-4 sm:px-6 uppercase font-bold text-[10px] sm:text-xs shrink-0 dark:border-white/5">{s}</Button>
+                  ))}
+                </div>
+              </div>
+              <Card className="rounded-[1.5rem] sm:rounded-[2rem] border-none shadow-xl overflow-hidden bg-white dark:bg-slate-900">
+                <div className="overflow-x-auto scrollbar-hide">
+                  <Table className="min-w-[600px]">
+                    <TableHeader className="bg-slate-50/50 dark:bg-slate-800/40">
+                      <TableRow className="border-none">
+                        <TableHead className="font-bold px-4 sm:px-8">Reference</TableHead>
+                        <TableHead className="font-bold">Player & Item</TableHead>
+                        <TableHead className="font-bold">Admin Handling</TableHead>
+                        <TableHead className="font-bold">Status</TableHead>
+                        <TableHead className="text-right px-4 sm:px-8">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredOrders.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={5} className="h-40 text-center text-slate-400 italic">No orders matching filters.</TableCell>
+                        </TableRow>
+                      ) : (
+                        filteredOrders.map(o => (
+                          <TableRow key={o.id} className="border-slate-50 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-slate-800/30">
+                            <TableCell className="px-4 sm:px-8 font-mono text-[10px] font-bold text-primary relative">
+                              {o.status === 'pending' && <div className="absolute left-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />}
+                              #{o.id.toUpperCase()}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex flex-col">
+                                <span className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white truncate max-w-[120px]">{o.gameDetails?.playerName || "Client"}</span>
+                                <span className="text-[9px] sm:text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase truncate max-w-[120px]">{o.items?.[0]?.title}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              {o.processedBy ? (
+                                <div className="flex items-center gap-2">
+                                  <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden relative border border-white dark:border-white/10">
+                                    {o.processedBy.photoURL ? <Image src={o.processedBy.photoURL} alt="" fill className="object-cover" /> : <User size={12} className="m-auto mt-1" />}
+                                  </div>
+                                  <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 truncate max-w-[80px]">{o.processedBy.name}</span>
+                                </div>
+                              ) : <span className="text-[10px] text-slate-300 italic">Unassigned</span>}
+                            </TableCell>
+                            <TableCell><Badge className={cn("rounded-full uppercase text-[8px] font-bold border-none", getStatusBadge(o.status))}>{o.status}</Badge></TableCell>
+                            <TableCell className="text-right px-4 sm:px-8">
+                              <div className="flex justify-end gap-1 sm:gap-2">
+                                <Button size="sm" onClick={() => handleOpenOrderDialog(o)} className="rounded-full h-8 px-2 sm:px-4 font-bold text-[9px] sm:text-[10px] gap-1 sm:gap-2 shrink-0"><Eye size={12} /> <span className="hidden xs:inline">Details</span></Button>
+                                <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500 shrink-0" onClick={() => confirmDelete(o.id, 'order')}><Trash2 size={16} /></Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </Card>
             </div>
           )}
 
           {activeView === 'account-posts' && (
             <div className="space-y-6">
-               <Card className="rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden border-none shadow-xl bg-white dark:bg-slate-900"><div className="overflow-x-auto scrollbar-hide"><Table className="min-w-[600px]"><TableHeader className="bg-slate-50/50 dark:bg-slate-800/40"><TableRow className="border-none"><TableHead className="px-4 sm:px-8">Seller</TableHead><TableHead>Details</TableHead><TableHead>Handled By</TableHead><TableHead>Status</TableHead><TableHead className="text-right px-4 sm:px-8">Actions</TableHead></TableRow></TableHeader><TableBody>{accountPosts.map(p => (<TableRow key={p.id} className="border-slate-50 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-slate-800/30"><TableCell className="px-4 sm:px-8 relative">{p.status === 'pending' && <div className="absolute left-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />}<div className="flex items-center gap-3"><div className="w-8 h-8 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800 relative shrink-0">{p.authorAvatar && <Image src={p.authorAvatar} alt="" fill className="object-cover" />}</div><span className="font-bold text-xs text-slate-900 dark:text-white truncate max-w-[100px]">{p.authorName}</span></div></TableCell><TableCell><div className="flex flex-col"><span className="text-xs font-bold text-slate-900 dark:text-white">Lv {p.level}</span><span className="text-[9px] uppercase font-bold text-slate-400 dark:text-slate-500">${p.price}</span></div></TableCell><TableCell>{p.processedBy ? (<div className="flex items-center gap-2"><div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden relative border border-white dark:border-white/10">{p.processedBy.photoURL ? <Image src={p.processedBy.photoURL} alt="" fill className="object-cover" /> : <User size={12} className="m-auto mt-1" />}</div><span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 truncate max-w-[80px]">{p.processedBy.name}</span></div>) : <span className="text-[10px] text-slate-300 italic">Unassigned</span>}</TableCell><TableCell><Badge className={cn("rounded-full text-[8px] font-bold uppercase border-none", getStatusBadge(p.status))}>{p.status}</Badge></TableCell><TableCell className="text-right px-4 sm:px-8"><div className="flex justify-end gap-1 sm:gap-2"><Button size="sm" onClick={() => handleOpenAccountDialog(p)} className="rounded-full h-8 px-2 sm:px-4 font-bold text-[9px] sm:text-[10px] gap-1 sm:gap-2 shrink-0"><Eye size={12} /> <span className="hidden xs:inline">View</span></Button><Button size="icon" variant="ghost" className="h-8 w-8 text-red-500 shrink-0" onClick={() => confirmDelete(p.id, 'account')}><Trash2 size={16} /></Button></div></TableCell></TableRow>))}</TableBody></Table></div></Card>
+               <Card className="rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden border-none shadow-xl bg-white dark:bg-slate-900">
+                <div className="overflow-x-auto scrollbar-hide">
+                  <Table className="min-w-[600px]">
+                    <TableHeader className="bg-slate-50/50 dark:bg-slate-800/40">
+                      <TableRow className="border-none">
+                        <TableHead className="px-4 sm:px-8">Seller</TableHead>
+                        <TableHead>Details</TableHead>
+                        <TableHead>Handled By</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right px-4 sm:px-8">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {accountPosts.map(p => (
+                        <TableRow key={p.id} className="border-slate-50 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-slate-800/30">
+                          <TableCell className="px-4 sm:px-8 relative">
+                            {p.status === 'pending' && <div className="absolute left-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />}
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800 relative shrink-0">
+                                {p.authorAvatar && <Image src={p.authorAvatar} alt="" fill className="object-cover" />}
+                              </div>
+                              <span className="font-bold text-xs text-slate-900 dark:text-white truncate max-w-[100px]">{p.authorName}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-col">
+                              <span className="text-xs font-bold text-slate-900 dark:text-white">Lv {p.level}</span>
+                              <span className="text-[9px] uppercase font-bold text-slate-400 dark:text-slate-500">${p.price}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {p.processedBy ? (
+                              <div className="flex items-center gap-2">
+                                <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden relative border border-white dark:border-white/10">
+                                  {p.processedBy.photoURL ? <Image src={p.processedBy.photoURL} alt="" fill className="object-cover" /> : <User size={12} className="m-auto mt-1" />}
+                                </div>
+                                <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 truncate max-w-[80px]">{p.processedBy.name}</span>
+                              </div>
+                            ) : <span className="text-[10px] text-slate-300 italic">Unassigned</span>}
+                          </TableCell>
+                          <TableCell><Badge className={cn("rounded-full text-[8px] font-bold uppercase border-none", getStatusBadge(p.status))}>{p.status}</Badge></TableCell>
+                          <TableCell className="text-right px-4 sm:px-8">
+                            <div className="flex justify-end gap-1 sm:gap-2">
+                              <Button size="sm" onClick={() => handleOpenAccountDialog(p)} className="rounded-full h-8 px-2 sm:px-4 font-bold text-[9px] sm:text-[10px] gap-1 sm:gap-2 shrink-0"><Eye size={12} /> <span className="hidden xs:inline">View</span></Button>
+                              <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500 shrink-0" onClick={() => confirmDelete(p.id, 'account')}><Trash2 size={16} /></Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+               </Card>
             </div>
           )}
 
@@ -619,13 +731,98 @@ export default function AdminPage() {
           )}
 
           {activeView === 'users' && (
-            <Card className="rounded-[1.5rem] sm:rounded-[2rem] border-none shadow-xl overflow-hidden bg-white dark:bg-slate-900"><div className="overflow-x-auto scrollbar-hide"><Table className="min-w-[600px]"><TableHeader className="bg-slate-50/50 dark:bg-slate-800/40"><TableRow className="border-none"><TableHead className="font-bold px-4 sm:px-8">Profile</TableHead><TableHead className="font-bold">Contact</TableHead><TableHead className="font-bold">Role</TableHead><TableHead className="font-bold">Balance</TableHead><TableHead className="text-right px-4 sm:px-8">Actions</TableHead></TableHeader><TableBody>{allUsers.map(u => (<TableRow key={u.uid} className={cn("border-slate-50 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-slate-800/30", u.banned && "bg-red-50/50 dark:bg-red-950/20 opacity-70")}><TableCell className="px-4 sm:px-8"><div className="flex items-center gap-3"><div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800 relative shrink-0">{u.photoURL && <Image src={u.photoURL} alt="" fill className="object-cover" />}</div><div className="flex flex-col"><span className="font-bold text-slate-900 dark:text-white text-xs truncate max-w-[100px]">{u.name}</span>{u.banned && <Badge variant="destructive" className="h-4 text-[8px] w-fit">BANNED</Badge>}</div></div></TableCell><TableCell><div className="flex flex-col"><span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 truncate max-w-[120px]">{u.email}</span><span className="text-[9px] text-slate-400 dark:text-slate-500">{u.phoneNumber}</span></div></TableCell><TableCell><Badge variant="secondary" className="rounded-full text-[9px] uppercase font-bold dark:bg-slate-800 dark:text-slate-300 border-none">{u.role}</Badge></TableCell><TableCell><div className="flex items-center gap-1.5"><Star size={12} className="text-amber-500 fill-amber-500" /><span className="font-bold text-slate-900 dark:text-white text-xs">{u.points || 0}</span></div></TableCell><TableCell className="text-right px-4 sm:px-8"><div className="flex justify-end gap-1"><Button size="icon" variant="ghost" onClick={() => { setSelectedUser(u); setIsUserManageOpen(true); }} className="text-primary hover:bg-primary/5 rounded-xl h-8 w-8"><UserCog size={18} /></Button><Button size="icon" variant="ghost" onClick={() => confirmDelete(u.uid, 'user')} className="text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl h-8 w-8"><Trash2 size={18} /></Button></div></TableCell></TableRow>))}</TableBody></Table></div></Card>
+            <Card className="rounded-[1.5rem] sm:rounded-[2rem] border-none shadow-xl overflow-hidden bg-white dark:bg-slate-900">
+              <div className="overflow-x-auto scrollbar-hide">
+                <Table className="min-w-[600px]">
+                  <TableHeader className="bg-slate-50/50 dark:bg-slate-800/40">
+                    <TableRow className="border-none">
+                      <TableHead className="font-bold px-4 sm:px-8">Profile</TableHead>
+                      <TableHead className="font-bold">Contact</TableHead>
+                      <TableHead className="font-bold">Role</TableHead>
+                      <TableHead className="font-bold">Balance</TableHead>
+                      <TableHead className="text-right px-4 sm:px-8">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {allUsers.map(u => (
+                      <TableRow key={u.uid} className={cn("border-slate-50 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-slate-800/30", u.banned && "bg-red-50/50 dark:bg-red-950/20 opacity-70")}>
+                        <TableCell className="px-4 sm:px-8">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800 relative shrink-0">
+                              {u.photoURL ? (
+                                <Image src={u.photoURL} alt="" fill className="object-cover" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-slate-300 dark:text-slate-600"><User size={16} /></div>
+                              )}
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="font-bold text-slate-900 dark:text-white text-xs truncate max-w-[100px]">{u.name}</span>
+                              {u.banned && <Badge variant="destructive" className="h-4 text-[8px] w-fit">BANNED</Badge>}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 truncate max-w-[120px]">{u.email}</span>
+                            <span className="text-[9px] text-slate-400 dark:text-slate-500">{u.phoneNumber}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary" className="rounded-full text-[9px] uppercase font-bold dark:bg-slate-800 dark:text-slate-300 border-none">{u.role}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1.5">
+                            <Star size={12} className="text-amber-500 fill-amber-500" />
+                            <span className="font-bold text-slate-900 dark:text-white text-xs">{u.points || 0}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right px-4 sm:px-8">
+                          <div className="flex justify-end gap-1">
+                            <Button size="icon" variant="ghost" onClick={() => { setSelectedUser(u); setIsUserManageOpen(true); }} className="text-primary hover:bg-primary/5 rounded-xl h-8 w-8"><UserCog size={18} /></Button>
+                            <Button size="icon" variant="ghost" onClick={() => confirmDelete(u.uid, 'user')} className="text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl h-8 w-8"><Trash2 size={18} /></Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </Card>
           )}
 
           {activeView === 'settings' && (
             <div className="max-w-3xl space-y-6 sm:space-y-8 animate-in slide-in-from-bottom-8">
               <Accordion type="single" collapsible className="w-full space-y-4">
-                 <AccordionItem value="general" className="border-none bg-white dark:bg-slate-900 rounded-[1.5rem] sm:rounded-[2rem] px-4 sm:px-8 shadow-lg"><AccordionTrigger className="hover:no-underline"><div className="flex items-center gap-3 sm:gap-4 text-left"><div className="p-2 sm:p-3 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-500 rounded-xl sm:rounded-2xl shrink-0"><SettingsIcon size={20} /></div><div><h4 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white">General Store Config</h4><p className="text-[10px] sm:text-xs text-muted-foreground">Logo, Live Status, and Fees</p></div></div></AccordionTrigger><AccordionContent className="pb-6 sm:pb-8 space-y-6"><div className="space-y-4"><Label className="text-[10px] font-bold uppercase text-slate-400">Store Logo</Label><div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6"><div className="w-20 h-20 rounded-2xl bg-slate-100 dark:bg-slate-800 relative overflow-hidden border-2 border-dashed border-slate-200 dark:border-white/5 flex items-center justify-center shrink-0">{storeSettings.logo ? <Image src={storeSettings.logo} alt="" fill className="object-contain p-2" unoptimized /> : <ImageIcon className="text-slate-300" />}</div><div className="flex-1 space-y-2"><Input type="file" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'logo')} className="h-10 rounded-xl dark:bg-slate-800 border-none" /><p className="text-[9px] text-muted-foreground italic">Recommended: Transparent PNG (Square)</p></div></div></div><div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-xl sm:rounded-2xl"><div><p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">TikTok Live Mode</p><p className="text-[9px] sm:text-[10px] text-muted-foreground">Show "Live Now" banner on homepage</p></div><Switch checked={storeSettings.isLive} onCheckedChange={val => updateStoreSettings({ isLive: val })} /></div><div className="space-y-2"><Label className="text-[10px] font-bold uppercase text-slate-400">Account Listing Fee ($)</Label><Input type="number" step="0.01" defaultValue={storeSettings?.config?.shop?.listingFee} onBlur={e => updateStoreSettings({ config: { ...storeSettings.config, shop: { ...storeSettings.config?.shop, listingFee: parseFloat(e.target.value) } } })} className="rounded-xl dark:bg-slate-800 border-none font-bold h-12" /></div></AccordionContent></AccordionItem>
+                 <AccordionItem value="general" className="border-none bg-white dark:bg-slate-900 rounded-[1.5rem] sm:rounded-[2rem] px-4 sm:px-8 shadow-lg">
+                   <AccordionTrigger className="hover:no-underline">
+                     <div className="flex items-center gap-3 sm:gap-4 text-left">
+                       <div className="p-2 sm:p-3 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-500 rounded-xl sm:rounded-2xl shrink-0"><SettingsIcon size={20} /></div>
+                       <div><h4 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white">General Store Config</h4><p className="text-[10px] sm:text-xs text-muted-foreground">Logo, Live Status, and Fees</p></div>
+                     </div>
+                   </AccordionTrigger>
+                   <AccordionContent className="pb-6 sm:pb-8 space-y-6">
+                     <div className="space-y-4">
+                       <Label className="text-[10px] font-bold uppercase text-slate-400">Store Logo</Label>
+                       <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
+                         <div className="w-20 h-20 rounded-2xl bg-slate-100 dark:bg-slate-800 relative overflow-hidden border-2 border-dashed border-slate-200 dark:border-white/5 flex items-center justify-center shrink-0">
+                           {storeSettings.logo ? <Image src={storeSettings.logo} alt="" fill className="object-contain p-2" unoptimized /> : <ImageIcon className="text-slate-300" />}
+                         </div>
+                         <div className="flex-1 space-y-2">
+                           <Input type="file" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'logo')} className="h-10 rounded-xl dark:bg-slate-800 border-none" />
+                           <p className="text-[9px] text-muted-foreground italic">Recommended: Transparent PNG (Square)</p>
+                         </div>
+                       </div>
+                     </div>
+                     <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-xl sm:rounded-2xl">
+                       <div><p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">TikTok Live Mode</p><p className="text-[9px] sm:text-[10px] text-muted-foreground">Show "Live Now" banner on homepage</p></div>
+                       <Switch checked={storeSettings.isLive} onCheckedChange={val => updateStoreSettings({ isLive: val })} />
+                     </div>
+                     <div className="space-y-2">
+                       <Label className="text-[10px] font-bold uppercase text-slate-400">Account Listing Fee ($)</Label>
+                       <Input type="number" step="0.01" defaultValue={storeSettings?.config?.shop?.listingFee} onBlur={e => updateStoreSettings({ config: { ...storeSettings.config, shop: { ...storeSettings.config?.shop, listingFee: parseFloat(e.target.value) } } })} className="rounded-xl dark:bg-slate-800 border-none font-bold h-12" />
+                     </div>
+                   </AccordionContent>
+                 </AccordionItem>
               </Accordion>
             </div>
           )}
