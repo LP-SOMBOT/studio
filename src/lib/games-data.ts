@@ -7,7 +7,7 @@
 export type GamePackage = {
   id: string;
   gameId: string;
-  category: 'top-up' | 'accounts';
+  category: 'top-up' | 'accounts' | 'booyah-pass';
   title: string;
   description: string;
   price: number;
@@ -15,6 +15,7 @@ export type GamePackage = {
   thumbnail: string;
   imageHint?: string;
   tags?: string[];
+  whatsappNumber?: string;
 };
 
 // Always empty in code. Real data is loaded from Firebase Realtime Database.

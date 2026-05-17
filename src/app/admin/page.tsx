@@ -60,7 +60,8 @@ import {
   Video,
   Globe,
   Bell,
-  ChevronLeft
+  ChevronLeft,
+  CalendarDays
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -157,7 +158,7 @@ export default function AdminPage() {
   } = useApp();
 
   const router = useRouter();
-  const [activeView, setActiveView] = useState<'dashboard' | 'orders' | 'inventory' | 'account-posts' | 'events' | 'users' | 'settings' | 'notifications'>('dashboard');
+  const [activeView, setActiveView] = useState<'dashboard' | 'orders' | 'inventory' | 'account-posts' | 'events' | 'users' | 'settings'>('dashboard');
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
@@ -184,7 +185,7 @@ export default function AdminPage() {
   const [deleteTarget, setDeleteTarget] = useState<{ id: string, type: 'user' | 'game' | 'product' | 'event' | 'banner' | 'account' | 'order' } | null>(null);
 
   const [gameForm, setGameForm] = useState({ title: "", icon: "", category: "top-up" });
-  const [productForm, setProductForm] = useState({ title: "", gameId: "", category: "top-up", description: "", price: "", discountedPrice: "", thumbnail: "" });
+  const [productForm, setProductForm] = useState({ title: "", gameId: "", category: "top-up", description: "", price: "", discountedPrice: "", thumbnail: "", whatsappNumber: "" });
   const [eventForm, setEventForm] = useState({ 
     title: "", 
     shortDescription: "", 
@@ -240,10 +241,16 @@ export default function AdminPage() {
   const handleOpenProductDialog = (product?: any) => {
     if (product) {
       setEditingProduct(product);
-      setProductForm({ ...product, price: product.price?.toString(), discountedPrice: product.discountedPrice?.toString() || "" });
+      setProductForm({ 
+        ...product, 
+        price: product.price?.toString(), 
+        discountedPrice: product.discountedPrice?.toString() || "",
+        category: product.category || "top-up",
+        whatsappNumber: product.whatsappNumber || ""
+      });
     } else {
       setEditingProduct(null);
-      setProductForm({ title: "", gameId: selectedGameId || "", category: "top-up", description: "", price: "", discountedPrice: "", thumbnail: "" });
+      setProductForm({ title: "", gameId: selectedGameId || "", category: "top-up", description: "", price: "", discountedPrice: "", thumbnail: "", whatsappNumber: "" });
     }
     setIsProductDialogOpen(true);
   };
@@ -416,7 +423,8 @@ export default function AdminPage() {
     }
   };
 
-  const getSmartTimestamp = (ts: number) => {
+  const getSmartTimestamp = (ts: number | undefined) => {
+    if (!ts) return "Not Yet";
     const date = new Date(ts);
     const now = new Date();
     const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
@@ -495,7 +503,7 @@ export default function AdminPage() {
             <h2 className="text-base sm:text-xl font-headline font-bold uppercase tracking-tight text-slate-900 dark:text-white truncate">{activeView.replace('-', ' ')}</h2>
           </div>
           <div className="flex items-center gap-2 sm:gap-4">
-            <button onClick={() => setActiveView('notifications')} className="relative p-2.5 bg-slate-50 dark:bg-slate-800 rounded-full text-slate-500 hover:text-primary transition-colors"><Bell size={20} />{unreadAdminNotifs > 0 && <span className="absolute top-0 right-0 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white dark:border-slate-800">{unreadAdminNotifs > 9 ? '9+' : unreadAdminNotifs}</span>}</button>
+            <button onClick={() => markAdminNotificationsAsRead()} className="relative p-2.5 bg-slate-50 dark:bg-slate-800 rounded-full text-slate-500 hover:text-primary transition-colors"><Bell size={20} />{unreadAdminNotifs > 0 && <span className="absolute top-0 right-0 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white dark:border-slate-800">{unreadAdminNotifs > 9 ? '9+' : unreadAdminNotifs}</span>}</button>
              <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 bg-green-50 dark:bg-green-950/20 text-green-600 dark:text-green-400 rounded-full cursor-pointer hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors" onClick={refreshAdminData}><RefreshCw size={12} className="animate-spin" /><span className="text-[10px] font-bold uppercase">Live</span></div>
             <div className="flex items-center gap-2 sm:gap-3"><div className="text-right hidden xs:block"><p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate max-w-[100px]">{user?.name}</p><p className="text-[9px] sm:text-[10px] text-primary uppercase font-bold">{user?.role}</p></div><div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-100 dark:bg-slate-800 border-2 border-white dark:border-slate-700 shadow-sm overflow-hidden relative shrink-0">{user?.photoURL ? <Image src={user.photoURL} alt="" fill className="object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-300 dark:text-slate-600"><User size={16} /></div>}</div></div>
           </div>
@@ -563,7 +571,10 @@ export default function AdminPage() {
                       <Card key={p.id} className="p-4 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] border-none shadow-xl bg-white dark:bg-slate-900 flex gap-4">
                         <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-slate-100 dark:bg-slate-800 overflow-hidden relative shadow-inner shrink-0">{p.thumbnail ? <Image src={p.thumbnail} alt="" fill className="object-cover" unoptimized /> : <ImageIcon className="m-auto absolute inset-0 text-slate-200 dark:text-slate-700" />}</div>
                         <div className="flex-1 flex flex-col justify-between min-w-0">
-                           <div><h4 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white leading-tight truncate">{p.title}</h4></div>
+                           <div className="flex items-start justify-between gap-2">
+                             <h4 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white leading-tight truncate">{p.title}</h4>
+                             {p.category === 'booyah-pass' && <Badge className="bg-purple-100 text-purple-600 border-none text-[8px] px-1.5 py-0">WA PASS</Badge>}
+                           </div>
                            <div className="flex justify-between items-end"><span className="font-bold text-base sm:text-lg text-primary">${p.price}</span><div className="flex gap-1"><Button size="icon" variant="ghost" className="h-8 w-8 text-blue-500" onClick={() => handleOpenProductDialog(p)}><Edit size={16} /></Button><Button size="icon" variant="ghost" className="h-8 w-8 text-red-500" onClick={() => confirmDelete(p.id, 'product')}><Trash2 size={16} /></Button></div></div>
                         </div>
                       </Card>
@@ -623,6 +634,197 @@ export default function AdminPage() {
       </div>
 
       {/* Dialogs */}
+      <Dialog open={isOrderDetailOpen} onOpenChange={setIsOrderDetailOpen}>
+        <DialogContent className="max-w-xl w-[95vw] rounded-[2rem] sm:rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl bg-white dark:bg-slate-900">
+           <div className="bg-primary p-6 sm:p-8 text-white">
+              <div className="flex justify-between items-start">
+                 <div>
+                    <DialogTitle className="text-xl sm:text-2xl font-headline font-bold">Order Verification</DialogTitle>
+                    <p className="text-[10px] sm:text-xs font-bold text-white/60 uppercase tracking-widest mt-1">Ref: #{selectedOrder?.id.toUpperCase()}</p>
+                 </div>
+                 <Badge className="bg-white/20 text-white border-none rounded-full uppercase text-[10px] font-bold">{selectedOrder?.status}</Badge>
+              </div>
+           </div>
+           
+           <div className="p-6 sm:p-8 space-y-6 max-h-[70vh] overflow-y-auto scrollbar-hide">
+              {/* Handling Admin Notification */}
+              {selectedOrder?.processedBy && selectedOrder.processedBy.uid !== user?.uid && (
+                <div className="p-4 bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 rounded-2xl flex items-center gap-4 animate-in fade-in zoom-in">
+                  <div className="w-12 h-12 rounded-full overflow-hidden relative shrink-0 border-2 border-indigo-200">
+                     {selectedOrder.processedBy.photoURL ? <Image src={selectedOrder.processedBy.photoURL} alt="" fill className="object-cover" /> : <User className="m-auto mt-2 text-indigo-300" />}
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-indigo-900 dark:text-indigo-300">Staff Handling</p>
+                    <p className="text-sm font-medium text-indigo-700 dark:text-indigo-400"><span className="font-bold">{selectedOrder.processedBy.name}</span> is currently working on this order.</p>
+                  </div>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-4">
+                 <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800 flex flex-col gap-1">
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase">Order Created</span>
+                    <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5"><Clock size={12}/> {getSmartTimestamp(selectedOrder?.createdAt)}</span>
+                 </div>
+                 <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800 flex flex-col gap-1">
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase">Admin Handled</span>
+                    <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5"><User size={12}/> {getSmartTimestamp(selectedOrder?.processedAt)}</span>
+                 </div>
+              </div>
+
+              {(selectedOrder?.status === 'successful' || selectedOrder?.status === 'cancelled') && (
+                <div className={cn(
+                  "p-4 rounded-xl border flex flex-col gap-1",
+                  selectedOrder.status === 'successful' ? "bg-green-50 border-green-100 dark:bg-green-500/10 dark:border-green-500/20" : "bg-red-50 border-red-100 dark:bg-red-500/10 dark:border-red-500/20"
+                )}>
+                  <span className={cn("text-[10px] font-bold uppercase", selectedOrder.status === 'successful' ? "text-green-600" : "text-red-600")}>
+                    {selectedOrder.status === 'successful' ? 'Completed At' : 'Cancelled At'}
+                  </span>
+                  <span className={cn("text-xs font-bold", selectedOrder.status === 'successful' ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400")}>
+                    {getSmartTimestamp(selectedOrder.completedAt)}
+                  </span>
+                </div>
+              )}
+
+              <div className="space-y-4">
+                 <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2"><SmartphoneIcon size={14}/> Client Information</h4>
+                 <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl space-y-3 border border-slate-100 dark:border-white/5">
+                    <div className="flex justify-between border-b dark:border-white/5 pb-2"><span className="text-xs text-muted-foreground">Full Name</span><span className="text-xs font-bold">{selectedOrder?.gameDetails?.fullName || 'N/A'}</span></div>
+                    <div className="flex justify-between border-b dark:border-white/5 pb-2"><span className="text-xs text-muted-foreground">Player ID / Game ID</span><span className="text-xs font-bold font-mono tracking-wider">{selectedOrder?.gameDetails?.playerID || 'N/A'}</span></div>
+                    <div className="flex justify-between border-b dark:border-white/5 pb-2"><span className="text-xs text-muted-foreground">In-Game Name</span><span className="text-xs font-bold">{selectedOrder?.gameDetails?.playerName || 'N/A'}</span></div>
+                    <div className="flex justify-between border-b dark:border-white/5 pb-2"><span className="text-xs text-muted-foreground">Sender Number</span><span className="text-xs font-bold text-primary">{selectedOrder?.gameDetails?.senderNumber || 'N/A'}</span></div>
+                    <div className="flex justify-between"><span className="text-xs text-muted-foreground">WhatsApp</span><span className="text-xs font-bold">{selectedOrder?.gameDetails?.whatsappNumber || 'N/A'}</span></div>
+                 </div>
+              </div>
+
+              <div className="space-y-4">
+                 <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2"><Box size={14}/> Item Details</h4>
+                 <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl flex justify-between items-center border border-slate-100 dark:border-white/5">
+                    <div className="flex items-center gap-4">
+                       <div className="w-12 h-12 rounded-xl bg-white dark:bg-slate-900 relative overflow-hidden shrink-0 shadow-sm">
+                          {selectedOrder?.items?.[0]?.thumbnail && <Image src={selectedOrder.items[0].thumbnail} alt="" fill className="object-cover" />}
+                       </div>
+                       <div><p className="text-xs font-bold">{selectedOrder?.items?.[0]?.title}</p><p className="text-[10px] text-muted-foreground uppercase font-bold">{selectedOrder?.paymentMethod}</p></div>
+                    </div>
+                    <div className="text-right">
+                       <p className="text-[10px] text-muted-foreground uppercase font-bold">Paid</p>
+                       <p className="text-lg font-headline font-bold text-primary">${selectedOrder?.total?.toFixed(2)}</p>
+                    </div>
+                 </div>
+              </div>
+
+              <div className="space-y-4 pt-4">
+                 <Label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Update Order Status</Label>
+                 <Select value={pendingOrderStatus} onValueChange={setPendingStatus}>
+                    <SelectTrigger className="h-12 rounded-xl border-none bg-slate-100 dark:bg-slate-800 font-bold"><SelectValue /></SelectTrigger>
+                    <SelectContent className="rounded-xl">
+                       {["pending", "processing", "successful", "cancelled"].map(s => <SelectItem key={s} value={s} className="rounded-lg">{s.toUpperCase()}</SelectItem>)}
+                    </SelectContent>
+                 </Select>
+              </div>
+           </div>
+           
+           <DialogFooter className="p-6 sm:p-8 bg-slate-50 dark:bg-slate-800/30">
+              <div className="flex flex-col sm:flex-row gap-3 w-full">
+                 <Button variant="ghost" onClick={() => setIsOrderDetailOpen(false)} className="rounded-xl flex-1 h-12 font-bold">Cancel</Button>
+                 <Button onClick={handleStatusSave} disabled={isSavingStatus} className="rounded-xl flex-[2] h-12 font-bold shadow-lg shadow-primary/20">
+                    {isSavingStatus ? <Loader2 className="animate-spin" /> : 'Save Changes'}
+                 </Button>
+              </div>
+           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isAccountDetailOpen} onOpenChange={setIsAccountDetailOpen}>
+        <DialogContent className="max-w-xl w-[95vw] rounded-[2rem] sm:rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl bg-white dark:bg-slate-900">
+          <div className="bg-amber-500 p-6 sm:p-8 text-white">
+             <div className="flex justify-between items-start">
+               <div>
+                  <DialogTitle className="text-xl sm:text-2xl font-headline font-bold">Listing Verification</DialogTitle>
+                  <p className="text-[10px] sm:text-xs font-bold text-white/60 uppercase tracking-widest mt-1">Ref: #{selectedAccount?.id.toUpperCase()}</p>
+               </div>
+               <Badge className="bg-white/20 text-white border-none rounded-full uppercase text-[10px] font-bold">{selectedAccount?.status}</Badge>
+             </div>
+          </div>
+
+          <div className="p-6 sm:p-8 space-y-6 max-h-[70vh] overflow-y-auto scrollbar-hide">
+              {/* Handling Admin Notification */}
+              {selectedAccount?.processedBy && selectedAccount.processedBy.uid !== user?.uid && (
+                <div className="p-4 bg-amber-50 dark:bg-amber-500/10 border border-amber-100 dark:border-amber-500/20 rounded-2xl flex items-center gap-4 animate-in fade-in zoom-in">
+                  <div className="w-12 h-12 rounded-full overflow-hidden relative shrink-0 border-2 border-amber-200">
+                     {selectedAccount.processedBy.photoURL ? <Image src={selectedAccount.processedBy.photoURL} alt="" fill className="object-cover" /> : <User className="m-auto mt-2 text-amber-300" />}
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-amber-900 dark:text-amber-300">Staff Handling</p>
+                    <p className="text-sm font-medium text-amber-700 dark:text-amber-400"><span className="font-bold">{selectedAccount.processedBy.name}</span> is currently reviewing this listing.</p>
+                  </div>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-4">
+                 <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800 flex flex-col gap-1">
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase">Listed Created</span>
+                    <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5"><Clock size={12}/> {getSmartTimestamp(selectedAccount?.createdAt)}</span>
+                 </div>
+                 <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800 flex flex-col gap-1">
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase">Admin Reviewed</span>
+                    <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5"><User size={12}/> {getSmartTimestamp(selectedAccount?.processedAt)}</span>
+                 </div>
+              </div>
+
+              {(selectedAccount?.status === 'approved' || selectedAccount?.status === 'rejected') && (
+                <div className={cn(
+                  "p-4 rounded-xl border flex flex-col gap-1",
+                  selectedAccount.status === 'approved' ? "bg-green-50 border-green-100 dark:bg-green-500/10 dark:border-green-500/20" : "bg-red-50 border-red-100 dark:bg-red-500/10 dark:border-red-500/20"
+                )}>
+                  <span className={cn("text-[10px] font-bold uppercase", selectedAccount.status === 'approved' ? "text-green-600" : "text-red-600")}>
+                    {selectedAccount.status === 'approved' ? 'Approved At' : 'Rejected At'}
+                  </span>
+                  <span className={cn("text-xs font-bold", selectedAccount.status === 'approved' ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400")}>
+                    {getSmartTimestamp(selectedAccount.completedAt)}
+                  </span>
+                </div>
+              )}
+
+             <div className="space-y-4">
+                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2"><User size={14}/> Seller Details</h4>
+                <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl space-y-3 border border-slate-100 dark:border-white/5">
+                   <div className="flex justify-between border-b dark:border-white/5 pb-2"><span className="text-xs text-muted-foreground">Seller Name</span><span className="text-xs font-bold">{selectedAccount?.authorName}</span></div>
+                   <div className="flex justify-between border-b dark:border-white/5 pb-2"><span className="text-xs text-muted-foreground">Seller Phone</span><span className="text-xs font-bold">{selectedAccount?.phone}</span></div>
+                   <div className="flex justify-between"><span className="text-xs text-muted-foreground">Platform</span><Badge className="text-[10px] rounded-full">{selectedAccount?.platform}</Badge></div>
+                </div>
+             </div>
+
+             <div className="space-y-4">
+                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2"><Star size={14}/> Account Stats</h4>
+                <div className="grid grid-cols-3 gap-3">
+                   <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 text-center border dark:border-white/5"><p className="text-[8px] text-muted-foreground uppercase font-bold">Lvl</p><p className="text-sm font-bold">{selectedAccount?.level}</p></div>
+                   <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 text-center border dark:border-white/5"><p className="text-[8px] text-muted-foreground uppercase font-bold">Prime</p><p className="text-sm font-bold">{selectedAccount?.primeLevel}</p></div>
+                   <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 text-center border dark:border-white/5"><p className="text-[8px] text-muted-foreground uppercase font-bold">Price</p><p className="text-sm font-bold text-primary">${selectedAccount?.price}</p></div>
+                </div>
+             </div>
+
+             <div className="space-y-4">
+                <Label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Update Listing Status</Label>
+                <Select value={pendingAccountStatus} onValueChange={setPendingAccountStatus}>
+                   <SelectTrigger className="h-12 rounded-xl border-none bg-slate-100 dark:bg-slate-800 font-bold"><SelectValue /></SelectTrigger>
+                   <SelectContent className="rounded-xl">
+                      {["pending", "processing", "approved", "rejected"].map(s => <SelectItem key={s} value={s} className="rounded-lg">{s.toUpperCase()}</SelectItem>)}
+                   </SelectContent>
+                </Select>
+             </div>
+          </div>
+
+          <DialogFooter className="p-6 sm:p-8 bg-slate-50 dark:bg-slate-800/30">
+              <div className="flex flex-col sm:flex-row gap-3 w-full">
+                 <Button variant="ghost" onClick={() => setIsAccountDetailOpen(false)} className="rounded-xl flex-1 h-12 font-bold">Cancel</Button>
+                 <Button onClick={handleAccountStatusSave} disabled={isSavingStatus} className="rounded-xl flex-[2] h-12 font-bold shadow-lg shadow-amber-500/20 bg-amber-500 hover:bg-amber-600">
+                    {isSavingStatus ? <Loader2 className="animate-spin" /> : 'Save Changes'}
+                 </Button>
+              </div>
+           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={isGameDialogOpen} onOpenChange={setIsGameDialogOpen}>
         <DialogContent className="max-w-md w-[95vw] rounded-[2rem] p-0 overflow-hidden border-none shadow-2xl bg-white dark:bg-slate-900">
            <div className="bg-primary p-6 text-white"><DialogTitle className="text-xl font-headline font-bold">{editingGame ? 'Edit Game' : 'Add New Game'}</DialogTitle></div>
@@ -646,7 +848,28 @@ export default function AdminPage() {
         <DialogContent className="max-w-xl w-[95vw] rounded-[2rem] sm:rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl bg-white dark:bg-slate-900">
           <div className="bg-primary p-6 sm:p-8 text-white"><DialogTitle className="text-xl sm:text-2xl font-headline font-bold">{editingProduct ? 'Edit Item' : 'Add New Item'}</DialogTitle></div>
           <form onSubmit={handleSaveProduct} className="p-6 sm:p-8 space-y-6 max-h-[70vh] overflow-y-auto scrollbar-hide">
-            <div className="space-y-2"><Label className="text-xs font-bold uppercase text-slate-400">Item Title</Label><Input value={productForm.title} onChange={e => setProductForm({...productForm, title: e.target.value})} required className="rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold h-12" /></div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2"><Label className="text-xs font-bold uppercase text-slate-400">Item Title</Label><Input value={productForm.title} onChange={e => setProductForm({...productForm, title: e.target.value})} required className="rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold h-12" /></div>
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase text-slate-400">Item Type</Label>
+                <Select value={productForm.category} onValueChange={v => setProductForm({...productForm, category: v as any})}>
+                  <SelectTrigger className="rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold h-12"><SelectValue placeholder="Select Type" /></SelectTrigger>
+                  <SelectContent className="rounded-xl">
+                    <SelectItem value="top-up">Top-up (Standard)</SelectItem>
+                    <SelectItem value="booyah-pass">Booyah Pass (Direct WhatsApp)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {productForm.category === 'booyah-pass' && (
+              <div className="space-y-2 animate-in slide-in-from-top-2">
+                <Label className="text-xs font-bold uppercase text-slate-400">Admin WhatsApp Number (Recipient)</Label>
+                <Input value={productForm.whatsappNumber} onChange={e => setProductForm({...productForm, whatsappNumber: e.target.value})} placeholder="e.g. 25261xxxxxx" className="rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold h-12" />
+                <p className="text-[10px] text-muted-foreground italic">* Users will be redirected to this number to complete the purchase.</p>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label className="text-xs font-bold uppercase text-slate-400">Game Collection</Label>

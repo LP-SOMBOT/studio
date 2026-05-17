@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo, Suspense } from "react";
@@ -13,7 +14,9 @@ import {
   ChevronRight,
   X,
   CreditCard,
-  AlertTriangle
+  AlertTriangle,
+  MessageCircle,
+  ShoppingBag
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +27,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
+import Image from "next/image";
 
 function CheckoutContent() {
   const { products, games, createOrder, setGlobalLoading, setActiveTab, user, loading, storeSettings } = useApp();
@@ -52,12 +56,12 @@ function CheckoutContent() {
     return (games || []).find(g => g.id === item?.gameId);
   }, [games, item?.gameId]);
 
-  // Bug Fix: Always use the exact base price as requested, not discountedPrice
   const total = item ? Number(item.price || 0) : 0;
   
   const gameTitle = game?.title?.toLowerCase() || "";
   const isFreeFire = gameTitle.includes("free fire");
   const isBloodStrike = gameTitle.includes("blood strike");
+  const isBooyahPass = item?.category === 'booyah-pass';
 
   useEffect(() => {
     if (!loading && !user && !isSuccess) {
@@ -77,9 +81,33 @@ function CheckoutContent() {
     setStep(2);
   };
 
+  const handleBooyahRedirect = () => {
+    if (!gameDetails.fullName || !gameDetails.playerID || !gameDetails.whatsappNumber) {
+      toast({ title: "Fadlan buuxi meelaha banaan", variant: "destructive" });
+      return;
+    }
+    
+    const adminWa = item?.whatsappNumber || "252613982172";
+    const message = `Asc, Oskar Shop.
+Waxaan rabaa Booyah Pass: *${item?.title}*
+Qiimaha: *$${total.toFixed(2)}*
+
+*Xogta Dalabka:*
+Magaca: ${gameDetails.fullName}
+Game ID: ${gameDetails.playerID}
+WhatsApp: ${gameDetails.whatsappNumber}
+
+Fadlan ila soo xiriir.`;
+
+    const encoded = encodeURIComponent(message);
+    window.open(`https://wa.me/${adminWa}?text=${encoded}`, '_blank');
+    
+    setIsSuccess(true);
+    setStep(4);
+  };
+
   const handlePaymentInitiation = () => {
     const paymentNum = storeSettings.paymentNumber || "613982172";
-    // We use the full total (base price)
     const formattedPrice = total.toString().replace('.', '*');
     const ussd = `*712*${paymentNum}*${formattedPrice}#`;
     
@@ -100,13 +128,12 @@ function CheckoutContent() {
     const purchaseItem = {
       id: item.id,
       title: item.title,
-      price: total, // Explicitly the base price
+      price: total,
       quantity: 1,
       gameId: item.gameId,
       thumbnail: item.thumbnail
     };
 
-    // Prepare descriptive game details for admin
     const finalDetails = {
       ...gameDetails,
       gameTitle: game?.title || "Unknown Game",
@@ -155,7 +182,7 @@ function CheckoutContent() {
         </div>
       )}
 
-      {step < 4 && (
+      {step < 4 && !isBooyahPass && (
         <div className="flex justify-between items-center mb-10 px-2 relative">
           <div className="absolute left-0 right-0 h-0.5 bg-gray-100 dark:bg-white/5 top-1/2 -translate-y-1/2 mx-8 -z-10" />
           <div 
@@ -190,14 +217,16 @@ function CheckoutContent() {
         <Card className="rounded-[2.5rem] shadow-xl border-none p-2 bg-white dark:bg-slate-900">
           <CardHeader>
             <CardTitle className="font-headline font-bold text-2xl flex items-center gap-2 text-slate-900 dark:text-white">
-              <Gamepad2 className="w-6 h-6 text-primary" /> {game?.title || "Xogta Dalabka"}
+              {isBooyahPass ? <ShoppingBag className="w-6 h-6 text-primary" /> : <Gamepad2 className="w-6 h-6 text-primary" />} 
+              {isBooyahPass ? "Booyah Pass Redirect" : (game?.title || "Xogta Dalabka")}
             </CardTitle>
-            <CardDescription className="dark:text-slate-400">Fadlan buuxi xogta saxda ah si laguugu soo diro {item?.title}.</CardDescription>
+            <CardDescription className="dark:text-slate-400">
+              {isBooyahPass ? "Fadlan buuxi xogtaada si lagugu hagaajiyo WhatsApp." : `Fadlan buuxi xogta saxda ah si laguugu soo diro ${item?.title}.`}
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleDetailsSubmit} className="space-y-6 pt-4">
+            <form onSubmit={!isBooyahPass ? handleDetailsSubmit : (e) => e.preventDefault()} className="space-y-6 pt-4">
               
-              {/* Somali Warning Note */}
               <div className="p-4 rounded-2xl bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-900/20 flex gap-3 text-red-600 dark:text-red-400">
                  <AlertTriangle className="shrink-0 w-5 h-5" />
                  <p className="text-[11px] font-bold leading-relaxed">
@@ -206,40 +235,36 @@ function CheckoutContent() {
               </div>
 
               <div className="space-y-4">
-                {/* Dedicated Full Name field for both FF and BS */}
-                {(isFreeFire || isBloodStrike) && (
-                  <>
-                    <div className="space-y-2">
-                      <Label className="text-sm font-bold dark:text-slate-200">Magacaaga oo buuxa</Label>
-                      <Input 
-                        placeholder="Geli magacaaga dhameystiran" 
-                        required 
-                        className="h-12 rounded-2xl bg-gray-50 dark:bg-slate-800 border-none px-5 font-bold"
-                        value={gameDetails.fullName}
-                        onChange={(e) => setGameDetails({...gameDetails, fullName: e.target.value})}
-                      />
-                    </div>
-                    {/* In-Game Name for both as requested */}
-                    <div className="space-y-2">
-                      <Label className="text-sm font-bold dark:text-slate-200">in-Game name</Label>
-                      <Input 
-                        placeholder="Geli magaca game ka kugu qoran" 
-                        required 
-                        className="h-12 rounded-2xl bg-gray-50 dark:bg-slate-800 border-none px-5 font-bold"
-                        value={gameDetails.playerName}
-                        onChange={(e) => setGameDetails({...gameDetails, playerName: e.target.value})}
-                      />
-                    </div>
-                  </>
+                <div className="space-y-2">
+                  <Label className="text-sm font-bold dark:text-slate-200">Magacaaga oo buuxa</Label>
+                  <Input 
+                    placeholder={isBooyahPass ? "Geli magacaaga" : "Geli magacaaga dhameystiran"} 
+                    required 
+                    className="h-12 rounded-2xl bg-gray-50 dark:bg-slate-800 border-none px-5 font-bold"
+                    value={gameDetails.fullName}
+                    onChange={(e) => setGameDetails({...gameDetails, fullName: e.target.value})}
+                  />
+                </div>
+
+                {!isBooyahPass && (isFreeFire || isBloodStrike) && (
+                  <div className="space-y-2">
+                    <Label className="text-sm font-bold dark:text-slate-200">in-Game name</Label>
+                    <Input 
+                      placeholder="Geli magaca game ka kugu qoran" 
+                      required 
+                      className="h-12 rounded-2xl bg-gray-50 dark:bg-slate-800 border-none px-5 font-bold"
+                      value={gameDetails.playerName}
+                      onChange={(e) => setGameDetails({...gameDetails, playerName: e.target.value})}
+                    />
+                  </div>
                 )}
 
-                {/* Game ID / UID Field */}
                 <div className="space-y-2">
                   <Label className="text-sm font-bold dark:text-slate-200">
-                    {isFreeFire ? "Game UID" : "Game ID"}
+                    {isBooyahPass ? "Game id" : (isFreeFire ? "Game UID" : "Game ID")}
                   </Label>
                   <Input 
-                    placeholder={isFreeFire ? "Geli ID-Ga game ka kugu qoran" : "Geli ID game ka kugu qoran"}
+                    placeholder={isBooyahPass ? "Geli ID Ga game kugu qoran" : (isFreeFire ? "Geli ID-Ga game ka kugu qoran" : "Geli ID game ka kugu qoran")}
                     required 
                     className="h-12 rounded-2xl bg-gray-50 dark:bg-slate-800 border-none px-5 font-bold"
                     value={gameDetails.playerID}
@@ -247,60 +272,55 @@ function CheckoutContent() {
                   />
                 </div>
 
-                {/* WhatsApp Number for both */}
-                {(isFreeFire || isBloodStrike) && (
-                  <div className="space-y-2">
-                    <Label className="text-sm font-bold dark:text-slate-200">WhatsApp Number</Label>
-                    <Input 
-                      type="tel"
-                      placeholder={isFreeFire ? "Geli number ka WhatsApp kaaga" : "Geli WhatsApp number kaaga"}
-                      required 
-                      className="h-12 rounded-2xl bg-gray-50 dark:bg-slate-800 border-none px-5 font-bold"
-                      value={gameDetails.whatsappNumber}
-                      onChange={(e) => setGameDetails({...gameDetails, whatsappNumber: e.target.value})}
-                    />
-                  </div>
-                )}
-
-                {/* Fallback for other games if any */}
-                {!isFreeFire && !isBloodStrike && (
-                  <div className="space-y-2">
-                    <Label className="text-sm font-bold dark:text-slate-200">Player ID / Account</Label>
-                    <Input 
-                      placeholder="Geli ID-gaaga halkan" 
-                      required 
-                      className="h-12 rounded-2xl bg-gray-50 dark:bg-slate-800 border-none px-5 font-bold"
-                      value={gameDetails.playerID}
-                      onChange={(e) => setGameDetails({...gameDetails, playerID: e.target.value})}
-                    />
-                  </div>
-                )}
+                <div className="space-y-2">
+                  <Label className="text-sm font-bold dark:text-slate-200">WhatsApp Number</Label>
+                  <Input 
+                    type="tel"
+                    placeholder="Geli WhatsApp number kaaga"
+                    required 
+                    className="h-12 rounded-2xl bg-gray-50 dark:bg-slate-800 border-none px-5 font-bold"
+                    value={gameDetails.whatsappNumber}
+                    onChange={(e) => setGameDetails({...gameDetails, whatsappNumber: e.target.value})}
+                  />
+                </div>
               </div>
 
-              <div className="space-y-2 pt-4 border-t dark:border-white/5">
-                <Label htmlFor="sender" className="text-sm font-bold flex items-center gap-2 text-primary">
-                  <CreditCard className="w-4 h-4" /> Lacag Diraha
-                </Label>
-                <Input 
-                  id="sender" 
-                  type="tel" 
-                  placeholder="Geli number ka lacagta kasoo direesid" 
-                  required 
-                  className="h-14 rounded-2xl bg-blue-50 dark:bg-blue-900/10 border-2 border-blue-100 dark:border-blue-500/20 focus-visible:ring-primary font-bold text-lg dark:text-white"
-                  value={gameDetails.senderNumber}
-                  onChange={(e) => setGameDetails({...gameDetails, senderNumber: e.target.value})}
-                />
-                <p className="text-[10px] text-muted-foreground dark:text-slate-500 font-medium italic">
-                  * Number-kan waxaa loo isticmaali doonaa in lagu hubiyo lacag bixintaada.
-                </p>
-              </div>
+              {!isBooyahPass && (
+                <div className="space-y-2 pt-4 border-t dark:border-white/5">
+                  <Label htmlFor="sender" className="text-sm font-bold flex items-center gap-2 text-primary">
+                    <CreditCard className="w-4 h-4" /> Lacag Diraha
+                  </Label>
+                  <Input 
+                    id="sender" 
+                    type="tel" 
+                    placeholder="Geli number ka lacagta kasoo direesid" 
+                    required 
+                    className="h-14 rounded-2xl bg-blue-50 dark:bg-blue-900/10 border-2 border-blue-100 dark:border-blue-500/20 focus-visible:ring-primary font-bold text-lg dark:text-white"
+                    value={gameDetails.senderNumber}
+                    onChange={(e) => setGameDetails({...gameDetails, senderNumber: e.target.value})}
+                  />
+                  <p className="text-[10px] text-muted-foreground dark:text-slate-500 font-medium italic">
+                    * Number-kan waxaa loo isticmaali doonaa in lagu hubiyo lacag bixintaada.
+                  </p>
+                </div>
+              )}
 
-              <Button 
-                type="submit" 
-                className="w-full h-14 rounded-2xl text-lg font-bold gap-2 shadow-lg shadow-primary/20 active:scale-95 transition-transform"
-              >
-                Continue to Payment <ChevronRight className="w-5 h-5" />
-              </Button>
+              {isBooyahPass ? (
+                <Button 
+                  type="button" 
+                  onClick={handleBooyahRedirect}
+                  className="w-full h-14 rounded-2xl text-lg font-bold gap-2 shadow-lg shadow-primary/20 active:scale-95 transition-transform"
+                >
+                  iibso <MessageCircle className="w-5 h-5" />
+                </Button>
+              ) : (
+                <Button 
+                  type="submit" 
+                  className="w-full h-14 rounded-2xl text-lg font-bold gap-2 shadow-lg shadow-primary/20 active:scale-95 transition-transform"
+                >
+                  Continue to Payment <ChevronRight className="w-5 h-5" />
+                </Button>
+              )}
             </form>
           </CardContent>
         </Card>
@@ -436,18 +456,20 @@ function CheckoutContent() {
           
           <h1 className="text-4xl font-headline font-bold mb-4 text-slate-900 dark:text-white">Waa Lagu guuleystay!</h1>
           <p className="text-base text-muted-foreground dark:text-slate-400 max-w-sm mb-10 leading-relaxed">
-            Dalabkaaga waa la diray. Sida ugu dhaqsiyaha badan ayaa lagugu adeegi doonnaa i.a, fadlan dulqaadka badi mahadsanid. Dalabkaaga waxaad Kala socon kartaa halkaan <span onClick={() => setActiveTab('orders')} className="text-primary font-bold cursor-pointer hover:underline">dalabyada</span>.
+            {isBooyahPass 
+              ? "WhatsApp ayaa laguu hagaajiyay si aad u dhamaystirto dalabkaaga. Fadlan halkaas kala xiriir Admin-ka."
+              : "Dalabkaaga waa la diray. Sida ugu dhaqsiyaha badan ayaa lagugu adeegi doonnaa i.a, fadlan dulqaadka badi mahadsanid. Dalabkaaga waxaad Kala socon kartaa halkaan."}
           </p>
 
           <div className="grid grid-cols-1 gap-3 w-full max-w-sm">
-            <Button 
-              className="h-14 rounded-2xl font-bold text-lg"
-              onClick={() => {
-                setActiveTab('orders');
-              }}
-            >
-              Eeg Dalabkaaga
-            </Button>
+            {!isBooyahPass && (
+              <Button 
+                className="h-14 rounded-2xl font-bold text-lg"
+                onClick={() => setActiveTab('orders')}
+              >
+                Eeg Dalabkaaga
+              </Button>
+            )}
             <Button 
               variant="ghost"
               className="h-12 rounded-2xl text-muted-foreground dark:text-slate-500"
