@@ -1,7 +1,7 @@
 'use client';
 
 import { useApp } from '@/lib/context';
-import { Trophy, Medal, Crown, User, Star } from 'lucide-react';
+import { Trophy, Medal, Crown, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
@@ -22,6 +22,7 @@ export default function RankingView() {
   const others = useMemo(() => sortedUsers.slice(3), [sortedUsers]);
 
   const userRank = useMemo(() => {
+    if (!user) return -1;
     return sortedUsers.findIndex(u => u.uid === user?.uid) + 1;
   }, [sortedUsers, user]);
 
@@ -86,7 +87,7 @@ export default function RankingView() {
               <div className="absolute -top-10 sm:-top-14 left-1/2 -translate-x-1/2 text-amber-500 animate-bounce">
                 <Crown className="w-8 h-8 sm:w-12 sm:h-12" fill="currentColor" />
               </div>
-              <div className="w-18 h-18 xs:w-20 xs:h-20 sm:w-32 sm:h-32 rounded-full overflow-hidden border-[4px] sm:border-[6px] border-amber-400 shadow-[0_0_40px_rgba(245,158,11,0.4)] bg-white dark:bg-slate-900 relative ring-4 ring-amber-400/20">
+              <div className="w-20 h-20 xs:w-24 xs:h-24 sm:w-32 sm:h-32 rounded-full overflow-hidden border-[4px] sm:border-[6px] border-amber-400 shadow-[0_0_40px_rgba(245,158,11,0.4)] bg-white dark:bg-slate-900 relative ring-4 ring-amber-400/20">
                 {top3[0].photoURL ? (
                   <Image src={top3[0].photoURL} alt="" fill className="object-cover" unoptimized />
                 ) : (
@@ -171,15 +172,14 @@ export default function RankingView() {
                 </div>
                 {u.gameUid && (
                   <p className="text-[8px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-wider truncate opacity-70">
-                    UID: {u.gameUid}
+                    ID: {u.gameUid}
                   </p>
                 )}
               </div>
 
               <div className="shrink-0">
                 <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-white/5 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl border border-slate-100 dark:border-white/5 shadow-inner">
-                  <Star size={12} className="text-amber-500 fill-amber-500 sm:w-4 sm:h-4" />
-                  <span className="text-xs sm:text-base font-bold text-slate-700 dark:text-slate-200">{u.points || 0}</span>
+                  <span className="text-xs sm:text-base font-bold text-slate-700 dark:text-slate-200">{u.points || 0} PTS</span>
                 </div>
               </div>
             </Card>
@@ -188,15 +188,15 @@ export default function RankingView() {
       </div>
 
       {/* Sticky User Position if not in Top 10-ish */}
-      {userRank > top3.length + others.length && user && (
+      {user && userRank > 0 && userRank > top3.length + others.length && (
          <div className="fixed bottom-24 left-4 right-4 z-50 animate-in slide-in-from-bottom-10 lg:bottom-12 lg:left-auto lg:right-10 lg:w-96">
            <Card className="rounded-2xl sm:rounded-[2.5rem] bg-slate-900 dark:bg-slate-900 text-white p-3 sm:p-5 flex items-center gap-4 shadow-[0_20px_50px_rgba(0,0,0,0.3)] border-none ring-1 ring-white/20">
               <div className="w-8 sm:w-10 text-center font-headline font-bold text-white/30 text-base sm:text-xl">
                 {userRank}
               </div>
               <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-white/10 overflow-hidden relative border border-white/20 shrink-0">
-                {userProfile?.photoURL ? (
-                  <Image src={userProfile.photoURL} alt="" fill className="object-cover" unoptimized />
+                {user.photoURL ? (
+                  <Image src={user.photoURL} alt="" fill className="object-cover" unoptimized />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-white/20"><User className="w-1/2 h-1/2" /></div>
                 )}
@@ -204,12 +204,11 @@ export default function RankingView() {
               <div className="flex-1 min-w-0">
                 <p className="font-bold text-xs sm:text-base truncate">Adiga (You)</p>
                 <p className="text-[8px] sm:text-[10px] font-bold text-white/40 uppercase tracking-widest truncate">
-                  {userProfile?.gameUid ? `UID: ${userProfile.gameUid}` : "Keep playing to rise!"}
+                  {user.gameUid ? `ID: ${user.gameUid}` : "Keep playing to rise!"}
                 </p>
               </div>
               <div className="text-right flex items-center gap-2 bg-white/10 px-3 sm:px-5 py-1.5 sm:py-2.5 rounded-xl sm:rounded-2xl">
-                 <Star className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-amber-400 fill-amber-400" />
-                 <span className="font-headline font-bold text-base sm:text-2xl">{userProfile?.points || 0}</span>
+                 <span className="font-headline font-bold text-base sm:text-2xl">{user.points || 0}</span>
               </div>
            </Card>
          </div>
