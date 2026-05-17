@@ -187,6 +187,12 @@ type UserProfile = {
   banned?: boolean;
 };
 
+type BannedInfo = {
+  name: string;
+  uid: string;
+  phone: string;
+};
+
 type AppContextType = {
   user: any;
   loading: boolean;
@@ -245,6 +251,9 @@ type AppContextType = {
   refreshAdminData: () => void;
   theme: 'light' | 'dark';
   toggleTheme: () => void;
+  isBannedModalOpen: boolean;
+  setIsBannedModalOpen: (open: boolean) => void;
+  bannedInfo: BannedInfo | null;
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -297,6 +306,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [isGlobalLoading, setIsGlobalLoading] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>(() => getCache(THEME_CACHE_KEY, 'light'));
   
+  const [isBannedModalOpen, setIsBannedModalOpen] = useState(false);
+  const [bannedInfo, setBannedInfo] = useState<BannedInfo | null>(null);
+
   const [syncStatus, setSyncStatus] = useState({
     settings: false,
     products: false,
@@ -474,7 +486,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setUserProfile(data);
       if (data) setCache(USER_CACHE_KEY, data);
       if (data?.banned) {
-        toast({ title: "Account Banned", description: "Your account has been suspended.", variant: "destructive" });
+        setBannedInfo({
+          name: data.name || "N/A",
+          uid: data.uid || user.uid,
+          phone: data.phoneNumber || "N/A"
+        });
+        setIsBannedModalOpen(true);
         logout();
       }
     });
@@ -809,7 +826,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       createOrder, postAccount, updateAccountPost, deleteAccountPost, deleteOrder, buyAccountPost, markNotificationsAsRead, markAdminNotificationsAsRead, updateOrderStatus, updateAccountPostStatus, 
       updateUserProfile, manageUser, deleteUser, saveGame, deleteGame, saveProduct, deleteProduct, saveEvent, deleteEvent, saveBanner, deleteBanner, savePaymentMethod, deletePaymentMethod, storeSettings, updateStoreSettings, 
       broadcastNotification, broadcastAdminNotification, messages, allChatSessions, chatTargetId, setChatTargetId, sendMessage, markMessagesAsRead, refreshAdminData,
-      theme, toggleTheme
+      theme, toggleTheme, isBannedModalOpen, setIsBannedModalOpen, bannedInfo
     }}>
       {children}
     </AppContext.Provider>

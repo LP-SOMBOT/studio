@@ -1,3 +1,4 @@
+
 import type {Metadata, Viewport} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
@@ -12,6 +13,7 @@ import SWRegistration from "@/components/layout/SWRegistration";
 import MainAppLayout from "@/components/layout/MainAppLayout";
 import { ErrorBoundary } from "@/components/layout/ErrorBoundary";
 import SplashScreen from "@/components/layout/SplashScreen";
+import BannedModal from "@/components/layout/BannedModal";
 
 export const metadata: Metadata = {
   title: 'Oskar Shop - Game Top-Up & Accounts',
@@ -61,6 +63,7 @@ export default function RootLayout({
               <SplashScreen />
               <GlobalLoading />
               <PWAInstaller />
+              <BannedModal />
               <NotificationGuard>
                 <OnboardingGuard>
                   <MainAppLayout>
