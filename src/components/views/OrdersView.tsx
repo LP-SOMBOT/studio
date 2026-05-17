@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useApp } from "@/lib/context";
@@ -174,11 +175,19 @@ function OrderCard({ order }: { order: any }) {
              )}
 
              {order.status === 'cancelled' && (
-               <div className="p-4 md:p-5 bg-red-50 dark:bg-red-500/10 rounded-2xl flex gap-3 items-center text-red-700 dark:text-red-400 text-[11px] md:text-[13px] font-bold border border-red-100 dark:border-red-500/20 shadow-sm">
-                  <ShieldAlert size={20} className="shrink-0" />
-                  <p className="leading-relaxed text-left">
-                    Dalabkaaga Waa Lagu guuldareystay fadlan hubi inaad bixisay lacagta, ama inuu saxanyahay Xogta aad Gelisay, Ama laxariir WhatsApp, Mahadsanid!
-                  </p>
+               <div className="p-4 md:p-5 bg-red-50 dark:bg-red-950/10 rounded-2xl flex flex-col gap-2 text-red-700 dark:text-red-400 border border-red-100 dark:border-red-900/20 shadow-sm">
+                  <div className="flex gap-3 items-center text-[11px] md:text-[13px] font-bold">
+                    <ShieldAlert size={20} className="shrink-0" />
+                    <p className="leading-relaxed text-left">
+                      Dalabkaaga Waa Lagu guuldareystay fadlan hubi inaad bixisay lacagta, ama inuu saxanyahay Xogta aad Gelisay, Ama laxariir WhatsApp, Mahadsanid!
+                    </p>
+                  </div>
+                  {order.cancellationReason && (
+                    <div className="mt-2 p-3 bg-white/50 dark:bg-black/20 rounded-xl border border-red-200/50 dark:border-red-800/30">
+                       <p className="text-[10px] uppercase font-black tracking-widest mb-1 opacity-60">Sababta Cancel-ka:</p>
+                       <p className="text-xs md:text-sm font-bold italic">"{order.cancellationReason}"</p>
+                    </div>
+                  )}
                </div>
              )}
           </div>

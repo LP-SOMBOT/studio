@@ -194,6 +194,7 @@ export default function AdminPage() {
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [selectedAccount, setSelectedAccount] = useState<any>(null);
   const [pendingOrderStatus, setPendingStatus] = useState<string>("");
+  const [cancellationReason, setCancellationReason] = useState<string>("");
   const [pendingAccountStatus, setPendingAccountStatus] = useState<string>("");
 
   const [deleteTarget, setDeleteTarget] = useState<{ id: string, type: 'user' | 'game' | 'product' | 'event' | 'banner' | 'account' | 'order' | 'payment' } | null>(null);
@@ -316,6 +317,7 @@ export default function AdminPage() {
   const handleOpenOrderDialog = (order: any) => {
     setSelectedOrder(order);
     setPendingStatus(order.status);
+    setCancellationReason(order.cancellationReason || "");
     setIsOrderDetailOpen(true);
   };
 
@@ -448,7 +450,7 @@ export default function AdminPage() {
     if (!selectedOrder || !pendingOrderStatus) return;
     setIsSavingStatus(true);
     try {
-      await updateOrderStatus(selectedOrder.id, pendingOrderStatus);
+      await updateOrderStatus(selectedOrder.id, pendingOrderStatus, pendingOrderStatus === 'cancelled' ? cancellationReason : undefined);
       toast({ title: `Order set to ${pendingOrderStatus}` });
       setIsOrderDetailOpen(false);
     } finally {
@@ -1277,6 +1279,19 @@ export default function AdminPage() {
                        {["pending", "processing", "successful", "cancelled"].map(s => <SelectItem key={s} value={s} className="rounded-lg">{s.toUpperCase()}</SelectItem>)}
                     </SelectContent>
                  </Select>
+                 
+                 {pendingOrderStatus === 'cancelled' && (
+                   <div className="space-y-2 pt-4 animate-in slide-in-from-top-2">
+                     <Label className="text-xs font-bold text-red-500 uppercase tracking-widest">Reason for Cancellation</Label>
+                     <Textarea 
+                       placeholder="E.g. Payment not received, wrong Player ID..." 
+                       value={cancellationReason}
+                       onChange={(e) => setCancellationReason(e.target.value)}
+                       className="rounded-xl bg-slate-100 dark:bg-slate-800 border-none font-bold min-h-[80px]"
+                     />
+                     <p className="text-[10px] text-muted-foreground italic">* This reason will be shown to the user.</p>
+                   </div>
+                 )}
               </div>
            </div>
            
@@ -1311,7 +1326,7 @@ export default function AdminPage() {
                   </div>
                   <div>
                     <p className="text-xs font-bold text-amber-900 dark:text-amber-300">Staff Handling</p>
-                    <p className="text-sm font-medium text-amber-700 dark:text-amber-400"><span className="font-bold">{selectedAccount.processedBy.name}</span> is currently reviewing this listing.</p>
+                    <p className="text-sm font-medium text-amber-700 dark:text-amber-400"><span className="font-bold">{selectedOrder.processedBy.name}</span> is currently reviewing this listing.</p>
                   </div>
                 </div>
               )}

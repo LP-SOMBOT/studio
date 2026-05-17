@@ -61,6 +61,7 @@ type Order = {
   items: CartItem[];
   total: number;
   status: 'pending' | 'processing' | 'successful' | 'cancelled';
+  cancellationReason?: string;
   createdAt: number;
   processedAt?: number;
   completedAt?: number;
@@ -223,7 +224,7 @@ type AppContextType = {
   buyAccountPost: (post: AccountPost) => void;
   markNotificationsAsRead: (notifId?: string) => Promise<void>;
   markAdminNotificationsAsRead: (notifId?: string) => Promise<void>;
-  updateOrderStatus: (orderId: string, status: string) => Promise<void>;
+  updateOrderStatus: (orderId: string, status: string, cancellationReason?: string) => Promise<void>;
   updateAccountPostStatus: (postId: string, status: string) => Promise<void>;
   updateUserProfile: (updates: Partial<UserProfile>) => Promise<void>;
   manageUser: (uid: string, updates: Partial<UserProfile>) => Promise<void>;
@@ -657,28 +658,47 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     await set(ref(rtdb, `adminNotifications/${nid}`), { id: nid, title, body, createdAt: Date.now(), type: skipPush ? 'assignment_update' : 'system_alert', linkTo: '#notifications', readBy: {} });
   };
 
-  const updateOrderStatus = async (oid: string, status: string) => {
+  const updateOrderStatus = async (oid: string, status: string, cancellationReason?: string) => {
     if (!rtdb || !enhancedUser) return;
     const orderSnap = await get(ref(rtdb, `orders/${oid}`));
     const orderData = orderSnap.val();
     if (!orderData) return;
     const oldStatus = orderData.status; const userId = orderData.userId; const items = orderData.items || [];
     const accountItem = items.find((i: any) => i.gameId === 'accounts' || i.gameId === 'account');
+    
     const assignmentUpdate: any = { status };
-    if (oldStatus === 'pending' && (status === 'processing' || status === 'successful')) {
+    if (status === 'cancelled' && cancellationReason) {
+      assignmentUpdate.cancellationReason = cancellationReason;
+    }
+
+    if (oldStatus === 'pending' && (status === 'processing' || status === 'successful' || status === 'cancelled')) {
       assignmentUpdate.processedBy = { uid: enhancedUser.uid, name: enhancedUser.name, photoURL: enhancedUser.photoURL || "" };
       assignmentUpdate.processedAt = Date.now();
       broadcastAdminNotification(`Order Assigned! 🤝`, `${enhancedUser.name} is now handling Order #${oid.toUpperCase()}`, true);
     }
     if ((status === 'successful' || status === 'cancelled') && oldStatus !== status) assignmentUpdate.completedAt = Date.now();
+    
     await update(ref(rtdb, `orders/${oid}`), assignmentUpdate);
+    
     if (status === 'successful') {
       if (accountItem && accountItem.id) await update(ref(rtdb, `accountPosts/${accountItem.id}`), { sold: true });
       if (userId && oldStatus !== 'successful') {
         await update(ref(rtdb, `users/${userId}`), { points: increment(1) });
         broadcastNotification("Order Successful! ✅", "Dalabkaaga waa lagu guuleystay. Waxaad heshay 1 point!", userId);
       }
-    } else if (oldStatus === 'successful' && status !== 'successful') {
+    } else if (status === 'cancelled') {
+      if (accountItem && accountItem.id) await update(ref(rtdb, `accountPosts/${accountItem.id}`), { sold: false });
+      if (userId) {
+        if (oldStatus === 'successful') {
+          await update(ref(rtdb, `users/${userId}`), { points: increment(-1) });
+        }
+        broadcastNotification(
+          "Dalabka waa la kansalay ❌", 
+          `Dalabkaagii #${oid.toUpperCase()} waa la kansalay. ${cancellationReason ? `Sabab: ${cancellationReason}` : ''}`, 
+          userId
+        );
+      }
+    } else if (oldStatus === 'successful' && status !== 'successful' && status !== 'cancelled') {
       if (accountItem && accountItem.id) await update(ref(rtdb, `accountPosts/${accountItem.id}`), { sold: false });
       if (userId) {
         await update(ref(rtdb, `users/${userId}`), { points: increment(-1) });
