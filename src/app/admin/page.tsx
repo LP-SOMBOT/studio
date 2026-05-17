@@ -60,7 +60,10 @@ import {
   Globe,
   Bell,
   ChevronLeft,
-  CalendarDays
+  CalendarDays,
+  CreditCardIcon,
+  Trophy,
+  Megaphone
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -210,6 +213,13 @@ export default function AdminPage() {
     tiktokUrl: ""
   });
 
+  const [appStatusForm, setAppStatusForm] = useState({
+    offline: false,
+    offlineTitle: "",
+    offlineBody: "",
+    offlineImageUrl: ""
+  });
+
   useEffect(() => {
     if (!loading && !user?.isAdmin) {
       router.replace('/');
@@ -217,12 +227,22 @@ export default function AdminPage() {
   }, [user, loading, router]);
 
   useEffect(() => {
-    if (storeSettings?.helpLinks) {
-      setHelpLinksForm({
-        tutorialUrl: storeSettings.helpLinks.tutorialUrl || "",
-        whatsappNumber: storeSettings.helpLinks.whatsappNumber || "",
-        tiktokUrl: storeSettings.helpLinks.tiktokUrl || ""
-      });
+    if (storeSettings) {
+      if (storeSettings.helpLinks) {
+        setHelpLinksForm({
+          tutorialUrl: storeSettings.helpLinks.tutorialUrl || "",
+          whatsappNumber: storeSettings.helpLinks.whatsappNumber || "",
+          tiktokUrl: storeSettings.helpLinks.tiktokUrl || ""
+        });
+      }
+      if (storeSettings.appStatus) {
+        setAppStatusForm({
+          offline: storeSettings.appStatus.offline || false,
+          offlineTitle: storeSettings.appStatus.offlineTitle || "",
+          offlineBody: storeSettings.appStatus.offlineBody || "",
+          offlineImageUrl: storeSettings.appStatus.offlineImageUrl || ""
+        });
+      }
     }
   }, [storeSettings]);
 
@@ -362,6 +382,16 @@ export default function AdminPage() {
     }
   };
 
+  const handleSaveAppStatus = async () => {
+    setIsUploading(true);
+    try {
+      await updateStoreSettings({ appStatus: appStatusForm });
+      toast({ title: "App status updated" });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const handleAdjustPoints = async (type: 'credit' | 'debit') => {
     if (!selectedUser || !pointAdjustment) return;
     const amount = parseInt(pointAdjustment);
@@ -404,7 +434,7 @@ export default function AdminPage() {
     }
   };
 
-  const handleImageUpload = async (file: File, target: 'game' | 'product' | 'event' | 'banner' | 'offline' | 'logo') => {
+  const handleImageUpload = async (file: File, target: 'game' | 'product' | 'event' | 'banner' | 'offline' | 'logo' | 'onboarding') => {
     setIsUploading(true);
     try {
       const url = await uploadToImgbb(file);
@@ -412,13 +442,27 @@ export default function AdminPage() {
       if (target === 'product') setProductForm(p => ({ ...p, thumbnail: url }));
       if (target === 'event') setEventForm(e => ({ ...e, thumbnailUrl: url }));
       if (target === 'banner') setBannerForm(b => ({ ...b, imageUrl: url }));
-      if (target === 'offline') updateStoreSettings({ appStatus: { ...storeSettings.appStatus, offlineImageUrl: url } });
+      if (target === 'offline') setAppStatusForm(a => ({ ...a, offlineImageUrl: url }));
       if (target === 'logo') updateStoreSettings({ logo: url });
+      if (target === 'onboarding') {
+          // This usually takes an index, handled separately in UI
+          return url;
+      }
       toast({ title: "Image Uploaded" });
     } catch (e) { 
       toast({ title: "Upload Failed", variant: "destructive" }); 
     } finally { 
       setIsUploading(false); 
+    }
+  };
+
+  const handleOnboardingImageUpload = async (file: File, index: number) => {
+    const url = await handleImageUpload(file, 'onboarding');
+    if (url) {
+      const newImages = [...(storeSettings.onboardingImages || ['', '', ''])];
+      newImages[index] = url;
+      updateStoreSettings({ onboardingImages: newImages });
+      toast({ title: `Onboarding Step ${index + 1} Image Updated` });
     }
   };
 
@@ -823,6 +867,168 @@ export default function AdminPage() {
                      </div>
                    </AccordionContent>
                  </AccordionItem>
+
+                 <AccordionItem value="payment" className="border-none bg-white dark:bg-slate-900 rounded-[1.5rem] sm:rounded-[2rem] px-4 sm:px-8 shadow-lg">
+                   <AccordionTrigger className="hover:no-underline">
+                     <div className="flex items-center gap-3 sm:gap-4 text-left">
+                       <div className="p-2 sm:p-3 bg-green-50 dark:bg-green-500/10 text-green-500 rounded-xl sm:rounded-2xl shrink-0"><CreditCardIcon size={20} /></div>
+                       <div><h4 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white">Payment Configuration</h4><p className="text-[10px] sm:text-xs text-muted-foreground">Recipient numbers for EVC/ZAAD</p></div>
+                     </div>
+                   </AccordionTrigger>
+                   <AccordionContent className="pb-6 sm:pb-8 space-y-6">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-bold uppercase text-slate-400">Primary Payment Number (EVC Plus / ZAAD)</Label>
+                        <Input 
+                          placeholder="e.g. 613982172" 
+                          defaultValue={storeSettings.paymentNumber} 
+                          onBlur={e => updateStoreSettings({ paymentNumber: e.target.value })} 
+                          className="rounded-xl dark:bg-slate-800 border-none font-bold h-14 text-lg" 
+                        />
+                        <p className="text-[10px] text-muted-foreground italic px-2">Used for standard top-ups and listing fee payments.</p>
+                      </div>
+                   </AccordionContent>
+                 </AccordionItem>
+
+                 <AccordionItem value="ticker" className="border-none bg-white dark:bg-slate-900 rounded-[1.5rem] sm:rounded-[2rem] px-4 sm:px-8 shadow-lg">
+                   <AccordionTrigger className="hover:no-underline">
+                     <div className="flex items-center gap-3 sm:gap-4 text-left">
+                       <div className="p-2 sm:p-3 bg-amber-50 dark:bg-amber-500/10 text-amber-500 rounded-xl sm:rounded-2xl shrink-0"><Megaphone size={20} /></div>
+                       <div><h4 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white">Announcement Ticker</h4><p className="text-[10px] sm:text-xs text-muted-foreground">Scrolling text on homepage</p></div>
+                     </div>
+                   </AccordionTrigger>
+                   <AccordionContent className="pb-6 sm:pb-8 space-y-6">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-bold uppercase text-slate-400">Ticker Message</Label>
+                        <Textarea 
+                          placeholder="Enter scrolling announcement..." 
+                          defaultValue={storeSettings.announcementTicker} 
+                          onBlur={e => updateStoreSettings({ announcementTicker: e.target.value })} 
+                          className="rounded-xl dark:bg-slate-800 border-none font-bold min-h-[100px]" 
+                        />
+                      </div>
+                   </AccordionContent>
+                 </AccordionItem>
+
+                 <AccordionItem value="app-status" className="border-none bg-white dark:bg-slate-900 rounded-[1.5rem] sm:rounded-[2rem] px-4 sm:px-8 shadow-lg">
+                   <AccordionTrigger className="hover:no-underline">
+                     <div className="flex items-center gap-3 sm:gap-4 text-left">
+                       <div className="p-2 sm:p-3 bg-red-50 dark:bg-red-500/10 text-red-500 rounded-xl sm:rounded-2xl shrink-0"><MonitorOff size={20} /></div>
+                       <div><h4 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white">App Status (Offline Mode)</h4><p className="text-[10px] sm:text-xs text-muted-foreground">Maintenance mode and updates</p></div>
+                     </div>
+                   </AccordionTrigger>
+                   <AccordionContent className="pb-6 sm:pb-8 space-y-6">
+                      <div className="flex items-center justify-between p-4 bg-red-50 dark:bg-red-950/10 rounded-2xl border border-red-100 dark:border-red-900/20">
+                        <div>
+                           <p className="font-bold text-red-700 dark:text-red-400">Maintenance Mode</p>
+                           <p className="text-[10px] text-red-600/70 dark:text-red-400/50 uppercase font-bold">Disable store for users</p>
+                        </div>
+                        <Switch 
+                          checked={appStatusForm.offline} 
+                          onCheckedChange={val => setAppStatusForm(prev => ({...prev, offline: val}))} 
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-4">
+                        <div className="space-y-2">
+                           <Label className="text-[10px] font-bold uppercase text-slate-400">Offline Title</Label>
+                           <Input 
+                            value={appStatusForm.offlineTitle} 
+                            onChange={e => setAppStatusForm(prev => ({...prev, offlineTitle: e.target.value}))} 
+                            className="rounded-xl dark:bg-slate-800 border-none font-bold" 
+                           />
+                        </div>
+                        <div className="space-y-2">
+                           <Label className="text-[10px] font-bold uppercase text-slate-400">Offline Message</Label>
+                           <Textarea 
+                            value={appStatusForm.offlineBody} 
+                            onChange={e => setAppStatusForm(prev => ({...prev, offlineBody: e.target.value}))} 
+                            className="rounded-xl dark:bg-slate-800 border-none font-bold min-h-[80px]" 
+                           />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-bold uppercase text-slate-400">Maintenance Image</Label>
+                        <div className="flex items-center gap-4">
+                           <div className="w-32 h-20 rounded-xl bg-slate-100 dark:bg-slate-800 relative overflow-hidden border-2 border-dashed border-slate-200 dark:border-white/5 shrink-0 flex items-center justify-center">
+                              {appStatusForm.offlineImageUrl ? <Image src={appStatusForm.offlineImageUrl} alt="" fill className="object-cover" unoptimized /> : <ImageIcon className="text-slate-300" />}
+                           </div>
+                           <Input type="file" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'offline')} className="flex-1 rounded-xl h-10" />
+                        </div>
+                      </div>
+
+                      <Button onClick={handleSaveAppStatus} disabled={isUploading} className="w-full h-12 rounded-2xl font-bold bg-red-600 hover:bg-red-700">
+                         {isUploading ? <Loader2 className="animate-spin" /> : "Save Offline Settings"}
+                      </Button>
+                   </AccordionContent>
+                 </AccordionItem>
+
+                 <AccordionItem value="help" className="border-none bg-white dark:bg-slate-900 rounded-[1.5rem] sm:rounded-[2rem] px-4 sm:px-8 shadow-lg">
+                   <AccordionTrigger className="hover:no-underline">
+                     <div className="flex items-center gap-3 sm:gap-4 text-left">
+                       <div className="p-2 sm:p-3 bg-blue-50 dark:bg-blue-500/10 text-blue-500 rounded-xl sm:rounded-2xl shrink-0"><Info size={20} /></div>
+                       <div><h4 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white">Support & Links</h4><p className="text-[10px] sm:text-xs text-muted-foreground">TikTok, WhatsApp, and Tutorials</p></div>
+                     </div>
+                   </AccordionTrigger>
+                   <AccordionContent className="pb-6 sm:pb-8 space-y-6">
+                      <div className="space-y-4">
+                        <div className="space-y-1">
+                           <Label className="text-[10px] font-bold uppercase text-slate-400 ml-2">TikTok Profile URL</Label>
+                           <Input 
+                            value={helpLinksForm.tiktokUrl} 
+                            onChange={e => setHelpLinksForm(prev => ({...prev, tiktokUrl: e.target.value}))} 
+                            placeholder="https://tiktok.com/@yourname" 
+                            className="rounded-xl dark:bg-slate-800 border-none font-bold h-12" 
+                           />
+                        </div>
+                        <div className="space-y-1">
+                           <Label className="text-[10px] font-bold uppercase text-slate-400 ml-2">WhatsApp Support Number</Label>
+                           <Input 
+                            value={helpLinksForm.whatsappNumber} 
+                            onChange={e => setHelpLinksForm(prev => ({...prev, whatsappNumber: e.target.value}))} 
+                            placeholder="e.g. 252613982172" 
+                            className="rounded-xl dark:bg-slate-800 border-none font-bold h-12" 
+                           />
+                        </div>
+                        <div className="space-y-1">
+                           <Label className="text-[10px] font-bold uppercase text-slate-400 ml-2">Tutorial / Video URL</Label>
+                           <Input 
+                            value={helpLinksForm.tutorialUrl} 
+                            onChange={e => setHelpLinksForm(prev => ({...prev, tutorialUrl: e.target.value}))} 
+                            placeholder="https://youtube.com/..." 
+                            className="rounded-xl dark:bg-slate-800 border-none font-bold h-12" 
+                           />
+                        </div>
+                        <Button onClick={handleSaveHelpLinks} disabled={isUploading} className="w-full h-12 rounded-2xl font-bold">
+                           {isUploading ? <Loader2 className="animate-spin" /> : "Save Support Links"}
+                        </Button>
+                      </div>
+                   </AccordionContent>
+                 </AccordionItem>
+
+                 <AccordionItem value="onboarding" className="border-none bg-white dark:bg-slate-900 rounded-[1.5rem] sm:rounded-[2rem] px-4 sm:px-8 shadow-lg">
+                   <AccordionTrigger className="hover:no-underline">
+                     <div className="flex items-center gap-3 sm:gap-4 text-left">
+                       <div className="p-2 sm:p-3 bg-purple-50 dark:bg-purple-500/10 text-purple-500 rounded-xl sm:rounded-2xl shrink-0"><SmartphoneIcon size={20} /></div>
+                       <div><h4 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white">Onboarding & Visuals</h4><p className="text-[10px] sm:text-xs text-muted-foreground">PWA Splash and intro images</p></div>
+                     </div>
+                   </AccordionTrigger>
+                   <AccordionContent className="pb-6 sm:pb-8 space-y-6">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                         {[0, 1, 2].map(idx => (
+                           <div key={idx} className="space-y-3">
+                              <Label className="text-[10px] font-bold uppercase text-slate-400 text-center block">Onboarding Step {idx + 1}</Label>
+                              <div className="aspect-[3/4] rounded-2xl bg-slate-100 dark:bg-slate-800 relative overflow-hidden border-2 border-dashed border-slate-200 dark:border-white/5 flex items-center justify-center">
+                                 {storeSettings.onboardingImages?.[idx] ? (
+                                   <Image src={storeSettings.onboardingImages[idx]} alt="" fill className="object-cover" unoptimized />
+                                 ) : <ImageIcon className="text-slate-300" />}
+                              </div>
+                              <Input type="file" onChange={e => e.target.files?.[0] && handleOnboardingImageUpload(e.target.files[0], idx)} className="h-8 text-[10px] rounded-lg" />
+                           </div>
+                         ))}
+                      </div>
+                   </AccordionContent>
+                 </AccordionItem>
               </Accordion>
             </div>
           )}
@@ -908,7 +1114,7 @@ export default function AdminPage() {
               </div>
 
               <div className="space-y-4 pt-4">
-                 <Label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Update Order Status</Label>
+                 <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Update Order Status</h4>
                  <Select value={pendingOrderStatus} onValueChange={setPendingStatus}>
                     <SelectTrigger className="h-12 rounded-xl border-none bg-slate-100 dark:bg-slate-800 font-bold"><SelectValue /></SelectTrigger>
                     <SelectContent className="rounded-xl">
@@ -999,7 +1205,7 @@ export default function AdminPage() {
              </div>
 
              <div className="space-y-4">
-                <Label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Update Listing Status</Label>
+                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Update Listing Status</h4>
                 <Select value={pendingAccountStatus} onValueChange={setPendingAccountStatus}>
                    <SelectTrigger className="h-12 rounded-xl border-none bg-slate-100 dark:bg-slate-800 font-bold"><SelectValue /></SelectTrigger>
                    <SelectContent className="rounded-xl">
