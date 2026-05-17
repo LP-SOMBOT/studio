@@ -80,9 +80,6 @@ export default function GamesView() {
               <h1 className="text-3xl font-headline font-bold text-slate-900 dark:text-white leading-tight">
                 {selectedGame ? selectedGame.title : "Game Store"}
               </h1>
-              <p className="text-muted-foreground font-medium mt-1">
-                {selectedGame ? `Doorashooyinka ${selectedGame.title}` : "Dooro game-ka aad rabto inaad top-up ka dhigato."}
-              </p>
             </div>
           </div>
         </div>
