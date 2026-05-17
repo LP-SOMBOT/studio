@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -445,7 +446,6 @@ export default function AdminPage() {
       if (target === 'offline') setAppStatusForm(a => ({ ...a, offlineImageUrl: url }));
       if (target === 'logo') updateStoreSettings({ logo: url });
       if (target === 'onboarding') {
-          // This usually takes an index, handled separately in UI
           return url;
       }
       toast({ title: "Image Uploaded" });
@@ -868,6 +868,42 @@ export default function AdminPage() {
                    </AccordionContent>
                  </AccordionItem>
 
+                 <AccordionItem value="banners" className="border-none bg-white dark:bg-slate-900 rounded-[1.5rem] sm:rounded-[2rem] px-4 sm:px-8 shadow-lg">
+                   <AccordionTrigger className="hover:no-underline">
+                     <div className="flex items-center gap-3 sm:gap-4 text-left">
+                       <div className="p-2 sm:p-3 bg-blue-50 dark:bg-blue-500/10 text-blue-500 rounded-xl sm:rounded-2xl shrink-0"><ImageIcon size={20} /></div>
+                       <div><h4 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white">Hero Slider Banners</h4><p className="text-[10px] sm:text-xs text-muted-foreground">Main slider images management</p></div>
+                     </div>
+                   </AccordionTrigger>
+                   <AccordionContent className="pb-6 sm:pb-8 space-y-6">
+                     <div className="grid grid-cols-1 gap-4">
+                       {banners.map(banner => (
+                         <Card key={banner.id} className="relative aspect-[21/9] rounded-2xl overflow-hidden border dark:border-white/5 group shadow-sm bg-slate-50 dark:bg-slate-800">
+                           <Image src={banner.imageUrl} alt="" fill className="object-cover" unoptimized />
+                           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
+                              <Button size="icon" variant="destructive" className="h-12 w-12 rounded-full shadow-xl" onClick={() => confirmDelete(banner.id, 'banner')}>
+                                 <Trash2 size={24} />
+                              </Button>
+                           </div>
+                           {banner.linkTo && (
+                             <div className="absolute bottom-2 left-2 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold text-white flex items-center gap-1">
+                               <ExternalLink size={10} /> {banner.linkTo}
+                             </div>
+                           )}
+                         </Card>
+                       ))}
+                       <Button 
+                         variant="outline" 
+                         onClick={() => { setBannerForm({ imageUrl: "", linkTo: "" }); setIsBannerDialogOpen(true); }}
+                         className="h-20 rounded-2xl border-2 border-dashed border-slate-200 dark:border-white/10 flex flex-col gap-1 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
+                       >
+                         <PlusCircle size={24} className="text-primary" />
+                         <span className="text-xs font-bold uppercase tracking-widest">Add Promotion Banner</span>
+                       </Button>
+                     </div>
+                   </AccordionContent>
+                 </AccordionItem>
+
                  <AccordionItem value="payment" className="border-none bg-white dark:bg-slate-900 rounded-[1.5rem] sm:rounded-[2rem] px-4 sm:px-8 shadow-lg">
                    <AccordionTrigger className="hover:no-underline">
                      <div className="flex items-center gap-3 sm:gap-4 text-left">
@@ -1049,7 +1085,6 @@ export default function AdminPage() {
            </div>
            
            <div className="p-6 sm:p-8 space-y-6 max-h-[70vh] overflow-y-auto scrollbar-hide">
-              {/* Handling Admin Notification */}
               {selectedOrder?.processedBy && selectedOrder.processedBy.uid !== user?.uid && (
                 <div className="p-4 bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 rounded-2xl flex items-center gap-4 animate-in fade-in zoom-in">
                   <div className="w-12 h-12 rounded-full overflow-hidden relative shrink-0 border-2 border-indigo-200">
@@ -1148,7 +1183,6 @@ export default function AdminPage() {
           </div>
 
           <div className="p-6 sm:p-8 space-y-6 max-h-[70vh] overflow-y-auto scrollbar-hide">
-              {/* Handling Admin Notification */}
               {selectedAccount?.processedBy && selectedAccount.processedBy.uid !== user?.uid && (
                 <div className="p-4 bg-amber-50 dark:bg-amber-500/10 border border-amber-100 dark:border-amber-500/20 rounded-2xl flex items-center gap-4 animate-in fade-in zoom-in">
                   <div className="w-12 h-12 rounded-full overflow-hidden relative shrink-0 border-2 border-amber-200">
@@ -1343,6 +1377,35 @@ export default function AdminPage() {
               <Button type="submit" disabled={isUploading} className="w-full h-14 rounded-2xl font-bold shadow-xl shadow-primary/20">{isUploading ? <Loader2 className="animate-spin" /> : 'Save Live Event'}</Button>
            </form>
          </DialogContent>
+      </Dialog>
+
+      <Dialog open={isBannerDialogOpen} onOpenChange={setIsBannerDialogOpen}>
+        <DialogContent className="max-w-md w-[95vw] rounded-[2rem] p-0 overflow-hidden border-none shadow-2xl bg-white dark:bg-slate-900">
+           <div className="bg-primary p-6 text-white"><DialogTitle className="text-xl font-headline font-bold">Add Promotion Banner</DialogTitle></div>
+           <div className="p-6 space-y-6">
+              <div className="space-y-2">
+                 <Label className="text-xs font-bold uppercase text-slate-400">Banner Image</Label>
+                 <div className="flex items-center gap-4">
+                    <div className="w-24 h-14 rounded-xl bg-slate-50 dark:bg-slate-800 relative overflow-hidden shrink-0 border border-dashed border-slate-300 dark:border-white/10">
+                       {bannerForm.imageUrl ? <Image src={bannerForm.imageUrl} alt="" fill className="object-cover" unoptimized /> : <ImageIcon className="m-auto absolute inset-0 text-slate-300" />}
+                    </div>
+                    <Input type="file" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'banner')} className="flex-1 rounded-xl h-10" />
+                 </div>
+              </div>
+              <div className="space-y-2">
+                 <Label className="text-xs font-bold uppercase text-slate-400">Redirect Link (Optional)</Label>
+                 <Input 
+                  placeholder="e.g. #games-xyz" 
+                  value={bannerForm.linkTo} 
+                  onChange={e => setBannerForm({...bannerForm, linkTo: e.target.value})} 
+                  className="rounded-xl h-12" 
+                 />
+              </div>
+              <Button onClick={handleSaveBanner} disabled={isUploading || !bannerForm.imageUrl} className="w-full h-14 rounded-2xl font-bold shadow-xl shadow-primary/20">
+                 {isUploading ? <Loader2 className="animate-spin" /> : 'Publish Banner'}
+              </Button>
+           </div>
+        </DialogContent>
       </Dialog>
 
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}><DialogContent className="max-w-sm w-[90vw] rounded-[1.5rem] bg-white dark:bg-slate-900"><DialogHeader><DialogTitle className="flex items-center gap-2 text-red-500"><ShieldAlert /> Warning</DialogTitle><DialogDescription className="font-bold">Ma hubtaa inaad tirtirto shaygan? Tallaabadan lagama noqon karo.</DialogDescription></DialogHeader><DialogFooter className="gap-2 pt-4 flex-col sm:flex-row"><Button variant="ghost" onClick={() => setIsDeleteDialogOpen(false)} className="rounded-xl flex-1 h-12">Dib u noqo</Button><Button variant="destructive" onClick={executeDelete} className="rounded-xl flex-1 h-12">Haa, Tirtir</Button></DialogFooter></DialogContent></Dialog>
