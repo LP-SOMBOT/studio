@@ -75,12 +75,12 @@
       "type": "object",
       "properties": {
         "title": { "type": "string" },
-        "description": { "type": "string" },
+        "shortDescription": { "type": "string" },
+        "content": { "type": "string" },
         "thumbnailUrl": { "type": "string" },
         "type": { "type": "string", "enum": ["freefire_event", "general"] },
         "active": { "type": "boolean" },
-        "startDate": { "type": "string" },
-        "endDate": { "type": "string" }
+        "expiresAt": { "type": "number" }
       }
     }
   },

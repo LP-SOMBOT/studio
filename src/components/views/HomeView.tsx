@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import AnnouncementTicker from "@/components/home/AnnouncementTicker";
 import HeroSlider from "@/components/home/HeroSlider";
 import { Button } from "@/components/ui/button";
@@ -21,18 +21,22 @@ import {
   Star,
   Gamepad2,
   Calendar,
-  ShoppingBag
+  ShoppingBag,
+  Clock
 } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export default function HomeView() {
   const { storeSettings, games, events, setActiveTab, isInitialLoading } = useApp();
   const [localDismiss, setLocalDismiss] = useState(false);
+  const router = useRouter();
 
   const isVisible = storeSettings?.isLive && !localDismiss;
 
   const activeEvents = useMemo(() => {
-    return (events || []).filter(e => e.active && e.type === 'freefire_event');
+    const now = Date.now();
+    return (events || []).filter(e => e.active && (!e.expiresAt || e.expiresAt > now));
   }, [events]);
 
   if (isInitialLoading) {
@@ -136,28 +140,7 @@ export default function HomeView() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
               {activeEvents.map((event) => (
-                <Card key={event.id} className="group overflow-hidden rounded-[2.5rem] lg:rounded-[3rem] border-none shadow-xl bg-white dark:bg-slate-900 transition-all hover:shadow-2xl hover:-translate-y-2">
-                  <div className="relative aspect-[16/9] w-full">
-                    <Image src={event.thumbnailUrl || 'https://picsum.photos/seed/event/600/400'} alt={event.title} fill className="object-cover group-hover:scale-110 transition-transform duration-1000" unoptimized />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-                    <div className="absolute bottom-6 left-6 right-6">
-                      <Badge className="bg-primary text-white border-none rounded-full px-4 py-1.5 text-[10px] lg:text-[11px] font-bold mb-3 uppercase tracking-[0.2em]">
-                        FREE FIRE EVENT
-                      </Badge>
-                      <h3 className="text-white font-headline font-bold text-xl lg:text-2xl leading-tight">{event.title}</h3>
-                    </div>
-                  </div>
-                  <div className="p-8">
-                    <p className="text-sm lg:text-base text-muted-foreground line-clamp-3 leading-relaxed mb-6 font-medium">{event.description}</p>
-                    <div className="flex items-center justify-between pt-6 border-t border-slate-50 dark:border-white/5">
-                      <div className="flex items-center gap-2 text-xs lg:text-sm font-bold text-primary">
-                        <Calendar className="w-5 h-5" />
-                        Active Now
-                      </div>
-                      <Button variant="ghost" className="rounded-full h-10 lg:h-12 px-6 font-bold text-xs lg:text-sm hover:bg-primary/10" onClick={() => setActiveTab('games')}>Join Now <ChevronRight className="w-4 h-4 ml-1" /></Button>
-                    </div>
-                  </div>
-                </Card>
+                <EventCard key={event.id} event={event} />
               ))}
             </div>
           </section>
@@ -182,6 +165,82 @@ export default function HomeView() {
         </section>
       </main>
     </div>
+  );
+}
+
+function EventCard({ event }: { event: any }) {
+  const router = useRouter();
+  const [timeLeft, setTimeLeft] = useState<string>("");
+
+  useEffect(() => {
+    if (!event.expiresAt) return;
+
+    const updateTimer = () => {
+      const now = Date.now();
+      const diff = event.expiresAt - now;
+
+      if (diff <= 0) {
+        setTimeLeft("Dhamaaday");
+        return;
+      }
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      if (days > 0) {
+        setTimeLeft(`${days} Maalin ${hours}:${minutes}:${seconds}`);
+      } else {
+        setTimeLeft(`${hours}:${minutes}:${seconds}`);
+      }
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, [event.expiresAt]);
+
+  return (
+    <Card className="group overflow-hidden rounded-[2.5rem] lg:rounded-[3rem] border-none shadow-xl bg-white dark:bg-slate-900 transition-all hover:shadow-2xl hover:-translate-y-2">
+      <div className="relative aspect-[16/9] w-full">
+        <Image src={event.thumbnailUrl || 'https://picsum.photos/seed/event/600/400'} alt={event.title} fill className="object-cover group-hover:scale-110 transition-transform duration-1000" unoptimized />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+        <div className="absolute bottom-6 left-6 right-6">
+          <Badge className="bg-primary text-white border-none rounded-full px-4 py-1.5 text-[10px] lg:text-[11px] font-bold mb-3 uppercase tracking-[0.2em]">
+            {event.type === 'freefire_event' ? 'FREE FIRE EVENT' : 'SPECIAL EVENT'}
+          </Badge>
+          <h3 className="text-white font-headline font-bold text-xl lg:text-2xl leading-tight">{event.title}</h3>
+        </div>
+      </div>
+      <div className="p-8">
+        <p className="text-sm lg:text-base text-muted-foreground line-clamp-3 leading-relaxed mb-6 font-medium">{event.shortDescription || event.description}</p>
+        
+        {event.expiresAt && (
+          <div className="mb-6 p-3 bg-amber-50 dark:bg-amber-500/5 rounded-2xl flex items-center gap-3 text-amber-700 dark:text-amber-400">
+             <Clock className="w-5 h-5 animate-pulse" />
+             <div className="flex flex-col">
+                <span className="text-[10px] font-bold uppercase tracking-wider opacity-60">Waqtiga haray</span>
+                <span className="text-sm font-bold font-mono">{timeLeft}</span>
+             </div>
+          </div>
+        )}
+
+        <div className="flex items-center justify-between pt-6 border-t border-slate-50 dark:border-white/5">
+          <div className="flex items-center gap-2 text-xs lg:text-sm font-bold text-primary">
+            <Calendar className="w-5 h-5" />
+            Active Now
+          </div>
+          <Button 
+            variant="ghost" 
+            className="rounded-full h-10 lg:h-12 px-6 font-bold text-xs lg:text-sm hover:bg-primary/10 transition-all active:scale-95" 
+            onClick={() => router.push(`/events/${event.id}`)}
+          >
+            View <ChevronRight className="w-4 h-4 ml-1" />
+          </Button>
+        </div>
+      </div>
+    </Card>
   );
 }
 

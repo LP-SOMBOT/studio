@@ -117,12 +117,13 @@ type AppNotification = {
 type GameEvent = {
   id: string;
   title: string;
-  description: string;
+  shortDescription: string;
+  content: string;
   thumbnailUrl: string;
   type: 'freefire_event' | 'general';
   active: boolean;
-  startDate?: string;
-  endDate?: string;
+  expiresAt?: number;
+  createdAt: number;
 };
 
 type Banner = {
@@ -369,7 +370,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const setActiveTab = useCallback((tab: string) => {
     setActiveTabState(tab);
     if (typeof window !== 'undefined') {
-      const isSpecialFlow = pathname === "/checkout" || pathname === "/checkout-account" || pathname.startsWith("/accounts/");
+      const isSpecialFlow = pathname === "/checkout" || pathname === "/checkout-account" || pathname.startsWith("/accounts/") || pathname.startsWith("/events/");
       if (isSpecialFlow || pathname !== '/') {
         router.push(tab === 'home' ? '/' : `/#${tab}`);
       } else {
@@ -745,7 +746,25 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const deleteProduct = async (id: string) => remove(ref(rtdb, `products/${id}`));
   
-  const saveEvent = async (e: any) => { if (!rtdb) return; const { id, ...data } = e; if (id) await update(ref(rtdb, `events/${id}`), data); else await push(ref(rtdb, 'events'), data); };
+  const saveEvent = async (e: any) => { 
+    if (!rtdb) return; 
+    const { id, duration, durationUnit, ...data } = e;
+    
+    let expiresAt = data.expiresAt || null;
+    if (duration && durationUnit) {
+      const now = Date.now();
+      const val = parseInt(duration);
+      if (durationUnit === 'days') expiresAt = now + (val * 24 * 60 * 60 * 1000);
+      else if (durationUnit === 'hours') expiresAt = now + (val * 60 * 60 * 1000);
+      else if (durationUnit === 'minutes') expiresAt = now + (val * 60 * 1000);
+    }
+
+    const eventToSave = { ...data, expiresAt, createdAt: Date.now() };
+
+    if (id) await update(ref(rtdb, `events/${id}`), eventToSave); 
+    else await push(ref(rtdb, 'events'), eventToSave); 
+  };
+
   const deleteEvent = async (id: string) => remove(ref(rtdb, `events/${id}`));
 
   const saveBanner = async (b: any) => { if (!rtdb) return; const { id, ...data } = b; if (id) await update(ref(rtdb, `banners/${id}`), data); else await push(ref(rtdb, 'banners'), { ...data, createdAt: Date.now(), active: true }); };

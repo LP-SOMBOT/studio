@@ -185,7 +185,17 @@ export default function AdminPage() {
 
   const [gameForm, setGameForm] = useState({ title: "", icon: "", category: "top-up" });
   const [productForm, setProductForm] = useState({ title: "", gameId: "", category: "top-up", description: "", price: "", discountedPrice: "", thumbnail: "" });
-  const [eventForm, setEventForm] = useState({ title: "", description: "", thumbnailUrl: "", type: "freefire_event", active: true });
+  const [eventForm, setEventForm] = useState({ 
+    title: "", 
+    shortDescription: "", 
+    content: "", 
+    description: "", 
+    thumbnailUrl: "", 
+    type: "freefire_event", 
+    active: true,
+    duration: "",
+    durationUnit: "days"
+  });
   const [bannerForm, setBannerForm] = useState({ imageUrl: "", linkTo: "" });
 
   const [pointAdjustment, setPointAdjustment] = useState("");
@@ -241,10 +251,14 @@ export default function AdminPage() {
   const handleOpenEventDialog = (ev?: any) => {
     if (ev) {
       setEditingEvent(ev);
-      setEventForm(ev);
+      setEventForm({
+        ...ev,
+        duration: "",
+        durationUnit: "days"
+      });
     } else {
       setEditingEvent(null);
-      setEventForm({ title: "", description: "", thumbnailUrl: "", type: "freefire_event", active: true });
+      setEventForm({ title: "", shortDescription: "", content: "", description: "", thumbnailUrl: "", type: "freefire_event", active: true, duration: "", durationUnit: "days" });
     }
     setIsEventDialogOpen(true);
   };
@@ -315,7 +329,7 @@ export default function AdminPage() {
     e.preventDefault();
     setIsUploading(true);
     try {
-      await saveEvent(eventForm);
+      await saveEvent({ ...eventForm, id: editingEvent?.id });
       toast({ title: "Event Saved" });
       setIsEventDialogOpen(false);
     } finally { setIsUploading(false); }
@@ -563,7 +577,34 @@ export default function AdminPage() {
           {activeView === 'events' && (
             <div className="space-y-6">
               <div className="flex justify-between items-center"><h3 className="font-headline font-bold text-lg sm:text-xl text-slate-900 dark:text-white">Live Events</h3><Button onClick={() => handleOpenEventDialog()} className="h-10 rounded-xl gap-2 font-bold px-3 sm:px-4 text-xs sm:text-sm"><Plus size={18} /> New Event</Button></div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">{events.map(ev => (<Card key={ev.id} className="rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden border-none shadow-lg bg-white dark:bg-slate-900"><div className="aspect-[21/9] relative"><Image src={ev.thumbnailUrl} alt="" fill className="object-cover" />{!ev.active && <div className="absolute inset-0 bg-black/60 flex items-center justify-center font-bold text-white text-xs uppercase tracking-widest">Inactive</div>}</div><div className="p-4 sm:p-6 flex justify-between items-center"><div className="min-w-0"><h4 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white truncate">{ev.title}</h4><p className="text-[9px] sm:text-[10px] text-muted-foreground uppercase font-bold">{ev.type}</p></div><div className="flex gap-1 shrink-0"><Button size="icon" variant="ghost" onClick={() => handleOpenEventDialog(ev)} className="text-blue-500"><Edit size={16}/></Button><Button size="icon" variant="ghost" onClick={() => confirmDelete(ev.id, 'event')} className="text-red-500"><Trash2 size={16}/></Button></div></div></Card>))}</div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                {events.map(ev => (
+                  <Card key={ev.id} className="rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden border-none shadow-lg bg-white dark:bg-slate-900">
+                    <div className="aspect-[21/9] relative">
+                      <Image src={ev.thumbnailUrl} alt="" fill className="object-cover" unoptimized />
+                      {!ev.active && <div className="absolute inset-0 bg-black/60 flex items-center justify-center font-bold text-white text-xs uppercase tracking-widest">Inactive</div>}
+                      {ev.expiresAt && ev.expiresAt < Date.now() && <div className="absolute inset-0 bg-red-600/40 backdrop-blur-sm flex items-center justify-center font-bold text-white text-xs uppercase tracking-widest">Expired</div>}
+                    </div>
+                    <div className="p-4 sm:p-6 flex justify-between items-center">
+                      <div className="min-w-0">
+                        <h4 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white truncate">{ev.title}</h4>
+                        <div className="flex items-center gap-2">
+                           <p className="text-[9px] sm:text-[10px] text-muted-foreground uppercase font-bold">{ev.type}</p>
+                           {ev.expiresAt && (
+                             <Badge variant="outline" className="h-4 text-[8px] border-amber-500 text-amber-500 px-1">
+                                Ends {format(new Date(ev.expiresAt), 'MMM d')}
+                             </Badge>
+                           )}
+                        </div>
+                      </div>
+                      <div className="flex gap-1 shrink-0">
+                        <Button size="icon" variant="ghost" onClick={() => handleOpenEventDialog(ev)} className="text-blue-500"><Edit size={16}/></Button>
+                        <Button size="icon" variant="ghost" onClick={() => confirmDelete(ev.id, 'event')} className="text-red-500"><Trash2 size={16}/></Button>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
             </div>
           )}
 
@@ -632,9 +673,55 @@ export default function AdminPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Other dialogs (Events, Banners, Delete, etc.) remain the same */}
+      <Dialog open={isEventDialogOpen} onOpenChange={setIsEventDialogOpen}>
+         <DialogContent className="max-w-2xl w-[95vw] rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl bg-white dark:bg-slate-900">
+           <div className="bg-primary p-6 text-white"><DialogTitle className="text-xl font-headline font-bold">{editingEvent ? 'Edit Live Event' : 'Add New Live Event'}</DialogTitle></div>
+           <form onSubmit={handleSaveEvent} className="p-6 space-y-6 max-h-[80vh] overflow-y-auto scrollbar-hide">
+              <div className="space-y-2"><Label className="text-xs font-bold uppercase text-slate-400">Event Title</Label><Input value={eventForm.title} onChange={e => setEventForm({...eventForm, title: e.target.value})} required className="rounded-xl h-12" /></div>
+              
+              <div className="space-y-2"><Label className="text-xs font-bold uppercase text-slate-400">Short Description (Home Screen)</Label><Input value={eventForm.shortDescription} onChange={e => setEventForm({...eventForm, shortDescription: e.target.value})} placeholder="Show in home card..." required className="rounded-xl h-12" /></div>
+              
+              <div className="space-y-2"><Label className="text-xs font-bold uppercase text-slate-400">Long Content (Event Page)</Label><Textarea value={eventForm.content} onChange={e => setEventForm({...eventForm, content: e.target.value})} placeholder="Detailed information for the full-screen view..." required className="rounded-xl min-h-[150px]" /></div>
+
+              <div className="grid grid-cols-2 gap-4">
+                 <div className="space-y-2">
+                    <Label className="text-xs font-bold uppercase text-slate-400">Duration (Scheduling)</Label>
+                    <Input type="number" placeholder="e.g. 5" value={eventForm.duration} onChange={e => setEventForm({...eventForm, duration: e.target.value})} className="rounded-xl h-12" />
+                 </div>
+                 <div className="space-y-2">
+                    <Label className="text-xs font-bold uppercase text-slate-400">Unit</Label>
+                    <Select value={eventForm.durationUnit} onValueChange={v => setEventForm({...eventForm, durationUnit: v})}>
+                       <SelectTrigger className="rounded-xl h-12"><SelectValue /></SelectTrigger>
+                       <SelectContent className="rounded-xl">
+                          <SelectItem value="days" className="rounded-lg">Days</SelectItem>
+                          <SelectItem value="hours" className="rounded-lg">Hours</SelectItem>
+                          <SelectItem value="minutes" className="rounded-lg">Minutes</SelectItem>
+                       </SelectContent>
+                    </Select>
+                 </div>
+              </div>
+
+              <div className="space-y-2">
+                 <Label className="text-xs font-bold uppercase text-slate-400">Thumbnail / Banner</Label>
+                 <div className="flex items-center gap-4">
+                    <div className="w-24 h-16 rounded-xl bg-slate-50 dark:bg-slate-800 relative overflow-hidden shrink-0">
+                       {eventForm.thumbnailUrl ? <Image src={eventForm.thumbnailUrl} alt="" fill className="object-cover" unoptimized /> : <ImageIcon className="m-auto absolute inset-0 text-slate-300" />}
+                    </div>
+                    <Input type="file" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'event')} className="flex-1 rounded-xl h-10" />
+                 </div>
+              </div>
+              
+              <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
+                 <Label className="font-bold">Active Status</Label>
+                 <Switch checked={eventForm.active} onCheckedChange={val => setEventForm({...eventForm, active: val})} />
+              </div>
+
+              <Button type="submit" disabled={isUploading} className="w-full h-14 rounded-2xl font-bold shadow-xl shadow-primary/20">{isUploading ? <Loader2 className="animate-spin" /> : 'Save Live Event'}</Button>
+           </form>
+         </DialogContent>
+      </Dialog>
+
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}><DialogContent className="max-w-sm w-[90vw] rounded-[1.5rem] bg-white dark:bg-slate-900"><DialogHeader><DialogTitle className="flex items-center gap-2 text-red-500"><ShieldAlert /> Warning</DialogTitle><DialogDescription className="font-bold">Ma hubtaa inaad tirtirto shaygan? Tallaabadan lagama noqon karo.</DialogDescription></DialogHeader><DialogFooter className="gap-2 pt-4 flex-col sm:flex-row"><Button variant="ghost" onClick={() => setIsDeleteDialogOpen(false)} className="rounded-xl flex-1 h-12">Dib u noqo</Button><Button variant="destructive" onClick={executeDelete} className="rounded-xl flex-1 h-12">Haa, Tirtir</Button></DialogFooter></DialogContent></Dialog>
-      {/* ... rest of the existing dialogs ... */}
     </div>
   );
 }
