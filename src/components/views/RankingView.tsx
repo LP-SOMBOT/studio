@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useApp } from '@/lib/context';
@@ -158,7 +159,11 @@ export default function RankingView() {
                   <span className="font-bold text-sm text-slate-900 dark:text-white">{u.name || "Unknown Player"}</span>
                   {isMe && <Badge className="bg-amber-400 text-white border-none text-[8px] px-2 py-0 h-4">YOU</Badge>}
                 </div>
-                <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mt-0.5">Top-Up Legend</p>
+                {u.gameUid && (
+                  <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mt-0.5">
+                    ID: {u.gameUid}
+                  </p>
+                )}
               </div>
               <div className="text-right">
                 <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-100 dark:border-white/5">
@@ -185,7 +190,9 @@ export default function RankingView() {
               </div>
               <div className="flex-1">
                 <p className="font-bold text-sm">Adiga (You)</p>
-                <p className="text-[9px] font-bold text-white/40 uppercase tracking-widest">Keep going!</p>
+                <p className="text-[9px] font-bold text-white/40 uppercase tracking-widest">
+                  {user?.gameUid ? `ID: ${user.gameUid}` : "Keep going!"}
+                </p>
               </div>
               <div className="text-right flex items-center gap-2 bg-white/10 px-4 py-2 rounded-2xl">
                  <Star size={14} className="text-amber-400 fill-amber-400" />
@@ -197,3 +204,4 @@ export default function RankingView() {
     </div>
   );
 }
+
