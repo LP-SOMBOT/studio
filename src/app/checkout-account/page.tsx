@@ -16,7 +16,8 @@ import {
   CreditCard,
   Copy,
   MessageCircle,
-  History
+  History,
+  Check
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -30,7 +31,7 @@ export default function CheckoutAccountPage() {
   const router = useRouter();
   const params = useSearchParams();
   const id = params.get('id');
-  const { accountPosts, user, loading, setActiveTab, createOrder, setGlobalLoading } = useApp();
+  const { accountPosts, user, orders, loading, setActiveTab, createOrder, setGlobalLoading, reportAccountOutcome } = useApp();
   
   const [step, setStep] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -40,6 +41,13 @@ export default function CheckoutAccountPage() {
   const post = useMemo(() => {
     return (accountPosts || []).find(p => p.id === id);
   }, [accountPosts, id]);
+
+  const associatedOrder = useMemo(() => {
+    if (!post || !user) return null;
+    return (orders || []).find(o => o.gameDetails?.postId === post.id);
+  }, [orders, post, user]);
+
+  const hasBought = associatedOrder?.buyerOutcome === 'bought';
 
   useEffect(() => {
     if (!loading && !user && step < 3) {
@@ -107,6 +115,14 @@ Ma ii diyaar yahay? Waxaan ahay ${name}.`;
     } finally {
       setIsProcessing(false);
       setGlobalLoading(false);
+    }
+  };
+
+  const handleOutcome = async (outcome: 'bought' | 'not_bought') => {
+    if (!post) return;
+    await reportAccountOutcome(post.id, outcome);
+    if (outcome === 'bought') {
+      toast({ title: "Waa lagu guuleystay!" });
     }
   };
 
@@ -191,9 +207,29 @@ Ma ii diyaar yahay? Waxaan ahay ${name}.`;
                <div className="space-y-3">
                   <h2 className="text-4xl font-headline font-bold">Waa laguu xajiyay!</h2>
                   <p className="text-muted-foreground font-medium max-w-sm mx-auto">
-                    Fadlan kala hadal seller-ka WhatsApp-ka. Markaad soo laabato, ha iloobin inaad noo soo sheegto hadii aad iibsatay iyo hadii kale.
+                    Fadlan kala hadal seller-ka WhatsApp-ka. Markaad soo laabato, fadlan noo sheeg go'aankaaga ugu dambeeya.
                   </p>
                </div>
+
+               {hasBought ? (
+                 <div className="p-8 bg-green-50 dark:bg-green-500/10 rounded-[2.5rem] border border-green-100 dark:border-green-500/20 animate-in fade-in slide-in-from-top-4">
+                    <CheckCircle2 className="w-12 h-12 text-green-600 mx-auto mb-3" />
+                    <h3 className="font-bold text-xl text-green-900 dark:text-green-400">Waa lagu guuleystay!</h3>
+                    <p className="text-sm text-green-700 dark:text-green-500/70 mt-1">Mahadsanid, dalabkaaga waxaa hadda hubinaya admin-ka.</p>
+                 </div>
+               ) : (
+                 <div className="bg-white dark:bg-slate-900 p-8 rounded-[3rem] shadow-xl space-y-6 border border-slate-100 dark:border-white/5">
+                    <p className="font-bold text-sm uppercase tracking-widest text-muted-foreground">Ma iibsatay account-kan?</p>
+                    <div className="flex flex-col gap-3">
+                       <Button onClick={() => handleOutcome('bought')} className="h-16 rounded-2xl bg-green-600 hover:bg-green-700 text-lg font-bold gap-2">
+                          <Check size={20} /> Haa, Waan iibsaday
+                       </Button>
+                       <Button onClick={() => handleOutcome('not_bought')} variant="outline" className="h-14 rounded-2xl font-bold border-red-100 text-red-500">
+                          Maya, Ma iibsanin
+                       </Button>
+                    </div>
+                 </div>
+               )}
                
                <div className="flex flex-col gap-3 pt-6">
                   <Button 

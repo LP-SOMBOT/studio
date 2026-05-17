@@ -24,7 +24,8 @@ import {
   Bomb,
   Info,
   History,
-  Check
+  Check,
+  PartyPopper
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -38,7 +39,7 @@ import { toast } from "@/hooks/use-toast";
 export default function AccountDetailPage() {
   const { id } = useParams();
   const router = useRouter();
-  const { accountPosts, user, buyAccountPost, reportAccountOutcome } = useApp();
+  const { accountPosts, user, orders, buyAccountPost, reportAccountOutcome } = useApp();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [fullScreenImage, setFullScreenImage] = useState<string | null>(null);
 
@@ -46,9 +47,15 @@ export default function AccountDetailPage() {
     return (accountPosts || []).find(p => p.id === id);
   }, [accountPosts, id]);
 
+  const associatedOrder = useMemo(() => {
+    if (!post || !user) return null;
+    return (orders || []).find(o => o.gameDetails?.postId === post.id);
+  }, [orders, post, user]);
+
   const isBuyer = post?.holdingBy === user?.uid;
   const isOwner = post?.uid === user?.uid;
   const isAdmin = user?.isAdmin;
+  const hasBought = associatedOrder?.buyerOutcome === 'bought';
 
   const handleShare = async () => {
     if (!post) return;
@@ -159,32 +166,44 @@ export default function AccountDetailPage() {
              {/* Dynamic Action Area */}
              <div className="pt-6 space-y-4">
                 {isBuyer && post.status === 'holding' && (
-                  <div className="p-6 bg-primary/5 rounded-[2rem] border border-primary/20 space-y-6">
-                    <div className="flex items-center gap-3">
-                      <History className="text-primary" />
-                      <div>
-                        <h4 className="font-bold text-sm">Account-kan waa laguu hayaa!</h4>
-                        <p className="text-[11px] text-muted-foreground">Ma iibsatay account-kan mise wali?</p>
+                  <div className="p-6 bg-primary/5 rounded-[2rem] border border-primary/20 space-y-6 animate-in slide-in-from-bottom-2">
+                    {hasBought ? (
+                      <div className="flex flex-col items-center text-center gap-3 py-2">
+                        <div className="w-16 h-16 bg-green-100 dark:bg-green-500/20 rounded-full flex items-center justify-center text-green-600">
+                          <CheckCircle2 size={32} />
+                        </div>
+                        <h4 className="font-bold text-lg">Mahadsanid!</h4>
+                        <p className="text-xs text-muted-foreground">Waad ku guuleysatay iibsiga. Admin-ka ayaa hadda hubinaya dalabkaaga.</p>
                       </div>
-                    </div>
-                    <div className="flex gap-3">
-                      <Button onClick={() => reportAccountOutcome(post.id, 'bought')} className="flex-1 h-12 rounded-xl bg-green-600 hover:bg-green-700 font-bold gap-2">
-                         <Check size={18} /> Waan iibsaday
-                      </Button>
-                      <Button onClick={() => reportAccountOutcome(post.id, 'not_bought')} variant="outline" className="flex-1 h-12 rounded-xl font-bold border-red-200 text-red-500">
-                         Ma iibsanin
-                      </Button>
-                    </div>
+                    ) : (
+                      <>
+                        <div className="flex items-center gap-3">
+                          <History className="text-primary" />
+                          <div>
+                            <h4 className="font-bold text-sm">Account-kan waa laguu hayaa!</h4>
+                            <p className="text-[11px] text-muted-foreground">Ma iibsatay account-kan mise wali?</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-3">
+                          <Button onClick={() => reportAccountOutcome(post.id, 'bought')} className="flex-1 h-12 rounded-xl bg-green-600 hover:bg-green-700 font-bold gap-2">
+                             <Check size={18} /> Waan iibsaday
+                          </Button>
+                          <Button onClick={() => reportAccountOutcome(post.id, 'not_bought')} variant="outline" className="flex-1 h-12 rounded-xl font-bold border-red-200 text-red-500">
+                             Ma iibsanin
+                          </Button>
+                        </div>
+                      </>
+                    )}
                   </div>
                 )}
 
                 <div className="hidden lg:block">
                   <Button 
                     onClick={() => buyAccountPost(post)}
-                    disabled={post.status === 'sold' || (post.status === 'holding' && !isBuyer && !isOwner && !isAdmin)}
+                    disabled={post.status === 'sold' || hasBought || (post.status === 'holding' && !isBuyer && !isOwner && !isAdmin)}
                     className="w-full h-16 rounded-[2rem] text-xl font-bold shadow-xl shadow-primary/30"
                   >
-                    {post.status === 'sold' ? "Waa la iibiyay" : (post.status === 'holding' && !isBuyer) ? "Account-ka waa la xajiyay" : "Laxariir Seller-ka"}
+                    {post.status === 'sold' ? "Waa la iibiyay" : hasBought ? "Waa lagu guuleystay!" : (post.status === 'holding' && !isBuyer) ? "Account-ka waa la xajiyay" : "Laxariir Seller-ka"}
                   </Button>
                 </div>
              </div>
@@ -196,12 +215,22 @@ export default function AccountDetailPage() {
       <div className="lg:hidden fixed bottom-0 left-0 right-0 p-6 bg-white/60 dark:bg-slate-950/60 backdrop-blur-xl border-t dark:border-white/5 z-50">
          <Button 
            onClick={() => buyAccountPost(post)}
-           disabled={post.status === 'sold' || (post.status === 'holding' && !isBuyer && !isOwner && !isAdmin)}
+           disabled={post.status === 'sold' || hasBought || (post.status === 'holding' && !isBuyer && !isOwner && !isAdmin)}
            className="w-full h-16 rounded-[2rem] text-xl font-bold shadow-2xl"
          >
-            {post.status === 'sold' ? "Waa la iibiyay" : (post.status === 'holding' && !isBuyer) ? "Account-ka waa la xajiyay" : "Laxariir Seller-ka"}
+            {post.status === 'sold' ? "Waa la iibiyay" : hasBought ? "Waa lagu guuleystay!" : (post.status === 'holding' && !isBuyer) ? "Account-ka waa la xajiyay" : "Laxariir Seller-ka"}
          </Button>
       </div>
+
+      {/* Full Screen Image Modal */}
+      {fullScreenImage && (
+        <div className="fixed inset-0 z-[100] bg-black flex items-center justify-center animate-in fade-in duration-300">
+          <button onClick={() => setFullScreenImage(null)} className="absolute top-10 right-6 text-white p-2 bg-white/10 rounded-full hover:bg-white/20"><X size={30} /></button>
+          <div className="relative w-full h-full p-4">
+            <Image src={fullScreenImage} alt="" fill className="object-contain" unoptimized />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
