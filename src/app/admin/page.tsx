@@ -1654,7 +1654,7 @@ export default function AdminPage() {
                   <Input type="number" step="0.01" value={productForm.price} onChange={e => setProductForm({...productForm, price: e.target.value})} required className="rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold h-12" />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase text-primary">Discount ($)</Label>
+                  <Label className="text-xs font-bold uppercase text-primary">Price</Label>
                   <Input type="number" step="0.01" placeholder="Optional" value={productForm.discountedPrice} onChange={e => setProductForm({...productForm, discountedPrice: e.target.value})} className="rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold h-12" />
                 </div>
               </div>
