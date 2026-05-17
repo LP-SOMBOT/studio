@@ -13,8 +13,8 @@ type GameCardProps = {
   title: string;
   description: string;
   thumbnail: string;
-  price: number;
-  discountedPrice?: number;
+  price: number | string;
+  discountedPrice?: number | string;
   gameId: string;
   imageHint?: string;
 };
@@ -26,11 +26,18 @@ export default function GameCard({ id, title, description, thumbnail, price, dis
     e.preventDefault();
     // PER USER REQUEST: Clients are NOT charged the discounted price.
     // The discounted price is for display purposes ONLY.
-    buyNow({ id, title, price: price, gameId, thumbnail });
+    // We pass the original price (base price) to handle the transaction.
+    buyNow({ id, title, price: Number(price), gameId, thumbnail });
   };
 
-  const hasDiscount = !!(discountedPrice && Number(discountedPrice) < price);
-  const discountPercent = hasDiscount ? Math.round(((price - Number(discountedPrice)) / price) * 100) : 0;
+  const numPrice = Number(price);
+  const numDiscountedPrice = (discountedPrice !== undefined && discountedPrice !== null && discountedPrice !== "") 
+    ? Number(discountedPrice) 
+    : null;
+
+  // Logic: Discount is only shown if it's greater than 0 and strictly less than the base price
+  const hasDiscount = numDiscountedPrice !== null && numDiscountedPrice > 0 && numDiscountedPrice < numPrice;
+  const discountPercent = hasDiscount ? Math.round(((numPrice - numDiscountedPrice) / numPrice) * 100) : 0;
 
   return (
     <Card className="group overflow-hidden bg-white dark:bg-slate-900 border-gray-100 dark:border-white/5 hover:shadow-xl hover:shadow-primary/10 transition-all duration-500 rounded-[2rem] flex flex-col h-full">
@@ -50,7 +57,7 @@ export default function GameCard({ id, title, description, thumbnail, price, dis
           </div>
         )}
         {hasDiscount && (
-          <Badge className="absolute top-4 left-4 bg-red-500 text-white border-none font-bold px-3 py-1 rounded-full shadow-lg">
+          <Badge className="absolute top-4 left-4 bg-red-500 text-white border-none font-bold px-3 py-1 rounded-full shadow-lg z-10">
             -{discountPercent}%
           </Badge>
         )}
@@ -61,11 +68,11 @@ export default function GameCard({ id, title, description, thumbnail, price, dis
         <div className="flex items-center gap-2 mt-auto">
           {hasDiscount ? (
             <>
-              <span className="text-2xl font-headline font-bold text-primary">${discountedPrice}</span>
-              <span className="text-sm text-gray-400 line-through">${price}</span>
+              <span className="text-2xl font-headline font-bold text-primary">${numDiscountedPrice}</span>
+              <span className="text-sm text-gray-400 line-through">${numPrice}</span>
             </>
           ) : (
-            <span className="text-2xl font-headline font-bold text-primary">${price}</span>
+            <span className="text-2xl font-headline font-bold text-primary">${numPrice}</span>
           )}
         </div>
       </CardContent>
