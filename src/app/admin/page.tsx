@@ -123,6 +123,7 @@ import { format } from "date-fns";
 export default function AdminPage() {
   const { 
     user, 
+    loading,
     storeSettings, 
     updateStoreSettings, 
     allUsers, 
@@ -149,8 +150,6 @@ export default function AdminPage() {
   } = useApp();
 
   const router = useRouter();
-  const [pin, setPin] = useState("");
-  const [isPinAuthenticated, setIsPinAuthenticated] = useState(false);
   const [activeView, setActiveView] = useState<'dashboard' | 'orders' | 'products' | 'account-posts' | 'events' | 'users' | 'settings'>('dashboard');
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -189,12 +188,12 @@ export default function AdminPage() {
     tiktokUrl: ""
   });
 
+  // Access Control: Redirect non-admins
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const sessionPin = sessionStorage.getItem("admin_pin_access");
-      if (sessionPin === "granted") setIsPinAuthenticated(true);
+    if (!loading && !user?.isAdmin) {
+      router.replace('/');
     }
-  }, []);
+  }, [user, loading, router]);
 
   useEffect(() => {
     if (storeSettings?.helpLinks) {
@@ -205,19 +204,6 @@ export default function AdminPage() {
       });
     }
   }, [storeSettings]);
-
-  const handlePinSubmit = () => {
-    const savedPin = storeSettings?.config?.adminSettings?.pin || "123456";
-    if (pin === savedPin) {
-      setIsPinAuthenticated(true);
-      sessionStorage.setItem("admin_pin_access", "granted");
-      toast({ title: "PIN Accepted" });
-      window.location.reload();
-    } else {
-      toast({ title: "Wrong PIN", variant: "destructive" });
-      setPin("");
-    }
-  };
 
   const handleOpenProductDialog = (product?: any) => {
     if (product) {
@@ -386,7 +372,7 @@ export default function AdminPage() {
     }
   };
 
-  if (isInitialLoading) {
+  if (loading || isInitialLoading) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center gap-6">
         <Loader2 className="w-10 h-10 animate-spin text-primary" />
@@ -395,27 +381,8 @@ export default function AdminPage() {
     );
   }
 
-  if (!isPinAuthenticated && !user?.isAdmin) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-900 p-4">
-        <Card className="max-w-md w-full p-6 sm:p-10 rounded-[2rem] sm:rounded-[3rem] bg-white dark:bg-slate-900 shadow-2xl text-center border-none">
-          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-primary/10 rounded-2xl sm:rounded-3xl flex items-center justify-center mx-auto mb-6 text-primary">
-            <Lock size={32} className="sm:w-10 sm:h-10" />
-          </div>
-          <h2 className="text-xl sm:text-2xl font-headline font-bold mb-2 text-slate-900 dark:text-white">OskarShop Admin</h2>
-          <p className="text-muted-foreground text-xs sm:text-sm mb-8">Enter Admin PIN to continue</p>
-          <div className="flex justify-center gap-2 sm:gap-3 mb-10">
-            {[...Array(6)].map((_, i) => <div key={i} className={cn("w-3 h-3 sm:w-4 sm:h-4 rounded-full border-2 transition-all", pin.length > i ? "bg-primary border-primary scale-110 shadow-lg" : "border-slate-200 dark:border-slate-800")} />)}
-          </div>
-          <div className="grid grid-cols-3 gap-3 sm:gap-4 max-w-[280px] mx-auto">
-            {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map(n => <Button key={n} variant="outline" className="h-14 sm:h-16 rounded-xl sm:rounded-2xl text-lg sm:text-xl font-bold dark:border-slate-800" onClick={() => pin.length < 6 && setPin(p => p + n)}>{n}</Button>)}
-            <Button variant="outline" className="h-14 sm:h-16 rounded-xl sm:rounded-2xl dark:border-slate-800" onClick={() => setPin(p => p.slice(0, -1))}><Delete /></Button>
-            <Button variant="outline" className="h-14 sm:h-16 rounded-xl sm:rounded-2xl text-lg sm:text-xl font-bold dark:border-slate-800" onClick={() => pin.length < 6 && setPin(p => p + "0")}>0</Button>
-            <Button className="h-14 sm:h-16 rounded-xl sm:rounded-2xl" onClick={handlePinSubmit}><CheckCircle2 /></Button>
-          </div>
-        </Card>
-      </div>
-    );
+  if (!user?.isAdmin) {
+    return null; // Redirect logic in useEffect handles this
   }
 
   const metrics = {
@@ -840,28 +807,6 @@ export default function AdminPage() {
                                 <Input type="file" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'offline')} className="h-10 flex-1 rounded-xl dark:bg-slate-800 border-none" />
                              </div>
                           </div>
-                       </div>
-                    </AccordionContent>
-                 </AccordionItem>
-                 <AccordionItem value="security" className="border-none bg-white dark:bg-slate-900 rounded-[1.5rem] sm:rounded-[2rem] px-4 sm:px-8 shadow-lg">
-                    <AccordionTrigger className="hover:no-underline"><div className="flex items-center gap-3 sm:gap-4 text-left"><div className="p-2 sm:p-3 bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300 rounded-xl sm:rounded-2xl shrink-0"><Lock size={20} /></div><div><h4 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white">Security & Access</h4><p className="text-[10px] sm:text-xs text-muted-foreground">Manage Admin PIN code</p></div></div></AccordionTrigger>
-                    <AccordionContent className="pb-6 sm:pb-8 space-y-4">
-                       <div className="space-y-2">
-                          <Label className="text-[10px] font-bold uppercase text-slate-400">Update Admin PIN</Label>
-                          <Input 
-                            type="password" 
-                            maxLength={6} 
-                            placeholder="Enter 6-digit PIN"
-                            defaultValue={storeSettings?.config?.adminSettings?.pin}
-                            onBlur={e => {
-                               if (e.target.value.length === 6) {
-                                  updateStoreSettings({ config: { ...storeSettings.config, adminSettings: { ...storeSettings.config?.adminSettings, pin: e.target.value } } });
-                                  toast({ title: "PIN Updated Successfully" });
-                               }
-                            }} 
-                            className="rounded-xl dark:bg-slate-800 border-none font-bold h-12" 
-                          />
-                          <p className="text-[9px] text-muted-foreground italic">* PIN must be exactly 6 digits.</p>
                        </div>
                     </AccordionContent>
                  </AccordionItem>

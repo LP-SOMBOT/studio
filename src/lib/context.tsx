@@ -493,8 +493,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [user, userProfile]);
 
   useEffect(() => {
-    const isPinAuthorized = typeof window !== 'undefined' && sessionStorage.getItem("admin_pin_access") === "granted";
-    if (!rtdb || (!enhancedUser?.isAdmin && !isPinAuthorized)) {
+    // Admin Panel Restricted Access Logic
+    if (!rtdb || !enhancedUser?.isAdmin) {
       if (allOrders.length > 0) setAllOrders([]);
       return;
     }
