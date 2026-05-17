@@ -134,7 +134,7 @@ export default function HomeView() {
               </div>
               <div>
                 <h2 className="text-2xl lg:text-4xl font-headline font-bold text-slate-900 dark:text-white">Live Events 🔥</h2>
-                <p className="text-xs lg:text-sm text-muted-foreground font-medium uppercase tracking-widest mt-1">Limited time game promotions</p>
+                <p className="text-xs lg:text-sm text-muted-foreground font-medium uppercase tracking-widest mt-1">Ka faa'ideeyso intuusan event Ga dhamaan!.</p>
               </div>
             </div>
 
