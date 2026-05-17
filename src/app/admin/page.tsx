@@ -196,6 +196,7 @@ export default function AdminPage() {
   const [pendingOrderStatus, setPendingStatus] = useState<string>("");
   const [cancellationReason, setCancellationReason] = useState<string>("");
   const [pendingAccountStatus, setPendingAccountStatus] = useState<string>("");
+  const [assignBuyerId, setAssignBuyerId] = useState<string>("");
 
   const [deleteTarget, setDeleteTarget] = useState<{ id: string, type: 'user' | 'game' | 'product' | 'event' | 'banner' | 'account' | 'order' | 'payment' } | null>(null);
 
@@ -324,6 +325,7 @@ export default function AdminPage() {
   const handleOpenAccountDialog = (acc: any) => {
     setSelectedAccount(acc);
     setPendingAccountStatus(acc.status);
+    setAssignBuyerId(acc.boughtBy || "");
     setIsAccountDetailOpen(true);
   };
 
@@ -462,7 +464,7 @@ export default function AdminPage() {
     if (!selectedAccount || !pendingAccountStatus) return;
     setIsSavingStatus(true);
     try {
-      await updateAccountPostStatus(selectedAccount.id, pendingAccountStatus);
+      await updateAccountPostStatus(selectedAccount.id, pendingAccountStatus, pendingAccountStatus === 'sold' ? assignBuyerId : undefined);
       toast({ title: `Listing set to ${pendingAccountStatus}` });
       setIsAccountDetailOpen(false);
     } finally {
@@ -538,9 +540,9 @@ export default function AdminPage() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'approved': case 'successful': return "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400";
+      case 'approved': case 'successful': case 'sold': return "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400";
       case 'pending': return "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400";
-      case 'processing': return "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400";
+      case 'processing': case 'holding': return "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400";
       default: return "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400";
     }
   };
@@ -671,49 +673,49 @@ export default function AdminPage() {
                     <TableHeader className="bg-slate-50/50 dark:bg-slate-800/40">
                       <TableRow className="border-none">
                         <TableHead className="px-4 sm:px-8">Seller</TableHead>
-                        <TableHead>Details</TableHead>
-                        <TableHead>Handled By</TableHead>
+                        <TableHead>Game & Info</TableHead>
+                        <TableHead>Outcome</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead className="text-right px-4 sm:px-8">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {accountPosts.map(p => (
-                        <TableRow key={p.id} className="border-slate-50 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-slate-800/30">
-                          <TableCell className="px-4 sm:px-8 relative">
-                            {p.status === 'pending' && <div className="absolute left-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />}
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800 relative shrink-0">
-                                {p.authorAvatar && <Image src={p.authorAvatar} alt="" fill className="object-cover" />}
-                              </div>
-                              <span className="font-bold text-xs text-slate-900 dark:text-white truncate max-w-[100px]">{p.authorName}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex flex-col">
-                              <span className="text-xs font-bold text-slate-900 dark:text-white">Lv {p.level}</span>
-                              <span className="text-[9px] uppercase font-bold text-slate-400 dark:text-slate-500">${p.price}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            {p.processedBy ? (
-                              <div className="flex items-center gap-2">
-                                <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden relative border border-white dark:border-white/10">
-                                  {p.processedBy.photoURL ? <Image src={p.processedBy.photoURL} alt="" fill className="object-cover" /> : <User size={12} className="m-auto mt-1" />}
+                      {accountPosts.map(p => {
+                        const associatedOrder = allOrders.find(o => o.gameDetails?.postId === p.id);
+                        return (
+                          <TableRow key={p.id} className="border-slate-50 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-slate-800/30">
+                            <TableCell className="px-4 sm:px-8 relative">
+                              {p.status === 'pending' && <div className="absolute left-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />}
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800 relative shrink-0">
+                                  {p.authorAvatar && <Image src={p.authorAvatar} alt="" fill className="object-cover" />}
                                 </div>
-                                <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 truncate max-w-[80px]">{p.processedBy.name}</span>
+                                <span className="font-bold text-xs text-slate-900 dark:text-white truncate max-w-[100px]">{p.authorName}</span>
                               </div>
-                            ) : <span className="text-[10px] text-slate-300 italic">Unassigned</span>}
-                          </TableCell>
-                          <TableCell><Badge className={cn("rounded-full text-[8px] font-bold uppercase border-none", getStatusBadge(p.status))}>{p.status}</Badge></TableCell>
-                          <TableCell className="text-right px-4 sm:px-8">
-                            <div className="flex justify-end gap-1 sm:gap-2">
-                              <Button size="sm" onClick={() => handleOpenAccountDialog(p)} className="rounded-full h-8 px-2 sm:px-4 font-bold text-[9px] sm:text-[10px] gap-1 sm:gap-2 shrink-0"><Eye size={12} /> <span className="hidden xs:inline">View</span></Button>
-                              <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500 shrink-0" onClick={() => confirmDelete(p.id, 'account')}><Trash2 size={16} /></Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex flex-col">
+                                <span className="text-xs font-bold text-slate-900 dark:text-white uppercase">{p.gameType} - Lv {p.level}</span>
+                                <span className="text-[9px] uppercase font-bold text-slate-400 dark:text-slate-500">${p.price}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              {associatedOrder?.buyerOutcome ? (
+                                <Badge className={cn("rounded-full text-[8px]", associatedOrder.buyerOutcome === 'bought' ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700")}>
+                                  Buyer: {associatedOrder.buyerOutcome.replace('_', ' ')}
+                                </Badge>
+                              ) : <span className="text-[10px] text-slate-300">No report</span>}
+                            </TableCell>
+                            <TableCell><Badge className={cn("rounded-full text-[8px] font-bold uppercase border-none", getStatusBadge(p.status))}>{p.status}</Badge></TableCell>
+                            <TableCell className="text-right px-4 sm:px-8">
+                              <div className="flex justify-end gap-1 sm:gap-2">
+                                <Button size="sm" onClick={() => handleOpenAccountDialog(p)} className="rounded-full h-8 px-2 sm:px-4 font-bold text-[9px] sm:text-[10px] gap-1 sm:gap-2 shrink-0"><Eye size={12} /> <span className="hidden xs:inline">View</span></Button>
+                                <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500 shrink-0" onClick={() => confirmDelete(p.id, 'account')}><Trash2 size={16} /></Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 </div>
@@ -896,9 +898,28 @@ export default function AdminPage() {
                        <div><p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">TikTok Live Mode</p><p className="text-[9px] sm:text-[10px] text-muted-foreground">Show "Live Now" banner on homepage</p></div>
                        <Switch checked={storeSettings.isLive} onCheckedChange={val => updateStoreSettings({ isLive: val })} />
                      </div>
-                     <div className="space-y-2">
-                       <Label className="text-[10px] font-bold uppercase text-slate-400">Account Listing Fee ($)</Label>
-                       <Input type="number" step="0.01" defaultValue={storeSettings?.config?.shop?.listingFee} onBlur={e => updateStoreSettings({ config: { ...storeSettings.config, shop: { ...storeSettings.config?.shop, listingFee: parseFloat(e.target.value) } } })} className="rounded-xl dark:bg-slate-800 border-none font-bold h-12" />
+                     
+                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t dark:border-white/5 pt-4">
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-bold uppercase text-slate-400">Free Fire Listing Fee ($)</Label>
+                          <Input 
+                            type="number" 
+                            step="0.01" 
+                            defaultValue={storeSettings?.config?.shop?.listingFeeFreeFire || storeSettings?.config?.shop?.listingFee} 
+                            onBlur={e => updateStoreSettings({ config: { ...storeSettings.config, shop: { ...storeSettings.config?.shop, listingFeeFreeFire: parseFloat(e.target.value) } } })} 
+                            className="rounded-xl dark:bg-slate-800 border-none font-bold h-12" 
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-bold uppercase text-slate-400">Blood Strike Listing Fee ($)</Label>
+                          <Input 
+                            type="number" 
+                            step="0.01" 
+                            defaultValue={storeSettings?.config?.shop?.listingFeeBloodStrike} 
+                            onBlur={e => updateStoreSettings({ config: { ...storeSettings.config, shop: { ...storeSettings.config?.shop, listingFeeBloodStrike: parseFloat(e.target.value) } } })} 
+                            className="rounded-xl dark:bg-slate-800 border-none font-bold h-12" 
+                          />
+                        </div>
                      </div>
                    </AccordionContent>
                  </AccordionItem>
@@ -1289,8 +1310,8 @@ export default function AdminPage() {
               <div className="space-y-4">
                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2"><SmartphoneIcon size={14}/> Client Information</h4>
                  <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl space-y-3 border border-slate-100 dark:border-white/5">
-                    <div className="flex justify-between border-b dark:border-white/5 pb-2"><span className="text-xs text-muted-foreground">Player ID / Game ID</span><span className="text-xs font-bold font-mono tracking-wider">{selectedOrder?.gameDetails?.playerID || 'N/A'}</span></div>
-                    <div className="flex justify-between border-b dark:border-white/5 pb-2"><span className="text-xs text-muted-foreground">In-Game Name</span><span className="text-xs font-bold">{selectedOrder?.gameDetails?.playerName || 'N/A'}</span></div>
+                    <div className="flex justify-between border-b dark:border-white/5 pb-2"><span className="text-xs text-muted-foreground">Player ID / Game ID</span><span className="text-xs font-bold font-mono tracking-wider">{selectedOrder?.gameDetails?.playerID || selectedOrder?.gameDetails?.postId || 'N/A'}</span></div>
+                    <div className="flex justify-between border-b dark:border-white/5 pb-2"><span className="text-xs text-muted-foreground">In-Game Name</span><span className="text-xs font-bold">{selectedOrder?.gameDetails?.playerName || selectedOrder?.gameDetails?.name || 'N/A'}</span></div>
                     <div className="flex justify-between border-b dark:border-white/5 pb-2"><span className="text-xs text-muted-foreground">Sender Number</span><span className="text-xs font-bold text-primary">{selectedOrder?.gameDetails?.senderNumber || 'N/A'}</span></div>
                     <div className="flex justify-between"><span className="text-xs text-muted-foreground">WhatsApp</span><span className="text-xs font-bold">{selectedOrder?.gameDetails?.whatsappNumber || 'N/A'}</span></div>
                  </div>
@@ -1383,15 +1404,15 @@ export default function AdminPage() {
                  </div>
               </div>
 
-              {(selectedAccount?.status === 'approved' || selectedAccount?.status === 'rejected') && (
+              {(selectedAccount?.status === 'approved' || selectedAccount?.status === 'rejected' || selectedAccount?.status === 'sold') && (
                 <div className={cn(
                   "p-4 rounded-xl border flex flex-col gap-1",
-                  selectedAccount.status === 'approved' ? "bg-green-50 border-green-100 dark:bg-green-500/10 dark:border-green-500/20" : "bg-red-50 border-red-100 dark:bg-red-500/10 dark:border-red-500/20"
+                  (selectedAccount.status === 'approved' || selectedAccount.status === 'sold') ? "bg-green-50 border-green-100 dark:bg-green-500/10 dark:border-green-500/20" : "bg-red-50 border-red-100 dark:bg-red-500/10 dark:border-red-500/20"
                 )}>
-                  <span className={cn("text-[10px] font-bold uppercase", selectedAccount.status === 'approved' ? "text-green-600" : "text-red-600")}>
-                    {selectedAccount.status === 'approved' ? 'Approved At' : 'Rejected At'}
+                  <span className={cn("text-[10px] font-bold uppercase", (selectedAccount.status === 'approved' || selectedAccount.status === 'sold') ? "text-green-600" : "text-red-600")}>
+                    {selectedAccount.status === 'approved' ? 'Approved At' : selectedAccount.status === 'sold' ? 'Sold At' : 'Rejected At'}
                   </span>
-                  <span className={cn("text-xs font-bold", selectedAccount.status === 'approved' ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400")}>
+                  <span className={cn("text-xs font-bold", (selectedAccount.status === 'approved' || selectedAccount.status === 'sold') ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400")}>
                     {getSmartTimestamp(selectedAccount.completedAt)}
                   </span>
                 </div>
@@ -1402,16 +1423,7 @@ export default function AdminPage() {
                 <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl space-y-3 border border-slate-100 dark:border-white/5">
                    <div className="flex justify-between border-b dark:border-white/5 pb-2"><span className="text-xs text-muted-foreground">Seller Name</span><span className="text-xs font-bold">{selectedAccount?.authorName}</span></div>
                    <div className="flex justify-between border-b dark:border-white/5 pb-2"><span className="text-xs text-muted-foreground">Seller Phone</span><span className="text-xs font-bold">{selectedAccount?.phone}</span></div>
-                   <div className="flex justify-between"><span className="text-xs text-muted-foreground">Platform</span><Badge className="text-[10px] rounded-full">{selectedAccount?.platform}</Badge></div>
-                </div>
-             </div>
-
-             <div className="space-y-4">
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2"><Star size={14}/> Account Stats</h4>
-                <div className="grid grid-cols-3 gap-3">
-                   <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 text-center border dark:border-white/5"><p className="text-[8px] text-muted-foreground uppercase font-bold">Lvl</p><p className="text-sm font-bold">{selectedAccount?.level}</p></div>
-                   <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 text-center border dark:border-white/5"><p className="text-[8px] text-muted-foreground uppercase font-bold">Prime</p><p className="text-sm font-bold">{selectedAccount?.primeLevel}</p></div>
-                   <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 text-center border dark:border-white/5"><p className="text-[8px] text-muted-foreground uppercase font-bold">Price</p><p className="text-sm font-bold text-primary">${selectedAccount?.price}</p></div>
+                   <div className="flex justify-between"><span className="text-xs text-muted-foreground">Game Type</span><Badge className="text-[10px] rounded-full uppercase">{selectedAccount?.gameType}</Badge></div>
                 </div>
              </div>
 
@@ -1420,9 +1432,21 @@ export default function AdminPage() {
                 <Select value={pendingAccountStatus} onValueChange={setPendingAccountStatus}>
                    <SelectTrigger className="h-12 rounded-xl border-none bg-slate-100 dark:bg-slate-800 font-bold"><SelectValue /></SelectTrigger>
                    <SelectContent className="rounded-xl">
-                      {["pending", "processing", "approved", "rejected"].map(s => <SelectItem key={s} value={s} className="rounded-lg">{s.toUpperCase()}</SelectItem>)}
+                      {["pending", "processing", "approved", "rejected", "holding", "sold"].map(s => <SelectItem key={s} value={s} className="rounded-lg">{s.toUpperCase()}</SelectItem>)}
                    </SelectContent>
                 </Select>
+
+                {pendingAccountStatus === 'sold' && (
+                  <div className="space-y-2 pt-4 animate-in slide-in-from-top-2">
+                    <Label className="text-xs font-bold text-primary uppercase tracking-widest">Assign Buyer (Optional)</Label>
+                    <Select value={assignBuyerId} onValueChange={setAssignBuyerId}>
+                       <SelectTrigger className="h-12 rounded-xl border-none bg-slate-100 dark:bg-slate-800 font-bold"><SelectValue placeholder="Select Buyer" /></SelectTrigger>
+                       <SelectContent className="rounded-xl">
+                          {allUsers.map(u => <SelectItem key={u.uid} value={u.uid}>{u.name} ({u.email})</SelectItem>)}
+                       </SelectContent>
+                    </Select>
+                  </div>
+                )}
              </div>
           </div>
 

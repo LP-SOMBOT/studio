@@ -67,6 +67,7 @@ type Order = {
   completedAt?: number;
   paymentMethod: string;
   gameDetails?: any;
+  buyerOutcome?: 'bought' | 'not_bought';
   processedBy?: {
     uid: string;
     name: string;
@@ -79,18 +80,28 @@ type AccountPost = {
   uid: string;
   authorName: string;
   authorAvatar?: string;
+  gameType: 'freefire' | 'bloodstrike';
   platform: string;
   level: number;
-  age: string;
-  primeLevel: number;
-  items: string[];
+  accountId?: string;
+  accountName?: string;
+  age?: string;
+  primeLevel?: number;
+  items?: string[];
+  evoWeapons?: number;
+  internalWeapons?: number;
+  emotes?: number;
+  executionEmotes?: number;
+  arrivalEmotes?: number;
   price: number;
   fee: number;
   totalCharge: number;
   thumbnailUrl: string;
   imageUrls: string[];
   phone: string;
-  status: 'pending' | 'approved' | 'rejected' | 'processing';
+  status: 'pending' | 'approved' | 'rejected' | 'processing' | 'holding' | 'sold';
+  holdingBy?: string;
+  boughtBy?: string;
   createdAt: number;
   processedAt?: number;
   completedAt?: number;
@@ -167,6 +178,8 @@ type StoreSettings = {
       feeType: 'percentage' | 'fixed';
       feeValue: number;
       listingFee?: number;
+      listingFeeFreeFire?: number;
+      listingFeeBloodStrike?: number;
     };
     adminSettings?: {
       pin: string;
@@ -225,7 +238,8 @@ type AppContextType = {
   markNotificationsAsRead: (notifId?: string) => Promise<void>;
   markAdminNotificationsAsRead: (notifId?: string) => Promise<void>;
   updateOrderStatus: (orderId: string, status: string, cancellationReason?: string) => Promise<void>;
-  updateAccountPostStatus: (postId: string, status: string) => Promise<void>;
+  updateAccountPostStatus: (postId: string, status: string, boughtBy?: string) => Promise<void>;
+  reportAccountOutcome: (postId: string, outcome: 'bought' | 'not_bought') => Promise<void>;
   updateUserProfile: (updates: Partial<UserProfile>) => Promise<void>;
   manageUser: (uid: string, updates: Partial<UserProfile>) => Promise<void>;
   deleteUser: (uid: string) => Promise<void>;
@@ -610,6 +624,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     } catch (e) { sequenceId = Date.now(); }
     const orderId = `iibinta${sequenceId}`;
     const newOrder: Order = { id: orderId, userId: user.uid, items: [directItem], total: directItem.price, status: 'pending', createdAt: Date.now(), paymentMethod, gameDetails };
+    
+    // Handle account holding status
+    if (directItem.gameId === 'accounts' && gameDetails.postId) {
+      await update(ref(rtdb, `accountPosts/${gameDetails.postId}`), {
+        status: 'holding',
+        holdingBy: user.uid
+      });
+    }
+
     await set(ref(rtdb, `orders/${orderId}`), newOrder);
     await broadcastAdminNotification("New Order Received! 🛍️", `Order #${orderId.toUpperCase()} for ${directItem.title} is pending verification.`);
   };
@@ -619,7 +642,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const postRef = push(ref(rtdb, 'accountPosts'));
     await set(postRef, { ...data, uid: user.uid, authorName: enhancedUser?.name, authorAvatar: enhancedUser?.photoURL, status: 'pending', createdAt: Date.now(), views: 0, sold: false });
     toast({ title: "Successfully posted!", description: "Waiting for admin approval of listing fee payment." });
-    await broadcastAdminNotification("New Account Post! 🎮", `${enhancedUser?.name} listed a Lv ${data.level} account.`);
+    await broadcastAdminNotification("New Account Post! 🎮", `${enhancedUser?.name} listed a ${data.gameType} account.`);
   };
 
   const updateAccountPost = async (pid: string, data: any) => {
@@ -639,6 +662,25 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     router.push(`/checkout-account?id=${post.id}`);
+  };
+
+  const reportAccountOutcome = async (pid: string, outcome: 'bought' | 'not_bought') => {
+    if (!rtdb || !user) return;
+    
+    // Find the associated order for this post and user
+    const orderRef = ref(rtdb, 'orders');
+    const orderSnap = await get(query(orderRef, orderByChild('gameDetails/postId'), equalTo(pid)));
+    const orders = orderSnap.val();
+    
+    if (orders) {
+      const orderId = Object.keys(orders).find(id => orders[orderId]?.userId === user.uid);
+      if (orderId) {
+        await update(ref(rtdb, `orders/${orderId}`), { buyerOutcome: outcome });
+        await broadcastAdminNotification("Buyer Report!", `Buyer reported "${outcome}" for account #${pid.toUpperCase()}.`);
+      }
+    }
+
+    toast({ title: "Report Sent!", description: "Admin will verify and update status." });
   };
 
   const broadcastNotification = async (title: string, body: string, target?: string) => {
@@ -681,13 +723,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     await update(ref(rtdb, `orders/${oid}`), assignmentUpdate);
     
     if (status === 'successful') {
-      if (accountItem && accountItem.id) await update(ref(rtdb, `accountPosts/${accountItem.id}`), { sold: true });
+      if (accountItem && accountItem.id) await update(ref(rtdb, `accountPosts/${accountItem.id}`), { status: 'sold', sold: true });
       if (userId && oldStatus !== 'successful') {
         await update(ref(rtdb, `users/${userId}`), { points: increment(1) });
         broadcastNotification("Order Successful! ✅", "Dalabkaaga waa lagu guuleystay. Waxaad heshay 1 point!", userId);
       }
     } else if (status === 'cancelled') {
-      if (accountItem && accountItem.id) await update(ref(rtdb, `accountPosts/${accountItem.id}`), { sold: false });
+      if (accountItem && accountItem.id) await update(ref(rtdb, `accountPosts/${accountItem.id}`), { status: 'approved', sold: false, holdingBy: null });
       if (userId) {
         if (oldStatus === 'successful') {
           await update(ref(rtdb, `users/${userId}`), { points: increment(-1) });
@@ -699,7 +741,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         );
       }
     } else if (oldStatus === 'successful' && status !== 'successful' && status !== 'cancelled') {
-      if (accountItem && accountItem.id) await update(ref(rtdb, `accountPosts/${accountItem.id}`), { sold: false });
+      if (accountItem && accountItem.id) await update(ref(rtdb, `accountPosts/${accountItem.id}`), { status: 'approved', sold: false, holdingBy: null });
       if (userId) {
         await update(ref(rtdb, `users/${userId}`), { points: increment(-1) });
         broadcastNotification("Order Update: Points Revoked ⚠️", `Dalabkaaga waa la bedelay xaaladiisa.`, userId);
@@ -707,20 +749,39 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const updateAccountPostStatus = async (pid: string, status: string) => {
+  const updateAccountPostStatus = async (pid: string, status: string, boughtBy?: string) => {
     if (!rtdb || !enhancedUser) return;
     const postSnap = await get(ref(rtdb, `accountPosts/${pid}`));
     const postData = postSnap.val();
     if (!postData) return;
     const oldStatus = postData.status; const assignmentUpdate: any = { status };
+    
+    if (boughtBy) {
+      assignmentUpdate.boughtBy = boughtBy;
+      assignmentUpdate.sold = true;
+    }
+
+    if (status === 'approved') {
+      assignmentUpdate.holdingBy = null;
+      assignmentUpdate.sold = false;
+    }
+
     if (oldStatus === 'pending' && (status === 'processing' || status === 'approved')) {
       assignmentUpdate.processedBy = { uid: enhancedUser.uid, name: enhancedUser.name, photoURL: enhancedUser.photoURL || "" };
       assignmentUpdate.processedAt = Date.now();
       broadcastAdminNotification(`Listing Assigned! 🤝`, `${enhancedUser.name} is now reviewing listing #${pid.toUpperCase()}`, true);
     }
-    if ((status === 'approved' || status === 'rejected') && oldStatus !== status) assignmentUpdate.completedAt = Date.now();
+    if ((status === 'approved' || status === 'rejected' || status === 'sold') && oldStatus !== status) assignmentUpdate.completedAt = Date.now();
+    
     await update(ref(rtdb, `accountPosts/${pid}`), assignmentUpdate);
-    if (postData.uid) broadcastNotification(status === 'approved' ? "Post Approved! ✅" : "Post Rejected ❌", status === 'approved' ? "Your account is now live in the marketplace." : "Your account listing was rejected by admin.", postData.uid);
+    
+    if (postData.uid) {
+       let msg = "";
+       if (status === 'approved') msg = "Your account is now live in the marketplace.";
+       if (status === 'rejected') msg = "Your account listing was rejected by admin.";
+       if (status === 'sold') msg = "Your account has been marked as SOLD! Check your balance.";
+       if (msg) broadcastNotification(status === 'approved' ? "Post Approved! ✅" : status === 'sold' ? "Account Sold! 🤑" : "Post Rejected ❌", msg, postData.uid);
+    }
   };
 
   const updateUserProfile = async (updates: any) => { if (!rtdb || !user) return; await update(ref(rtdb, `users/${user.uid}`), updates); toast({ title: "Profile updated!" }); };
@@ -843,7 +904,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     <AppContext.Provider value={{ 
       user: enhancedUser, loading, isGlobalLoading, isInitialLoading, activeTab, setActiveTab, setGlobalLoading: setIsGlobalLoading,
       login, signup, logout, buyNow, orders, allOrders, games, products, allUsers, accountPosts, notifications, adminNotifications, events, banners,
-      createOrder, postAccount, updateAccountPost, deleteAccountPost, deleteOrder, buyAccountPost, markNotificationsAsRead, markAdminNotificationsAsRead, updateOrderStatus, updateAccountPostStatus, 
+      createOrder, postAccount, updateAccountPost, deleteAccountPost, deleteOrder, buyAccountPost, markNotificationsAsRead, markAdminNotificationsAsRead, updateOrderStatus, updateAccountPostStatus, reportAccountOutcome,
       updateUserProfile, manageUser, deleteUser, saveGame, deleteGame, saveProduct, deleteProduct, saveEvent, deleteEvent, saveBanner, deleteBanner, savePaymentMethod, deletePaymentMethod, storeSettings, updateStoreSettings, 
       broadcastNotification, broadcastAdminNotification, messages, allChatSessions, chatTargetId, setChatTargetId, sendMessage, markMessagesAsRead, refreshAdminData,
       theme, toggleTheme, isBannedModalOpen, setIsBannedModalOpen, bannedInfo
