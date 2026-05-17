@@ -15,7 +15,8 @@ import {
   CreditCard,
   AlertTriangle,
   MessageCircle,
-  ShoppingBag
+  ShoppingBag,
+  Copy
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -155,6 +156,11 @@ Fadlan ila soo xiriir.`;
     }, 1500);
   };
 
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast({ title: "La koobiyey!", description: "Number-ka waa la koobiyey." });
+  };
+
   if (!item && step < 4) {
     return (
       <div className="space-y-6">
@@ -226,11 +232,34 @@ Fadlan ila soo xiriir.`;
           <CardContent>
             <form onSubmit={!isBooyahPass ? handleDetailsSubmit : (e) => e.preventDefault()} className="space-y-6 pt-4">
               
-              <div className="p-4 rounded-2xl bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-900/20 flex gap-3 text-red-600 dark:text-red-400">
+              <div className={cn(
+                "p-4 rounded-2xl flex gap-3",
+                isBooyahPass 
+                  ? "bg-blue-50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/20 text-blue-600 dark:text-blue-400"
+                  : "bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-900/20 text-red-600 dark:text-red-400"
+              )}>
                  <AlertTriangle className="shrink-0 w-5 h-5" />
-                 <p className="text-[11px] font-bold leading-relaxed">
-                   Fadlan iska hubi Xogta sida ID gaga inta aadan dalabka dirin, dalabka mar hadii la diro lama Soo celin karo FADLAN ISKA HUBI, Mahadsanid!.
-                 </p>
+                 {isBooyahPass ? (
+                   <div className="flex flex-col gap-2">
+                     <p className="text-[11px] font-bold leading-relaxed">
+                        Number kaan ku dir lacag dhan <span className="text-sm font-headline text-foreground dark:text-white">${total.toFixed(2)}</span>
+                     </p>
+                     <div className="flex items-center gap-2 bg-white/50 dark:bg-black/20 px-4 py-2 rounded-xl border border-blue-200/50 dark:border-blue-800/30 w-fit">
+                        <span className="text-sm font-mono font-bold tracking-wider">{item?.whatsappNumber || "252613982172"}</span>
+                        <button 
+                          type="button"
+                          onClick={() => copyToClipboard(item?.whatsappNumber || "252613982172")}
+                          className="p-1.5 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-lg transition-colors text-blue-700 dark:text-blue-300"
+                        >
+                           <Copy size={16} />
+                        </button>
+                     </div>
+                   </div>
+                 ) : (
+                   <p className="text-[11px] font-bold leading-relaxed">
+                     Fadlan iska hubi Xogta sida ID gaga inta aadan dalabka dirin, dalabka mar hadii la diro lama Soo celin karo FADLAN ISKA HUBI, Mahadsanid!.
+                   </p>
+                 )}
               </div>
 
               <div className="space-y-4">
