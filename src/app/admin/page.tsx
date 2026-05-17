@@ -1619,7 +1619,7 @@ export default function AdminPage() {
           <div className="bg-primary p-6 sm:p-8 text-white"><DialogTitle className="text-xl sm:text-2xl font-headline font-bold">{editingProduct ? 'Edit Item' : 'Add New Item'}</DialogTitle></div>
           <form onSubmit={handleSaveProduct} className="p-6 sm:p-8 space-y-6 max-h-[70vh] overflow-y-auto scrollbar-hide">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2"><Label className="text-xs font-bold uppercase text-slate-400">Item Title</Label><Input value={productForm.title} onChange={e => setProductForm({...productForm, title: e.target.value})} required className="rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold h-12" /></div>
+              <div className="space-y-2"><Label className="text-xs font-bold uppercase text-slate-400">Price ($)</Label><Input value={productForm.title} onChange={e => setProductForm({...productForm, title: e.target.value})} required className="rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold h-12" /></div>
               <div className="space-y-2">
                 <Label className="text-xs font-bold uppercase text-slate-400">Item Type</Label>
                 <Select value={productForm.category} onValueChange={v => setProductForm({...productForm, category: v as any})}>
@@ -1654,7 +1654,7 @@ export default function AdminPage() {
                   <Input type="number" step="0.01" value={productForm.price} onChange={e => setProductForm({...productForm, price: e.target.value})} required className="rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold h-12" />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase text-primary">Price</Label>
+                  <Label className="text-xs font-bold uppercase text-primary">Discounted price</Label>
                   <Input type="number" step="0.01" placeholder="Optional" value={productForm.discountedPrice} onChange={e => setProductForm({...productForm, discountedPrice: e.target.value})} className="rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold h-12" />
                 </div>
               </div>
@@ -1809,7 +1809,7 @@ function StatCard({ label, value, icon: Icon, color, badge }: { label: string, v
   return (
     <Card className="rounded-[1.5rem] sm:rounded-[2.5rem] p-4 sm:p-6 border-none shadow-lg bg-white dark:bg-slate-900 relative">
       {badge && <div className="absolute top-4 right-4 w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.6)]" />}
-      <div className={cn("w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-6", colors[color])}><Icon size={20} className="sm:w-6 sm:h-6" /></div>
+      <div className={cn("w-10 h-10 sm:w-12 h-12 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-6", colors[color])}><Icon size={20} className="sm:w-6 sm:h-6" /></div>
       <h3 className="text-xl sm:text-3xl font-headline font-bold text-slate-900 dark:text-white mb-1 truncate">{value}</h3>
       <p className="text-[8px] sm:text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.1em] sm:tracking-[0.2em]">{label}</p>
     </Card>
