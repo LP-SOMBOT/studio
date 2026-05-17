@@ -17,7 +17,8 @@ import {
   AlertTriangle,
   MessageCircle,
   ShoppingBag,
-  Copy
+  Copy,
+  Lock
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -402,12 +403,22 @@ Fadlan ila soo xiriir.`;
               </RadioGroup>
             )}
 
-            <div className="bg-gray-50 dark:bg-slate-800/40 p-6 rounded-[2rem] mb-8 border border-gray-100 dark:border-white/5">
-              <div className="flex justify-between items-center">
-                <span className="text-base text-muted-foreground dark:text-slate-400 font-medium">Order Total:</span>
-                <span className="text-3xl font-headline font-bold text-primary">${total.toFixed(2)}</span>
+            <div className="bg-gray-50 dark:bg-slate-800/40 p-6 rounded-[2rem] mb-8 border border-gray-100 dark:border-white/5 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+                <Lock size={60} />
               </div>
-              <p className="text-[10px] text-muted-foreground text-center mt-2 italic">* This is the fixed base price.</p>
+              <div className="flex justify-between items-center relative z-10">
+                <span className="text-base text-muted-foreground dark:text-slate-400 font-medium">Order Total:</span>
+                <div className="text-right">
+                  <span className="text-3xl font-headline font-bold text-primary">${total.toFixed(2)}</span>
+                  <div className="flex items-center justify-end gap-1 text-[10px] text-green-600 dark:text-green-400 font-bold uppercase tracking-widest mt-1">
+                    <ShieldCheck size={12} /> Fixed Base Rate
+                  </div>
+                </div>
+              </div>
+              <p className="text-[9px] text-muted-foreground text-center mt-4 italic opacity-60">
+                * Note: Promotional display prices are visual only. This total reflects the official base price.
+              </p>
             </div>
 
             <div className="flex gap-4">

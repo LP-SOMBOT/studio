@@ -66,7 +66,8 @@ import {
   Trophy,
   Megaphone,
   CreditCard as PaymentIcon,
-  UserCircle
+  UserCircle,
+  Tag
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -1394,7 +1395,7 @@ export default function AdminPage() {
                         <div className="flex justify-between border-b dark:border-white/5 pb-2"><span className="text-xs text-muted-foreground">Player ID / Game ID</span><span className="text-xs font-bold font-mono tracking-wider">{selectedOrder?.gameDetails?.playerID || selectedOrder?.gameDetails?.postId || 'N/A'}</span></div>
                         <div className="flex justify-between border-b dark:border-white/5 pb-2"><span className="text-xs text-muted-foreground">In-Game Name</span><span className="text-xs font-bold">{selectedOrder?.gameDetails?.playerName || selectedOrder?.gameDetails?.name || 'N/A'}</span></div>
                         <div className="flex justify-between border-b dark:border-white/5 pb-2"><span className="text-xs text-muted-foreground">Sender Number</span><span className="text-xs font-bold text-primary">{selectedOrder?.gameDetails?.senderNumber || 'N/A'}</span></div>
-                        <div className="flex justify-between"><span className="text-xs text-muted-foreground">WhatsApp</span><span className="text-xs font-bold">{selectedOrder?.gameDetails?.whatsappNumber || 'N/A'}</span></div>
+                        <div className="flex justify-between border-b dark:border-white/5 pb-2"><span className="text-xs text-muted-foreground">WhatsApp</span><span className="text-xs font-bold">{selectedOrder?.gameDetails?.whatsappNumber || 'N/A'}</span></div>
                       </>
                     )}
                  </div>
@@ -1648,15 +1649,20 @@ export default function AdminPage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase text-slate-400">Base Price ($)</Label>
+                <Label className="text-xs font-bold uppercase text-slate-400">Base Price (Payable $)</Label>
                 <Input type="number" step="0.01" value={productForm.price} onChange={e => setProductForm({...productForm, price: e.target.value})} required className="rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold h-12" />
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase text-slate-400">Discounted Price ($) - Optional</Label>
-              <Input type="number" step="0.01" value={productForm.discountedPrice} onChange={e => setProductForm({...productForm, discountedPrice: e.target.value})} className="rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold h-12" />
-              <p className="text-[10px] text-muted-foreground italic">* Leave empty if no discount. This price is for display only and will NOT be charged to the user.</p>
+            <div className="space-y-2 p-4 bg-amber-50 dark:bg-amber-950/20 rounded-2xl border border-amber-100 dark:border-amber-900/20">
+              <div className="flex items-center gap-2 mb-2 text-amber-600">
+                <Tag size={16} />
+                <Label className="text-xs font-bold uppercase tracking-widest">Visual Promo Price ($)</Label>
+              </div>
+              <Input type="number" step="0.01" value={productForm.discountedPrice} onChange={e => setProductForm({...productForm, discountedPrice: e.target.value})} className="rounded-xl bg-white dark:bg-slate-800 border-none font-bold h-12 shadow-sm" />
+              <p className="text-[10px] text-amber-700 dark:text-amber-400 font-medium italic mt-2">
+                * This price is for <strong>DISPLAY ONLY</strong>. It will show as the discounted price on the card, but users will still be charged the <strong>Base Price</strong> at checkout.
+              </p>
             </div>
 
             <div className="space-y-2"><Label className="text-xs font-bold uppercase text-slate-400">Description</Label><Textarea value={productForm.description} onChange={e => setProductForm({...productForm, description: e.target.value})} className="rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold min-h-[80px]" /></div>
