@@ -18,7 +18,8 @@ import {
   MessageCircle,
   ShoppingBag,
   Copy,
-  Lock
+  Lock,
+  Tag
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -70,7 +71,12 @@ function CheckoutContent() {
     return (games || []).find(g => g.id === item?.gameId);
   }, [games, item?.gameId]);
 
-  const total = item ? Number(item.price || 0) : 0;
+  const total = useMemo(() => {
+    if (!item) return 0;
+    const base = Number(item.price || 0);
+    const disc = Number(item.discountedPrice || 0);
+    return (disc > 0 && disc < base) ? disc : base;
+  }, [item]);
   
   const gameTitle = game?.title?.toLowerCase() || "";
   const isFreeFire = gameTitle.includes("free fire");
@@ -125,7 +131,7 @@ Fadlan ila soo xiriir.`;
     const method = paymentMethods.find(m => m.id === selectedMethodId);
     if (!method) return;
 
-    const formattedPrice = total.toString().replace('.', '*');
+    const formattedPrice = total.toFixed(2).replace('.', '*');
     const ussd = method.ussdTemplate.replace('$', formattedPrice);
     
     toast({
@@ -408,11 +414,16 @@ Fadlan ila soo xiriir.`;
                 <Lock size={60} />
               </div>
               <div className="flex justify-between items-center relative z-10">
-                <span className="text-base text-muted-foreground dark:text-slate-400 font-medium">Order Total:</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-base text-muted-foreground dark:text-slate-400 font-medium">Order Total:</span>
+                  {item?.discountedPrice && Number(item.discountedPrice) < Number(item.price) && (
+                    <Badge className="bg-primary/10 text-primary border-none text-[10px] font-black uppercase">Promo Applied</Badge>
+                  )}
+                </div>
                 <div className="text-right">
                   <span className="text-3xl font-headline font-bold text-primary">${total.toFixed(2)}</span>
                   <div className="flex items-center justify-end gap-1 text-[10px] text-green-600 dark:text-green-400 font-bold uppercase tracking-widest mt-1">
-                    <ShieldCheck size={12} /> Fixed Base Rate
+                    <ShieldCheck size={12} /> Secure Rate
                   </div>
                 </div>
               </div>

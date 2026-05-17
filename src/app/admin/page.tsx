@@ -203,7 +203,7 @@ export default function AdminPage() {
   const [deleteTarget, setDeleteTarget] = useState<{ id: string, type: 'user' | 'game' | 'product' | 'event' | 'banner' | 'account' | 'order' | 'payment' } | null>(null);
 
   const [gameForm, setGameForm] = useState({ title: "", icon: "", category: "top-up" });
-  const [productForm, setProductForm] = useState({ title: "", gameId: "", category: "top-up", description: "", price: "", thumbnail: "", whatsappNumber: "" });
+  const [productForm, setProductForm] = useState({ title: "", gameId: "", category: "top-up", description: "", price: "", discountedPrice: "", thumbnail: "", whatsappNumber: "" });
   const [eventForm, setEventForm] = useState({ 
     title: "", 
     shortDescription: "", 
@@ -280,12 +280,13 @@ export default function AdminPage() {
       setProductForm({ 
         ...product, 
         price: product.price?.toString(), 
+        discountedPrice: product.discountedPrice?.toString() || "",
         category: product.category || "top-up",
         whatsappNumber: product.whatsappNumber || ""
       });
     } else {
       setEditingProduct(null);
-      setProductForm({ title: "", gameId: selectedGameId || "", category: "top-up", description: "", price: "", thumbnail: "", whatsappNumber: "" });
+      setProductForm({ title: "", gameId: selectedGameId || "", category: "top-up", description: "", price: "", discountedPrice: "", thumbnail: "", whatsappNumber: "" });
     }
     setIsProductDialogOpen(true);
   };
@@ -369,7 +370,8 @@ export default function AdminPage() {
     try {
       await saveProduct({ 
         ...productForm, 
-        price: parseFloat(productForm.price)
+        price: parseFloat(productForm.price),
+        discountedPrice: productForm.discountedPrice ? parseFloat(productForm.discountedPrice) : undefined
       });
       toast({ title: "Item Saved" });
       setIsProductDialogOpen(false);
@@ -770,7 +772,14 @@ export default function AdminPage() {
                            </div>
                            <div className="flex justify-between items-end">
                              <div className="flex flex-col">
-                                <span className="font-bold text-base sm:text-lg text-primary">${p.price}</span>
+                                {p.discountedPrice && p.discountedPrice < p.price ? (
+                                  <>
+                                    <span className="text-[10px] text-muted-foreground line-through">${p.price}</span>
+                                    <span className="font-bold text-base sm:text-lg text-primary">${p.discountedPrice}</span>
+                                  </>
+                                ) : (
+                                  <span className="font-bold text-base sm:text-lg text-primary">${p.price}</span>
+                                )}
                              </div>
                              <div className="flex gap-1">
                                 <Button size="icon" variant="ghost" className="h-8 w-8 text-blue-500" onClick={() => handleOpenProductDialog(p)}><Edit size={16} /></Button>
@@ -1639,9 +1648,15 @@ export default function AdminPage() {
                   <SelectContent className="rounded-xl">{games.map(g => <SelectItem key={g.id} value={g.id}>{g.title}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase text-slate-400">Price ($)</Label>
-                <Input type="number" step="0.01" value={productForm.price} onChange={e => setProductForm({...productForm, price: e.target.value})} required className="rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold h-12" />
+              <div className="grid grid-cols-2 gap-3 flex-1">
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold uppercase text-slate-400">Price ($)</Label>
+                  <Input type="number" step="0.01" value={productForm.price} onChange={e => setProductForm({...productForm, price: e.target.value})} required className="rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold h-12" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold uppercase text-primary">Discount ($)</Label>
+                  <Input type="number" step="0.01" placeholder="Optional" value={productForm.discountedPrice} onChange={e => setProductForm({...productForm, discountedPrice: e.target.value})} className="rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold h-12" />
+                </div>
               </div>
             </div>
 
