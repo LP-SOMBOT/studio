@@ -202,7 +202,10 @@ function EventCard({ event }: { event: any }) {
   }, [event.expiresAt]);
 
   return (
-    <Card className="group overflow-hidden rounded-[2.5rem] lg:rounded-[3rem] border-none shadow-xl bg-white dark:bg-slate-900 transition-all hover:shadow-2xl hover:-translate-y-2">
+    <Card 
+      onClick={() => router.push(`/events/${event.id}`)}
+      className="group overflow-hidden rounded-[2.5rem] lg:rounded-[3rem] border-none shadow-xl bg-white dark:bg-slate-900 transition-all hover:shadow-2xl hover:-translate-y-2 cursor-pointer"
+    >
       <div className="relative aspect-[16/9] w-full">
         <Image src={event.thumbnailUrl || 'https://picsum.photos/seed/event/600/400'} alt={event.title} fill className="object-cover group-hover:scale-110 transition-transform duration-1000" unoptimized />
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
@@ -234,7 +237,7 @@ function EventCard({ event }: { event: any }) {
           <Button 
             variant="ghost" 
             className="rounded-full h-10 lg:h-12 px-6 font-bold text-xs lg:text-sm hover:bg-primary/10 transition-all active:scale-95" 
-            onClick={() => router.push(`/events/${event.id}`)}
+            onClick={(e) => { e.stopPropagation(); router.push(`/events/${event.id}`); }}
           >
             View <ChevronRight className="w-4 h-4 ml-1" />
           </Button>
