@@ -1033,25 +1033,101 @@ export default function AdminPage() {
             <div className="flex flex-col">
               <div className="bg-slate-900 p-6 sm:p-10 text-white relative">
                  <Badge className="bg-primary text-white mb-2 font-mono border-none">ORDER {selectedOrder.id.toUpperCase()}</Badge>
-                 <h2 className="text-2xl sm:text-3xl font-headline font-bold">Order Verification</h2>
+                 <h2 className="text-2xl sm:text-3xl font-headline font-bold">Verification Panel</h2>
+                 <p className="text-[10px] text-white/40 uppercase tracking-widest font-bold mt-2">Opened: {format(selectedOrder.createdAt, 'PPpp')}</p>
                  <button onClick={() => setIsOrderDetailOpen(false)} className="absolute top-6 right-6 sm:top-8 sm:right-8 text-white/20 hover:text-white"><X size={24} /></button>
-                 {selectedOrder.processedBy && selectedOrder.processedBy.uid !== user.uid && (
-                   <div className="mt-4 p-4 bg-amber-500/20 rounded-2xl flex items-center gap-4 border border-amber-500/40">
-                      <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-amber-500">
-                        {selectedOrder.processedBy.photoURL ? <Image src={selectedOrder.processedBy.photoURL} alt="" width={40} height={40} className="object-cover" /> : <User size={20} className="m-2" />}
+                 
+                 {selectedOrder.processedBy && (
+                   <div className={cn(
+                     "mt-6 p-5 rounded-2xl flex items-center gap-4 border",
+                     selectedOrder.processedBy.uid === user.uid 
+                       ? "bg-primary/20 border-primary/40" 
+                       : "bg-amber-500/20 border-amber-500/40 animate-pulse"
+                   )}>
+                      <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white/20 shrink-0">
+                        {selectedOrder.processedBy.photoURL ? <Image src={selectedOrder.processedBy.photoURL} alt="" width={48} height={48} className="object-cover" /> : <User size={24} className="m-3" />}
                       </div>
-                      <p className="text-sm font-bold text-amber-200">⚠️ {selectedOrder.processedBy.name} is currently handling this order.</p>
+                      <div className="flex-1">
+                        <p className="text-sm font-bold text-white">
+                          {selectedOrder.processedBy.uid === user.uid ? "You are handling this order." : `${selectedOrder.processedBy.name} is working on this order.`}
+                        </p>
+                        <p className="text-[10px] text-white/60 font-medium">Started: {selectedOrder.processedAt ? format(selectedOrder.processedAt, 'HH:mm:ss') : 'N/A'}</p>
+                      </div>
                    </div>
                  )}
               </div>
-              <div className="p-6 sm:p-10 space-y-8 sm:space-y-10">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8">
-                  <div><h4 className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Customer</h4><Card className="p-4 sm:p-5 rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none flex flex-col gap-4 shadow-inner"><div className="flex items-center gap-4"><div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0"><User size={24} /></div><div className="min-w-0"><p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">{selectedOrder.gameDetails?.playerName || "N/A"}</p><p className="text-[9px] sm:text-[10px] text-muted-foreground uppercase font-mono tracking-tight truncate">{selectedOrder.gameDetails?.playerID || "N/A"}</p></div></div><div className="space-y-2 pt-2 border-t dark:border-white/5"><div className="flex justify-between items-center"><span className="text-[9px] sm:text-[10px] font-bold text-slate-400">Sender:</span><span className="text-[11px] sm:text-xs font-bold text-primary">{selectedOrder.gameDetails?.senderNumber || "N/A"}</span></div></div></Card></div>
-                  <div><h4 className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Item</h4><Card className="p-4 sm:p-5 rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none flex items-center gap-4 shadow-inner h-full"><div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center text-amber-500 shrink-0"><Package size={24} /></div><div className="min-w-0"><p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">{selectedOrder.items?.[0]?.title}</p><p className="text-[9px] sm:text-[10px] text-primary font-bold uppercase">${selectedOrder.total?.toFixed(2)}</p></div></Card></div>
+              
+              <div className="p-6 sm:p-10 space-y-10">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-4">
+                    <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2"><User size={12}/> Customer Data</h4>
+                    <Card className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800 border-none shadow-inner space-y-3">
+                       <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0"><User size={28} /></div>
+                          <div className="min-w-0">
+                             <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{selectedOrder.gameDetails?.playerName || "Client"}</p>
+                             <p className="text-[10px] font-mono text-muted-foreground uppercase">{selectedOrder.gameDetails?.playerID || "No ID"}</p>
+                          </div>
+                       </div>
+                       <div className="pt-3 border-t dark:border-white/5 space-y-2">
+                          <div className="flex justify-between text-[10px] font-bold"><span className="text-slate-400 uppercase">Sender:</span> <span className="text-primary">{selectedOrder.gameDetails?.senderNumber || "N/A"}</span></div>
+                          <div className="flex justify-between text-[10px] font-bold"><span className="text-slate-400 uppercase">Contact:</span> <span className="text-slate-600 dark:text-slate-300">{selectedOrder.gameDetails?.phoneNumber || "N/A"}</span></div>
+                       </div>
+                    </Card>
+                  </div>
+
+                  <div className="space-y-4">
+                    <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2"><Package size={12}/> Package Details</h4>
+                    <Card className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800 border-none shadow-inner h-full flex flex-col justify-between">
+                       <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center text-amber-500 shrink-0"><Package size={28} /></div>
+                          <div className="min-w-0">
+                             <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{selectedOrder.items?.[0]?.title}</p>
+                             <p className="text-[10px] font-bold text-primary uppercase tracking-tight">{selectedOrder.items?.[0]?.gameId}</p>
+                          </div>
+                       </div>
+                       <div className="pt-3 border-t dark:border-white/5 flex justify-between items-end">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase">Price:</span>
+                          <span className="text-2xl font-headline font-bold text-primary">${selectedOrder.total?.toFixed(2)}</span>
+                       </div>
+                    </Card>
+                  </div>
                 </div>
-                <div className="pt-6 sm:pt-8 border-t dark:border-white/5 space-y-6">
-                   <div className="flex flex-col gap-2"><Label className="text-[9px] sm:text-[10px] font-bold uppercase text-slate-400 tracking-widest ml-1">Process Action</Label><Select value={pendingOrderStatus} onValueChange={setPendingStatus}><SelectTrigger className="h-14 sm:h-16 rounded-xl sm:rounded-2xl font-bold text-base sm:text-lg bg-slate-50 dark:bg-slate-800 border-none"><SelectValue /></SelectTrigger><SelectContent className="rounded-xl sm:rounded-2xl dark:bg-slate-900">{["pending", "processing", "successful", "cancelled"].map(s => <SelectItem key={s} value={s} className="rounded-xl uppercase font-bold">{s}</SelectItem>)}</SelectContent></Select></div>
-                   <div className="flex flex-col sm:flex-row gap-3"><Button variant="outline" onClick={() => setIsOrderDetailOpen(false)} className="w-full sm:flex-1 h-14 sm:h-16 rounded-xl sm:rounded-2xl font-bold">Cancel</Button><Button onClick={handleStatusSave} disabled={isSavingStatus || pendingOrderStatus === selectedOrder.status} className="w-full sm:flex-[2] h-14 sm:h-16 rounded-xl sm:rounded-2xl font-bold text-base sm:text-lg shadow-xl shadow-primary/20">{isSavingStatus ? <Loader2 className="animate-spin" /> : "Save Changes"}</Button></div>
+
+                <div className="space-y-6 pt-6 border-t dark:border-white/5">
+                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800 flex flex-col gap-1">
+                         <span className="text-[9px] font-bold text-slate-400 uppercase">Order Created</span>
+                         <span className="text-[11px] font-bold">{format(selectedOrder.createdAt, 'HH:mm:ss')}</span>
+                      </div>
+                      <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800 flex flex-col gap-1">
+                         <span className="text-[9px] font-bold text-slate-400 uppercase">Admin Handled</span>
+                         <span className="text-[11px] font-bold">{selectedOrder.processedAt ? format(selectedOrder.processedAt, 'HH:mm:ss') : 'Waiting...'}</span>
+                      </div>
+                      <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800 flex flex-col gap-1">
+                         <span className="text-[9px] font-bold text-slate-400 uppercase">Completed At</span>
+                         <span className={cn("text-[11px] font-bold", !selectedOrder.completedAt && "text-slate-400 italic")}>{selectedOrder.completedAt ? format(selectedOrder.completedAt, 'HH:mm:ss') : 'Not Yet'}</span>
+                      </div>
+                   </div>
+
+                   <div className="space-y-4 pt-6">
+                      <Label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest ml-1">Change Status</Label>
+                      <Select value={pendingOrderStatus} onValueChange={setPendingStatus}>
+                        <SelectTrigger className="h-16 rounded-[1.5rem] font-bold text-lg bg-slate-50 dark:bg-slate-800 border-none shadow-inner">
+                           <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-2xl dark:bg-slate-900">
+                           {["pending", "processing", "successful", "cancelled"].map(s => <SelectItem key={s} value={s} className="rounded-xl uppercase font-bold">{s}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                   </div>
+
+                   <div className="flex flex-col sm:flex-row gap-3 pt-4">
+                      <Button variant="outline" onClick={() => setIsOrderDetailOpen(false)} className="w-full sm:flex-1 h-16 rounded-[1.5rem] font-bold">Discard</Button>
+                      <Button onClick={handleStatusSave} disabled={isSavingStatus || pendingOrderStatus === selectedOrder.status} className="w-full sm:flex-[2] h-16 rounded-[1.5rem] font-bold text-lg shadow-xl shadow-primary/20">
+                         {isSavingStatus ? <Loader2 className="animate-spin" /> : "Verify & Save Changes"}
+                      </Button>
+                   </div>
                 </div>
               </div>
             </div>
@@ -1067,54 +1143,95 @@ export default function AdminPage() {
               <div className="bg-slate-900 p-6 sm:p-10 text-white relative">
                  <Badge className="bg-amber-500 text-white mb-2 font-mono border-none">LISTING {selectedAccount.id.toUpperCase()}</Badge>
                  <h2 className="text-2xl sm:text-3xl font-headline font-bold">Listing Verification</h2>
+                 <p className="text-[10px] text-white/40 uppercase tracking-widest font-bold mt-2">Submitted: {format(selectedAccount.createdAt, 'PPpp')}</p>
                  <button onClick={() => setIsAccountDetailOpen(false)} className="absolute top-6 right-6 sm:top-8 sm:right-8 text-white/20 hover:text-white"><X size={24} /></button>
-                 {selectedAccount.processedBy && selectedAccount.processedBy.uid !== user.uid && (
-                   <div className="mt-4 p-4 bg-amber-500/20 rounded-2xl flex items-center gap-4 border border-amber-500/40">
-                      <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-amber-500">
-                        {selectedAccount.processedBy.photoURL ? <Image src={selectedAccount.processedBy.photoURL} alt="" width={40} height={40} className="object-cover" /> : <User size={20} className="m-2" />}
+                 
+                 {selectedAccount.processedBy && (
+                   <div className={cn(
+                     "mt-6 p-5 rounded-2xl flex items-center gap-4 border",
+                     selectedAccount.processedBy.uid === user.uid 
+                       ? "bg-amber-500/10 border-amber-500/40" 
+                       : "bg-red-500/20 border-red-500/40 animate-pulse"
+                   )}>
+                      <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-amber-500 shrink-0">
+                        {selectedAccount.processedBy.photoURL ? <Image src={selectedAccount.processedBy.photoURL} alt="" width={48} height={48} className="object-cover" /> : <User size={24} className="m-3" />}
                       </div>
-                      <p className="text-sm font-bold text-amber-200">⚠️ {selectedAccount.processedBy.name} is currently reviewing this listing.</p>
+                      <div className="flex-1">
+                        <p className="text-sm font-bold text-white">
+                          {selectedAccount.processedBy.uid === user.uid ? "You are reviewing this listing." : `${selectedAccount.processedBy.name} is reviewing this listing.`}
+                        </p>
+                        <p className="text-[10px] text-white/60 font-medium">Started: {selectedAccount.processedAt ? format(selectedAccount.processedAt, 'HH:mm:ss') : 'N/A'}</p>
+                      </div>
                    </div>
                  )}
               </div>
-              <div className="p-6 sm:p-10 space-y-8 sm:space-y-10">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8">
+
+              <div className="p-6 sm:p-10 space-y-10">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div>
-                    <h4 className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Seller Details</h4>
-                    <Card className="p-4 sm:p-5 rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none flex flex-col gap-4 shadow-inner">
+                    <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Seller Profile</h4>
+                    <Card className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800 border-none flex flex-col gap-4 shadow-inner">
                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600 relative overflow-hidden shrink-0">
+                          <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600 relative overflow-hidden shrink-0">
                              {selectedAccount.authorAvatar ? <Image src={selectedAccount.authorAvatar} alt="" fill className="object-cover" unoptimized /> : <User size={24} />}
                           </div>
-                          <div className="min-w-0"><p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">{selectedAccount.authorName}</p><p className="text-[9px] sm:text-[10px] text-muted-foreground uppercase font-mono truncate">{selectedAccount.platform}</p></div>
+                          <div className="min-w-0">
+                             <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{selectedAccount.authorName}</p>
+                             <Badge variant="outline" className="border-slate-200 dark:border-slate-700 font-bold text-[9px] uppercase">{selectedAccount.platform}</Badge>
+                          </div>
+                       </div>
+                       <div className="pt-3 border-t dark:border-white/5">
+                          <div className="flex justify-between text-[10px] font-bold"><span className="text-slate-400">CONTACT:</span> <span className="text-slate-600 dark:text-slate-300">{selectedAccount.phone || "N/A"}</span></div>
                        </div>
                     </Card>
                   </div>
+
                   <div>
-                    <h4 className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Listing Data</h4>
-                    <Card className="p-4 sm:p-5 rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none space-y-2 shadow-inner">
-                       <div className="flex justify-between items-center"><span className="text-[11px] sm:text-xs font-bold text-slate-400">Level:</span><span className="font-bold text-slate-900 dark:text-white">Lv {selectedAccount.level}</span></div>
-                       <div className="flex justify-between items-center"><span className="text-[11px] sm:text-xs font-bold text-slate-400">Price:</span><span className="font-bold text-primary">${selectedAccount.price}</span></div>
+                    <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Listing Details</h4>
+                    <Card className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800 border-none shadow-inner space-y-3">
+                       <div className="flex justify-between items-center text-xs"><span className="text-slate-400 font-bold uppercase">Level:</span> <span className="font-bold">Lv {selectedAccount.level}</span></div>
+                       <div className="flex justify-between items-center text-xs"><span className="text-slate-400 font-bold uppercase">Prime:</span> <span className="font-bold">Lv {selectedAccount.primeLevel}</span></div>
+                       <div className="pt-2 border-t dark:border-white/5 flex justify-between items-end">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase">Listing Price:</span>
+                          <span className="text-2xl font-headline font-bold text-primary">${selectedAccount.price}</span>
+                       </div>
                     </Card>
                   </div>
                 </div>
-                <div className="pt-6 sm:pt-8 border-t dark:border-white/5 space-y-6">
-                   <div className="flex flex-col gap-2">
-                      <Label className="text-[9px] sm:text-[10px] font-bold uppercase text-slate-400 tracking-widest ml-1">Marketplace Status</Label>
+
+                <div className="space-y-6 pt-6 border-t dark:border-white/5">
+                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800 flex flex-col gap-1">
+                         <span className="text-[9px] font-bold text-slate-400 uppercase">Submitted</span>
+                         <span className="text-[11px] font-bold">{format(selectedAccount.createdAt, 'HH:mm:ss')}</span>
+                      </div>
+                      <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800 flex flex-col gap-1">
+                         <span className="text-[9px] font-bold text-slate-400 uppercase">Review Started</span>
+                         <span className="text-[11px] font-bold">{selectedAccount.processedAt ? format(selectedAccount.processedAt, 'HH:mm:ss') : 'Waiting...'}</span>
+                      </div>
+                      <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800 flex flex-col gap-1">
+                         <span className="text-[9px] font-bold text-slate-400 uppercase">Approved At</span>
+                         <span className={cn("text-[11px] font-bold", !selectedAccount.completedAt && "text-slate-400 italic")}>{selectedAccount.completedAt ? format(selectedAccount.completedAt, 'HH:mm:ss') : 'Not Yet'}</span>
+                      </div>
+                   </div>
+
+                   <div className="space-y-4 pt-6">
+                      <Label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest ml-1">Marketplace Decision</Label>
                       <Select value={pendingAccountStatus} onValueChange={setPendingAccountStatus}>
-                        <SelectTrigger className="h-14 sm:h-16 rounded-xl sm:rounded-2xl font-bold text-base sm:text-lg bg-slate-50 dark:bg-slate-800 border-none shadow-inner">
+                        <SelectTrigger className="h-16 rounded-[1.5rem] font-bold text-lg bg-slate-50 dark:bg-slate-800 border-none shadow-inner">
                            <SelectValue />
                         </SelectTrigger>
-                        <SelectContent className="rounded-xl sm:rounded-2xl dark:bg-slate-900">
+                        <SelectContent className="rounded-2xl dark:bg-slate-900">
                            {["pending", "processing", "approved", "rejected"].map(s => (
                              <SelectItem key={s} value={s} className="rounded-xl uppercase font-bold">{s}</SelectItem>
                            ))}
                         </SelectContent>
                       </Select>
                    </div>
-                   <div className="flex flex-col sm:flex-row gap-3">
-                      <Button variant="outline" onClick={() => setIsAccountDetailOpen(false)} className="w-full sm:flex-1 h-14 sm:h-16 rounded-xl sm:rounded-2xl font-bold">Cancel</Button>
-                      <Button onClick={handleAccountStatusSave} disabled={isSavingStatus || pendingAccountStatus === selectedAccount.status} className="w-full sm:flex-[2] h-14 sm:h-16 rounded-xl sm:rounded-2xl font-bold text-base sm:text-lg shadow-xl shadow-primary/20">
+
+                   <div className="flex flex-col sm:flex-row gap-3 pt-4">
+                      <Button variant="outline" onClick={() => setIsAccountDetailOpen(false)} className="w-full sm:flex-1 h-16 rounded-[1.5rem] font-bold">Back</Button>
+                      <Button onClick={handleAccountStatusSave} disabled={isSavingStatus || pendingAccountStatus === selectedAccount.status} className="w-full sm:flex-[2] h-16 rounded-[1.5rem] font-bold text-lg shadow-xl shadow-primary/20">
                          {isSavingStatus ? <Loader2 className="animate-spin" /> : "Xaqiiji Listing-ka"}
                       </Button>
                    </div>

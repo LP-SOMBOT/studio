@@ -54,6 +54,8 @@ type Order = {
   total: number;
   status: 'pending' | 'processing' | 'successful' | 'cancelled';
   createdAt: number;
+  processedAt?: number;
+  completedAt?: number;
   paymentMethod: string;
   gameDetails?: any;
   processedBy?: {
@@ -81,6 +83,8 @@ type AccountPost = {
   phone: string;
   status: 'pending' | 'approved' | 'rejected' | 'processing';
   createdAt: number;
+  processedAt?: number;
+  completedAt?: number;
   views: number;
   sold: boolean;
   processedBy?: {
@@ -727,16 +731,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     
     const accountItem = items.find((i: any) => i.gameId === 'accounts' || i.gameId === 'account');
     
-    // Multi-admin Assignment Logic
     const assignmentUpdate: any = { status };
+
+    // Set Processed info if moving from pending
     if (oldStatus === 'pending' && (status === 'processing' || status === 'successful')) {
       assignmentUpdate.processedBy = {
         uid: enhancedUser.uid,
         name: enhancedUser.name,
         photoURL: enhancedUser.photoURL || ""
       };
-      // Broadcast to other admins (no push)
+      assignmentUpdate.processedAt = Date.now();
       broadcastAdminNotification(`Order Assigned! 🤝`, `${enhancedUser.name} is now handling Order #${oid.toUpperCase()}`, true);
+    }
+
+    // Set Completion time if moving to successful
+    if (status === 'successful' && oldStatus !== 'successful') {
+      assignmentUpdate.completedAt = Date.now();
     }
 
     await update(ref(rtdb, `orders/${oid}`), assignmentUpdate);
@@ -770,15 +780,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     const oldStatus = postData.status;
 
-    // Multi-admin Assignment
     const assignmentUpdate: any = { status };
+
     if (oldStatus === 'pending' && (status === 'processing' || status === 'approved')) {
       assignmentUpdate.processedBy = {
         uid: enhancedUser.uid,
         name: enhancedUser.name,
         photoURL: enhancedUser.photoURL || ""
       };
+      assignmentUpdate.processedAt = Date.now();
       broadcastAdminNotification(`Listing Assigned! 🤝`, `${enhancedUser.name} is now reviewing listing #${pid.toUpperCase()}`, true);
+    }
+
+    if (status === 'approved' && oldStatus !== 'approved') {
+      assignmentUpdate.completedAt = Date.now();
     }
 
     await update(ref(rtdb, `accountPosts/${pid}`), assignmentUpdate);
