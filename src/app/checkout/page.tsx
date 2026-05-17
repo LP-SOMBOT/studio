@@ -80,7 +80,7 @@ function CheckoutContent() {
   };
 
   const handleBooyahRedirect = () => {
-    if (!gameDetails.playerID || !gameDetails.whatsappNumber) {
+    if (!gameDetails.playerID || !gameDetails.whatsappNumber || !gameDetails.senderNumber) {
       toast({ title: "Fadlan buuxi meelaha banaan", variant: "destructive" });
       return;
     }
@@ -93,6 +93,7 @@ Qiimaha: *$${total.toFixed(2)}*
 *Xogta Dalabka:*
 Game ID: ${gameDetails.playerID}
 WhatsApp: ${gameDetails.whatsappNumber}
+Lacag Diraha: ${gameDetails.senderNumber}
 
 Fadlan ila soo xiriir.`;
 
@@ -269,25 +270,23 @@ Fadlan ila soo xiriir.`;
                 </div>
               </div>
 
-              {!isBooyahPass && (
-                <div className="space-y-2 pt-4 border-t dark:border-white/5">
-                  <Label htmlFor="sender" className="text-sm font-bold flex items-center gap-2 text-primary">
-                    <CreditCard className="w-4 h-4" /> Lacag Diraha
-                  </Label>
-                  <Input 
-                    id="sender" 
-                    type="tel" 
-                    placeholder="Geli number ka lacagta kasoo direesid" 
-                    required 
-                    className="h-14 rounded-2xl bg-blue-50 dark:bg-blue-900/10 border-2 border-blue-100 dark:border-blue-500/20 focus-visible:ring-primary font-bold text-lg dark:text-white"
-                    value={gameDetails.senderNumber}
-                    onChange={(e) => setGameDetails({...gameDetails, senderNumber: e.target.value})}
-                  />
-                  <p className="text-[10px] text-muted-foreground dark:text-slate-500 font-medium italic">
-                    * Number-kan waxaa loo isticmaali doonaa in lagu hubiyo lacag bixintaada.
-                  </p>
-                </div>
-              )}
+              <div className="space-y-2 pt-4 border-t dark:border-white/5">
+                <Label htmlFor="sender" className="text-sm font-bold flex items-center gap-2 text-primary">
+                  <CreditCard className="w-4 h-4" /> Lacag Diraha
+                </Label>
+                <Input 
+                  id="sender" 
+                  type="tel" 
+                  placeholder="Geli number ka lacagta kasoo direesid" 
+                  required 
+                  className="h-14 rounded-2xl bg-blue-50 dark:bg-blue-900/10 border-2 border-blue-100 dark:border-blue-500/20 focus-visible:ring-primary font-bold text-lg dark:text-white"
+                  value={gameDetails.senderNumber}
+                  onChange={(e) => setGameDetails({...gameDetails, senderNumber: e.target.value})}
+                />
+                <p className="text-[10px] text-muted-foreground dark:text-slate-500 font-medium italic">
+                  * Number-kan waxaa loo isticmaali doonaa in lagu hubiyo lacag bixintaada.
+                </p>
+              </div>
 
               {isBooyahPass ? (
                 <Button 
