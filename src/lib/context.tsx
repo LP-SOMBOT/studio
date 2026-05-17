@@ -56,6 +56,11 @@ type Order = {
   createdAt: number;
   paymentMethod: string;
   gameDetails?: any;
+  processedBy?: {
+    uid: string;
+    name: string;
+    photoURL?: string;
+  };
 };
 
 type AccountPost = {
@@ -78,6 +83,11 @@ type AccountPost = {
   createdAt: number;
   views: number;
   sold: boolean;
+  processedBy?: {
+    uid: string;
+    name: string;
+    photoURL?: string;
+  };
 };
 
 type AppNotification = {
@@ -89,6 +99,7 @@ type AppNotification = {
   createdAt: number;
   linkTo: string;
   icon?: string;
+  isAdminOnly?: boolean;
 };
 
 type GameEvent = {
@@ -172,6 +183,7 @@ type AppContextType = {
   allUsers: UserProfile[];
   accountPosts: AccountPost[];
   notifications: AppNotification[];
+  adminNotifications: AppNotification[];
   events: GameEvent[];
   banners: Banner[];
   createOrder: (paymentMethod: string, gameDetails: any, directItem: CartItem) => Promise<void>;
@@ -181,6 +193,7 @@ type AppContextType = {
   deleteOrder: (orderId: string) => Promise<void>;
   buyAccountPost: (post: AccountPost) => void;
   markNotificationsAsRead: (notifId?: string) => Promise<void>;
+  markAdminNotificationsAsRead: (notifId?: string) => Promise<void>;
   updateOrderStatus: (orderId: string, status: string) => Promise<void>;
   updateAccountPostStatus: (postId: string, status: string) => Promise<void>;
   updateUserProfile: (updates: Partial<UserProfile>) => Promise<void>;
@@ -195,6 +208,7 @@ type AppContextType = {
   storeSettings: StoreSettings;
   updateStoreSettings: (settings: any) => Promise<void>;
   broadcastNotification: (title: string, body: string, target?: string) => Promise<void>;
+  broadcastAdminNotification: (title: string, body: string, skipPush?: boolean) => Promise<void>;
   messages: any[];
   allChatSessions: any[];
   chatTargetId: string | null;
@@ -275,6 +289,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [allOrders, setAllOrders] = useState<Order[]>([]);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const [adminNotifications, setAdminNotifications] = useState<AppNotification[]>([]);
   const [chatTargetId, setChatTargetId] = useState<string | null>(null);
   const [messages, setMessages] = useState<any[]>([]);
   const [allChatSessions, setAllChatSessions] = useState<any[]>([]);
@@ -496,24 +511,46 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     // Admin Panel Restricted Access Logic
     if (!rtdb || !enhancedUser?.isAdmin) {
       if (allOrders.length > 0) setAllOrders([]);
+      setAdminNotifications([]);
       return;
     }
     const allOrdersRef = ref(rtdb, 'orders');
     const chatIndexRef = ref(rtdb, 'chatIndex');
+    const adminNotifsRef = query(ref(rtdb, 'adminNotifications'), limitToLast(30));
+
     const unsubscribeOrders = onValue(allOrdersRef, (snapshot) => {
       const val = snapshot.val();
       if (val) setAllOrders(Object.entries(val).map(([id, v]: any) => ({ ...v, id })).sort((a, b) => b.createdAt - a.createdAt));
       else setAllOrders([]);
     });
+
     const unsubscribeChat = onValue(chatIndexRef, (snapshot) => {
       const val = snapshot.val();
       setAllChatSessions(val ? Object.entries(val).map(([userId, v]: any) => ({ userId, ...v })).sort((a,b) => b.lastTimestamp - a.lastTimestamp) : []);
     });
+
+    const unsubscribeAdminNotifs = onValue(adminNotifsRef, (snapshot) => {
+      const data = snapshot.val() ? Object.entries(snapshot.val()).map(([id, v]: any) => ({ ...v, id })).sort((a,b) => b.createdAt - a.createdAt) : [];
+      
+      // Admin Push Notifications Logic
+      if (data.length > 0) {
+        const latest = data[0];
+        if (!latest.readBy?.[enhancedUser.uid] && latest.createdAt > sessionStartTime.current) {
+          // Rule: Skip push for assignment updates
+          if (latest.type !== 'assignment_update') {
+            showPushNotification(latest.title, latest.body, "admin-push-" + latest.id);
+          }
+        }
+      }
+      setAdminNotifications(data);
+    });
+
     return () => {
       off(allOrdersRef, 'value', unsubscribeOrders);
       off(chatIndexRef, 'value', unsubscribeChat);
+      off(adminNotifsRef, 'value', unsubscribeAdminNotifs);
     };
-  }, [rtdb, enhancedUser?.isAdmin, pathname]);
+  }, [rtdb, enhancedUser, pathname, showPushNotification]);
 
   const refreshAdminData = () => {
     if (!rtdb) return;
@@ -599,11 +636,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       gameDetails
     };
     await set(ref(rtdb, `orders/${orderId}`), newOrder);
+
+    // Notify Admins of New Order
+    await broadcastAdminNotification("New Order Received! 🛍️", `Order #${orderId.toUpperCase()} for ${directItem.title} is pending verification.`);
   };
 
   const postAccount = async (data: any) => {
     if (!rtdb || !user) return;
-    await push(ref(rtdb, 'accountPosts'), {
+    const postRef = push(ref(rtdb, 'accountPosts'));
+    await set(postRef, {
       ...data,
       uid: user.uid,
       authorName: enhancedUser?.name,
@@ -614,6 +655,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       sold: false
     });
     toast({ title: "Successfully posted!", description: "Waiting for admin approval of listing fee payment." });
+
+    // Notify Admins
+    await broadcastAdminNotification("New Account Post! 🎮", `${enhancedUser?.name} listed a Lv ${data.level} account.`);
   };
 
   const updateAccountPost = async (pid: string, data: any) => {
@@ -657,8 +701,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     await update(ref(rtdb), updates);
   };
 
-  const updateOrderStatus = async (oid: string, status: string) => {
+  const broadcastAdminNotification = async (title: string, body: string, skipPush: boolean = false) => {
     if (!rtdb) return;
+    const nid = push(ref(rtdb, 'adminNotifications')).key;
+    await set(ref(rtdb, `adminNotifications/${nid}`), {
+      id: nid,
+      title,
+      body,
+      createdAt: Date.now(),
+      type: skipPush ? 'assignment_update' : 'system_alert',
+      linkTo: '#notifications',
+      readBy: {}
+    });
+  };
+
+  const updateOrderStatus = async (oid: string, status: string) => {
+    if (!rtdb || !enhancedUser) return;
     const orderSnap = await get(ref(rtdb, `orders/${oid}`));
     const orderData = orderSnap.val();
     if (!orderData) return;
@@ -669,7 +727,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     
     const accountItem = items.find((i: any) => i.gameId === 'accounts' || i.gameId === 'account');
     
-    await update(ref(rtdb, `orders/${oid}`), { status });
+    // Multi-admin Assignment Logic
+    const assignmentUpdate: any = { status };
+    if (oldStatus === 'pending' && (status === 'processing' || status === 'successful')) {
+      assignmentUpdate.processedBy = {
+        uid: enhancedUser.uid,
+        name: enhancedUser.name,
+        photoURL: enhancedUser.photoURL || ""
+      };
+      // Broadcast to other admins (no push)
+      broadcastAdminNotification(`Order Assigned! 🤝`, `${enhancedUser.name} is now handling Order #${oid.toUpperCase()}`, true);
+    }
+
+    await update(ref(rtdb, `orders/${oid}`), assignmentUpdate);
     
     if (status === 'successful') {
       if (accountItem && accountItem.id) {
@@ -693,11 +763,27 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateAccountPostStatus = async (pid: string, status: string) => {
-    if (!rtdb) return;
-    await update(ref(rtdb, `accountPosts/${pid}`), { status });
+    if (!rtdb || !enhancedUser) return;
     const postSnap = await get(ref(rtdb, `accountPosts/${pid}`));
     const postData = postSnap.val();
-    if (postData?.uid) {
+    if (!postData) return;
+
+    const oldStatus = postData.status;
+
+    // Multi-admin Assignment
+    const assignmentUpdate: any = { status };
+    if (oldStatus === 'pending' && (status === 'processing' || status === 'approved')) {
+      assignmentUpdate.processedBy = {
+        uid: enhancedUser.uid,
+        name: enhancedUser.name,
+        photoURL: enhancedUser.photoURL || ""
+      };
+      broadcastAdminNotification(`Listing Assigned! 🤝`, `${enhancedUser.name} is now reviewing listing #${pid.toUpperCase()}`, true);
+    }
+
+    await update(ref(rtdb, `accountPosts/${pid}`), assignmentUpdate);
+    
+    if (postData.uid) {
       broadcastNotification(
         status === 'approved' ? "Post Approved! ✅" : "Post Rejected ❌",
         status === 'approved' ? "Your account is now live in the marketplace." : "Your account listing was rejected by admin.",
@@ -730,6 +816,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     else {
       const updates: any = {};
       notifications.forEach(n => updates[`notifications/${user.uid}/${n.id}/read`] = true);
+      await update(ref(rtdb), updates);
+    }
+  };
+
+  const markAdminNotificationsAsRead = async (nid?: string) => {
+    if (!rtdb || !enhancedUser?.isAdmin) return;
+    if (nid) await update(ref(rtdb, `adminNotifications/${nid}/readBy/${enhancedUser.uid}`), true);
+    else {
+      const updates: any = {};
+      adminNotifications.forEach(n => updates[`adminNotifications/${n.id}/readBy/${enhancedUser.uid}`] = true);
       await update(ref(rtdb), updates);
     }
   };
@@ -794,10 +890,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   return (
     <AppContext.Provider value={{ 
       user: enhancedUser, loading, isGlobalLoading, isInitialLoading, activeTab, setActiveTab, setGlobalLoading: setIsGlobalLoading,
-      login, signup, logout, buyNow, orders, allOrders, products, allUsers, accountPosts, notifications, events, banners,
-      createOrder, postAccount, updateAccountPost, deleteAccountPost, deleteOrder, buyAccountPost, markNotificationsAsRead, updateOrderStatus, updateAccountPostStatus, 
+      login, signup, logout, buyNow, orders, allOrders, products, allUsers, accountPosts, notifications, adminNotifications, events, banners,
+      createOrder, postAccount, updateAccountPost, deleteAccountPost, deleteOrder, buyAccountPost, markNotificationsAsRead, markAdminNotificationsAsRead, updateOrderStatus, updateAccountPostStatus, 
       updateUserProfile, manageUser, deleteUser, saveProduct, deleteProduct, saveEvent, deleteEvent, saveBanner, deleteBanner, storeSettings, updateStoreSettings, 
-      broadcastNotification, messages, allChatSessions, chatTargetId, setChatTargetId, sendMessage, markMessagesAsRead, refreshAdminData,
+      broadcastNotification, broadcastAdminNotification, messages, allChatSessions, chatTargetId, setChatTargetId, sendMessage, markMessagesAsRead, refreshAdminData,
       theme, toggleTheme
     }}>
       {children}

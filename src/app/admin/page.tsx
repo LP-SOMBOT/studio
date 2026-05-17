@@ -58,7 +58,8 @@ import {
   Home,
   ShieldAlert,
   Video,
-  Globe
+  Globe,
+  Bell
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -132,6 +133,8 @@ export default function AdminPage() {
     accountPosts,
     events,
     banners,
+    adminNotifications,
+    markAdminNotificationsAsRead,
     updateOrderStatus,
     updateAccountPostStatus,
     deleteUser,
@@ -150,7 +153,7 @@ export default function AdminPage() {
   } = useApp();
 
   const router = useRouter();
-  const [activeView, setActiveView] = useState<'dashboard' | 'orders' | 'products' | 'account-posts' | 'events' | 'users' | 'settings'>('dashboard');
+  const [activeView, setActiveView] = useState<'dashboard' | 'orders' | 'products' | 'account-posts' | 'events' | 'users' | 'settings' | 'notifications'>('dashboard');
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
@@ -389,7 +392,8 @@ export default function AdminPage() {
     revenue: allOrders.filter(o => o.status === 'successful').reduce((acc, o) => acc + (o.total || 0), 0),
     orders: allOrders.length,
     users: allUsers.length,
-    inventory: products.length
+    inventory: products.length,
+    pendingCount: allOrders.filter(o => o.status === 'pending').length + accountPosts.filter(p => p.status === 'pending').length
   };
 
   const filteredOrders = allOrders.filter(o => {
@@ -407,6 +411,8 @@ export default function AdminPage() {
     }
   };
 
+  const unreadAdminNotifs = adminNotifications.filter(n => !n.readBy?.[user.uid]).length;
+
   const SidebarContent = ({ isMobile = false }) => (
     <div className="flex flex-col h-full">
       {!isMobile && (
@@ -421,9 +427,10 @@ export default function AdminPage() {
         <SideNavItem active={false} expanded={isSidebarExpanded || isMobile} onClick={() => router.push('/')} icon={Home} label="Back to Store" className="text-primary hover:bg-primary/5 mb-4" />
         <div className="h-px bg-slate-50 dark:bg-white/5 my-4 mx-2" />
         <SideNavItem active={activeView === 'dashboard'} expanded={isSidebarExpanded || isMobile} onClick={() => { setActiveView('dashboard'); setIsMobileMenuOpen(false); }} icon={LayoutDashboard} label="Dashboard" />
-        <SideNavItem active={activeView === 'orders'} expanded={isSidebarExpanded || isMobile} onClick={() => { setActiveView('orders'); setIsMobileMenuOpen(false); }} icon={ShoppingBag} label="Orders" />
+        <SideNavItem active={activeView === 'orders'} expanded={isSidebarExpanded || isMobile} onClick={() => { setActiveView('orders'); setIsMobileMenuOpen(false); }} icon={ShoppingBag} label="Orders" badge={allOrders.filter(o => o.status === 'pending').length} />
+        <SideNavItem active={activeView === 'account-posts'} expanded={isSidebarExpanded || isMobile} onClick={() => { setActiveView('account-posts'); setIsMobileMenuOpen(false); }} icon={Gamepad2} label="Marketplace" badge={accountPosts.filter(p => p.status === 'pending').length} />
+        <SideNavItem active={activeView === 'notifications'} expanded={isSidebarExpanded || isMobile} onClick={() => { setActiveView('notifications'); setIsMobileMenuOpen(false); }} icon={Bell} label="Notifications" badge={unreadAdminNotifs} />
         <SideNavItem active={activeView === 'products'} expanded={isSidebarExpanded || isMobile} onClick={() => { setActiveView('products'); setIsMobileMenuOpen(false); }} icon={Package} label="Inventory" />
-        <SideNavItem active={activeView === 'account-posts'} expanded={isSidebarExpanded || isMobile} onClick={() => { setActiveView('account-posts'); setIsMobileMenuOpen(false); }} icon={Gamepad2} label="Marketplace" />
         <SideNavItem active={activeView === 'events'} expanded={isSidebarExpanded || isMobile} onClick={() => { setActiveView('events'); setIsMobileMenuOpen(false); }} icon={Calendar} label="Live Events" />
         <SideNavItem active={activeView === 'users'} expanded={isSidebarExpanded || isMobile} onClick={() => { setActiveView('users'); setIsMobileMenuOpen(false); }} icon={Users} label="Users" />
         <SideNavItem active={activeView === 'settings'} expanded={isSidebarExpanded || isMobile} onClick={() => { setActiveView('settings'); setIsMobileMenuOpen(false); }} icon={SettingsIcon} label="Settings" />
@@ -449,7 +456,6 @@ export default function AdminPage() {
         {/* Responsive Header */}
         <header className="h-20 bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border-b dark:border-white/5 flex items-center justify-between px-4 sm:px-6 md:px-10 shrink-0">
           <div className="flex items-center gap-4">
-            {/* Mobile Menu Trigger */}
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
               <SheetTrigger asChild>
                 <button className="md:hidden p-2 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl">
@@ -469,6 +475,18 @@ export default function AdminPage() {
           </div>
 
           <div className="flex items-center gap-2 sm:gap-4">
+            <button 
+              onClick={() => setActiveView('notifications')}
+              className="relative p-2.5 bg-slate-50 dark:bg-slate-800 rounded-full text-slate-500 hover:text-primary transition-colors"
+            >
+              <Bell size={20} />
+              {unreadAdminNotifs > 0 && (
+                <span className="absolute top-0 right-0 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white dark:border-slate-800">
+                  {unreadAdminNotifs > 9 ? '9+' : unreadAdminNotifs}
+                </span>
+              )}
+            </button>
+
              <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 bg-green-50 dark:bg-green-950/20 text-green-600 dark:text-green-400 rounded-full cursor-pointer hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors" onClick={refreshAdminData}>
                <RefreshCw size={12} className="animate-spin" />
                <span className="text-[10px] font-bold uppercase">Live</span>
@@ -491,9 +509,9 @@ export default function AdminPage() {
             <div className="space-y-6 sm:space-y-10">
               <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                 <StatCard label="Revenue" value={`$${metrics.revenue.toFixed(2)}`} icon={DollarSign} color="blue" />
-                <StatCard label="Orders" value={metrics.orders.toString()} icon={ShoppingBag} color="amber" />
+                <StatCard label="Pending Items" value={metrics.pendingCount.toString()} icon={ShoppingBag} color="amber" badge={metrics.pendingCount > 0} />
                 <StatCard label="Users" value={metrics.users.toString()} icon={Users} color="emerald" />
-                <StatCard label="Items" value={metrics.inventory.toString()} icon={Package} color="indigo" />
+                <StatCard label="Inventory" value={metrics.inventory.toString()} icon={Package} color="indigo" />
               </div>
               <Card className="rounded-[1.5rem] sm:rounded-[2.5rem] p-4 sm:p-6 md:p-10 border-none shadow-xl bg-white dark:bg-slate-900 h-[300px] sm:h-[400px]">
                  <ResponsiveContainer width="100%" height="100%">
@@ -524,7 +542,7 @@ export default function AdminPage() {
                       <TableRow className="border-none">
                         <TableHead className="font-bold px-4 sm:px-8">Reference</TableHead>
                         <TableHead className="font-bold">Player & Item</TableHead>
-                        <TableHead className="font-bold">Amount</TableHead>
+                        <TableHead className="font-bold">Admin Handling</TableHead>
                         <TableHead className="font-bold">Status</TableHead>
                         <TableHead className="text-right px-4 sm:px-8">Actions</TableHead>
                       </TableRow>
@@ -534,14 +552,26 @@ export default function AdminPage() {
                         <TableRow><TableCell colSpan={5} className="h-40 text-center text-slate-400 italic">No orders matching filters.</TableCell></TableRow>
                       ) : filteredOrders.map(o => (
                         <TableRow key={o.id} className="border-slate-50 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-slate-800/30">
-                          <TableCell className="px-4 sm:px-8 font-mono text-[10px] font-bold text-primary">#{o.id.toUpperCase()}</TableCell>
+                          <TableCell className="px-4 sm:px-8 font-mono text-[10px] font-bold text-primary relative">
+                            {o.status === 'pending' && <div className="absolute left-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />}
+                            #{o.id.toUpperCase()}
+                          </TableCell>
                           <TableCell>
                              <div className="flex flex-col">
                                 <span className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white truncate max-w-[120px]">{o.gameDetails?.playerName || "Client"}</span>
                                 <span className="text-[9px] sm:text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase truncate max-w-[120px]">{o.items?.[0]?.title}</span>
                              </div>
                           </TableCell>
-                          <TableCell className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white">${o.total?.toFixed(2)}</TableCell>
+                          <TableCell>
+                            {o.processedBy ? (
+                              <div className="flex items-center gap-2">
+                                <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden relative border border-white dark:border-white/10">
+                                  {o.processedBy.photoURL ? <Image src={o.processedBy.photoURL} alt="" fill className="object-cover" /> : <User size={12} className="m-auto mt-1" />}
+                                </div>
+                                <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 truncate max-w-[80px]">{o.processedBy.name}</span>
+                              </div>
+                            ) : <span className="text-[10px] text-slate-300 italic">Unassigned</span>}
+                          </TableCell>
                           <TableCell><Badge className={cn("rounded-full uppercase text-[8px] font-bold border-none", getStatusBadge(o.status))}>{o.status}</Badge></TableCell>
                           <TableCell className="text-right px-4 sm:px-8">
                              <div className="flex justify-end gap-1 sm:gap-2">
@@ -555,6 +585,87 @@ export default function AdminPage() {
                   </Table>
                 </div>
               </Card>
+            </div>
+          )}
+
+          {activeView === 'account-posts' && (
+            <div className="space-y-6">
+               <Card className="rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden border-none shadow-xl bg-white dark:bg-slate-900">
+                  <div className="overflow-x-auto scrollbar-hide">
+                    <Table className="min-w-[600px]">
+                       <TableHeader className="bg-slate-50/50 dark:bg-slate-800/40">
+                          <TableRow className="border-none">
+                             <TableHead className="px-4 sm:px-8">Seller</TableHead>
+                             <TableHead>Details</TableHead>
+                             <TableHead>Handled By</TableHead>
+                             <TableHead>Status</TableHead>
+                             <TableHead className="text-right px-4 sm:px-8">Actions</TableHead>
+                          </TableRow>
+                       </TableHeader>
+                       <TableBody>
+                          {accountPosts.map(p => (
+                             <TableRow key={p.id} className="border-slate-50 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-slate-800/30">
+                                <TableCell className="px-4 sm:px-8 relative">
+                                  {p.status === 'pending' && <div className="absolute left-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />}
+                                  <div className="flex items-center gap-3"><div className="w-8 h-8 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800 relative shrink-0">{p.authorAvatar && <Image src={p.authorAvatar} alt="" fill className="object-cover" />}</div><span className="font-bold text-xs text-slate-900 dark:text-white truncate max-w-[100px]">{p.authorName}</span></div>
+                                </TableCell>
+                                <TableCell><div className="flex flex-col"><span className="text-xs font-bold text-slate-900 dark:text-white">Lv {p.level}</span><span className="text-[9px] uppercase font-bold text-slate-400 dark:text-slate-500">${p.price}</span></div></TableCell>
+                                <TableCell>
+                                  {p.processedBy ? (
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden relative border border-white dark:border-white/10">
+                                        {p.processedBy.photoURL ? <Image src={p.processedBy.photoURL} alt="" fill className="object-cover" /> : <User size={12} className="m-auto mt-1" />}
+                                      </div>
+                                      <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 truncate max-w-[80px]">{p.processedBy.name}</span>
+                                    </div>
+                                  ) : <span className="text-[10px] text-slate-300 italic">Unassigned</span>}
+                                </TableCell>
+                                <TableCell><Badge className={cn("rounded-full text-[8px] font-bold uppercase border-none", getStatusBadge(p.status))}>{p.status}</Badge></TableCell>
+                                <TableCell className="text-right px-4 sm:px-8"><div className="flex justify-end gap-1 sm:gap-2">
+                                  <Button size="sm" onClick={() => handleOpenAccountDialog(p)} className="rounded-full h-8 px-2 sm:px-4 font-bold text-[9px] sm:text-[10px] gap-1 sm:gap-2 shrink-0"><Eye size={12} /> <span className="hidden xs:inline">View</span></Button>
+                                  <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500 shrink-0" onClick={() => confirmDelete(p.id, 'account')}><Trash2 size={16} /></Button>
+                                </div></TableCell>
+                             </TableRow>
+                          ))}
+                       </TableBody>
+                    </Table>
+                  </div>
+               </Card>
+            </div>
+          )}
+
+          {activeView === 'notifications' && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h3 className="font-headline font-bold text-lg sm:text-xl text-slate-900 dark:text-white">Admin Activity Log</h3>
+                <Button variant="ghost" size="sm" className="text-[10px] font-bold uppercase" onClick={() => markAdminNotificationsAsRead()}>Mark All Read</Button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {adminNotifications.length === 0 ? (
+                  <div className="col-span-full py-20 text-center opacity-30 italic">No admin activity recorded.</div>
+                ) : adminNotifications.map(n => (
+                  <Card 
+                    key={n.id} 
+                    className={cn(
+                      "p-4 rounded-[1.5rem] border-none shadow-sm flex items-center gap-4 transition-all",
+                      !n.readBy?.[user.uid] ? "bg-white dark:bg-slate-900 shadow-md ring-1 ring-primary/20" : "bg-white/40 dark:bg-slate-900/40 opacity-70"
+                    )}
+                    onClick={() => markAdminNotificationsAsRead(n.id)}
+                  >
+                    <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", n.type === 'assignment_update' ? "bg-blue-50 text-blue-500" : "bg-amber-50 text-amber-500")}>
+                      {n.type === 'assignment_update' ? <User size={18} /> : <AlertCircle size={18} />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-start">
+                        <h4 className="font-bold text-xs text-slate-900 dark:text-white truncate">{n.title}</h4>
+                        <span className="text-[8px] font-bold text-muted-foreground uppercase">{format(n.createdAt, 'HH:mm')}</span>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground line-clamp-1">{n.body}</p>
+                    </div>
+                    {!n.readBy?.[user.uid] && <div className="w-2 h-2 bg-primary rounded-full shrink-0" />}
+                  </Card>
+                ))}
+              </div>
             </div>
           )}
 
@@ -577,40 +688,6 @@ export default function AdminPage() {
                   </Card>
                 ))}
               </div>
-            </div>
-          )}
-
-          {activeView === 'account-posts' && (
-            <div className="space-y-6">
-               <Card className="rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden border-none shadow-xl bg-white dark:bg-slate-900">
-                  <div className="overflow-x-auto scrollbar-hide">
-                    <Table className="min-w-[600px]">
-                       <TableHeader className="bg-slate-50/50 dark:bg-slate-800/40">
-                          <TableRow className="border-none">
-                             <TableHead className="px-4 sm:px-8">Seller</TableHead>
-                             <TableHead>Details</TableHead>
-                             <TableHead>Price</TableHead>
-                             <TableHead>Status</TableHead>
-                             <TableHead className="text-right px-4 sm:px-8">Actions</TableHead>
-                          </TableRow>
-                       </TableHeader>
-                       <TableBody>
-                          {accountPosts.map(p => (
-                             <TableRow key={p.id} className="border-slate-50 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-slate-800/30">
-                                <TableCell className="px-4 sm:px-8"><div className="flex items-center gap-3"><div className="w-8 h-8 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800 relative shrink-0">{p.authorAvatar && <Image src={p.authorAvatar} alt="" fill className="object-cover" />}</div><span className="font-bold text-xs text-slate-900 dark:text-white truncate max-w-[100px]">{p.authorName}</span></div></TableCell>
-                                <TableCell><div className="flex flex-col"><span className="text-xs font-bold text-slate-900 dark:text-white">Lv {p.level}</span><span className="text-[9px] uppercase font-bold text-slate-400 dark:text-slate-500">{p.platform}</span></div></TableCell>
-                                <TableCell className="font-bold text-primary text-xs sm:text-sm">${p.price}</TableCell>
-                                <TableCell><Badge className={cn("rounded-full text-[8px] font-bold uppercase border-none", getStatusBadge(p.status))}>{p.status}</Badge></TableCell>
-                                <TableCell className="text-right px-4 sm:px-8"><div className="flex justify-end gap-1 sm:gap-2">
-                                  <Button size="sm" onClick={() => handleOpenAccountDialog(p)} className="rounded-full h-8 px-2 sm:px-4 font-bold text-[9px] sm:text-[10px] gap-1 sm:gap-2 shrink-0"><Eye size={12} /> <span className="hidden xs:inline">View</span></Button>
-                                  <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500 shrink-0" onClick={() => confirmDelete(p.id, 'account')}><Trash2 size={16} /></Button>
-                                </div></TableCell>
-                             </TableRow>
-                          ))}
-                       </TableBody>
-                    </Table>
-                  </div>
-               </Card>
             </div>
           )}
 
@@ -816,7 +893,7 @@ export default function AdminPage() {
         </main>
       </div>
 
-      {/* Dialogs - Shared across views */}
+      {/* Dialogs */}
       <Dialog open={isProductDialogOpen} onOpenChange={setIsProductDialogOpen}>
         <DialogContent className="max-w-xl w-[95vw] rounded-[2rem] sm:rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl bg-white dark:bg-slate-900">
           <div className="bg-primary p-6 sm:p-8 text-white">
@@ -958,6 +1035,14 @@ export default function AdminPage() {
                  <Badge className="bg-primary text-white mb-2 font-mono border-none">ORDER {selectedOrder.id.toUpperCase()}</Badge>
                  <h2 className="text-2xl sm:text-3xl font-headline font-bold">Order Verification</h2>
                  <button onClick={() => setIsOrderDetailOpen(false)} className="absolute top-6 right-6 sm:top-8 sm:right-8 text-white/20 hover:text-white"><X size={24} /></button>
+                 {selectedOrder.processedBy && selectedOrder.processedBy.uid !== user.uid && (
+                   <div className="mt-4 p-4 bg-amber-500/20 rounded-2xl flex items-center gap-4 border border-amber-500/40">
+                      <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-amber-500">
+                        {selectedOrder.processedBy.photoURL ? <Image src={selectedOrder.processedBy.photoURL} alt="" width={40} height={40} className="object-cover" /> : <User size={20} className="m-2" />}
+                      </div>
+                      <p className="text-sm font-bold text-amber-200">⚠️ {selectedOrder.processedBy.name} is currently handling this order.</p>
+                   </div>
+                 )}
               </div>
               <div className="p-6 sm:p-10 space-y-8 sm:space-y-10">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8">
@@ -983,6 +1068,14 @@ export default function AdminPage() {
                  <Badge className="bg-amber-500 text-white mb-2 font-mono border-none">LISTING {selectedAccount.id.toUpperCase()}</Badge>
                  <h2 className="text-2xl sm:text-3xl font-headline font-bold">Listing Verification</h2>
                  <button onClick={() => setIsAccountDetailOpen(false)} className="absolute top-6 right-6 sm:top-8 sm:right-8 text-white/20 hover:text-white"><X size={24} /></button>
+                 {selectedAccount.processedBy && selectedAccount.processedBy.uid !== user.uid && (
+                   <div className="mt-4 p-4 bg-amber-500/20 rounded-2xl flex items-center gap-4 border border-amber-500/40">
+                      <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-amber-500">
+                        {selectedAccount.processedBy.photoURL ? <Image src={selectedAccount.processedBy.photoURL} alt="" width={40} height={40} className="object-cover" /> : <User size={20} className="m-2" />}
+                      </div>
+                      <p className="text-sm font-bold text-amber-200">⚠️ {selectedAccount.processedBy.name} is currently reviewing this listing.</p>
+                   </div>
+                 )}
               </div>
               <div className="p-6 sm:p-10 space-y-8 sm:space-y-10">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8">
@@ -1037,16 +1130,24 @@ export default function AdminPage() {
 
 const chartData = [ { day: 'MON', value: 400 }, { day: 'TUE', value: 300 }, { day: 'WED', value: 500 }, { day: 'THU', value: 450 }, { day: 'FRI', value: 700 }, { day: 'SAT', value: 650 }, { day: 'SUN', value: 800 } ];
 
-function SideNavItem({ active, expanded, onClick, icon: Icon, label, className }: { active: boolean, expanded: boolean, onClick: () => void, icon: any, label: string, className?: string }) {
+function SideNavItem({ active, expanded, onClick, icon: Icon, label, className, badge }: { active: boolean, expanded: boolean, onClick: () => void, icon: any, label: string, className?: string, badge?: number }) {
   return (
     <button onClick={onClick} className={cn("w-full h-12 flex items-center transition-all duration-300 rounded-xl relative group", active ? "bg-primary text-white shadow-lg" : "text-slate-400 dark:text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800", expanded ? "px-4 gap-4" : "justify-center", className)}>
       <Icon size={20} className="shrink-0" />
-      {expanded && <span className="font-bold text-sm whitespace-nowrap overflow-hidden">{label}</span>}
+      {expanded && <span className="font-bold text-sm whitespace-nowrap overflow-hidden flex-1 text-left">{label}</span>}
+      {badge !== undefined && badge > 0 && (
+        <span className={cn(
+          "bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center transition-all",
+          expanded ? "px-2 py-0.5" : "absolute top-1 right-1 w-4 h-4"
+        )}>
+          {badge}
+        </span>
+      )}
     </button>
   );
 }
 
-function StatCard({ label, value, icon: Icon, color }: { label: string, value: string, icon: any, color: string }) {
+function StatCard({ label, value, icon: Icon, color, badge }: { label: string, value: string, icon: any, color: string, badge?: boolean }) {
   const colors: Record<string, string> = { 
     blue: "bg-blue-50 dark:bg-blue-500/10 text-blue-500", 
     amber: "bg-amber-50 dark:bg-amber-500/10 text-amber-500", 
@@ -1054,7 +1155,8 @@ function StatCard({ label, value, icon: Icon, color }: { label: string, value: s
     indigo: "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-500" 
   };
   return (
-    <Card className="rounded-[1.5rem] sm:rounded-[2.5rem] p-4 sm:p-6 border-none shadow-lg bg-white dark:bg-slate-900">
+    <Card className="rounded-[1.5rem] sm:rounded-[2.5rem] p-4 sm:p-6 border-none shadow-lg bg-white dark:bg-slate-900 relative">
+      {badge && <div className="absolute top-4 right-4 w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.6)]" />}
       <div className={cn("w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-6", colors[color])}><Icon size={20} className="sm:w-6 sm:h-6" /></div>
       <h3 className="text-xl sm:text-3xl font-headline font-bold text-slate-900 dark:text-white mb-1 truncate">{value}</h3>
       <p className="text-[8px] sm:text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.1em] sm:tracking-[0.2em]">{label}</p>
