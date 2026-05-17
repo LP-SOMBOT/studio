@@ -670,10 +670,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     // Find the associated order for this post and user
     const orderRef = ref(rtdb, 'orders');
     const orderSnap = await get(query(orderRef, orderByChild('gameDetails/postId'), equalTo(pid)));
-    const orders = orderSnap.val();
+    const ordersData = orderSnap.val();
     
-    if (orders) {
-      const orderId = Object.keys(orders).find(id => orders[orderId]?.userId === user.uid);
+    if (ordersData) {
+      // FIX: Correctly index using the loop argument 'id' instead of the unitialized 'orderId'
+      const orderId = Object.keys(ordersData).find(id => ordersData[id]?.userId === user.uid);
       if (orderId) {
         await update(ref(rtdb, `orders/${orderId}`), { buyerOutcome: outcome });
         await broadcastAdminNotification("Buyer Report!", `Buyer reported "${outcome}" for account #${pid.toUpperCase()}.`);
