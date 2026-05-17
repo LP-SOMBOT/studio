@@ -815,7 +815,7 @@ export default function AdminPage() {
                     <AccordionContent className="pb-6 sm:pb-8 space-y-6"><div className="grid grid-cols-1 sm:grid-cols-2 gap-4">{banners.map(b => (<div key={b.id} className="relative aspect-[21/9] rounded-xl sm:rounded-2xl overflow-hidden shadow-md group"><Image src={b.imageUrl} alt="" fill className="object-cover" /><div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2"><Button size="icon" variant="destructive" className="rounded-full" onClick={() => confirmDelete(b.id, 'banner')}><Trash2 size={16} /></Button></div></div>))}<button onClick={() => setIsBannerDialogOpen(true)} className="aspect-[21/9] rounded-xl sm:rounded-2xl border-3 border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center text-slate-300 dark:text-slate-700 hover:border-primary hover:text-primary transition-all gap-2 bg-slate-50 dark:bg-slate-800/40"><PlusCircle size={32} /><span className="text-[10px] sm:text-xs font-bold uppercase">Add New Banner</span></button></div></AccordionContent>
                  </AccordionItem>
                  <AccordionItem value="help-links" className="border-none bg-white dark:bg-slate-900 rounded-[1.5rem] sm:rounded-[2rem] px-4 sm:px-8 shadow-lg">
-                    <AccordionTrigger className="hover:no-underline"><div className="flex items-center gap-3 sm:gap-4 text-left"><div className="p-2 sm:p-3 bg-green-50 dark:bg-green-500/10 text-green-500 rounded-xl sm:rounded-2xl shrink-0"><Globe size={20} /></div><div><h4 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white">Help & Support Links</h4><p className="text-[10px] sm:text-xs text-muted-foreground">Manage tutorial video, TikTok, and WhatsApp</p></div></div></AccordionTrigger>
+                    <AccordionTrigger className="hover:no-underline"><div className="flex items-center gap-3 sm:gap-4 text-left"><div className="p-2 sm:p-3 bg-green-50 dark:bg-green-950/20 text-green-600 dark:text-green-400 rounded-xl sm:rounded-2xl shrink-0"><Globe size={20} /></div><div><h4 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white">Help & Support Links</h4><p className="text-[10px] sm:text-xs text-muted-foreground">Manage tutorial video, TikTok, and WhatsApp</p></div></div></AccordionTrigger>
                     <AccordionContent className="pb-6 sm:pb-8 space-y-6 pt-2">
                        <div className="grid grid-cols-1 gap-6">
                           <div className="space-y-2">
@@ -1105,7 +1105,9 @@ export default function AdminPage() {
                          <span className="text-[11px] font-bold">{selectedOrder.processedAt ? format(selectedOrder.processedAt, 'HH:mm:ss') : 'Waiting...'}</span>
                       </div>
                       <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800 flex flex-col gap-1">
-                         <span className="text-[9px] font-bold text-slate-400 uppercase">Completed At</span>
+                         <span className="text-[9px] font-bold text-slate-400 uppercase">
+                           {selectedOrder.status === 'cancelled' ? 'Cancelled At' : 'Completed At'}
+                         </span>
                          <span className={cn("text-[11px] font-bold", !selectedOrder.completedAt && "text-slate-400 italic")}>{selectedOrder.completedAt ? format(selectedOrder.completedAt, 'HH:mm:ss') : 'Not Yet'}</span>
                       </div>
                    </div>
@@ -1210,7 +1212,9 @@ export default function AdminPage() {
                          <span className="text-[11px] font-bold">{selectedAccount.processedAt ? format(selectedAccount.processedAt, 'HH:mm:ss') : 'Waiting...'}</span>
                       </div>
                       <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800 flex flex-col gap-1">
-                         <span className="text-[9px] font-bold text-slate-400 uppercase">Approved At</span>
+                         <span className="text-[9px] font-bold text-slate-400 uppercase">
+                           {selectedAccount.status === 'rejected' ? 'Rejected At' : 'Approved At'}
+                         </span>
                          <span className={cn("text-[11px] font-bold", !selectedAccount.completedAt && "text-slate-400 italic")}>{selectedAccount.completedAt ? format(selectedAccount.completedAt, 'HH:mm:ss') : 'Not Yet'}</span>
                       </div>
                    </div>

@@ -744,8 +744,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       broadcastAdminNotification(`Order Assigned! 🤝`, `${enhancedUser.name} is now handling Order #${oid.toUpperCase()}`, true);
     }
 
-    // Set Completion time if moving to successful
-    if (status === 'successful' && oldStatus !== 'successful') {
+    // Set Completion or Cancellation time
+    if ((status === 'successful' || status === 'cancelled') && oldStatus !== status) {
       assignmentUpdate.completedAt = Date.now();
     }
 
@@ -792,7 +792,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       broadcastAdminNotification(`Listing Assigned! 🤝`, `${enhancedUser.name} is now reviewing listing #${pid.toUpperCase()}`, true);
     }
 
-    if (status === 'approved' && oldStatus !== 'approved') {
+    // Set Approval or Rejection time
+    if ((status === 'approved' || status === 'rejected') && oldStatus !== status) {
       assignmentUpdate.completedAt = Date.now();
     }
 
