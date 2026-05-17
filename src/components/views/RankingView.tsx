@@ -1,7 +1,7 @@
 'use client';
 
 import { useApp } from '@/lib/context';
-import { Trophy, Medal, Crown, User } from 'lucide-react';
+import { Trophy, Medal, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
@@ -78,9 +78,6 @@ export default function RankingView() {
         {top3[0] && (
           <div className="flex flex-col items-center flex-1 z-10 animate-in slide-in-from-bottom-12 duration-1000 min-w-0">
             <div className="relative mb-4 scale-110 sm:scale-125">
-              <div className="absolute -top-10 sm:-top-14 left-1/2 -translate-x-1/2 text-amber-500 animate-bounce">
-                <Crown className="w-8 h-8 sm:w-12 sm:h-12" fill="currentColor" />
-              </div>
               <div className="w-20 h-20 xs:w-24 xs:h-24 sm:w-32 sm:h-32 rounded-full overflow-hidden border-[4px] sm:border-[6px] border-amber-400 shadow-[0_0_40px_rgba(245,158,11,0.4)] bg-white dark:bg-slate-900 relative ring-4 ring-amber-400/20">
                 {top3[0].photoURL ? (
                   <Image src={top3[0].photoURL} alt="" fill className="object-cover" unoptimized />
