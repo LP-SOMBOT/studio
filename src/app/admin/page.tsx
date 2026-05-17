@@ -97,6 +97,13 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
@@ -146,6 +153,7 @@ export default function AdminPage() {
   const [isPinAuthenticated, setIsPinAuthenticated] = useState(false);
   const [activeView, setActiveView] = useState<'dashboard' | 'orders' | 'products' | 'account-posts' | 'events' | 'users' | 'settings'>('dashboard');
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
   const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
@@ -390,20 +398,20 @@ export default function AdminPage() {
   if (!isPinAuthenticated && !user?.isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-900 p-4">
-        <Card className="max-w-md w-full p-10 rounded-[3rem] bg-white dark:bg-slate-900 shadow-2xl text-center border-none">
-          <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto mb-6 text-primary">
-            <Lock size={40} />
+        <Card className="max-w-md w-full p-6 sm:p-10 rounded-[2rem] sm:rounded-[3rem] bg-white dark:bg-slate-900 shadow-2xl text-center border-none">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-primary/10 rounded-2xl sm:rounded-3xl flex items-center justify-center mx-auto mb-6 text-primary">
+            <Lock size={32} className="sm:w-10 sm:h-10" />
           </div>
-          <h2 className="text-2xl font-headline font-bold mb-2 text-slate-900 dark:text-white">OskarShop Admin</h2>
-          <p className="text-muted-foreground text-sm mb-8">Enter Admin PIN to continue</p>
-          <div className="flex justify-center gap-3 mb-10">
-            {[...Array(6)].map((_, i) => <div key={i} className={cn("w-4 h-4 rounded-full border-2 transition-all", pin.length > i ? "bg-primary border-primary scale-110 shadow-lg" : "border-slate-200 dark:border-slate-800")} />)}
+          <h2 className="text-xl sm:text-2xl font-headline font-bold mb-2 text-slate-900 dark:text-white">OskarShop Admin</h2>
+          <p className="text-muted-foreground text-xs sm:text-sm mb-8">Enter Admin PIN to continue</p>
+          <div className="flex justify-center gap-2 sm:gap-3 mb-10">
+            {[...Array(6)].map((_, i) => <div key={i} className={cn("w-3 h-3 sm:w-4 sm:h-4 rounded-full border-2 transition-all", pin.length > i ? "bg-primary border-primary scale-110 shadow-lg" : "border-slate-200 dark:border-slate-800")} />)}
           </div>
-          <div className="grid grid-cols-3 gap-4 max-w-[280px] mx-auto">
-            {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map(n => <Button key={n} variant="outline" className="h-16 rounded-2xl text-xl font-bold dark:border-slate-800" onClick={() => pin.length < 6 && setPin(p => p + n)}>{n}</Button>)}
-            <Button variant="outline" className="h-16 rounded-2xl dark:border-slate-800" onClick={() => setPin(p => p.slice(0, -1))}><Delete /></Button>
-            <Button variant="outline" className="h-16 rounded-2xl text-xl font-bold dark:border-slate-800" onClick={() => pin.length < 6 && setPin(p => p + "0")}>0</Button>
-            <Button className="h-16 rounded-2xl" onClick={handlePinSubmit}><CheckCircle2 /></Button>
+          <div className="grid grid-cols-3 gap-3 sm:gap-4 max-w-[280px] mx-auto">
+            {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map(n => <Button key={n} variant="outline" className="h-14 sm:h-16 rounded-xl sm:rounded-2xl text-lg sm:text-xl font-bold dark:border-slate-800" onClick={() => pin.length < 6 && setPin(p => p + n)}>{n}</Button>)}
+            <Button variant="outline" className="h-14 sm:h-16 rounded-xl sm:rounded-2xl dark:border-slate-800" onClick={() => setPin(p => p.slice(0, -1))}><Delete /></Button>
+            <Button variant="outline" className="h-14 sm:h-16 rounded-xl sm:rounded-2xl text-lg sm:text-xl font-bold dark:border-slate-800" onClick={() => pin.length < 6 && setPin(p => p + "0")}>0</Button>
+            <Button className="h-14 sm:h-16 rounded-xl sm:rounded-2xl" onClick={handlePinSubmit}><CheckCircle2 /></Button>
           </div>
         </Card>
       </div>
@@ -418,7 +426,7 @@ export default function AdminPage() {
   };
 
   const filteredOrders = allOrders.filter(o => {
-    const matchesSearch = o.id.includes(searchQuery) || o.gameDetails?.playerName?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = o.id.toLowerCase().includes(searchQuery.toLowerCase()) || o.gameDetails?.playerName?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = orderStatusFilter === "all" || o.status === orderStatusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -432,54 +440,95 @@ export default function AdminPage() {
     }
   };
 
+  const SidebarContent = ({ isMobile = false }) => (
+    <div className="flex flex-col h-full">
+      {!isMobile && (
+        <div className="h-20 px-6 flex items-center justify-between shrink-0">
+          {isSidebarExpanded && <span className="font-headline font-bold text-lg text-slate-900 dark:text-white">Oskar Control</span>}
+          <button onClick={() => setIsSidebarExpanded(!isSidebarExpanded)} className="p-2 text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl">
+            <Menu size={20} />
+          </button>
+        </div>
+      )}
+      <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto scrollbar-hide">
+        <SideNavItem active={false} expanded={isSidebarExpanded || isMobile} onClick={() => router.push('/')} icon={Home} label="Back to Store" className="text-primary hover:bg-primary/5 mb-4" />
+        <div className="h-px bg-slate-50 dark:bg-white/5 my-4 mx-2" />
+        <SideNavItem active={activeView === 'dashboard'} expanded={isSidebarExpanded || isMobile} onClick={() => { setActiveView('dashboard'); setIsMobileMenuOpen(false); }} icon={LayoutDashboard} label="Dashboard" />
+        <SideNavItem active={activeView === 'orders'} expanded={isSidebarExpanded || isMobile} onClick={() => { setActiveView('orders'); setIsMobileMenuOpen(false); }} icon={ShoppingBag} label="Orders" />
+        <SideNavItem active={activeView === 'products'} expanded={isSidebarExpanded || isMobile} onClick={() => { setActiveView('products'); setIsMobileMenuOpen(false); }} icon={Package} label="Inventory" />
+        <SideNavItem active={activeView === 'account-posts'} expanded={isSidebarExpanded || isMobile} onClick={() => { setActiveView('account-posts'); setIsMobileMenuOpen(false); }} icon={Gamepad2} label="Marketplace" />
+        <SideNavItem active={activeView === 'events'} expanded={isSidebarExpanded || isMobile} onClick={() => { setActiveView('events'); setIsMobileMenuOpen(false); }} icon={Calendar} label="Live Events" />
+        <SideNavItem active={activeView === 'users'} expanded={isSidebarExpanded || isMobile} onClick={() => { setActiveView('users'); setIsMobileMenuOpen(false); }} icon={Users} label="Users" />
+        <SideNavItem active={activeView === 'settings'} expanded={isSidebarExpanded || isMobile} onClick={() => { setActiveView('settings'); setIsMobileMenuOpen(false); }} icon={SettingsIcon} label="Settings" />
+      </nav>
+      <div className="p-4 border-t dark:border-white/5 shrink-0">
+        <button onClick={logout} className="w-full h-12 flex items-center gap-4 text-red-500 rounded-xl hover:bg-red-50 dark:hover:bg-red-950/20 px-4">
+          <LogOut size={20} />
+          <span className={cn("font-bold text-sm", (!isSidebarExpanded && !isMobile) && "hidden")}>Logout</span>
+        </button>
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex overflow-hidden">
-      <aside className={cn("h-screen bg-white dark:bg-slate-900 border-r border-slate-100 dark:border-white/5 flex flex-col transition-all duration-300 z-40", isSidebarExpanded ? "w-64" : "w-20")}>
-        <div className="h-20 px-6 flex items-center justify-between">
-          {isSidebarExpanded && <span className="font-headline font-bold text-lg text-slate-900 dark:text-white">Oskar Control</span>}
-          <button onClick={() => setIsSidebarExpanded(!isSidebarExpanded)} className="p-2 text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl"><Menu size={20} /></button>
-        </div>
-        <nav className="flex-1 px-4 py-6 space-y-2">
-          <SideNavItem active={false} expanded={isSidebarExpanded} onClick={() => router.push('/')} icon={Home} label="Back to Store" className="text-primary hover:bg-primary/5 mb-4" />
-          <div className="h-px bg-slate-50 dark:bg-white/5 my-4 mx-2" />
-          <SideNavItem active={activeView === 'dashboard'} expanded={isSidebarExpanded} onClick={() => setActiveView('dashboard')} icon={LayoutDashboard} label="Dashboard" />
-          <SideNavItem active={activeView === 'orders'} expanded={isSidebarExpanded} onClick={() => setActiveView('orders')} icon={ShoppingBag} label="Orders" />
-          <SideNavItem active={activeView === 'products'} expanded={isSidebarExpanded} onClick={() => setActiveView('products')} icon={Package} label="Inventory" />
-          <SideNavItem active={activeView === 'account-posts'} expanded={isSidebarExpanded} onClick={() => setActiveView('account-posts')} icon={Gamepad2} label="Marketplace" />
-          <SideNavItem active={activeView === 'events'} expanded={isSidebarExpanded} onClick={() => setActiveView('events')} icon={Calendar} label="Live Events" />
-          <SideNavItem active={activeView === 'users'} expanded={isSidebarExpanded} onClick={() => setActiveView('users')} icon={Users} label="Users" />
-          <SideNavItem active={activeView === 'settings'} expanded={isSidebarExpanded} onClick={() => setActiveView('settings')} icon={SettingsIcon} label="Settings" />
-        </nav>
-        <div className="p-4 border-t dark:border-white/5"><button onClick={logout} className="w-full h-12 flex items-center gap-4 text-red-500 rounded-xl hover:bg-red-50 dark:hover:bg-red-950/20 px-4"><LogOut size={20} /><span className="font-bold text-sm">Logout</span></button></div>
+      {/* Desktop Sidebar */}
+      <aside className={cn("hidden md:flex h-screen bg-white dark:bg-slate-900 border-r border-slate-100 dark:border-white/5 flex-col transition-all duration-300 z-40", isSidebarExpanded ? "w-64" : "w-20")}>
+        <SidebarContent />
       </aside>
 
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-20 bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border-b dark:border-white/5 flex items-center justify-between px-10 shrink-0">
-          <h2 className="text-xl font-headline font-bold uppercase tracking-tight text-slate-900 dark:text-white">{activeView}</h2>
+      {/* Main Container */}
+      <div className="flex-1 flex flex-col overflow-hidden w-full">
+        {/* Responsive Header */}
+        <header className="h-20 bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border-b dark:border-white/5 flex items-center justify-between px-4 sm:px-6 md:px-10 shrink-0">
           <div className="flex items-center gap-4">
-             <div className="flex items-center gap-1.5 px-3 py-1 bg-green-50 dark:bg-green-950/20 text-green-600 dark:text-green-400 rounded-full cursor-pointer hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors" onClick={refreshAdminData}>
+            {/* Mobile Menu Trigger */}
+            <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <button className="md:hidden p-2 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl">
+                  <Menu size={24} />
+                </button>
+              </SheetTrigger>
+              <SheetContent side="left" className="p-0 border-none bg-white dark:bg-slate-900 w-72">
+                <SheetHeader className="p-6 border-b dark:border-white/5">
+                  <SheetTitle className="font-headline font-bold text-left text-slate-900 dark:text-white">Oskar Control</SheetTitle>
+                </SheetHeader>
+                <SidebarContent isMobile />
+              </SheetContent>
+            </Sheet>
+            <h2 className="text-base sm:text-xl font-headline font-bold uppercase tracking-tight text-slate-900 dark:text-white truncate">
+              {activeView.replace('-', ' ')}
+            </h2>
+          </div>
+
+          <div className="flex items-center gap-2 sm:gap-4">
+             <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 bg-green-50 dark:bg-green-950/20 text-green-600 dark:text-green-400 rounded-full cursor-pointer hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors" onClick={refreshAdminData}>
                <RefreshCw size={12} className="animate-spin" />
-               <span className="text-[10px] font-bold uppercase">Live Sync Active</span>
+               <span className="text-[10px] font-bold uppercase">Live</span>
             </div>
-            <div className="flex items-center gap-3">
-               <div className="text-right"><p className="text-sm font-bold text-slate-900 dark:text-white">{user?.name}</p><p className="text-[10px] text-primary uppercase font-bold">{user?.role}</p></div>
-               <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 border-2 border-white dark:border-slate-700 shadow-sm overflow-hidden relative">
-                 {user?.photoURL ? <Image src={user.photoURL} alt="" fill className="object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-300 dark:text-slate-600"><User size={20} /></div>}
+            <div className="flex items-center gap-2 sm:gap-3">
+               <div className="text-right hidden xs:block">
+                 <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate max-w-[100px]">{user?.name}</p>
+                 <p className="text-[9px] sm:text-[10px] text-primary uppercase font-bold">{user?.role}</p>
+               </div>
+               <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-100 dark:bg-slate-800 border-2 border-white dark:border-slate-700 shadow-sm overflow-hidden relative shrink-0">
+                 {user?.photoURL ? <Image src={user.photoURL} alt="" fill className="object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-300 dark:text-slate-600"><User size={16} /></div>}
                </div>
             </div>
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-10 space-y-10 scrollbar-hide">
+        {/* Content Area */}
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-10 space-y-6 sm:space-y-10 scrollbar-hide">
           {activeView === 'dashboard' && (
-            <div className="space-y-10">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <StatCard label="Total Revenue" value={`$${metrics.revenue.toFixed(2)}`} icon={DollarSign} color="blue" />
-                <StatCard label="All Orders" value={metrics.orders.toString()} icon={ShoppingBag} color="amber" />
-                <StatCard label="Registered Users" value={metrics.users.toString()} icon={Users} color="emerald" />
-                <StatCard label="Inventory Items" value={metrics.inventory.toString()} icon={Package} color="indigo" />
+            <div className="space-y-6 sm:space-y-10">
+              <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                <StatCard label="Revenue" value={`$${metrics.revenue.toFixed(2)}`} icon={DollarSign} color="blue" />
+                <StatCard label="Orders" value={metrics.orders.toString()} icon={ShoppingBag} color="amber" />
+                <StatCard label="Users" value={metrics.users.toString()} icon={Users} color="emerald" />
+                <StatCard label="Items" value={metrics.inventory.toString()} icon={Package} color="indigo" />
               </div>
-              <Card className="rounded-[2.5rem] p-10 border-none shadow-xl bg-white dark:bg-slate-900 h-[400px]">
+              <Card className="rounded-[1.5rem] sm:rounded-[2.5rem] p-4 sm:p-6 md:p-10 border-none shadow-xl bg-white dark:bg-slate-900 h-[300px] sm:h-[400px]">
                  <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={chartData}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" opacity={0.1} />
@@ -495,66 +544,68 @@ export default function AdminPage() {
 
           {activeView === 'orders' && (
             <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Input placeholder="Search Order ID or Player..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="max-w-md h-12 rounded-xl dark:bg-slate-900 dark:border-white/5" />
+              <div className="flex flex-col gap-4">
+                <Input placeholder="Search ID or Player..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full max-w-md h-12 rounded-xl dark:bg-slate-900 dark:border-white/5" />
                 <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                  {["all", "pending", "processing", "successful", "cancelled"].map(s => <Button key={s} variant={orderStatusFilter === s ? "default" : "outline"} onClick={() => setOrderStatusFilter(s)} className="rounded-full h-12 px-6 uppercase font-bold text-xs shrink-0 dark:border-white/5">{s}</Button>)}
+                  {["all", "pending", "processing", "successful", "cancelled"].map(s => <Button key={s} variant={orderStatusFilter === s ? "default" : "outline"} onClick={() => setOrderStatusFilter(s)} className="rounded-full h-10 sm:h-12 px-4 sm:px-6 uppercase font-bold text-[10px] sm:text-xs shrink-0 dark:border-white/5">{s}</Button>)}
                 </div>
               </div>
-              <Card className="rounded-[2rem] border-none shadow-xl overflow-hidden bg-white dark:bg-slate-900">
-                <Table>
-                  <TableHeader className="bg-slate-50/50 dark:bg-slate-800/40">
-                    <TableRow className="border-none">
-                      <TableHead className="font-bold px-8">Reference</TableHead>
-                      <TableHead className="font-bold">Player & Item</TableHead>
-                      <TableHead className="font-bold">Amount</TableHead>
-                      <TableHead className="font-bold">Status</TableHead>
-                      <TableHead className="text-right px-8">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredOrders.length === 0 ? (
-                      <TableRow><TableCell colSpan={5} className="h-40 text-center text-slate-400 italic">No orders matching filters.</TableCell></TableRow>
-                    ) : filteredOrders.map(o => (
-                      <TableRow key={o.id} className="border-slate-50 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-slate-800/30">
-                        <TableCell className="px-8 font-mono text-[10px] font-bold text-primary">#{o.id.toUpperCase()}</TableCell>
-                        <TableCell>
-                           <div className="flex flex-col">
-                              <span className="font-bold text-slate-900 dark:text-white">{o.gameDetails?.playerName || "Client"}</span>
-                              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase">{o.items?.[0]?.title}</span>
-                           </div>
-                        </TableCell>
-                        <TableCell className="font-bold text-slate-900 dark:text-white">${o.total?.toFixed(2)}</TableCell>
-                        <TableCell><Badge className={cn("rounded-full uppercase text-[8px] font-bold border-none", getStatusBadge(o.status))}>{o.status}</Badge></TableCell>
-                        <TableCell className="text-right px-8">
-                           <div className="flex justify-end gap-2">
-                             <Button size="sm" onClick={() => handleOpenOrderDialog(o)} className="rounded-full h-8 px-4 font-bold text-[10px] gap-2"><Eye size={12} /> Details</Button>
-                             <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500" onClick={() => confirmDelete(o.id, 'order')}><Trash2 size={16} /></Button>
-                           </div>
-                        </TableCell>
+              <Card className="rounded-[1.5rem] sm:rounded-[2rem] border-none shadow-xl overflow-hidden bg-white dark:bg-slate-900">
+                <div className="overflow-x-auto scrollbar-hide">
+                  <Table className="min-w-[600px]">
+                    <TableHeader className="bg-slate-50/50 dark:bg-slate-800/40">
+                      <TableRow className="border-none">
+                        <TableHead className="font-bold px-4 sm:px-8">Reference</TableHead>
+                        <TableHead className="font-bold">Player & Item</TableHead>
+                        <TableHead className="font-bold">Amount</TableHead>
+                        <TableHead className="font-bold">Status</TableHead>
+                        <TableHead className="text-right px-4 sm:px-8">Actions</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredOrders.length === 0 ? (
+                        <TableRow><TableCell colSpan={5} className="h-40 text-center text-slate-400 italic">No orders matching filters.</TableCell></TableRow>
+                      ) : filteredOrders.map(o => (
+                        <TableRow key={o.id} className="border-slate-50 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-slate-800/30">
+                          <TableCell className="px-4 sm:px-8 font-mono text-[10px] font-bold text-primary">#{o.id.toUpperCase()}</TableCell>
+                          <TableCell>
+                             <div className="flex flex-col">
+                                <span className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white truncate max-w-[120px]">{o.gameDetails?.playerName || "Client"}</span>
+                                <span className="text-[9px] sm:text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase truncate max-w-[120px]">{o.items?.[0]?.title}</span>
+                             </div>
+                          </TableCell>
+                          <TableCell className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white">${o.total?.toFixed(2)}</TableCell>
+                          <TableCell><Badge className={cn("rounded-full uppercase text-[8px] font-bold border-none", getStatusBadge(o.status))}>{o.status}</Badge></TableCell>
+                          <TableCell className="text-right px-4 sm:px-8">
+                             <div className="flex justify-end gap-1 sm:gap-2">
+                               <Button size="sm" onClick={() => handleOpenOrderDialog(o)} className="rounded-full h-8 px-2 sm:px-4 font-bold text-[9px] sm:text-[10px] gap-1 sm:gap-2 shrink-0"><Eye size={12} /> <span className="hidden xs:inline">Details</span></Button>
+                               <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500 shrink-0" onClick={() => confirmDelete(o.id, 'order')}><Trash2 size={16} /></Button>
+                             </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               </Card>
             </div>
           )}
 
           {activeView === 'products' && (
             <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <Input placeholder="Search items..." className="max-w-xs h-12 rounded-xl dark:bg-slate-900 dark:border-white/5" />
-                <Button onClick={() => handleOpenProductDialog()} className="h-12 rounded-xl gap-2 font-bold shadow-lg shadow-primary/20"><PlusCircle size={20} /> Add Item</Button>
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <Input placeholder="Search items..." className="w-full sm:max-w-xs h-12 rounded-xl dark:bg-slate-900 dark:border-white/5" />
+                <Button onClick={() => handleOpenProductDialog()} className="w-full sm:w-auto h-12 rounded-xl gap-2 font-bold shadow-lg shadow-primary/20"><PlusCircle size={20} /> Add Item</Button>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {products.map(p => (
-                  <Card key={p.id} className="p-6 rounded-[2rem] border-none shadow-xl bg-white dark:bg-slate-900 flex gap-4">
-                    <div className="w-20 h-20 rounded-2xl bg-slate-100 dark:bg-slate-800 overflow-hidden relative shadow-inner">
+                  <Card key={p.id} className="p-4 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] border-none shadow-xl bg-white dark:bg-slate-900 flex gap-4">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-slate-100 dark:bg-slate-800 overflow-hidden relative shadow-inner shrink-0">
                       {p.thumbnail ? <Image src={p.thumbnail} alt="" fill className="object-cover" /> : <ImageIcon className="m-auto absolute inset-0 text-slate-200 dark:text-slate-700" />}
                     </div>
-                    <div className="flex-1 flex flex-col justify-between">
-                       <div><h4 className="font-bold text-slate-900 dark:text-white leading-tight">{p.title}</h4><p className="text-[10px] font-bold text-primary uppercase">{p.gameId}</p></div>
-                       <div className="flex justify-between items-end"><span className="font-bold text-lg text-primary">${p.price}</span><div className="flex gap-2"><Button size="icon" variant="ghost" className="h-8 w-8 text-blue-500" onClick={() => handleOpenProductDialog(p)}><Edit size={16} /></Button><Button size="icon" variant="ghost" className="h-8 w-8 text-red-500" onClick={() => confirmDelete(p.id, 'product')}><Trash2 size={16} /></Button></div></div>
+                    <div className="flex-1 flex flex-col justify-between min-w-0">
+                       <div><h4 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white leading-tight truncate">{p.title}</h4><p className="text-[9px] sm:text-[10px] font-bold text-primary uppercase">{p.gameId}</p></div>
+                       <div className="flex justify-between items-end"><span className="font-bold text-base sm:text-lg text-primary">${p.price}</span><div className="flex gap-1"><Button size="icon" variant="ghost" className="h-8 w-8 text-blue-500" onClick={() => handleOpenProductDialog(p)}><Edit size={16} /></Button><Button size="icon" variant="ghost" className="h-8 w-8 text-red-500" onClick={() => confirmDelete(p.id, 'product')}><Trash2 size={16} /></Button></div></div>
                     </div>
                   </Card>
                 ))}
@@ -564,32 +615,34 @@ export default function AdminPage() {
 
           {activeView === 'account-posts' && (
             <div className="space-y-6">
-               <Card className="rounded-[2rem] overflow-hidden border-none shadow-xl bg-white dark:bg-slate-900">
-                  <Table>
-                     <TableHeader className="bg-slate-50/50 dark:bg-slate-800/40">
-                        <TableRow className="border-none">
-                           <TableHead className="px-8">Seller</TableHead>
-                           <TableHead>Details</TableHead>
-                           <TableHead>Price</TableHead>
-                           <TableHead>Status</TableHead>
-                           <TableHead className="text-right px-8">Actions</TableHead>
-                        </TableRow>
-                     </TableHeader>
-                     <TableBody>
-                        {accountPosts.map(p => (
-                           <TableRow key={p.id} className="border-slate-50 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-slate-800/30">
-                              <TableCell className="px-8"><div className="flex items-center gap-3"><div className="w-8 h-8 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800 relative">{p.authorAvatar && <Image src={p.authorAvatar} alt="" fill className="object-cover" />}</div><span className="font-bold text-xs text-slate-900 dark:text-white">{p.authorName}</span></div></TableCell>
-                              <TableCell><div className="flex flex-col"><span className="text-xs font-bold text-slate-900 dark:text-white">Lv {p.level}</span><span className="text-[9px] uppercase font-bold text-slate-400 dark:text-slate-500">{p.platform}</span></div></TableCell>
-                              <TableCell className="font-bold text-primary">${p.price}</TableCell>
-                              <TableCell><Badge className={cn("rounded-full text-[8px] font-bold uppercase border-none", getStatusBadge(p.status))}>{p.status}</Badge></TableCell>
-                              <TableCell className="text-right px-8"><div className="flex justify-end gap-2">
-                                <Button size="sm" onClick={() => handleOpenAccountDialog(p)} className="rounded-full h-8 px-4 font-bold text-[10px] gap-2"><Eye size={12} /> View</Button>
-                                <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500" onClick={() => confirmDelete(p.id, 'account')}><Trash2 size={16} /></Button>
-                              </div></TableCell>
-                           </TableRow>
-                        ))}
-                     </TableBody>
-                  </Table>
+               <Card className="rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden border-none shadow-xl bg-white dark:bg-slate-900">
+                  <div className="overflow-x-auto scrollbar-hide">
+                    <Table className="min-w-[600px]">
+                       <TableHeader className="bg-slate-50/50 dark:bg-slate-800/40">
+                          <TableRow className="border-none">
+                             <TableHead className="px-4 sm:px-8">Seller</TableHead>
+                             <TableHead>Details</TableHead>
+                             <TableHead>Price</TableHead>
+                             <TableHead>Status</TableHead>
+                             <TableHead className="text-right px-4 sm:px-8">Actions</TableHead>
+                          </TableRow>
+                       </TableHeader>
+                       <TableBody>
+                          {accountPosts.map(p => (
+                             <TableRow key={p.id} className="border-slate-50 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-slate-800/30">
+                                <TableCell className="px-4 sm:px-8"><div className="flex items-center gap-3"><div className="w-8 h-8 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800 relative shrink-0">{p.authorAvatar && <Image src={p.authorAvatar} alt="" fill className="object-cover" />}</div><span className="font-bold text-xs text-slate-900 dark:text-white truncate max-w-[100px]">{p.authorName}</span></div></TableCell>
+                                <TableCell><div className="flex flex-col"><span className="text-xs font-bold text-slate-900 dark:text-white">Lv {p.level}</span><span className="text-[9px] uppercase font-bold text-slate-400 dark:text-slate-500">{p.platform}</span></div></TableCell>
+                                <TableCell className="font-bold text-primary text-xs sm:text-sm">${p.price}</TableCell>
+                                <TableCell><Badge className={cn("rounded-full text-[8px] font-bold uppercase border-none", getStatusBadge(p.status))}>{p.status}</Badge></TableCell>
+                                <TableCell className="text-right px-4 sm:px-8"><div className="flex justify-end gap-1 sm:gap-2">
+                                  <Button size="sm" onClick={() => handleOpenAccountDialog(p)} className="rounded-full h-8 px-2 sm:px-4 font-bold text-[9px] sm:text-[10px] gap-1 sm:gap-2 shrink-0"><Eye size={12} /> <span className="hidden xs:inline">View</span></Button>
+                                  <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500 shrink-0" onClick={() => confirmDelete(p.id, 'account')}><Trash2 size={16} /></Button>
+                                </div></TableCell>
+                             </TableRow>
+                          ))}
+                       </TableBody>
+                    </Table>
+                  </div>
                </Card>
             </div>
           )}
@@ -597,19 +650,19 @@ export default function AdminPage() {
           {activeView === 'events' && (
             <div className="space-y-6">
               <div className="flex justify-between items-center">
-                <h3 className="font-headline font-bold text-xl text-slate-900 dark:text-white">Live Events</h3>
-                <Button onClick={() => handleOpenEventDialog()} className="h-10 rounded-xl gap-2 font-bold"><Plus size={18} /> New Event</Button>
+                <h3 className="font-headline font-bold text-lg sm:text-xl text-slate-900 dark:text-white">Live Events</h3>
+                <Button onClick={() => handleOpenEventDialog()} className="h-10 rounded-xl gap-2 font-bold px-3 sm:px-4 text-xs sm:text-sm"><Plus size={18} /> New Event</Button>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                 {events.map(ev => (
-                  <Card key={ev.id} className="rounded-[2rem] overflow-hidden border-none shadow-lg bg-white dark:bg-slate-900">
+                  <Card key={ev.id} className="rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden border-none shadow-lg bg-white dark:bg-slate-900">
                     <div className="aspect-[21/9] relative">
                       <Image src={ev.thumbnailUrl} alt="" fill className="object-cover" />
                       {!ev.active && <div className="absolute inset-0 bg-black/60 flex items-center justify-center font-bold text-white text-xs uppercase tracking-widest">Inactive</div>}
                     </div>
-                    <div className="p-6 flex justify-between items-center">
-                      <div><h4 className="font-bold text-slate-900 dark:text-white">{ev.title}</h4><p className="text-[10px] text-muted-foreground uppercase font-bold">{ev.type}</p></div>
-                      <div className="flex gap-2"><Button size="icon" variant="ghost" onClick={() => handleOpenEventDialog(ev)} className="text-blue-500"><Edit size={16}/></Button><Button size="icon" variant="ghost" onClick={() => confirmDelete(ev.id, 'event')} className="text-red-500"><Trash2 size={16}/></Button></div>
+                    <div className="p-4 sm:p-6 flex justify-between items-center">
+                      <div className="min-w-0"><h4 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white truncate">{ev.title}</h4><p className="text-[9px] sm:text-[10px] text-muted-foreground uppercase font-bold">{ev.type}</p></div>
+                      <div className="flex gap-1 shrink-0"><Button size="icon" variant="ghost" onClick={() => handleOpenEventDialog(ev)} className="text-blue-500"><Edit size={16}/></Button><Button size="icon" variant="ghost" onClick={() => confirmDelete(ev.id, 'event')} className="text-red-500"><Trash2 size={16}/></Button></div>
                     </div>
                   </Card>
                 ))}
@@ -618,42 +671,44 @@ export default function AdminPage() {
           )}
 
           {activeView === 'users' && (
-            <Card className="rounded-[2rem] border-none shadow-xl overflow-hidden bg-white dark:bg-slate-900">
-               <Table>
-                  <TableHeader className="bg-slate-50/50 dark:bg-slate-800/40">
-                    <TableRow className="border-none">
-                      <TableHead className="font-bold px-8">Profile</TableHead>
-                      <TableHead className="font-bold">Contact</TableHead>
-                      <TableHead className="font-bold">Role</TableHead>
-                      <TableHead className="font-bold">Balance</TableHead>
-                      <TableHead className="text-right px-8">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {allUsers.map(u => (
-                      <TableRow key={u.uid} className={cn("border-slate-50 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-slate-800/30", u.banned && "bg-red-50/50 dark:bg-red-950/20 opacity-70")}>
-                        <TableCell className="px-8"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800 relative">{u.photoURL && <Image src={u.photoURL} alt="" fill className="object-cover" />}</div><div className="flex flex-col"><span className="font-bold text-slate-900 dark:text-white text-xs">{u.name}</span>{u.banned && <Badge variant="destructive" className="h-4 text-[8px]">BANNED</Badge>}</div></div></TableCell>
-                        <TableCell><div className="flex flex-col"><span className="text-[10px] font-bold text-slate-600 dark:text-slate-400">{u.email}</span><span className="text-[9px] text-slate-400 dark:text-slate-500">{u.phoneNumber}</span></div></TableCell>
-                        <TableCell><Badge variant="secondary" className="rounded-full text-[9px] uppercase font-bold dark:bg-slate-800 dark:text-slate-300 border-none">{u.role}</Badge></TableCell>
-                        <TableCell><div className="flex items-center gap-1.5"><Star size={12} className="text-amber-500 fill-amber-500" /><span className="font-bold text-slate-900 dark:text-white">{u.points || 0}</span></div></TableCell>
-                        <TableCell className="text-right px-8"><div className="flex justify-end gap-2"><Button size="icon" variant="ghost" onClick={() => { setSelectedUser(u); setIsUserManageOpen(true); }} className="text-primary hover:bg-primary/5 rounded-xl"><UserCog size={18} /></Button><Button size="icon" variant="ghost" onClick={() => confirmDelete(u.uid, 'user')} className="text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl"><Trash2 size={18} /></Button></div></TableCell>
+            <Card className="rounded-[1.5rem] sm:rounded-[2rem] border-none shadow-xl overflow-hidden bg-white dark:bg-slate-900">
+               <div className="overflow-x-auto scrollbar-hide">
+                 <Table className="min-w-[600px]">
+                    <TableHeader className="bg-slate-50/50 dark:bg-slate-800/40">
+                      <TableRow className="border-none">
+                        <TableHead className="font-bold px-4 sm:px-8">Profile</TableHead>
+                        <TableHead className="font-bold">Contact</TableHead>
+                        <TableHead className="font-bold">Role</TableHead>
+                        <TableHead className="font-bold">Balance</TableHead>
+                        <TableHead className="text-right px-4 sm:px-8">Actions</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-               </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {allUsers.map(u => (
+                        <TableRow key={u.uid} className={cn("border-slate-50 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-slate-800/30", u.banned && "bg-red-50/50 dark:bg-red-950/20 opacity-70")}>
+                          <TableCell className="px-4 sm:px-8"><div className="flex items-center gap-3"><div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800 relative shrink-0">{u.photoURL && <Image src={u.photoURL} alt="" fill className="object-cover" />}</div><div className="flex flex-col"><span className="font-bold text-slate-900 dark:text-white text-xs truncate max-w-[100px]">{u.name}</span>{u.banned && <Badge variant="destructive" className="h-4 text-[8px] w-fit">BANNED</Badge>}</div></div></TableCell>
+                          <TableCell><div className="flex flex-col"><span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 truncate max-w-[120px]">{u.email}</span><span className="text-[9px] text-slate-400 dark:text-slate-500">{u.phoneNumber}</span></div></TableCell>
+                          <TableCell><Badge variant="secondary" className="rounded-full text-[9px] uppercase font-bold dark:bg-slate-800 dark:text-slate-300 border-none">{u.role}</Badge></TableCell>
+                          <TableCell><div className="flex items-center gap-1.5"><Star size={12} className="text-amber-500 fill-amber-500" /><span className="font-bold text-slate-900 dark:text-white text-xs">{u.points || 0}</span></div></TableCell>
+                          <TableCell className="text-right px-4 sm:px-8"><div className="flex justify-end gap-1"><Button size="icon" variant="ghost" onClick={() => { setSelectedUser(u); setIsUserManageOpen(true); }} className="text-primary hover:bg-primary/5 rounded-xl h-8 w-8"><UserCog size={18} /></Button><Button size="icon" variant="ghost" onClick={() => confirmDelete(u.uid, 'user')} className="text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl h-8 w-8"><Trash2 size={18} /></Button></div></TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                 </Table>
+               </div>
             </Card>
           )}
 
           {activeView === 'settings' && (
-            <div className="max-w-3xl space-y-8 animate-in slide-in-from-bottom-8">
+            <div className="max-w-3xl space-y-6 sm:space-y-8 animate-in slide-in-from-bottom-8">
               <Accordion type="single" collapsible className="w-full space-y-4">
-                 <AccordionItem value="general" className="border-none bg-white dark:bg-slate-900 rounded-[2rem] px-8 shadow-lg">
-                    <AccordionTrigger className="hover:no-underline"><div className="flex items-center gap-4 text-left"><div className="p-3 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-500 rounded-2xl"><SettingsIcon size={20} /></div><div><h4 className="font-bold text-slate-900 dark:text-white">General Store Config</h4><p className="text-xs text-muted-foreground">Logo, Live Status, and Fees</p></div></div></AccordionTrigger>
-                    <AccordionContent className="pb-8 space-y-6">
+                 <AccordionItem value="general" className="border-none bg-white dark:bg-slate-900 rounded-[1.5rem] sm:rounded-[2rem] px-4 sm:px-8 shadow-lg">
+                    <AccordionTrigger className="hover:no-underline"><div className="flex items-center gap-3 sm:gap-4 text-left"><div className="p-2 sm:p-3 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-500 rounded-xl sm:rounded-2xl shrink-0"><SettingsIcon size={20} /></div><div><h4 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white">General Store Config</h4><p className="text-[10px] sm:text-xs text-muted-foreground">Logo, Live Status, and Fees</p></div></div></AccordionTrigger>
+                    <AccordionContent className="pb-6 sm:pb-8 space-y-6">
                        <div className="space-y-4">
                           <Label className="text-[10px] font-bold uppercase text-slate-400">Store Logo</Label>
-                          <div className="flex items-center gap-6">
-                             <div className="w-20 h-20 rounded-2xl bg-slate-100 dark:bg-slate-800 relative overflow-hidden border-2 border-dashed border-slate-200 dark:border-white/5 flex items-center justify-center">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
+                             <div className="w-20 h-20 rounded-2xl bg-slate-100 dark:bg-slate-800 relative overflow-hidden border-2 border-dashed border-slate-200 dark:border-white/5 flex items-center justify-center shrink-0">
                                 {storeSettings.logo ? <Image src={storeSettings.logo} alt="" fill className="object-contain p-2" unoptimized /> : <ImageIcon className="text-slate-300" />}
                              </div>
                              <div className="flex-1 space-y-2">
@@ -662,8 +717,8 @@ export default function AdminPage() {
                              </div>
                           </div>
                        </div>
-                       <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl">
-                          <div><p className="text-sm font-bold text-slate-900 dark:text-white">TikTok Live Mode</p><p className="text-[10px] text-muted-foreground">Show "Live Now" banner on homepage</p></div>
+                       <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-xl sm:rounded-2xl">
+                          <div><p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">TikTok Live Mode</p><p className="text-[9px] sm:text-[10px] text-muted-foreground">Show "Live Now" banner on homepage</p></div>
                           <Switch checked={storeSettings.isLive} onCheckedChange={val => updateStoreSettings({ isLive: val })} />
                        </div>
                        <div className="space-y-2">
@@ -673,24 +728,24 @@ export default function AdminPage() {
                             step="0.01"
                             defaultValue={storeSettings?.config?.shop?.listingFee} 
                             onBlur={e => updateStoreSettings({ config: { ...storeSettings.config, shop: { ...storeSettings.config?.shop, listingFee: parseFloat(e.target.value) } } })} 
-                            className="rounded-xl dark:bg-slate-800 border-none font-bold" 
+                            className="rounded-xl dark:bg-slate-800 border-none font-bold h-12" 
                           />
                        </div>
                     </AccordionContent>
                  </AccordionItem>
-                 <AccordionItem value="payment" className="border-none bg-white dark:bg-slate-900 rounded-[2rem] px-8 shadow-lg">
+                 <AccordionItem value="payment" className="border-none bg-white dark:bg-slate-900 rounded-[1.5rem] sm:rounded-[2rem] px-4 sm:px-8 shadow-lg">
                     <AccordionTrigger className="hover:no-underline">
-                      <div className="flex items-center gap-4 text-left">
-                        <div className="p-3 bg-primary/10 text-primary rounded-2xl">
+                      <div className="flex items-center gap-3 sm:gap-4 text-left">
+                        <div className="p-2 sm:p-3 bg-primary/10 text-primary rounded-xl sm:rounded-2xl shrink-0">
                           <CreditCard size={20} />
                         </div>
                         <div>
-                          <h4 className="font-bold text-slate-900 dark:text-white">Payment Details</h4>
-                          <p className="text-xs text-muted-foreground">Manage merchant number & USSD logic</p>
+                          <h4 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white">Payment Details</h4>
+                          <p className="text-[10px] sm:text-xs text-muted-foreground">Manage merchant number & USSD logic</p>
                         </div>
                       </div>
                     </AccordionTrigger>
-                    <AccordionContent className="pb-8 space-y-6 pt-2">
+                    <AccordionContent className="pb-6 sm:pb-8 space-y-6 pt-2">
                       <div className="space-y-2">
                         <Label className="text-[10px] font-bold uppercase text-slate-400 flex items-center gap-2">
                           <Smartphone size={12}/> Merchant Payment Number
@@ -698,7 +753,7 @@ export default function AdminPage() {
                         <Input 
                           defaultValue={storeSettings.paymentNumber || "613982172"} 
                           onBlur={e => updateStoreSettings({ paymentNumber: e.target.value })} 
-                          className="rounded-xl dark:bg-slate-800 border-none font-bold"
+                          className="rounded-xl dark:bg-slate-800 border-none font-bold h-12"
                           placeholder="e.g. 6187542920"
                         />
                         <p className="text-[9px] text-muted-foreground italic">
@@ -707,24 +762,24 @@ export default function AdminPage() {
                       </div>
                     </AccordionContent>
                  </AccordionItem>
-                 <AccordionItem value="ticker" className="border-none bg-white dark:bg-slate-900 rounded-[2rem] px-8 shadow-lg">
-                    <AccordionTrigger className="hover:no-underline"><div className="flex items-center gap-4 text-left"><div className="p-3 bg-blue-50 dark:bg-blue-500/10 text-primary rounded-2xl"><Sparkles size={20} /></div><div><h4 className="font-bold text-slate-900 dark:text-white">Announcement Ticker</h4><p className="text-xs text-muted-foreground">Manage the homepage scrolling note</p></div></div></AccordionTrigger>
-                    <AccordionContent className="pb-8 space-y-4"><Label className="text-[10px] font-bold uppercase tracking-widest ml-1 text-slate-400">Ticker Text Content</Label><Textarea defaultValue={storeSettings.announcementTicker} onBlur={e => updateStoreSettings({ announcementTicker: e.target.value })} className="rounded-2xl bg-slate-50 dark:bg-slate-800 border-none min-h-[100px] text-sm font-bold shadow-inner" placeholder="Welcome to Oskar Shop..." /><p className="text-[10px] text-muted-foreground italic">* Changes reflect immediately on refresh for all users.</p></AccordionContent>
+                 <AccordionItem value="ticker" className="border-none bg-white dark:bg-slate-900 rounded-[1.5rem] sm:rounded-[2rem] px-4 sm:px-8 shadow-lg">
+                    <AccordionTrigger className="hover:no-underline"><div className="flex items-center gap-3 sm:gap-4 text-left"><div className="p-2 sm:p-3 bg-blue-50 dark:bg-blue-500/10 text-primary rounded-xl sm:rounded-2xl shrink-0"><Sparkles size={20} /></div><div><h4 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white">Announcement Ticker</h4><p className="text-[10px] sm:text-xs text-muted-foreground">Manage the homepage scrolling note</p></div></div></AccordionTrigger>
+                    <AccordionContent className="pb-6 sm:pb-8 space-y-4"><Label className="text-[10px] font-bold uppercase tracking-widest ml-1 text-slate-400">Ticker Text Content</Label><Textarea defaultValue={storeSettings.announcementTicker} onBlur={e => updateStoreSettings({ announcementTicker: e.target.value })} className="rounded-2xl bg-slate-50 dark:bg-slate-800 border-none min-h-[100px] text-xs sm:text-sm font-bold shadow-inner" placeholder="Welcome to Oskar Shop..." /><p className="text-[10px] text-muted-foreground italic">* Changes reflect immediately on refresh for all users.</p></AccordionContent>
                  </AccordionItem>
-                 <AccordionItem value="banners" className="border-none bg-white dark:bg-slate-900 rounded-[2rem] px-8 shadow-lg">
-                    <AccordionTrigger className="hover:no-underline"><div className="flex items-center gap-4 text-left"><div className="p-3 bg-amber-50 dark:bg-amber-500/10 text-amber-500 rounded-2xl"><Layers size={20} /></div><div><h4 className="font-bold text-slate-900 dark:text-white">Homepage Banners</h4><p className="text-xs text-muted-foreground">Manage slider images and promotions</p></div></div></AccordionTrigger>
-                    <AccordionContent className="pb-8 space-y-6"><div className="grid grid-cols-1 md:grid-cols-2 gap-4">{banners.map(b => (<div key={b.id} className="relative aspect-[21/9] rounded-2xl overflow-hidden shadow-md group"><Image src={b.imageUrl} alt="" fill className="object-cover" /><div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2"><Button size="icon" variant="destructive" className="rounded-full" onClick={() => confirmDelete(b.id, 'banner')}><Trash2 size={16} /></Button></div></div>))}<button onClick={() => setIsBannerDialogOpen(true)} className="aspect-[21/9] rounded-2xl border-3 border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center text-slate-300 dark:text-slate-700 hover:border-primary hover:text-primary transition-all gap-2 bg-slate-50 dark:bg-slate-800/40"><PlusCircle size={32} /><span className="text-xs font-bold uppercase">Add New Banner</span></button></div></AccordionContent>
+                 <AccordionItem value="banners" className="border-none bg-white dark:bg-slate-900 rounded-[1.5rem] sm:rounded-[2rem] px-4 sm:px-8 shadow-lg">
+                    <AccordionTrigger className="hover:no-underline"><div className="flex items-center gap-3 sm:gap-4 text-left"><div className="p-2 sm:p-3 bg-amber-50 dark:bg-amber-500/10 text-amber-500 rounded-xl sm:rounded-2xl shrink-0"><Layers size={20} /></div><div><h4 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white">Homepage Banners</h4><p className="text-[10px] sm:text-xs text-muted-foreground">Manage slider images and promotions</p></div></div></AccordionTrigger>
+                    <AccordionContent className="pb-6 sm:pb-8 space-y-6"><div className="grid grid-cols-1 sm:grid-cols-2 gap-4">{banners.map(b => (<div key={b.id} className="relative aspect-[21/9] rounded-xl sm:rounded-2xl overflow-hidden shadow-md group"><Image src={b.imageUrl} alt="" fill className="object-cover" /><div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2"><Button size="icon" variant="destructive" className="rounded-full" onClick={() => confirmDelete(b.id, 'banner')}><Trash2 size={16} /></Button></div></div>))}<button onClick={() => setIsBannerDialogOpen(true)} className="aspect-[21/9] rounded-xl sm:rounded-2xl border-3 border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center text-slate-300 dark:text-slate-700 hover:border-primary hover:text-primary transition-all gap-2 bg-slate-50 dark:bg-slate-800/40"><PlusCircle size={32} /><span className="text-[10px] sm:text-xs font-bold uppercase">Add New Banner</span></button></div></AccordionContent>
                  </AccordionItem>
-                 <AccordionItem value="help-links" className="border-none bg-white dark:bg-slate-900 rounded-[2rem] px-8 shadow-lg">
-                    <AccordionTrigger className="hover:no-underline"><div className="flex items-center gap-4 text-left"><div className="p-3 bg-green-50 dark:bg-green-500/10 text-green-500 rounded-2xl"><Globe size={20} /></div><div><h4 className="font-bold text-slate-900 dark:text-white">Help & Support Links</h4><p className="text-xs text-muted-foreground">Manage tutorial video, TikTok, and WhatsApp</p></div></div></AccordionTrigger>
-                    <AccordionContent className="pb-8 space-y-6 pt-2">
+                 <AccordionItem value="help-links" className="border-none bg-white dark:bg-slate-900 rounded-[1.5rem] sm:rounded-[2rem] px-4 sm:px-8 shadow-lg">
+                    <AccordionTrigger className="hover:no-underline"><div className="flex items-center gap-3 sm:gap-4 text-left"><div className="p-2 sm:p-3 bg-green-50 dark:bg-green-500/10 text-green-500 rounded-xl sm:rounded-2xl shrink-0"><Globe size={20} /></div><div><h4 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white">Help & Support Links</h4><p className="text-[10px] sm:text-xs text-muted-foreground">Manage tutorial video, TikTok, and WhatsApp</p></div></div></AccordionTrigger>
+                    <AccordionContent className="pb-6 sm:pb-8 space-y-6 pt-2">
                        <div className="grid grid-cols-1 gap-6">
                           <div className="space-y-2">
                              <Label className="text-[10px] font-bold uppercase text-slate-400 flex items-center gap-2"><Video size={12}/> Tutorial Video URL</Label>
                              <Input 
                                 value={helpLinksForm.tutorialUrl} 
                                 onChange={e => setHelpLinksForm({...helpLinksForm, tutorialUrl: e.target.value})} 
-                                className="rounded-xl dark:bg-slate-800 border-none font-bold"
+                                className="rounded-xl dark:bg-slate-800 border-none font-bold h-12"
                                 placeholder="https://youtube.com/..."
                              />
                           </div>
@@ -733,7 +788,7 @@ export default function AdminPage() {
                              <Input 
                                 value={helpLinksForm.whatsappNumber} 
                                 onChange={e => setHelpLinksForm({...helpLinksForm, whatsappNumber: e.target.value})} 
-                                className="rounded-xl dark:bg-slate-800 border-none font-bold"
+                                className="rounded-xl dark:bg-slate-800 border-none font-bold h-12"
                                 placeholder="252613982172"
                              />
                           </div>
@@ -742,30 +797,30 @@ export default function AdminPage() {
                              <Input 
                                 value={helpLinksForm.tiktokUrl} 
                                 onChange={e => setHelpLinksForm({...helpLinksForm, tiktokUrl: e.target.value})} 
-                                className="rounded-xl dark:bg-slate-800 border-none font-bold"
+                                className="rounded-xl dark:bg-slate-800 border-none font-bold h-12"
                                 placeholder="https://tiktok.com/@Oskarshop"
                              />
                           </div>
-                          <Button onClick={handleSaveHelpLinks} className="h-12 rounded-xl font-bold gap-2">
+                          <Button onClick={handleSaveHelpLinks} className="h-12 rounded-xl font-bold gap-2 w-full">
                              {isUploading ? <Loader2 className="animate-spin" /> : <CheckCircle2 size={18} />} Save Help Settings
                           </Button>
                        </div>
                     </AccordionContent>
                  </AccordionItem>
-                 <AccordionItem value="maintenance" className="border-none bg-white dark:bg-slate-900 rounded-[2rem] px-8 shadow-lg">
-                    <AccordionTrigger className="hover:no-underline"><div className="flex items-center gap-4 text-left"><div className="p-3 bg-red-50 dark:bg-red-500/10 text-red-500 rounded-2xl"><MonitorOff size={20} /></div><div><h4 className="font-bold text-slate-900 dark:text-white">Maintenance Mode</h4><p className="text-xs text-muted-foreground">Put store offline for updates</p></div></div></AccordionTrigger>
-                    <AccordionContent className="pb-8 space-y-6">
-                       <div className="flex items-center justify-between p-4 bg-red-50 dark:bg-red-950/20 rounded-2xl border border-red-100 dark:border-red-900/20">
-                          <div><p className="text-sm font-bold text-red-600 dark:text-red-400">Offline Mode</p><p className="text-[10px] text-red-400/80">Only admins can access the store</p></div>
+                 <AccordionItem value="maintenance" className="border-none bg-white dark:bg-slate-900 rounded-[1.5rem] sm:rounded-[2rem] px-4 sm:px-8 shadow-lg">
+                    <AccordionTrigger className="hover:no-underline"><div className="flex items-center gap-3 sm:gap-4 text-left"><div className="p-2 sm:p-3 bg-red-50 dark:bg-red-500/10 text-red-500 rounded-xl sm:rounded-2xl shrink-0"><MonitorOff size={20} /></div><div><h4 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white">Maintenance Mode</h4><p className="text-[10px] sm:text-xs text-muted-foreground">Put store offline for updates</p></div></div></AccordionTrigger>
+                    <AccordionContent className="pb-6 sm:pb-8 space-y-6">
+                       <div className="flex items-center justify-between p-4 bg-red-50 dark:bg-red-950/20 rounded-xl sm:rounded-2xl border border-red-100 dark:border-red-900/20">
+                          <div><p className="text-xs sm:text-sm font-bold text-red-600 dark:text-red-400">Offline Mode</p><p className="text-[9px] sm:text-[10px] text-red-400/80">Only admins can access the store</p></div>
                           <Switch checked={storeSettings.appStatus?.offline} onCheckedChange={val => updateStoreSettings({ appStatus: { ...storeSettings.appStatus, offline: val } })} />
                        </div>
                        <div className="space-y-4">
-                          <div className="space-y-2"><Label className="text-[10px] font-bold text-slate-400 uppercase">Offline Title</Label><Input defaultValue={storeSettings.appStatus?.offlineTitle} onBlur={e => updateStoreSettings({ appStatus: { ...storeSettings.appStatus, offlineTitle: e.target.value } })} className="rounded-xl dark:bg-slate-800 border-none font-bold" /></div>
-                          <div className="space-y-2"><Label className="text-[10px] font-bold text-slate-400 uppercase">Offline Message</Label><Textarea defaultValue={storeSettings.appStatus?.offlineBody} onBlur={e => updateStoreSettings({ appStatus: { ...storeSettings.appStatus, offlineBody: e.target.value } })} className="rounded-xl dark:bg-slate-800 border-none font-bold" /></div>
+                          <div className="space-y-2"><Label className="text-[10px] font-bold text-slate-400 uppercase">Offline Title</Label><Input defaultValue={storeSettings.appStatus?.offlineTitle} onBlur={e => updateStoreSettings({ appStatus: { ...storeSettings.appStatus, offlineTitle: e.target.value } })} className="rounded-xl dark:bg-slate-800 border-none font-bold h-12" /></div>
+                          <div className="space-y-2"><Label className="text-[10px] font-bold text-slate-400 uppercase">Offline Message</Label><Textarea defaultValue={storeSettings.appStatus?.offlineBody} onBlur={e => updateStoreSettings({ appStatus: { ...storeSettings.appStatus, offlineBody: e.target.value } })} className="rounded-xl dark:bg-slate-800 border-none font-bold h-24" /></div>
                           <div className="space-y-2">
                              <Label className="text-[10px] font-bold uppercase text-slate-400">Maintenance Image</Label>
-                             <div className="flex items-center gap-4">
-                                <div className="w-32 aspect-video rounded-xl bg-slate-100 dark:bg-slate-800 relative overflow-hidden group border border-slate-200 dark:border-white/5">
+                             <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                                <div className="w-full sm:w-32 aspect-video rounded-xl bg-slate-100 dark:bg-slate-800 relative overflow-hidden group border border-slate-200 dark:border-white/5 shrink-0">
                                    {storeSettings.appStatus?.offlineImageUrl ? (
                                      <>
                                        <Image src={storeSettings.appStatus.offlineImageUrl} alt="" fill className="object-cover" unoptimized />
@@ -788,9 +843,9 @@ export default function AdminPage() {
                        </div>
                     </AccordionContent>
                  </AccordionItem>
-                 <AccordionItem value="security" className="border-none bg-white dark:bg-slate-900 rounded-[2rem] px-8 shadow-lg">
-                    <AccordionTrigger className="hover:no-underline"><div className="flex items-center gap-4 text-left"><div className="p-3 bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300 rounded-2xl"><Lock size={20} /></div><div><h4 className="font-bold text-slate-900 dark:text-white">Security & Access</h4><p className="text-xs text-muted-foreground">Manage Admin PIN code</p></div></div></AccordionTrigger>
-                    <AccordionContent className="pb-8 space-y-4">
+                 <AccordionItem value="security" className="border-none bg-white dark:bg-slate-900 rounded-[1.5rem] sm:rounded-[2rem] px-4 sm:px-8 shadow-lg">
+                    <AccordionTrigger className="hover:no-underline"><div className="flex items-center gap-3 sm:gap-4 text-left"><div className="p-2 sm:p-3 bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300 rounded-xl sm:rounded-2xl shrink-0"><Lock size={20} /></div><div><h4 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white">Security & Access</h4><p className="text-[10px] sm:text-xs text-muted-foreground">Manage Admin PIN code</p></div></div></AccordionTrigger>
+                    <AccordionContent className="pb-6 sm:pb-8 space-y-4">
                        <div className="space-y-2">
                           <Label className="text-[10px] font-bold uppercase text-slate-400">Update Admin PIN</Label>
                           <Input 
@@ -804,7 +859,7 @@ export default function AdminPage() {
                                   toast({ title: "PIN Updated Successfully" });
                                }
                             }} 
-                            className="rounded-xl dark:bg-slate-800 border-none font-bold" 
+                            className="rounded-xl dark:bg-slate-800 border-none font-bold h-12" 
                           />
                           <p className="text-[9px] text-muted-foreground italic">* PIN must be exactly 6 digits.</p>
                        </div>
@@ -816,40 +871,41 @@ export default function AdminPage() {
         </main>
       </div>
 
+      {/* Dialogs - Shared across views */}
       <Dialog open={isProductDialogOpen} onOpenChange={setIsProductDialogOpen}>
-        <DialogContent className="max-w-xl rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl bg-white dark:bg-slate-900">
-          <div className="bg-primary p-8 text-white">
-            <DialogTitle className="text-2xl font-headline font-bold">{editingProduct ? 'Edit Item' : 'Add New Item'}</DialogTitle>
+        <DialogContent className="max-w-xl w-[95vw] rounded-[2rem] sm:rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl bg-white dark:bg-slate-900">
+          <div className="bg-primary p-6 sm:p-8 text-white">
+            <DialogTitle className="text-xl sm:text-2xl font-headline font-bold">{editingProduct ? 'Edit Item' : 'Add New Item'}</DialogTitle>
           </div>
-          <form onSubmit={handleSaveProduct} className="p-8 space-y-6 max-h-[70vh] overflow-y-auto scrollbar-hide">
+          <form onSubmit={handleSaveProduct} className="p-6 sm:p-8 space-y-6 max-h-[70vh] overflow-y-auto scrollbar-hide">
             <div className="space-y-2">
               <Label className="text-xs font-bold uppercase text-slate-400">Item Title</Label>
-              <Input value={productForm.title} onChange={e => setProductForm({...productForm, title: e.target.value})} required className="rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold" />
+              <Input value={productForm.title} onChange={e => setProductForm({...productForm, title: e.target.value})} required className="rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold h-12" />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label className="text-xs font-bold uppercase text-slate-400">Game ID</Label>
                 <Select value={productForm.gameId} onValueChange={v => setProductForm({...productForm, gameId: v})}>
-                  <SelectTrigger className="rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold h-12"><SelectValue /></SelectTrigger>
                   <SelectContent className="rounded-xl"><SelectItem value="freefire">Free Fire</SelectItem><SelectItem value="bloodstrike">Blood Strike</SelectItem></SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
                 <Label className="text-xs font-bold uppercase text-slate-400">Category</Label>
                 <Select value={productForm.category} onValueChange={(v:any) => setProductForm({...productForm, category: v})}>
-                  <SelectTrigger className="rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold h-12"><SelectValue /></SelectTrigger>
                   <SelectContent className="rounded-xl"><SelectItem value="top-up">Top-Up</SelectItem><SelectItem value="accounts">Accounts</SelectItem></SelectContent>
                 </Select>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label className="text-xs font-bold uppercase text-slate-400">Price ($)</Label>
-                <Input type="number" step="0.01" value={productForm.price} onChange={e => setProductForm({...productForm, price: e.target.value})} required className="rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold" />
+                <Input type="number" step="0.01" value={productForm.price} onChange={e => setProductForm({...productForm, price: e.target.value})} required className="rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold h-12" />
               </div>
               <div className="space-y-2">
                 <Label className="text-xs font-bold uppercase text-slate-400">Discount Price (Opt)</Label>
-                <Input type="number" step="0.01" value={productForm.discountedPrice} onChange={e => setProductForm({...productForm, discountedPrice: e.target.value})} className="rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold" />
+                <Input type="number" step="0.01" value={productForm.discountedPrice} onChange={e => setProductForm({...productForm, discountedPrice: e.target.value})} className="rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold h-12" />
               </div>
             </div>
             <div className="space-y-2">
@@ -862,7 +918,7 @@ export default function AdminPage() {
                 <div className="w-16 h-16 rounded-xl bg-slate-100 dark:bg-slate-800 relative overflow-hidden shrink-0 border border-dashed border-slate-300 dark:border-white/10">
                   {productForm.thumbnail ? <Image src={productForm.thumbnail} alt="" fill className="object-cover" unoptimized /> : <ImageIcon className="m-auto absolute inset-0 text-slate-300" />}
                 </div>
-                <Input type="file" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'product')} className="flex-1 rounded-xl dark:bg-slate-800 border-none" />
+                <Input type="file" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'product')} className="flex-1 rounded-xl dark:bg-slate-800 border-none h-10" />
               </div>
             </div>
             <Button type="submit" disabled={isUploading} className="w-full h-14 rounded-2xl font-bold shadow-xl shadow-primary/20">
@@ -873,15 +929,15 @@ export default function AdminPage() {
       </Dialog>
 
       <Dialog open={isEventDialogOpen} onOpenChange={setIsEventDialogOpen}>
-        <DialogContent className="max-w-xl rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl bg-white dark:bg-slate-900">
-          <div className="bg-blue-600 p-8 text-white">
-            <DialogTitle className="text-2xl font-headline font-bold">{editingEvent ? 'Edit Event' : 'Create Live Event'}</DialogTitle>
+        <DialogContent className="max-w-xl w-[95vw] rounded-[2rem] sm:rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl bg-white dark:bg-slate-900">
+          <div className="bg-blue-600 p-6 sm:p-8 text-white">
+            <DialogTitle className="text-xl sm:text-2xl font-headline font-bold">{editingEvent ? 'Edit Event' : 'Create Live Event'}</DialogTitle>
           </div>
-          <form onSubmit={handleSaveEvent} className="p-8 space-y-6">
-            <div className="space-y-2"><Label className="text-xs font-bold text-slate-400">Event Title</Label><Input value={eventForm.title} onChange={e => setEventForm({...eventForm, title: e.target.value})} required className="rounded-xl" /></div>
-            <div className="space-y-2"><Label className="text-xs font-bold text-slate-400">Description</Label><Textarea value={eventForm.description} onChange={e => setEventForm({...eventForm, description: e.target.value})} className="rounded-xl" /></div>
+          <form onSubmit={handleSaveEvent} className="p-6 sm:p-8 space-y-6">
+            <div className="space-y-2"><Label className="text-xs font-bold text-slate-400">Event Title</Label><Input value={eventForm.title} onChange={e => setEventForm({...eventForm, title: e.target.value})} required className="rounded-xl h-12" /></div>
+            <div className="space-y-2"><Label className="text-xs font-bold text-slate-400">Description</Label><Textarea value={eventForm.description} onChange={e => setEventForm({...eventForm, description: e.target.value})} className="rounded-xl h-24" /></div>
             <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
-               <div><p className="font-bold text-sm">Active Status</p><p className="text-[10px] text-muted-foreground">Is this event visible to users?</p></div>
+               <div><p className="font-bold text-xs sm:text-sm">Active Status</p><p className="text-[9px] sm:text-[10px] text-muted-foreground">Is this event visible to users?</p></div>
                <Switch checked={eventForm.active} onCheckedChange={v => setEventForm({...eventForm, active: v})} />
             </div>
             <div className="space-y-2">
@@ -890,7 +946,7 @@ export default function AdminPage() {
                 <div className="w-20 aspect-video rounded-xl bg-slate-100 dark:bg-slate-800 relative overflow-hidden shrink-0">
                   {eventForm.thumbnailUrl ? <Image src={eventForm.thumbnailUrl} alt="" fill className="object-cover" unoptimized /> : <ImageIcon className="m-auto absolute inset-0 text-slate-300" />}
                 </div>
-                <Input type="file" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'event')} className="flex-1 rounded-xl" />
+                <Input type="file" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'event')} className="flex-1 rounded-xl h-10" />
               </div>
             </div>
             <Button type="submit" disabled={isUploading} className="w-full h-14 rounded-2xl font-bold bg-blue-600 hover:bg-blue-700">
@@ -901,17 +957,17 @@ export default function AdminPage() {
       </Dialog>
 
       <Dialog open={isBannerDialogOpen} onOpenChange={setIsBannerDialogOpen}>
-        <DialogContent className="max-w-md rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl bg-white dark:bg-slate-900">
-          <div className="bg-amber-500 p-8 text-white"><DialogTitle className="text-2xl font-headline font-bold">New Banner</DialogTitle></div>
-          <div className="p-8 space-y-6">
+        <DialogContent className="max-w-md w-[95vw] rounded-[2rem] sm:rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl bg-white dark:bg-slate-900">
+          <div className="bg-amber-500 p-6 sm:p-8 text-white"><DialogTitle className="text-xl sm:text-2xl font-headline font-bold">New Banner</DialogTitle></div>
+          <div className="p-6 sm:p-8 space-y-6">
             <div className="space-y-2">
                <Label className="text-xs font-bold text-slate-400">Slider Image</Label>
                <div className="aspect-[21/9] rounded-xl bg-slate-50 dark:bg-slate-800 relative overflow-hidden mb-4 flex items-center justify-center">
                   {bannerForm.imageUrl ? <Image src={bannerForm.imageUrl} alt="" fill className="object-cover" /> : <ImageIcon className="text-slate-300" size={40} />}
                </div>
-               <Input type="file" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'banner')} className="rounded-xl" />
+               <Input type="file" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'banner')} className="rounded-xl h-10" />
             </div>
-            <div className="space-y-2"><Label className="text-xs font-bold text-slate-400">Action Link (Optional)</Label><Input value={bannerForm.linkTo} onChange={e => setBannerForm({...bannerForm, linkTo: e.target.value})} placeholder="e.g. #games" className="rounded-xl" /></div>
+            <div className="space-y-2"><Label className="text-xs font-bold text-slate-400">Action Link (Optional)</Label><Input value={bannerForm.linkTo} onChange={e => setBannerForm({...bannerForm, linkTo: e.target.value})} placeholder="e.g. #games" className="rounded-xl h-12" /></div>
             <Button onClick={handleSaveBanner} disabled={isUploading || !bannerForm.imageUrl} className="w-full h-14 rounded-2xl font-bold bg-amber-500 hover:bg-amber-600">
               {isUploading ? <Loader2 className="animate-spin" /> : 'Publish Banner'}
             </Button>
@@ -920,27 +976,27 @@ export default function AdminPage() {
       </Dialog>
 
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="max-w-sm rounded-[2rem] bg-white dark:bg-slate-900">
+        <DialogContent className="max-w-sm w-[90vw] rounded-[1.5rem] sm:rounded-[2rem] bg-white dark:bg-slate-900">
            <DialogHeader>
              <DialogTitle className="flex items-center gap-2 text-red-500"><ShieldAlert /> Warning</DialogTitle>
              <DialogDescription className="font-bold">Ma hubtaa inaad tirtirto shaygan? Tallaabadan lagama noqon karo.</DialogDescription>
            </DialogHeader>
-           <DialogFooter className="gap-2 pt-4">
-             <Button variant="ghost" onClick={() => setIsDeleteDialogOpen(false)} className="rounded-xl flex-1">Dib u noqo</Button>
-             <Button variant="destructive" onClick={executeDelete} className="rounded-xl flex-1">Haa, Tirtir</Button>
+           <DialogFooter className="gap-2 pt-4 flex-col sm:flex-row">
+             <Button variant="ghost" onClick={() => setIsDeleteDialogOpen(false)} className="rounded-xl flex-1 h-12">Dib u noqo</Button>
+             <Button variant="destructive" onClick={executeDelete} className="rounded-xl flex-1 h-12">Haa, Tirtir</Button>
            </DialogFooter>
         </DialogContent>
       </Dialog>
 
       <Dialog open={isUserManageOpen} onOpenChange={setIsUserManageOpen}>
-        <DialogContent className="max-w-md w-[95vw] rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl bg-white dark:bg-slate-900 max-h-[90vh] overflow-y-auto scrollbar-hide">
+        <DialogContent className="max-w-md w-[95vw] rounded-[2rem] sm:rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl bg-white dark:bg-slate-900 max-h-[90vh] overflow-y-auto scrollbar-hide">
           <DialogHeader className="sr-only"><DialogTitle>User Management</DialogTitle></DialogHeader>
           {selectedUser && (
             <div className="flex flex-col">
-              <div className="bg-slate-900 p-8 text-white"><div className="flex items-center gap-4"><div className="w-16 h-16 rounded-full overflow-hidden border-2 border-white/20 relative">{selectedUser.photoURL ? <Image src={selectedUser.photoURL} alt="" fill className="object-cover" unoptimized /> : <User size={32} className="m-4 text-white/40" />}</div><div><h2 className="text-2xl font-bold font-headline">{selectedUser.name}</h2><p className="text-xs text-white/40">{selectedUser.email}</p></div></div></div>
-              <div className="p-8 space-y-8">
-                <div className="space-y-4"><h3 className="text-xs font-bold uppercase text-slate-400 flex items-center gap-2"><Shield size={14} /> Permissions</h3><div className="grid grid-cols-2 gap-2">{['user', 'staff', 'admin'].map(r => <Button key={r} variant={selectedUser.role === r ? "default" : "outline"} onClick={() => manageUser(selectedUser.uid, { role: r as any })} className="h-11 rounded-2xl text-[10px] uppercase font-bold dark:border-white/5">{r}</Button>)}</div></div>
-                <div className="space-y-4"><h3 className="text-xs font-bold uppercase text-slate-400 flex items-center gap-2"><Star size={14} /> Points Balance</h3><div className="bg-slate-50 dark:bg-slate-800 rounded-[2rem] p-6 text-center shadow-inner"><p className="text-4xl font-headline font-bold mb-6 text-slate-900 dark:text-white">{selectedUser.points || 0}</p><div className="flex gap-2"><Input type="number" placeholder="Amount" value={pointAdjustment} onChange={e => setPointAdjustment(e.target.value)} className="h-12 rounded-xl border-none bg-white dark:bg-slate-700 shadow-sm text-center font-bold" /><Button onClick={() => handleAdjustPoints('credit')} className="bg-green-600"><ArrowUpCircle /></Button><Button onClick={() => handleAdjustPoints('debit')} className="bg-red-600"><ArrowDownCircle /></Button></div></div></div>
+              <div className="bg-slate-900 p-6 sm:p-8 text-white"><div className="flex items-center gap-4"><div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden border-2 border-white/20 relative shrink-0">{selectedUser.photoURL ? <Image src={selectedUser.photoURL} alt="" fill className="object-cover" unoptimized /> : <User size={32} className="m-3 text-white/40" />}</div><div><h2 className="text-xl sm:text-2xl font-bold font-headline truncate max-w-[200px]">{selectedUser.name}</h2><p className="text-[10px] sm:text-xs text-white/40 truncate max-w-[200px]">{selectedUser.email}</p></div></div></div>
+              <div className="p-6 sm:p-8 space-y-8">
+                <div className="space-y-4"><h3 className="text-xs font-bold uppercase text-slate-400 flex items-center gap-2"><Shield size={14} /> Permissions</h3><div className="grid grid-cols-2 gap-2">{['user', 'staff', 'admin'].map(r => <Button key={r} variant={selectedUser.role === r ? "default" : "outline"} onClick={() => manageUser(selectedUser.uid, { role: r as any })} className="h-11 rounded-xl sm:rounded-2xl text-[10px] uppercase font-bold dark:border-white/5">{r}</Button>)}</div></div>
+                <div className="space-y-4"><h3 className="text-xs font-bold uppercase text-slate-400 flex items-center gap-2"><Star size={14} /> Points Balance</h3><div className="bg-slate-50 dark:bg-slate-800 rounded-[1.5rem] sm:rounded-[2rem] p-4 sm:p-6 text-center shadow-inner"><p className="text-3xl sm:text-4xl font-headline font-bold mb-6 text-slate-900 dark:text-white">{selectedUser.points || 0}</p><div className="flex gap-2"><Input type="number" placeholder="Amt" value={pointAdjustment} onChange={e => setPointAdjustment(e.target.value)} className="h-12 rounded-xl border-none bg-white dark:bg-slate-700 shadow-sm text-center font-bold" /><Button onClick={() => handleAdjustPoints('credit')} className="bg-green-600 px-3"><ArrowUpCircle size={20} /></Button><Button onClick={() => handleAdjustPoints('debit')} className="bg-red-600 px-3"><ArrowDownCircle size={20} /></Button></div></div></div>
                 <div className="pt-6 border-t dark:border-white/5 flex flex-col gap-3"><Button variant={selectedUser.banned ? "outline" : "destructive"} onClick={handleBanUser} className="w-full h-14 rounded-2xl gap-2 font-bold">{selectedUser.banned ? <CheckCircle2 /> : <Ban />} {selectedUser.banned ? "Unban Account" : "Ban Account"}</Button></div>
               </div>
             </div>
@@ -949,23 +1005,23 @@ export default function AdminPage() {
       </Dialog>
 
       <Dialog open={isOrderDetailOpen} onOpenChange={setIsOrderDetailOpen}>
-        <DialogContent className="max-w-3xl w-[95vw] rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl bg-white dark:bg-slate-900 max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl w-[95vw] rounded-[2rem] sm:rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl bg-white dark:bg-slate-900 max-h-[90vh] overflow-y-auto">
           <DialogHeader className="sr-only"><DialogTitle>Order Details</DialogTitle></DialogHeader>
           {selectedOrder && (
             <div className="flex flex-col">
-              <div className="bg-slate-900 p-10 text-white relative">
+              <div className="bg-slate-900 p-6 sm:p-10 text-white relative">
                  <Badge className="bg-primary text-white mb-2 font-mono border-none">ORDER {selectedOrder.id.toUpperCase()}</Badge>
-                 <h2 className="text-3xl font-headline font-bold">Order Verification</h2>
-                 <button onClick={() => setIsOrderDetailOpen(false)} className="absolute top-8 right-8 text-white/20 hover:text-white"><X size={24} /></button>
+                 <h2 className="text-2xl sm:text-3xl font-headline font-bold">Order Verification</h2>
+                 <button onClick={() => setIsOrderDetailOpen(false)} className="absolute top-6 right-6 sm:top-8 sm:right-8 text-white/20 hover:text-white"><X size={24} /></button>
               </div>
-              <div className="p-10 space-y-10">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-                  <div><h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Customer</h4><Card className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800 border-none flex flex-col gap-4 shadow-inner"><div className="flex items-center gap-4"><div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary"><User size={24} /></div><div className="min-w-0"><p className="text-sm font-bold text-slate-900 dark:text-white truncate">{selectedOrder.gameDetails?.playerName || "N/A"}</p><p className="text-[10px] text-muted-foreground uppercase font-mono tracking-tight">{selectedOrder.gameDetails?.playerID || "N/A"}</p></div></div><div className="space-y-2 pt-2 border-t dark:border-white/5"><div className="flex justify-between items-center"><span className="text-[10px] font-bold text-slate-400">Sender:</span><span className="text-xs font-bold text-primary">{selectedOrder.gameDetails?.senderNumber || "N/A"}</span></div></div></Card></div>
-                  <div><h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Item</h4><Card className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800 border-none flex items-center gap-4 shadow-inner h-full"><div className="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center text-amber-500"><Package size={24} /></div><div><p className="text-sm font-bold text-slate-900 dark:text-white">{selectedOrder.items?.[0]?.title}</p><p className="text-[10px] text-primary font-bold uppercase">${selectedOrder.total?.toFixed(2)}</p></div></Card></div>
+              <div className="p-6 sm:p-10 space-y-8 sm:space-y-10">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8">
+                  <div><h4 className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Customer</h4><Card className="p-4 sm:p-5 rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none flex flex-col gap-4 shadow-inner"><div className="flex items-center gap-4"><div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0"><User size={20} sm:size={24} /></div><div className="min-w-0"><p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">{selectedOrder.gameDetails?.playerName || "N/A"}</p><p className="text-[9px] sm:text-[10px] text-muted-foreground uppercase font-mono tracking-tight truncate">{selectedOrder.gameDetails?.playerID || "N/A"}</p></div></div><div className="space-y-2 pt-2 border-t dark:border-white/5"><div className="flex justify-between items-center"><span className="text-[9px] sm:text-[10px] font-bold text-slate-400">Sender:</span><span className="text-[11px] sm:text-xs font-bold text-primary">{selectedOrder.gameDetails?.senderNumber || "N/A"}</span></div></div></Card></div>
+                  <div><h4 className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Item</h4><Card className="p-4 sm:p-5 rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none flex items-center gap-4 shadow-inner h-full"><div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center text-amber-500 shrink-0"><Package size={20} sm:size={24} /></div><div className="min-w-0"><p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">{selectedOrder.items?.[0]?.title}</p><p className="text-[9px] sm:text-[10px] text-primary font-bold uppercase">${selectedOrder.total?.toFixed(2)}</p></div></Card></div>
                 </div>
-                <div className="pt-8 border-t dark:border-white/5 space-y-6">
-                   <div className="flex flex-col gap-2"><Label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest ml-1">Process Action</Label><Select value={pendingOrderStatus} onValueChange={setPendingStatus}><SelectTrigger className="h-16 rounded-2xl font-bold text-lg bg-slate-50 dark:bg-slate-800 border-none"><SelectValue /></SelectTrigger><SelectContent className="rounded-2xl dark:bg-slate-900">{["pending", "processing", "successful", "cancelled"].map(s => <SelectItem key={s} value={s} className="rounded-xl uppercase font-bold">{s}</SelectItem>)}</SelectContent></Select></div>
-                   <div className="flex gap-3"><Button variant="outline" onClick={() => setIsOrderDetailOpen(false)} className="flex-1 h-16 rounded-2xl font-bold">Cancel</Button><Button onClick={handleStatusSave} disabled={isSavingStatus || pendingOrderStatus === selectedOrder.status} className="flex-[2] h-16 rounded-2xl font-bold text-lg shadow-xl shadow-primary/20">{isSavingStatus ? <Loader2 className="animate-spin" /> : "Save Changes"}</Button></div>
+                <div className="pt-6 sm:pt-8 border-t dark:border-white/5 space-y-6">
+                   <div className="flex flex-col gap-2"><Label className="text-[9px] sm:text-[10px] font-bold uppercase text-slate-400 tracking-widest ml-1">Process Action</Label><Select value={pendingOrderStatus} onValueChange={setPendingStatus}><SelectTrigger className="h-14 sm:h-16 rounded-xl sm:rounded-2xl font-bold text-base sm:text-lg bg-slate-50 dark:bg-slate-800 border-none"><SelectValue /></SelectTrigger><SelectContent className="rounded-xl sm:rounded-2xl dark:bg-slate-900">{["pending", "processing", "successful", "cancelled"].map(s => <SelectItem key={s} value={s} className="rounded-xl uppercase font-bold">{s}</SelectItem>)}</SelectContent></Select></div>
+                   <div className="flex flex-col sm:flex-row gap-3"><Button variant="outline" onClick={() => setIsOrderDetailOpen(false)} className="w-full sm:flex-1 h-14 sm:h-16 rounded-xl sm:rounded-2xl font-bold">Cancel</Button><Button onClick={handleStatusSave} disabled={isSavingStatus || pendingOrderStatus === selectedOrder.status} className="w-full sm:flex-[2] h-14 sm:h-16 rounded-xl sm:rounded-2xl font-bold text-base sm:text-lg shadow-xl shadow-primary/20">{isSavingStatus ? <Loader2 className="animate-spin" /> : "Save Changes"}</Button></div>
                 </div>
               </div>
             </div>
@@ -974,53 +1030,53 @@ export default function AdminPage() {
       </Dialog>
 
       <Dialog open={isAccountDetailOpen} onOpenChange={setIsAccountDetailOpen}>
-        <DialogContent className="max-w-3xl w-[95vw] rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl bg-white dark:bg-slate-900 max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl w-[95vw] rounded-[2rem] sm:rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl bg-white dark:bg-slate-900 max-h-[90vh] overflow-y-auto">
           <DialogHeader className="sr-only"><DialogTitle>Marketplace Listing Verification</DialogTitle></DialogHeader>
           {selectedAccount && (
             <div className="flex flex-col">
-              <div className="bg-slate-900 p-10 text-white relative">
+              <div className="bg-slate-900 p-6 sm:p-10 text-white relative">
                  <Badge className="bg-amber-500 text-white mb-2 font-mono border-none">LISTING {selectedAccount.id.toUpperCase()}</Badge>
-                 <h2 className="text-3xl font-headline font-bold">Listing Verification</h2>
-                 <button onClick={() => setIsAccountDetailOpen(false)} className="absolute top-8 right-8 text-white/20 hover:text-white"><X size={24} /></button>
+                 <h2 className="text-2xl sm:text-3xl font-headline font-bold">Listing Verification</h2>
+                 <button onClick={() => setIsAccountDetailOpen(false)} className="absolute top-6 right-6 sm:top-8 sm:right-8 text-white/20 hover:text-white"><X size={24} /></button>
               </div>
-              <div className="p-10 space-y-10">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+              <div className="p-6 sm:p-10 space-y-8 sm:space-y-10">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8">
                   <div>
-                    <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Seller Details</h4>
-                    <Card className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800 border-none flex flex-col gap-4 shadow-inner">
+                    <h4 className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Seller Details</h4>
+                    <Card className="p-4 sm:p-5 rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none flex flex-col gap-4 shadow-inner">
                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600 relative overflow-hidden">
-                             {selectedAccount.authorAvatar ? <Image src={selectedAccount.authorAvatar} alt="" fill className="object-cover" unoptimized /> : <User size={24} />}
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600 relative overflow-hidden shrink-0">
+                             {selectedAccount.authorAvatar ? <Image src={selectedAccount.authorAvatar} alt="" fill className="object-cover" unoptimized /> : <User size={20} sm:size={24} />}
                           </div>
-                          <div><p className="text-sm font-bold text-slate-900 dark:text-white">{selectedAccount.authorName}</p><p className="text-[10px] text-muted-foreground uppercase font-mono">{selectedAccount.platform}</p></div>
+                          <div className="min-w-0"><p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">{selectedAccount.authorName}</p><p className="text-[9px] sm:text-[10px] text-muted-foreground uppercase font-mono truncate">{selectedAccount.platform}</p></div>
                        </div>
                     </Card>
                   </div>
                   <div>
-                    <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Listing Data</h4>
-                    <Card className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800 border-none space-y-2 shadow-inner">
-                       <div className="flex justify-between items-center"><span className="text-xs font-bold text-slate-400">Level:</span><span className="font-bold text-slate-900 dark:text-white">Lv {selectedAccount.level}</span></div>
-                       <div className="flex justify-between items-center"><span className="text-xs font-bold text-slate-400">Price:</span><span className="font-bold text-primary">${selectedAccount.price}</span></div>
+                    <h4 className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Listing Data</h4>
+                    <Card className="p-4 sm:p-5 rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none space-y-2 shadow-inner">
+                       <div className="flex justify-between items-center"><span className="text-[11px] sm:text-xs font-bold text-slate-400">Level:</span><span className="font-bold text-slate-900 dark:text-white">Lv {selectedAccount.level}</span></div>
+                       <div className="flex justify-between items-center"><span className="text-[11px] sm:text-xs font-bold text-slate-400">Price:</span><span className="font-bold text-primary">${selectedAccount.price}</span></div>
                     </Card>
                   </div>
                 </div>
-                <div className="pt-8 border-t dark:border-white/5 space-y-6">
+                <div className="pt-6 sm:pt-8 border-t dark:border-white/5 space-y-6">
                    <div className="flex flex-col gap-2">
-                      <Label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest ml-1">Marketplace Status</Label>
+                      <Label className="text-[9px] sm:text-[10px] font-bold uppercase text-slate-400 tracking-widest ml-1">Marketplace Status</Label>
                       <Select value={pendingAccountStatus} onValueChange={setPendingAccountStatus}>
-                        <SelectTrigger className="h-16 rounded-2xl font-bold text-lg bg-slate-50 dark:bg-slate-800 border-none shadow-inner">
+                        <SelectTrigger className="h-14 sm:h-16 rounded-xl sm:rounded-2xl font-bold text-base sm:text-lg bg-slate-50 dark:bg-slate-800 border-none shadow-inner">
                            <SelectValue />
                         </SelectTrigger>
-                        <SelectContent className="rounded-2xl dark:bg-slate-900">
+                        <SelectContent className="rounded-xl sm:rounded-2xl dark:bg-slate-900">
                            {["pending", "processing", "approved", "rejected"].map(s => (
                              <SelectItem key={s} value={s} className="rounded-xl uppercase font-bold">{s}</SelectItem>
                            ))}
                         </SelectContent>
                       </Select>
                    </div>
-                   <div className="flex gap-3">
-                      <Button variant="outline" onClick={() => setIsAccountDetailOpen(false)} className="flex-1 h-16 rounded-2xl font-bold">Cancel</Button>
-                      <Button onClick={handleAccountStatusSave} disabled={isSavingStatus || pendingAccountStatus === selectedAccount.status} className="flex-[2] h-16 rounded-2xl font-bold text-lg shadow-xl shadow-primary/20">
+                   <div className="flex flex-col sm:flex-row gap-3">
+                      <Button variant="outline" onClick={() => setIsAccountDetailOpen(false)} className="w-full sm:flex-1 h-14 sm:h-16 rounded-xl sm:rounded-2xl font-bold">Cancel</Button>
+                      <Button onClick={handleAccountStatusSave} disabled={isSavingStatus || pendingAccountStatus === selectedAccount.status} className="w-full sm:flex-[2] h-14 sm:h-16 rounded-xl sm:rounded-2xl font-bold text-base sm:text-lg shadow-xl shadow-primary/20">
                          {isSavingStatus ? <Loader2 className="animate-spin" /> : "Xaqiiji Listing-ka"}
                       </Button>
                    </div>
@@ -1039,8 +1095,8 @@ const chartData = [ { day: 'MON', value: 400 }, { day: 'TUE', value: 300 }, { da
 function SideNavItem({ active, expanded, onClick, icon: Icon, label, className }: { active: boolean, expanded: boolean, onClick: () => void, icon: any, label: string, className?: string }) {
   return (
     <button onClick={onClick} className={cn("w-full h-12 flex items-center transition-all duration-300 rounded-xl relative group", active ? "bg-primary text-white shadow-lg" : "text-slate-400 dark:text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800", expanded ? "px-4 gap-4" : "justify-center", className)}>
-      <Icon size={20} />
-      {expanded && <span className="font-bold text-sm whitespace-nowrap">{label}</span>}
+      <Icon size={20} className="shrink-0" />
+      {expanded && <span className="font-bold text-sm whitespace-nowrap overflow-hidden">{label}</span>}
     </button>
   );
 }
@@ -1053,10 +1109,10 @@ function StatCard({ label, value, icon: Icon, color }: { label: string, value: s
     indigo: "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-500" 
   };
   return (
-    <Card className="rounded-[2.5rem] p-6 border-none shadow-lg bg-white dark:bg-slate-900">
-      <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center mb-6", colors[color])}><Icon size={24} /></div>
-      <h3 className="text-3xl font-headline font-bold text-slate-900 dark:text-white mb-1">{value}</h3>
-      <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">{label}</p>
+    <Card className="rounded-[1.5rem] sm:rounded-[2.5rem] p-4 sm:p-6 border-none shadow-lg bg-white dark:bg-slate-900">
+      <div className={cn("w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-6", colors[color])}><Icon size={20} className="sm:w-6 sm:h-6" /></div>
+      <h3 className="text-xl sm:text-3xl font-headline font-bold text-slate-900 dark:text-white mb-1 truncate">{value}</h3>
+      <p className="text-[8px] sm:text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.1em] sm:tracking-[0.2em]">{label}</p>
     </Card>
   );
 }
