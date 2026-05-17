@@ -164,6 +164,12 @@ export default function AdminPage() {
   } = useApp();
 
   const router = useRouter();
+
+  const paymentMethods = useMemo(() => {
+    if (!storeSettings?.paymentMethods) return [];
+    return Object.entries(storeSettings.paymentMethods).map(([id, m]) => ({ ...m, id }));
+  }, [storeSettings?.paymentMethods]);
+
   const [activeView, setActiveView] = useState<'dashboard' | 'orders' | 'inventory' | 'account-posts' | 'events' | 'users' | 'settings'>('dashboard');
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -226,11 +232,6 @@ export default function AdminPage() {
     offlineBody: "",
     offlineImageUrl: ""
   });
-
-  const paymentMethods = useMemo(() => {
-    if (!storeSettings?.paymentMethods) return [];
-    return Object.entries(storeSettings.paymentMethods).map(([id, m]) => ({ ...m, id }));
-  }, [storeSettings?.paymentMethods]);
 
   useEffect(() => {
     if (!loading && !user?.isAdmin) {
@@ -1135,6 +1136,63 @@ export default function AdminPage() {
       </div>
 
       {/* Dialogs */}
+      <Dialog open={isUserManageOpen} onOpenChange={setIsUserManageOpen}>
+        <DialogContent className="max-w-md w-[95vw] rounded-[2rem] p-0 overflow-hidden border-none shadow-2xl bg-white dark:bg-slate-900">
+           <div className="bg-indigo-600 p-6 text-white">
+              <div className="flex justify-between items-start">
+                 <div>
+                    <DialogTitle className="text-xl font-headline font-bold">Manage User</DialogTitle>
+                    <p className="text-[10px] font-bold text-white/60 uppercase tracking-widest mt-1">UID: {selectedUser?.uid}</p>
+                 </div>
+                 <Badge className="bg-white/20 text-white border-none rounded-full uppercase text-[10px] font-bold">{selectedUser?.role}</Badge>
+              </div>
+           </div>
+           
+           <div className="p-6 space-y-8">
+              <div className="flex items-center gap-4">
+                 <div className="w-16 h-16 rounded-full overflow-hidden relative bg-slate-100 dark:bg-slate-800 border-2 border-white dark:border-slate-800 shadow-lg">
+                    {selectedUser?.photoURL ? <Image src={selectedUser.photoURL} alt="" fill className="object-cover" /> : <User className="m-auto mt-3 text-slate-300" />}
+                 </div>
+                 <div>
+                    <h3 className="font-bold text-lg text-slate-900 dark:text-white">{selectedUser?.name}</h3>
+                    <p className="text-xs text-muted-foreground">{selectedUser?.email}</p>
+                 </div>
+              </div>
+
+              <div className="space-y-4">
+                 <Label className="text-[10px] font-bold uppercase text-slate-400">Adjust Balance (Current: {selectedUser?.points || 0})</Label>
+                 <div className="flex gap-2">
+                    <Input 
+                      type="number" 
+                      placeholder="Amount" 
+                      value={pointAdjustment} 
+                      onChange={e => setPointAdjustment(e.target.value)}
+                      className="rounded-xl h-12"
+                    />
+                    <Button onClick={() => handleAdjustPoints('credit')} className="bg-green-600 hover:bg-green-700 h-12 rounded-xl px-4"><ArrowUpCircle size={18} /></Button>
+                    <Button onClick={() => handleAdjustPoints('debit')} variant="destructive" className="h-12 rounded-xl px-4"><ArrowDownCircle size={18} /></Button>
+                 </div>
+              </div>
+
+              <div className="pt-4 border-t dark:border-white/5 space-y-4">
+                 <h4 className="text-[10px] font-bold uppercase text-slate-400">Security Actions</h4>
+                 <Button 
+                   onClick={handleBanUser}
+                   variant={selectedUser?.banned ? "outline" : "destructive"}
+                   className="w-full h-12 rounded-xl font-bold gap-2"
+                 >
+                    {selectedUser?.banned ? <CheckCircle2 size={18} /> : <Ban size={18} />}
+                    {selectedUser?.banned ? "Unban User" : "Ban User"}
+                 </Button>
+              </div>
+           </div>
+           
+           <div className="p-6 bg-slate-50 dark:bg-slate-800/30">
+              <Button variant="ghost" onClick={() => setIsUserManageOpen(false)} className="w-full h-12 rounded-xl font-bold">Close</Button>
+           </div>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={isOrderDetailOpen} onOpenChange={setIsOrderDetailOpen}>
         <DialogContent className="max-w-xl w-[95vw] rounded-[2rem] sm:rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl bg-white dark:bg-slate-900">
            <div className="bg-primary p-6 sm:p-8 text-white">
