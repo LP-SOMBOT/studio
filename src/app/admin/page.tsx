@@ -1441,7 +1441,7 @@ export default function AdminPage() {
           <div className="bg-amber-500 p-6 sm:p-8 text-white">
              <div className="flex justify-between items-start">
                <div>
-                  <DialogTitle className="text-xl sm:text-2xl font-headline font-bold">Listing Verification</DialogTitle>
+                  <DialogTitle className="text-xl sm:text-2xl font-headline font-bold">Listing Management</DialogTitle>
                   <p className="text-[10px] sm:text-xs font-bold text-white/60 uppercase tracking-widest mt-1">Ref: #{selectedAccount?.id.toUpperCase()}</p>
                </div>
                <Badge className="bg-white/20 text-white border-none rounded-full uppercase text-[10px] font-bold">{selectedAccount?.status}</Badge>
@@ -1449,12 +1449,13 @@ export default function AdminPage() {
           </div>
 
           <div className="p-6 sm:p-8 space-y-6 max-h-[70vh] overflow-y-auto scrollbar-hide">
-              {/* Holder Card - Modern Overhaul */}
-              {(selectedAccount?.status === 'holding' || selectedAccount?.status === 'sold') && (
-                <div className="space-y-4 animate-in slide-in-from-top-4">
-                   <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                     <UserCircle size={14} className="text-primary" /> Current Holder (Buyer)
-                   </h4>
+              {/* Deal Status & Holder Info Section */}
+              <div className="space-y-4">
+                 <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                   <SmartphoneIcon size={14} className="text-primary" /> Active Deal Status
+                 </h4>
+                 
+                 {selectedAccount?.status === 'holding' || selectedAccount?.status === 'sold' ? (
                    <div className="bg-slate-900 text-white p-6 rounded-[2rem] shadow-xl relative overflow-hidden group">
                       <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity"><Smartphone size={80} /></div>
                       {(() => {
@@ -1470,7 +1471,7 @@ export default function AdminPage() {
                                   <p className="text-lg font-bold">{buyerProfile?.name || 'System User'}</p>
                                   <p className="text-xs text-white/40 font-medium">{buyerProfile?.email}</p>
                                </div>
-                               <Badge className="ml-auto bg-primary text-white border-none text-[10px] font-bold uppercase">{selectedAccount?.status === 'sold' ? 'Purchased' : 'Holding'}</Badge>
+                               <Badge className="ml-auto bg-primary text-white border-none text-[10px] font-bold uppercase">{selectedAccount?.status === 'sold' ? 'Finalized' : 'In Hold'}</Badge>
                             </div>
 
                             <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/5">
@@ -1493,12 +1494,28 @@ export default function AdminPage() {
                                  <p className="text-[10px] font-bold uppercase tracking-widest">Buyer Report: {buyerOrder.buyerOutcome.replace('_', ' ')}</p>
                               </div>
                             )}
+
+                            {selectedAccount?.status === 'holding' && (
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={() => updateAccountPostStatus(selectedAccount.id, 'approved')}
+                                className="w-full h-10 rounded-xl border-white/10 text-white/60 hover:text-white hover:bg-white/5 gap-2"
+                              >
+                                <RefreshCw size={14} /> Release from Holding
+                              </Button>
+                            )}
                           </div>
                         )
                       })()}
                    </div>
-                </div>
-              )}
+                 ) : (
+                   <div className="p-8 border-2 border-dashed border-slate-100 dark:border-white/5 rounded-[2rem] text-center opacity-30">
+                      <Smartphone size={32} className="mx-auto mb-2" />
+                      <p className="text-xs font-bold uppercase">No active deal</p>
+                   </div>
+                 )}
+              </div>
 
               <div className="grid grid-cols-2 gap-4">
                  <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800 flex flex-col gap-1 border dark:border-white/5 shadow-sm">
@@ -1514,7 +1531,7 @@ export default function AdminPage() {
               {selectedAccount?.status === 'sold' && (
                 <div className="p-4 rounded-xl bg-green-50 dark:bg-green-500/10 border border-green-100 dark:border-green-500/20 flex flex-col gap-1 animate-in zoom-in">
                   <span className="text-[10px] font-bold uppercase text-green-600">Finalized Sold Date</span>
-                  <span className="text-xs font-bold text-green-700 dark:text-green-400">{getSmartTimestamp(selectedAccount?.completedAt)}</span>
+                  <span className="text-xs font-bold text-green-700 dark:text-green-400">{getSmartTimestamp(selectedAccount.completedAt)}</span>
                 </div>
               )}
 

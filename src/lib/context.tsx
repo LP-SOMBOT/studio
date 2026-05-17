@@ -779,7 +779,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const postSnap = await get(ref(rtdb, `accountPosts/${pid}`));
     const postData = postSnap.val();
     if (!postData) return;
-    const oldStatus = postData.status; const assignmentUpdate: any = { status };
+    const oldStatus = postData.status; 
+    const assignmentUpdate: any = { status };
     
     if (boughtBy) {
       assignmentUpdate.boughtBy = boughtBy;
@@ -788,6 +789,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     if (status === 'approved') {
       assignmentUpdate.holdingBy = null;
+      assignmentUpdate.boughtBy = null;
       assignmentUpdate.sold = false;
 
       // Start countdown only on initial approval or renewal approval

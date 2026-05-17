@@ -55,7 +55,14 @@ export default function AccountDetailPage() {
   const isBuyer = post?.holdingBy === user?.uid;
   const isOwner = post?.uid === user?.uid;
   const isAdmin = user?.isAdmin;
+  
+  // Logic Fix: hasBought only restricts if the post is still in holding or sold.
+  // If the admin releases the account (Approved), the buyer can contact again.
   const hasBought = associatedOrder?.buyerOutcome === 'bought';
+  
+  const showSold = post?.status === 'sold';
+  const showSuccess = post?.status === 'holding' && hasBought && isBuyer;
+  const showHolding = post?.status === 'holding' && !isBuyer;
 
   const handleShare = async () => {
     if (!post) return;
@@ -200,10 +207,10 @@ export default function AccountDetailPage() {
                 <div className="hidden lg:block">
                   <Button 
                     onClick={() => buyAccountPost(post)}
-                    disabled={post.status === 'sold' || hasBought || (post.status === 'holding' && !isBuyer && !isOwner && !isAdmin)}
+                    disabled={showSold || showSuccess || (showHolding && !isOwner && !isAdmin)}
                     className="w-full h-16 rounded-[2rem] text-xl font-bold shadow-xl shadow-primary/30"
                   >
-                    {post.status === 'sold' ? "Waa la iibiyay" : hasBought ? "Waa lagu guuleystay!" : (post.status === 'holding' && !isBuyer) ? "Account-ka waa la xajiyay" : "Laxariir Seller-ka"}
+                    {showSold ? "Waa la iibiyay" : showSuccess ? "Waa lagu guuleystay!" : showHolding ? "Account-ka waa la xajiyay" : "Laxariir Seller-ka"}
                   </Button>
                 </div>
              </div>
@@ -215,10 +222,10 @@ export default function AccountDetailPage() {
       <div className="lg:hidden fixed bottom-0 left-0 right-0 p-6 bg-white/60 dark:bg-slate-950/60 backdrop-blur-xl border-t dark:border-white/5 z-50">
          <Button 
            onClick={() => buyAccountPost(post)}
-           disabled={post.status === 'sold' || hasBought || (post.status === 'holding' && !isBuyer && !isOwner && !isAdmin)}
+           disabled={showSold || showSuccess || (showHolding && !isOwner && !isAdmin)}
            className="w-full h-16 rounded-[2rem] text-xl font-bold shadow-2xl"
          >
-            {post.status === 'sold' ? "Waa la iibiyay" : hasBought ? "Waa lagu guuleystay!" : (post.status === 'holding' && !isBuyer) ? "Account-ka waa la xajiyay" : "Laxariir Seller-ka"}
+            {showSold ? "Waa la iibiyay" : showSuccess ? "Waa lagu guuleystay!" : showHolding ? "Account-ka waa la xajiyay" : "Laxariir Seller-ka"}
          </Button>
       </div>
 
