@@ -284,7 +284,13 @@ export default function ProfileView() {
                <div className="space-y-4">
                   <ProfileInput label="Full Name" value={editData.name} onChange={val => setEditData({...editData, name: val})} />
                   <ProfileInput label="Game Name (Optional)" value={editData.gameName} onChange={val => setEditData({...editData, gameName: val})} />
-                  <ProfileInput label="Player ID (Optional)" value={editData.gameUid} onChange={val => setEditData({...editData, gameUid: val})} />
+                  <ProfileInput 
+                    label="Player ID (Optional)" 
+                    value={editData.gameUid} 
+                    type="tel"
+                    inputMode="numeric"
+                    onChange={val => setEditData({...editData, gameUid: val.replace(/\D/g, '')})} 
+                  />
                </div>
 
                <Button 
@@ -340,11 +346,13 @@ function ProfileOption({ icon: Icon, label, onClick, variant }: { icon: any, lab
   );
 }
 
-function ProfileInput({ label, value, onChange }: { label: string, value: string, onChange: (val: string) => void }) {
+function ProfileInput({ label, value, onChange, type = "text", inputMode }: { label: string, value: string, onChange: (val: string) => void, type?: string, inputMode?: any }) {
   return (
     <div className="space-y-1.5">
       <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-3">{label}</Label>
       <Input 
+        type={type}
+        inputMode={inputMode}
         value={value} 
         onChange={e => onChange(e.target.value)} 
         className="h-14 rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-5 font-bold focus-visible:ring-primary shadow-inner" 
