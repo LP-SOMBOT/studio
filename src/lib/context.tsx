@@ -667,18 +667,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const reportAccountOutcome = async (pid: string, outcome: 'bought' | 'not_bought') => {
     if (!rtdb || !user) return;
     
-    // Find the associated order for this post and user
-    const orderRef = ref(rtdb, 'orders');
-    const orderSnap = await get(query(orderRef, orderByChild('gameDetails/postId'), equalTo(pid)));
-    const ordersData = orderSnap.val();
+    // Use the local synchronized orders state to find the correct order
+    // This avoids the "Index not defined" error for gameDetails/postId
+    const targetOrder = orders.find(o => o.gameDetails?.postId === pid && o.userId === user.uid);
     
-    if (ordersData) {
-      // FIX: Correctly index using the loop argument 'id' instead of the unitialized 'orderId'
-      const orderId = Object.keys(ordersData).find(id => ordersData[id]?.userId === user.uid);
-      if (orderId) {
-        await update(ref(rtdb, `orders/${orderId}`), { buyerOutcome: outcome });
-        await broadcastAdminNotification("Buyer Report!", `Buyer reported "${outcome}" for account #${pid.toUpperCase()}.`);
-      }
+    if (targetOrder) {
+      await update(ref(rtdb, `orders/${targetOrder.id}`), { buyerOutcome: outcome });
+      await broadcastAdminNotification("Buyer Report!", `Buyer reported "${outcome}" for account #${pid.toUpperCase()}.`);
     }
 
     toast({ title: "Report Sent!", description: "Admin will verify and update status." });
