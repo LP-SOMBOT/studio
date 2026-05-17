@@ -358,9 +358,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const handleHash = () => {
-      const hash = typeof window !== 'undefined' ? window.location.hash.replace('#', '') : '';
+      const rawHash = typeof window !== 'undefined' ? window.location.hash.replace('#', '') : '';
+      // Support suffixes like #games-XYZ to maintain active tab
+      const tabName = rawHash.split('-')[0];
       const validTabs = ['home', 'games', 'accounts', 'ranking', 'profile', 'chat', 'notifications', 'orders'];
-      if (validTabs.includes(hash)) setActiveTabState(hash);
+      if (validTabs.includes(tabName)) setActiveTabState(tabName);
     };
     handleHash();
     window.addEventListener('hashchange', handleHash);
