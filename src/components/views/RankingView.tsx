@@ -44,15 +44,9 @@ export default function RankingView() {
   return (
     <div className="pb-32 px-4 py-6 sm:py-10 max-w-5xl mx-auto page-transition overflow-x-hidden">
       <header className="text-center mb-10 sm:mb-16">
-        <div className="inline-flex p-3 sm:p-4 bg-amber-100 dark:bg-amber-500/10 rounded-[1.5rem] sm:rounded-[2rem] mb-4 text-amber-600 shadow-xl shadow-amber-500/10">
-           <Trophy className="w-6 h-6 sm:w-10 sm:h-10" />
-        </div>
         <h1 className="text-3xl sm:text-5xl font-headline font-bold tracking-tight text-slate-900 dark:text-white drop-shadow-sm">
-          Oskar Ranking
+          Ranking
         </h1>
-        <p className="text-muted-foreground font-bold text-[9px] sm:text-[11px] uppercase tracking-[0.25em] mt-3">
-          Global Hall of Fame
-        </p>
       </header>
 
       {/* Podium - Responsive Scaling */}
