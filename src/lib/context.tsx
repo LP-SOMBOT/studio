@@ -644,8 +644,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const postAccount = async (data: any) => {
     if (!rtdb || !user) return;
-    const termDuration = data.term === 'monthly' ? (30 * 24 * 60 * 60 * 1000) : (7 * 24 * 60 * 60 * 1000);
-    const expiresAt = Date.now() + termDuration;
     
     const postRef = push(ref(rtdb, 'accountPosts'));
     await set(postRef, { 
@@ -655,7 +653,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       authorAvatar: enhancedUser?.photoURL, 
       status: 'pending', 
       createdAt: Date.now(), 
-      expiresAt,
+      expiresAt: null, // Only set upon admin approval
       views: 0, 
       sold: false 
     });
@@ -672,12 +670,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const renewAccountPost = async (pid: string, term: 'weekly' | 'monthly') => {
     if (!rtdb) return;
-    const termDuration = term === 'monthly' ? (30 * 24 * 60 * 60 * 1000) : (7 * 24 * 60 * 60 * 1000);
-    const expiresAt = Date.now() + termDuration;
     
     await update(ref(rtdb, `accountPosts/${pid}`), {
       term,
-      expiresAt,
+      expiresAt: null, // Reset and wait for re-approval
       status: 'pending', // Back to pending for verification
       sold: false,
       holdingBy: null
@@ -793,6 +789,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (status === 'approved') {
       assignmentUpdate.holdingBy = null;
       assignmentUpdate.sold = false;
+
+      // Start countdown only on initial approval or renewal approval
+      if (oldStatus !== 'approved' || !postData.expiresAt) {
+        const term = postData.term || 'weekly';
+        const duration = term === 'monthly' ? (30 * 24 * 60 * 60 * 1000) : (7 * 24 * 60 * 60 * 1000);
+        assignmentUpdate.expiresAt = Date.now() + duration;
+      }
     }
 
     if (oldStatus === 'pending' && (status === 'processing' || status === 'approved')) {
