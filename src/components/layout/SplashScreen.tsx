@@ -60,7 +60,7 @@ export default function SplashScreen() {
       
       <div className="mt-10 flex flex-col items-center gap-2 animate-in slide-in-from-bottom-4 duration-1000">
         <h1 className="text-3xl font-headline font-bold tracking-tight text-gray-900">
-          Oskar<span className="text-primary">Shop</span>
+          <span className="text-red-600">Oskar</span><span className="text-primary">Shop</span>
         </h1>
         
         <div className="flex gap-2 mt-6">

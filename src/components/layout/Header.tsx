@@ -31,7 +31,7 @@ export default function Header() {
             )}
           </div>
           <span className="font-headline font-bold text-2xl tracking-tight">
-            Oskar<span className="text-primary">Shop</span>
+            <span className="text-red-600">Oskar</span><span className="text-primary">Shop</span>
           </span>
         </div>
 
