@@ -81,7 +81,7 @@ function CheckoutContent() {
   };
 
   const handleBooyahRedirect = () => {
-    if (!gameDetails.fullName || !gameDetails.playerID || !gameDetails.whatsappNumber) {
+    if (!gameDetails.playerID || !gameDetails.whatsappNumber) {
       toast({ title: "Fadlan buuxi meelaha banaan", variant: "destructive" });
       return;
     }
@@ -92,7 +92,6 @@ Waxaan rabaa Booyah Pass: *${item?.title}*
 Qiimaha: *$${total.toFixed(2)}*
 
 *Xogta Dalabka:*
-Magaca: ${gameDetails.fullName}
 Game ID: ${gameDetails.playerID}
 WhatsApp: ${gameDetails.whatsappNumber}
 
@@ -234,17 +233,6 @@ Fadlan ila soo xiriir.`;
               </div>
 
               <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label className="text-sm font-bold dark:text-slate-200">Magacaaga oo buuxa</Label>
-                  <Input 
-                    placeholder={isBooyahPass ? "Geli magacaaga" : "Geli magacaaga dhameystiran"} 
-                    required 
-                    className="h-12 rounded-2xl bg-gray-50 dark:bg-slate-800 border-none px-5 font-bold"
-                    value={gameDetails.fullName}
-                    onChange={(e) => setGameDetails({...gameDetails, fullName: e.target.value})}
-                  />
-                </div>
-
                 {!isBooyahPass && (isFreeFire || isBloodStrike) && (
                   <div className="space-y-2">
                     <Label className="text-sm font-bold dark:text-slate-200">in-Game name</Label>
