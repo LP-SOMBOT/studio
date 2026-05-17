@@ -223,7 +223,7 @@ Fadlan ila soo xiriir.`;
           <CardHeader>
             <CardTitle className="font-headline font-bold text-2xl flex items-center gap-2 text-slate-900 dark:text-white">
               {isBooyahPass ? <ShoppingBag className="w-6 h-6 text-primary" /> : <Gamepad2 className="w-6 h-6 text-primary" />} 
-              {isBooyahPass ? "Fadlan buuxi form-ka Si saxan." : (game?.title || "Xogta Dalabka")}
+              {isBooyahPass ? "Booyah pass" : (game?.title || "Xogta Dalabka")}
             </CardTitle>
             <CardDescription className="dark:text-slate-400">
               {isBooyahPass ? "Fadlan buuxi xogtaada si lagugu hagaajiyo WhatsApp." : `Fadlan buuxi xogta saxda ah si laguugu soo diro ${item?.title}.`}
@@ -471,7 +471,7 @@ Fadlan ila soo xiriir.`;
           <p className="text-base text-muted-foreground dark:text-slate-400 max-w-sm mb-10 leading-relaxed">
             {isBooyahPass 
               ? `WhatsApp  kaan (${item?.whatsappNumber || "252613982172"})  nagala Soo xariire si aad u iibsato booyah pass, Mahadsanid!.`
-              : "Dalabkaaga waa la diray. Sida ugu dhaqsiyaha badan ayaa lagugu adeegi doonnaa i.a, fadlan dulqaadka badi mahadsanid. Dalabkaaga waxaad Kala socon kartaa halkaan."}
+              : "Dalabkaga waa la diray. Sida ugu dhaqsiyaha badan ayaa lagugu adeegi doonnaa i.a, fadlan dulqaadka badi mahadsanid. Dalabkaaga waxaad Kala socon kartaa halkaan."}
           </p>
 
           <div className="grid grid-cols-1 gap-3 w-full max-w-sm">
