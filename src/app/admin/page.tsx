@@ -227,6 +227,11 @@ export default function AdminPage() {
     offlineImageUrl: ""
   });
 
+  const paymentMethods = useMemo(() => {
+    if (!storeSettings?.paymentMethods) return [];
+    return Object.entries(storeSettings.paymentMethods).map(([id, m]) => ({ ...m, id }));
+  }, [storeSettings?.paymentMethods]);
+
   useEffect(() => {
     if (!loading && !user?.isAdmin) {
       router.replace('/');
@@ -564,11 +569,6 @@ export default function AdminPage() {
     </div>
   );
 
-  const paymentMethods = useMemo(() => {
-    if (!storeSettings.paymentMethods) return [];
-    return Object.entries(storeSettings.paymentMethods).map(([id, m]) => ({ ...m, id }));
-  }, [storeSettings.paymentMethods]);
-
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex overflow-hidden">
       <aside className={cn("hidden md:flex h-screen bg-white dark:bg-slate-900 border-r border-slate-100 dark:border-white/5 flex-col transition-all duration-300 z-40", isSidebarExpanded ? "w-64" : "w-20")}><SidebarContent /></aside>
@@ -696,9 +696,9 @@ export default function AdminPage() {
                             {p.processedBy ? (
                               <div className="flex items-center gap-2">
                                 <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden relative border border-white dark:border-white/10">
-                                  {p.processedBy.photoURL ? <Image src={o.processedBy.photoURL} alt="" fill className="object-cover" /> : <User size={12} className="m-auto mt-1" />}
+                                  {p.processedBy.photoURL ? <Image src={p.processedBy.photoURL} alt="" fill className="object-cover" /> : <User size={12} className="m-auto mt-1" />}
                                 </div>
-                                <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 truncate max-w-[80px]">{o.processedBy.name}</span>
+                                <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 truncate max-w-[80px]">{p.processedBy.name}</span>
                               </div>
                             ) : <span className="text-[10px] text-slate-300 italic">Unassigned</span>}
                           </TableCell>
@@ -849,7 +849,6 @@ export default function AdminPage() {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1.5">
-                            <Star size={12} className="text-amber-500 fill-amber-500" />
                             <span className="font-bold text-slate-900 dark:text-white text-xs">{u.points || 0}</span>
                           </div>
                         </TableCell>
@@ -1485,7 +1484,7 @@ export default function AdminPage() {
               <Label className="text-xs font-bold uppercase text-slate-400">Icon / Logo</Label>
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 rounded-xl bg-slate-100 dark:bg-slate-800 relative overflow-hidden shrink-0 border border-dashed border-slate-300 dark:border-white/10 flex items-center justify-center">
-                  {paymentMethodForm.icon ? <Image src={paymentMethodForm.icon} alt="" fill className="object-cover" unoptimized /> : <ImageIcon className="text-slate-300" />}
+                  {paymentMethodForm.icon ? <Image src={paymentMethodForm.icon} alt="" fill className="object-cover" unoptimized /> : <PaymentIcon size={20} />}
                 </div>
                 <Input type="file" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'payment')} className="flex-1 rounded-xl h-10" />
               </div>
