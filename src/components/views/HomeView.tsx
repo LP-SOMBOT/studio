@@ -58,6 +58,12 @@ export default function HomeView() {
     );
   }
 
+  const handleGameRedirect = (gameId: string) => {
+    // Set the tab to games and append the hash for the specific collection
+    setActiveTab('games');
+    window.location.hash = `#games-${gameId}`;
+  };
+
   return (
     <div className="pb-24 page-transition">
       <AnnouncementTicker />
@@ -119,7 +125,7 @@ export default function HomeView() {
               <GameCollectionCard 
                 key={game.id} 
                 game={game} 
-                onClick={() => setActiveTab('games')} 
+                onClick={() => handleGameRedirect(game.id)} 
               />
             ))}
           </div>
