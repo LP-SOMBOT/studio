@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useMemo, useEffect, useState } from "react";
@@ -7,6 +6,7 @@ import { useApp } from "@/lib/context";
 import { ArrowLeft, Clock, Calendar, ShieldCheck, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
 import { format } from "date-fns";
@@ -14,7 +14,7 @@ import { format } from "date-fns";
 export default function EventDetailPage() {
   const { id } = useParams();
   const router = useRouter();
-  const { events } = useApp();
+  const { events, setActiveTab } = useApp();
   const [timeLeft, setTimeLeft] = useState<string>("");
 
   const event = useMemo(() => {
