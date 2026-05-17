@@ -1137,60 +1137,101 @@ export default function AdminPage() {
         </main>
       </div>
 
-      {/* Dialogs */}
+      {/* Modern User Management Dialog */}
       <Dialog open={isUserManageOpen} onOpenChange={setIsUserManageOpen}>
-        <DialogContent className="max-w-md w-[95vw] rounded-[2rem] p-0 overflow-hidden border-none shadow-2xl bg-white dark:bg-slate-900">
-           <div className="bg-indigo-600 p-6 text-white">
-              <div className="flex justify-between items-start">
+        <DialogContent className="max-w-md w-[95vw] rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl bg-white dark:bg-slate-900">
+           <div className="bg-slate-900 p-8 text-white relative">
+              <div className="flex justify-between items-start relative z-10">
                  <div>
-                    <DialogTitle className="text-xl font-headline font-bold">Manage User</DialogTitle>
-                    <p className="text-[10px] font-bold text-white/60 uppercase tracking-widest mt-1">UID: {selectedUser?.uid}</p>
+                    <DialogTitle className="text-2xl font-headline font-bold">User Control</DialogTitle>
+                    <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest mt-1">ID: {selectedUser?.uid.slice(0, 12)}...</p>
                  </div>
-                 <Badge className="bg-white/20 text-white border-none rounded-full uppercase text-[10px] font-bold">{selectedUser?.role}</Badge>
+                 <Badge className="bg-primary text-white border-none rounded-full uppercase text-[10px] font-bold px-4 py-1 shadow-lg shadow-primary/20">
+                    {selectedUser?.role}
+                 </Badge>
+              </div>
+              <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
+                 <User size={120} />
               </div>
            </div>
            
-           <div className="p-6 space-y-8">
-              <div className="flex items-center gap-4">
-                 <div className="w-16 h-16 rounded-full overflow-hidden relative bg-slate-100 dark:bg-slate-800 border-2 border-white dark:border-slate-800 shadow-lg">
-                    {selectedUser?.photoURL ? <Image src={selectedUser.photoURL} alt="" fill className="object-cover" /> : <User className="m-auto mt-3 text-slate-300" />}
+           <div className="p-8 space-y-8">
+              <div className="flex items-center gap-5">
+                 <div className="w-20 h-20 rounded-[2rem] overflow-hidden relative bg-slate-100 dark:bg-slate-800 border-4 border-white dark:border-slate-800 shadow-xl">
+                    {selectedUser?.photoURL ? <Image src={selectedUser.photoURL} alt="" fill className="object-cover" /> : <User className="m-auto mt-4 text-slate-300" size={32} />}
                  </div>
-                 <div>
-                    <h3 className="font-bold text-lg text-slate-900 dark:text-white">{selectedUser?.name}</h3>
-                    <p className="text-xs text-muted-foreground">{selectedUser?.email}</p>
+                 <div className="min-w-0">
+                    <h3 className="font-bold text-xl text-slate-900 dark:text-white truncate">{selectedUser?.name}</h3>
+                    <p className="text-xs text-muted-foreground truncate">{selectedUser?.email}</p>
                  </div>
               </div>
 
+              {/* Role Management */}
               <div className="space-y-4">
-                 <Label className="text-[10px] font-bold uppercase text-slate-400">Adjust Balance (Current: {selectedUser?.points || 0})</Label>
-                 <div className="flex gap-2">
-                    <Input 
-                      type="number" 
-                      placeholder="Amount" 
-                      value={pointAdjustment} 
-                      onChange={e => setPointAdjustment(e.target.value)}
-                      className="rounded-xl h-12"
-                    />
-                    <Button onClick={() => handleAdjustPoints('credit')} className="bg-green-600 hover:bg-green-700 h-12 rounded-xl px-4"><ArrowUpCircle size={18} /></Button>
-                    <Button onClick={() => handleAdjustPoints('debit')} variant="destructive" className="h-12 rounded-xl px-4"><ArrowDownCircle size={18} /></Button>
+                 <Label className="text-[10px] font-bold uppercase text-slate-400 tracking-wider flex items-center gap-2">
+                    <ShieldCheck size={14} className="text-primary" /> Account Access Level
+                 </Label>
+                 <Select 
+                    value={selectedUser?.role || 'user'} 
+                    onValueChange={(val) => {
+                      if (selectedUser) {
+                        manageUser(selectedUser.uid, { role: val as any });
+                        setSelectedUser({ ...selectedUser, role: val });
+                      }
+                    }}
+                 >
+                    <SelectTrigger className="h-14 rounded-2xl border-none bg-slate-50 dark:bg-slate-800 font-bold px-5">
+                       <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-2xl dark:bg-slate-900">
+                       <SelectItem value="user" className="rounded-xl">Standard User</SelectItem>
+                       <SelectItem value="staff" className="rounded-xl">Admin Staff</SelectItem>
+                       <SelectItem value="admin" className="rounded-xl">Full Admin</SelectItem>
+                    </SelectContent>
+                 </Select>
+                 <p className="text-[10px] text-muted-foreground italic px-2 leading-relaxed">
+                    Staff and Admins gain access to the Oskar Control Panel for orders and management.
+                 </p>
+              </div>
+
+              <div className="space-y-4">
+                 <Label className="text-[10px] font-bold uppercase text-slate-400 tracking-wider flex items-center gap-2">
+                    <Trophy size={14} className="text-amber-500" /> Reward Balance
+                 </Label>
+                 <div className="flex gap-3">
+                    <div className="relative flex-1">
+                       <Input 
+                        type="number" 
+                        placeholder="0" 
+                        value={pointAdjustment} 
+                        onChange={e => setPointAdjustment(e.target.value)}
+                        className="rounded-2xl h-14 bg-slate-50 dark:bg-slate-800 border-none font-headline font-bold text-xl pl-5"
+                       />
+                       <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-muted-foreground uppercase">Current: {selectedUser?.points || 0}</div>
+                    </div>
+                    <Button onClick={() => handleAdjustPoints('credit')} className="bg-green-600 hover:bg-green-700 h-14 w-14 rounded-2xl shrink-0 shadow-lg shadow-green-500/20"><ArrowUpCircle size={24} /></Button>
+                    <Button onClick={() => handleAdjustPoints('debit')} variant="destructive" className="h-14 w-14 rounded-2xl shrink-0 shadow-lg shadow-red-500/20"><ArrowDownCircle size={24} /></Button>
                  </div>
               </div>
 
               <div className="pt-4 border-t dark:border-white/5 space-y-4">
-                 <h4 className="text-[10px] font-bold uppercase text-slate-400">Security Actions</h4>
+                 <Label className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">Protocol Enforcement</Label>
                  <Button 
                    onClick={handleBanUser}
                    variant={selectedUser?.banned ? "outline" : "destructive"}
-                   className="w-full h-12 rounded-xl font-bold gap-2"
+                   className={cn(
+                    "w-full h-16 rounded-2xl font-bold gap-3 text-lg transition-all",
+                    selectedUser?.banned ? "border-2 border-green-500 text-green-500 hover:bg-green-50" : "shadow-xl shadow-red-500/20"
+                   )}
                  >
-                    {selectedUser?.banned ? <CheckCircle2 size={18} /> : <Ban size={18} />}
-                    {selectedUser?.banned ? "Unban User" : "Ban User"}
+                    {selectedUser?.banned ? <CheckCircle2 size={24} /> : <Ban size={24} />}
+                    {selectedUser?.banned ? "Release Restriction" : "Suspend Account"}
                  </Button>
               </div>
            </div>
            
-           <div className="p-6 bg-slate-50 dark:bg-slate-800/30">
-              <Button variant="ghost" onClick={() => setIsUserManageOpen(false)} className="w-full h-12 rounded-xl font-bold">Close</Button>
+           <div className="p-8 bg-slate-50 dark:bg-slate-800/30 flex gap-3">
+              <Button onClick={() => setIsUserManageOpen(false)} className="w-full h-14 rounded-2xl font-bold bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-white hover:bg-slate-300">Dismiss</Button>
            </div>
         </DialogContent>
       </Dialog>
