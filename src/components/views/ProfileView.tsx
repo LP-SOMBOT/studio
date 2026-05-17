@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -21,7 +22,8 @@ import {
   UserCircle,
   LayoutDashboard,
   Moon,
-  Sun
+  Sun,
+  ShieldCheck as AccountIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -197,6 +199,7 @@ export default function ProfileView() {
          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <ProfileGroup title="Marketplace & Activity">
                 <ProfileOption icon={ShoppingBag} label="Dalabyadada" onClick={() => setActiveTab('orders')} />
+                <ProfileOption icon={AccountIcon} label="Account-yadayda" onClick={() => setActiveTab('my-accounts')} />
                 <ProfileOption icon={Gamepad2} label="iska iibi account" onClick={() => setActiveTab('accounts')} />
                 <ProfileOption icon={Trophy} label="Global Leaderboard" onClick={() => setActiveTab('ranking')} />
             </ProfileGroup>

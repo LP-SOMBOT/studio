@@ -10,6 +10,7 @@ import AccountsView from "@/components/views/AccountsView";
 import RankingView from "@/components/views/RankingView";
 import NotificationsView from "@/components/views/NotificationsView";
 import OrdersView from "@/components/views/OrdersView";
+import MyAccountsView from "@/components/views/MyAccountsView";
 import OfflinePage from "@/components/layout/OfflinePage";
 
 export default function AppShell() {
@@ -32,6 +33,7 @@ export default function AppShell() {
       {activeTab === 'profile' && <ProfileView />}
       {activeTab === 'chat' && <ChatView />}
       {activeTab === 'notifications' && <NotificationsView />}
+      {activeTab === 'my-accounts' && <MyAccountsView />}
     </>
   );
 }

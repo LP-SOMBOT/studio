@@ -1311,7 +1311,7 @@ export default function AdminPage() {
               {selectedOrder?.buyerOutcome && (
                 <div className={cn(
                   "p-4 rounded-2xl flex items-center gap-3 border animate-in slide-in-from-left-2",
-                  selectedOrder.buyerOutcome === 'bought' ? "bg-green-50 border-green-100 text-green-700" : "bg-red-50 border-red-100 text-red-700"
+                  selectedOrder.buyerOutcome === 'bought' ? "bg-green-50 border-green-100 text-green-700" : "bg-red-100 text-red-700"
                 )}>
                    {selectedOrder.buyerOutcome === 'bought' ? <CheckCircle2 size={18} /> : <XCircle size={18} />}
                    <p className="text-xs font-bold uppercase tracking-tight">Buyer Report: {selectedOrder.buyerOutcome.replace('_', ' ')}</p>
@@ -1426,67 +1426,99 @@ export default function AdminPage() {
           </div>
 
           <div className="p-6 sm:p-8 space-y-6 max-h-[70vh] overflow-y-auto scrollbar-hide">
-              {selectedAccount?.processedBy && selectedAccount.processedBy.uid !== user?.uid && (
-                <div className="p-4 bg-amber-50 dark:bg-amber-500/10 border border-amber-100 dark:border-amber-500/20 rounded-2xl flex items-center gap-4 animate-in fade-in zoom-in">
-                  <div className="w-12 h-12 rounded-full overflow-hidden relative shrink-0 border-2 border-amber-200">
-                     {selectedAccount.processedBy.photoURL ? <Image src={selectedAccount.processedBy.photoURL} alt="" fill className="object-cover" /> : <User className="m-auto mt-2 text-amber-300" />}
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-amber-900 dark:text-amber-300">Staff Handling</p>
-                    <p className="text-sm font-medium text-amber-700 dark:text-amber-400"><span className="font-bold">{selectedOrder.processedBy.name}</span> is currently reviewing this listing.</p>
-                  </div>
+              {/* Holder Card - Modern Overhaul */}
+              {(selectedAccount?.status === 'holding' || selectedAccount?.status === 'sold') && (
+                <div className="space-y-4 animate-in slide-in-from-top-4">
+                   <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                     <UserCircle size={14} className="text-primary" /> Current Holder (Buyer)
+                   </h4>
+                   <div className="bg-slate-900 text-white p-6 rounded-[2rem] shadow-xl relative overflow-hidden group">
+                      <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity"><Smartphone size={80} /></div>
+                      {(() => {
+                        const buyerProfile = allUsers.find(u => u.uid === (selectedAccount?.holdingBy || selectedAccount?.boughtBy));
+                        const buyerOrder = allOrders.find(o => o.gameDetails?.postId === selectedAccount?.id && o.userId === (selectedAccount?.holdingBy || selectedAccount?.boughtBy));
+                        return (
+                          <div className="space-y-6 relative z-10">
+                            <div className="flex items-center gap-4">
+                               <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-primary/40 relative bg-slate-800">
+                                  {buyerProfile?.photoURL ? <Image src={buyerProfile.photoURL} alt="" fill className="object-cover" /> : <User className="m-auto mt-3 text-slate-700" size={32} />}
+                               </div>
+                               <div>
+                                  <p className="text-lg font-bold">{buyerProfile?.name || 'System User'}</p>
+                                  <p className="text-xs text-white/40 font-medium">{buyerProfile?.email}</p>
+                               </div>
+                               <Badge className="ml-auto bg-primary text-white border-none text-[10px] font-bold uppercase">{selectedAccount?.status === 'sold' ? 'Purchased' : 'Holding'}</Badge>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/5">
+                               <div>
+                                  <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Provided Name</p>
+                                  <p className="text-sm font-bold text-primary">{buyerOrder?.gameDetails?.name || 'N/A'}</p>
+                               </div>
+                               <div>
+                                  <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">WhatsApp Number</p>
+                                  <p className="text-sm font-bold text-primary">{buyerOrder?.gameDetails?.whatsappNumber || 'N/A'}</p>
+                               </div>
+                            </div>
+
+                            {buyerOrder?.buyerOutcome && (
+                              <div className={cn(
+                                "p-3 rounded-xl border flex items-center gap-3",
+                                buyerOrder.buyerOutcome === 'bought' ? "bg-green-500/10 border-green-500/20 text-green-400" : "bg-red-500/10 border-red-500/20 text-red-400"
+                              )}>
+                                 {buyerOrder.buyerOutcome === 'bought' ? <CheckCircle2 size={16} /> : <XCircle size={16} />}
+                                 <p className="text-[10px] font-bold uppercase tracking-widest">Buyer Report: {buyerOrder.buyerOutcome.replace('_', ' ')}</p>
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })()}
+                   </div>
                 </div>
               )}
 
               <div className="grid grid-cols-2 gap-4">
-                 <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800 flex flex-col gap-1">
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase">Listed Created</span>
-                    <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5"><Clock size={12}/> {getSmartTimestamp(selectedAccount?.createdAt)}</span>
+                 <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800 flex flex-col gap-1 border dark:border-white/5 shadow-sm">
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase">Listed Date</span>
+                    <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5"><Calendar size={12}/> {getSmartTimestamp(selectedAccount?.createdAt)}</span>
                  </div>
-                 <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800 flex flex-col gap-1">
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase">Admin Reviewed</span>
-                    <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5"><User size={12}/> {getSmartTimestamp(selectedAccount?.processedAt)}</span>
+                 <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800 flex flex-col gap-1 border dark:border-white/5 shadow-sm">
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase">Review/Hold Date</span>
+                    <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5"><Clock size={12}/> {getSmartTimestamp(selectedAccount?.processedAt)}</span>
                  </div>
               </div>
 
-              {(selectedAccount?.status === 'approved' || selectedAccount?.status === 'rejected' || selectedAccount?.status === 'sold') && (
-                <div className={cn(
-                  "p-4 rounded-xl border flex flex-col gap-1",
-                  (selectedAccount.status === 'approved' || selectedAccount.status === 'sold') ? "bg-green-50 border-green-100 dark:bg-green-500/10 dark:border-green-500/20" : "bg-red-50 border-red-100 dark:bg-red-500/10 dark:border-red-500/20"
-                )}>
-                  <span className={cn("text-[10px] font-bold uppercase", (selectedAccount.status === 'approved' || selectedAccount.status === 'sold') ? "text-green-600" : "text-red-600")}>
-                    {selectedAccount.status === 'approved' ? 'Approved At' : selectedAccount.status === 'sold' ? 'Sold At' : 'Rejected At'}
-                  </span>
-                  <span className={cn("text-xs font-bold", (selectedAccount.status === 'approved' || selectedAccount.status === 'sold') ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400")}>
-                    {getSmartTimestamp(selectedAccount.completedAt)}
-                  </span>
+              {selectedAccount?.status === 'sold' && (
+                <div className="p-4 rounded-xl bg-green-50 dark:bg-green-500/10 border border-green-100 dark:border-green-500/20 flex flex-col gap-1 animate-in zoom-in">
+                  <span className="text-[10px] font-bold uppercase text-green-600">Finalized Sold Date</span>
+                  <span className="text-xs font-bold text-green-700 dark:text-green-400">{getSmartTimestamp(selectedAccount?.completedAt)}</span>
                 </div>
               )}
 
              <div className="space-y-4">
                 <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2"><User size={14}/> Seller Details</h4>
-                <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl space-y-3 border border-slate-100 dark:border-white/5">
+                <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl space-y-3 border border-slate-100 dark:border-white/5 shadow-inner">
                    <div className="flex justify-between border-b dark:border-white/5 pb-2"><span className="text-xs text-muted-foreground">Seller Name</span><span className="text-xs font-bold">{selectedAccount?.authorName}</span></div>
-                   <div className="flex justify-between border-b dark:border-white/5 pb-2"><span className="text-xs text-muted-foreground">Seller Phone</span><span className="text-xs font-bold">{selectedAccount?.phone}</span></div>
-                   <div className="flex justify-between"><span className="text-xs text-muted-foreground">Game Type</span><Badge className="text-[10px] rounded-full uppercase">{selectedAccount?.gameType}</Badge></div>
+                   <div className="flex justify-between border-b dark:border-white/5 pb-2"><span className="text-xs text-muted-foreground">Seller Phone</span><span className="text-xs font-bold text-primary">{selectedAccount?.phone}</span></div>
+                   <div className="flex justify-between"><span className="text-xs text-muted-foreground">Game Type</span><Badge className="text-[10px] rounded-full uppercase font-black">{selectedAccount?.gameType}</Badge></div>
                 </div>
              </div>
 
              <div className="space-y-4">
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Update Listing Status</h4>
+                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Listing Lifecycle Management</h4>
                 <Select value={pendingAccountStatus} onValueChange={setPendingAccountStatus}>
-                   <SelectTrigger className="h-12 rounded-xl border-none bg-slate-100 dark:bg-slate-800 font-bold"><SelectValue /></SelectTrigger>
-                   <SelectContent className="rounded-xl">
-                      {["pending", "processing", "approved", "rejected", "holding", "sold"].map(s => <SelectItem key={s} value={s} className="rounded-lg">{s.toUpperCase()}</SelectItem>)}
+                   <SelectTrigger className="h-14 rounded-2xl border-none bg-slate-100 dark:bg-slate-800 font-bold px-6 shadow-sm"><SelectValue /></SelectTrigger>
+                   <SelectContent className="rounded-2xl">
+                      {["pending", "processing", "approved", "rejected", "holding", "sold"].map(s => <SelectItem key={s} value={s} className="rounded-xl">{s.toUpperCase()}</SelectItem>)}
                    </SelectContent>
                 </Select>
 
                 {pendingAccountStatus === 'sold' && (
                   <div className="space-y-2 pt-4 animate-in slide-in-from-top-2">
-                    <Label className="text-xs font-bold text-primary uppercase tracking-widest">Assign Buyer (Optional)</Label>
+                    <Label className="text-[10px] font-bold text-primary uppercase tracking-widest ml-3">Assign Verified Buyer (Recommended)</Label>
                     <Select value={assignBuyerId} onValueChange={setAssignBuyerId}>
-                       <SelectTrigger className="h-12 rounded-xl border-none bg-slate-100 dark:bg-slate-800 font-bold"><SelectValue placeholder="Select Buyer" /></SelectTrigger>
-                       <SelectContent className="rounded-xl">
+                       <SelectTrigger className="h-14 rounded-2xl border-none bg-slate-100 dark:bg-slate-800 font-bold px-6 shadow-sm"><SelectValue placeholder="Select Final Buyer" /></SelectTrigger>
+                       <SelectContent className="rounded-2xl">
                           {allUsers.map(u => <SelectItem key={u.uid} value={u.uid}>{u.name} ({u.email})</SelectItem>)}
                        </SelectContent>
                     </Select>
@@ -1497,9 +1529,9 @@ export default function AdminPage() {
 
           <DialogFooter className="p-6 sm:p-8 bg-slate-50 dark:bg-slate-800/30">
               <div className="flex flex-col sm:flex-row gap-3 w-full">
-                 <Button variant="ghost" onClick={() => setIsAccountDetailOpen(false)} className="rounded-xl flex-1 h-12 font-bold">Cancel</Button>
-                 <Button onClick={handleAccountStatusSave} disabled={isSavingStatus} className="rounded-xl flex-[2] h-12 font-bold shadow-lg shadow-amber-500/20 bg-amber-500 hover:bg-amber-600">
-                    {isSavingStatus ? <Loader2 className="animate-spin" /> : 'Save Changes'}
+                 <Button variant="ghost" onClick={() => setIsAccountDetailOpen(false)} className="rounded-2xl flex-1 h-12 font-bold">Dismiss</Button>
+                 <Button onClick={handleAccountStatusSave} disabled={isSavingStatus} className="rounded-2xl flex-[2] h-12 font-bold shadow-lg shadow-amber-500/20 bg-amber-500 hover:bg-amber-600">
+                    {isSavingStatus ? <Loader2 className="animate-spin" /> : 'Update Listing Status'}
                  </Button>
               </div>
            </DialogFooter>
