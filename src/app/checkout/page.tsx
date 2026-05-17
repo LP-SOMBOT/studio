@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo, Suspense } from "react";
@@ -457,7 +456,7 @@ Fadlan ila soo xiriir.`;
           <h1 className="text-4xl font-headline font-bold mb-4 text-slate-900 dark:text-white">Waa Lagu guuleystay!</h1>
           <p className="text-base text-muted-foreground dark:text-slate-400 max-w-sm mb-10 leading-relaxed">
             {isBooyahPass 
-              ? "WhatsApp ayaa laguu hagaajiyay si aad u dhamaystirto dalabkaaga. Fadlan halkaas kala xiriir Admin-ka."
+              ? `WhatsApp kaan (${item?.whatsappNumber || "252613982172"}) nagala Soo xariire si aad u iibsato booyah pass, Mahadsanid!.`
               : "Dalabkaaga waa la diray. Sida ugu dhaqsiyaha badan ayaa lagugu adeegi doonnaa i.a, fadlan dulqaadka badi mahadsanid. Dalabkaaga waxaad Kala socon kartaa halkaan."}
           </p>
 
