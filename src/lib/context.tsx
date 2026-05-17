@@ -37,6 +37,14 @@ export const safeGet = (obj: any, path: string, fallback: any = "") => {
   return path.split('.').reduce((acc, key) => acc?.[key] ?? fallback, obj);
 };
 
+type Game = {
+  id: string;
+  title: string;
+  icon: string;
+  category: 'top-up' | 'accounts';
+  createdAt: number;
+};
+
 type CartItem = {
   id: string;
   title: string;
@@ -183,6 +191,7 @@ type AppContextType = {
   buyNow: (item: Omit<CartItem, 'quantity'>) => void;
   orders: Order[];
   allOrders: Order[];
+  games: Game[];
   products: GamePackage[];
   allUsers: UserProfile[];
   accountPosts: AccountPost[];
@@ -203,6 +212,8 @@ type AppContextType = {
   updateUserProfile: (updates: Partial<UserProfile>) => Promise<void>;
   manageUser: (uid: string, updates: Partial<UserProfile>) => Promise<void>;
   deleteUser: (uid: string) => Promise<void>;
+  saveGame: (game: Partial<Game>) => Promise<void>;
+  deleteGame: (id: string) => Promise<void>;
   saveProduct: (product: Partial<GamePackage>) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;
   saveEvent: (event: Partial<GameEvent>) => Promise<void>;
@@ -229,6 +240,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 const USER_CACHE_KEY = 'oskar_user_cache';
 const SETTINGS_CACHE_KEY = 'oskar_settings_cache';
 const PRODUCTS_CACHE_KEY = 'oskar_products_cache';
+const GAMES_CACHE_KEY = 'oskar_games_cache';
 const EVENTS_CACHE_KEY = 'oskar_events_cache';
 const BANNERS_CACHE_KEY = 'oskar_banners_cache';
 const THEME_CACHE_KEY = 'oskar_theme_cache';
@@ -279,10 +291,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     accPosts: false,
     events: false,
     banners: false,
-    allUsers: false
+    allUsers: false,
+    games: false
   });
 
   const [storeSettings, setStoreSettings] = useState<StoreSettings>(() => getCache(SETTINGS_CACHE_KEY, {}));
+  const [games, setGames] = useState<Game[]>(() => getCache(GAMES_CACHE_KEY, []));
   const [products, setProducts] = useState<GamePackage[]>(() => getCache(PRODUCTS_CACHE_KEY, []));
   const [accountPosts, setAccountPosts] = useState<AccountPost[]>([]);
   const [events, setEvents] = useState<GameEvent[]>(() => getCache(EVENTS_CACHE_KEY, []));
@@ -298,7 +312,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [messages, setMessages] = useState<any[]>([]);
   const [allChatSessions, setAllChatSessions] = useState<any[]>([]);
 
-  // Internal Session Management for Notifications
   const sessionStartTime = useRef(Date.now());
   const lastNotifiedRef = useRef<Set<string>>(new Set());
 
@@ -314,36 +327,27 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
 
   const isInitialLoading = useMemo(() => {
-    return !syncStatus.settings || !syncStatus.products || !syncStatus.banners || !syncStatus.events;
+    return !syncStatus.settings || !syncStatus.products || !syncStatus.banners || !syncStatus.events || !syncStatus.games;
   }, [syncStatus]);
 
-  // Robust Push Notification Implementation using Service Worker
   const showPushNotification = useCallback((title: string, body: string, id: string) => {
     if (typeof window === 'undefined') return;
-    
-    // Uniqueness check for current session
     if (lastNotifiedRef.current.has(id)) return;
     lastNotifiedRef.current.add(id);
-
-    // Standard Browser Notification check
     if (!('Notification' in window)) return;
     if (Notification.permission !== 'granted') return;
-
     const logo = storeSettings.logo || "https://placehold.co/192x192/0EA5E9/FFFFFF/png?text=O";
-
-    // Attempt to use Service Worker registration (Better for background/minimized state)
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.ready.then((registration) => {
         registration.showNotification(title, {
           body,
           icon: logo,
           badge: logo,
-          tag: id, // Prevent duplicate alerts for the same ID
+          tag: id,
           vibrate: [200, 100, 200],
           requireInteraction: true
         });
       }).catch(() => {
-        // Fallback to standard if SW is not ready
         new Notification(title, { body, icon: logo });
       });
     } else {
@@ -378,85 +382,74 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (!rtdb) return;
     
     const settingsRef = ref(rtdb, 'settings');
+    const gamesRef = ref(rtdb, 'games');
     const productsRef = ref(rtdb, 'products');
     const accPostsRef = ref(rtdb, 'accountPosts');
     const eventsRef = ref(rtdb, 'events');
     const bannersRef = ref(rtdb, 'banners');
     const usersRef = ref(rtdb, 'users');
 
-    const unsubSettings = onValue(settingsRef, (s) => {
+    onValue(settingsRef, (s) => {
       const data = s.val() || {};
-      
-      // Real-time Background Alerts for Live/Online Status
       if (syncStatus.settings) {
-        if (data.isLive && !storeSettings.isLive) {
-          showPushNotification("Oskar is LIVE Now! 🔴", "Join us on TikTok for exclusive rewards and diamonds!", "live-ticker-" + Date.now());
-        }
-        if (data.appStatus?.offline === false && storeSettings.appStatus?.offline === true) {
-          showPushNotification("Oskar Shop is Online! ✅", "We are back! You can now resume your top-ups and purchases.", "online-alert-" + Date.now());
-        }
+        if (data.isLive && !storeSettings.isLive) showPushNotification("Oskar is LIVE Now! 🔴", "Join us on TikTok for exclusive rewards and diamonds!", "live-ticker-" + Date.now());
+        if (data.appStatus?.offline === false && storeSettings.appStatus?.offline === true) showPushNotification("Oskar Shop is Online! ✅", "We are back! You can now resume your top-ups and purchases.", "online-alert-" + Date.now());
       }
-
       setStoreSettings(data);
       setCache(SETTINGS_CACHE_KEY, data);
       setSyncStatus(prev => ({ ...prev, settings: true }));
     });
 
-    const unsubProducts = onValue(productsRef, (s) => {
+    onValue(gamesRef, (s) => {
+      const data = s.val() ? Object.entries(s.val()).map(([id, v]: any) => ({ ...v, id })) : [];
+      setGames(data);
+      setCache(GAMES_CACHE_KEY, data);
+      setSyncStatus(prev => ({ ...prev, games: true }));
+    });
+
+    onValue(productsRef, (s) => {
       const data = s.val() ? Object.entries(s.val()).map(([id, v]: any) => ({ ...v, id })) : [];
       setProducts(data);
       setCache(PRODUCTS_CACHE_KEY, data);
       setSyncStatus(prev => ({ ...prev, products: true }));
     });
 
-    const unsubAccPosts = onValue(accPostsRef, (s) => {
+    onValue(accPostsRef, (s) => {
       const data = s.val() ? Object.entries(s.val()).map(([id, v]: any) => ({ ...v, id })) : [];
       setAccountPosts(data);
       setSyncStatus(prev => ({ ...prev, accPosts: true }));
     });
 
-    const unsubEvents = onValue(eventsRef, (s) => {
+    onValue(eventsRef, (s) => {
       const data = s.val() ? Object.entries(s.val()).map(([id, v]: any) => ({ ...v, id })) : [];
       setEvents(data);
       setCache(EVENTS_CACHE_KEY, data);
       setSyncStatus(prev => ({ ...prev, events: true }));
     });
 
-    const unsubBanners = onValue(bannersRef, (s) => {
+    onValue(bannersRef, (s) => {
       const data = s.val() ? Object.entries(s.val()).map(([id, v]: any) => ({ ...v, id })) : [];
       setBanners(data);
       setCache(BANNERS_CACHE_KEY, data);
       setSyncStatus(prev => ({ ...prev, banners: true }));
     });
 
-    const unsubUsers = onValue(usersRef, (s) => {
+    onValue(usersRef, (s) => {
       if (s.val()) {
-        const users = Object.entries(s.val()).map(([uid, v]: any) => ({
-          ...v,
-          uid: v.uid || uid
-        }));
+        const users = Object.entries(s.val()).map(([uid, v]: any) => ({ ...v, uid: v.uid || uid }));
         setAllUsers(users);
-      } else {
-        setAllUsers([]);
-      }
+      } else setAllUsers([]);
       setSyncStatus(prev => ({ ...prev, allUsers: true }));
     });
 
     return () => {
-      off(settingsRef);
-      off(productsRef);
-      off(accPostsRef);
-      off(eventsRef);
-      off(bannersRef);
-      off(usersRef);
+      off(settingsRef); off(gamesRef); off(productsRef); off(accPostsRef); off(eventsRef); off(bannersRef); off(usersRef);
     };
   }, [rtdb, syncStatus.settings, storeSettings.isLive, storeSettings.appStatus?.offline, showPushNotification]);
 
   useEffect(() => {
     if (!rtdb || !user) {
-      setUserProfile(null);
-      setNotifications([]);
-      setOrders([]);
+      setUserProfile(null); setNotifications([]); setOrders([]);
       return;
     }
     const profileRef = ref(rtdb, `users/${user.uid}`);
@@ -473,19 +466,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
-    // Dedicated Real-time System Notification Listener
     onValue(notifsRef, (s) => {
       const data = s.val() ? Object.entries(s.val()).map(([id, v]: any) => ({ ...v, id })).sort((a,b) => b.createdAt - a.createdAt) : [];
-      
-      // Trigger browser notification for fresh messages
       if (data.length > 0) {
         const latest = data[0];
-        // Rules: Must be unread AND must be newer than the time the app session started
-        if (!latest.read && latest.createdAt > sessionStartTime.current) {
-          showPushNotification(latest.title, latest.body, "oskar-notif-" + latest.id);
-        }
+        if (!latest.read && latest.createdAt > sessionStartTime.current) showPushNotification(latest.title, latest.body, "oskar-notif-" + latest.id);
       }
-
       setNotifications(data);
     });
 
@@ -495,24 +481,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     });
 
     return () => {
-      off(profileRef);
-      off(notifsRef);
-      off(userOrdersRef);
+      off(profileRef); off(notifsRef); off(userOrdersRef);
     };
   }, [rtdb, user, showPushNotification]);
 
   const enhancedUser = useMemo(() => {
     if (!user) return null;
     const role = userProfile?.role || 'user';
-    return { 
-      ...user, 
-      ...userProfile, 
-      isAdmin: role === 'admin' || role === 'super_admin' || role === 'staff' 
-    };
+    return { ...user, ...userProfile, isAdmin: role === 'admin' || role === 'super_admin' || role === 'staff' };
   }, [user, userProfile]);
 
   useEffect(() => {
-    // Admin Panel Restricted Access Logic
     if (!rtdb || !enhancedUser?.isAdmin) {
       if (allOrders.length > 0) setAllOrders([]);
       setAdminNotifications([]);
@@ -522,39 +501,32 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const chatIndexRef = ref(rtdb, 'chatIndex');
     const adminNotifsRef = query(ref(rtdb, 'adminNotifications'), limitToLast(30));
 
-    const unsubscribeOrders = onValue(allOrdersRef, (snapshot) => {
+    onValue(allOrdersRef, (snapshot) => {
       const val = snapshot.val();
       if (val) setAllOrders(Object.entries(val).map(([id, v]: any) => ({ ...v, id })).sort((a, b) => b.createdAt - a.createdAt));
       else setAllOrders([]);
     });
 
-    const unsubscribeChat = onValue(chatIndexRef, (snapshot) => {
+    onValue(chatIndexRef, (snapshot) => {
       const val = snapshot.val();
       setAllChatSessions(val ? Object.entries(val).map(([userId, v]: any) => ({ userId, ...v })).sort((a,b) => b.lastTimestamp - a.lastTimestamp) : []);
     });
 
-    const unsubscribeAdminNotifs = onValue(adminNotifsRef, (snapshot) => {
+    onValue(adminNotifsRef, (snapshot) => {
       const data = snapshot.val() ? Object.entries(snapshot.val()).map(([id, v]: any) => ({ ...v, id })).sort((a,b) => b.createdAt - a.createdAt) : [];
-      
-      // Admin Push Notifications Logic
       if (data.length > 0) {
         const latest = data[0];
         if (!latest.readBy?.[enhancedUser.uid] && latest.createdAt > sessionStartTime.current) {
-          // Rule: Skip push for assignment updates
-          if (latest.type !== 'assignment_update') {
-            showPushNotification(latest.title, latest.body, "admin-push-" + latest.id);
-          }
+          if (latest.type !== 'assignment_update') showPushNotification(latest.title, latest.body, "admin-push-" + latest.id);
         }
       }
       setAdminNotifications(data);
     });
 
     return () => {
-      off(allOrdersRef, 'value', unsubscribeOrders);
-      off(chatIndexRef, 'value', unsubscribeChat);
-      off(adminNotifsRef, 'value', unsubscribeAdminNotifs);
+      off(allOrdersRef); off(chatIndexRef); off(adminNotifsRef);
     };
-  }, [rtdb, enhancedUser, pathname, showPushNotification]);
+  }, [rtdb, enhancedUser, showPushNotification]);
 
   const refreshAdminData = () => {
     if (!rtdb) return;
@@ -574,15 +546,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     try {
       const cred = await createUserWithEmailAndPassword(auth, e, p);
       await updateProfile(cred.user, { displayName: n });
-      const profile = {
-        uid: cred.user.uid,
-        email: e,
-        name: n,
-        phoneNumber: ph,
-        role: 'user',
-        points: 0,
-        createdAt: Date.now()
-      };
+      const profile = { uid: cred.user.uid, email: e, name: n, phoneNumber: ph, role: 'user', points: 0, createdAt: Date.now() };
       await set(ref(rtdb, `users/${cred.user.uid}`), profile);
       setCache(USER_CACHE_KEY, profile);
     } finally { setIsGlobalLoading(false); }
@@ -590,11 +554,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     setIsGlobalLoading(true);
-    try { 
-      localStorage.removeItem(USER_CACHE_KEY);
-      await signOut(auth); 
-      router.push('/login');
-    } finally { setIsGlobalLoading(false); }
+    try { localStorage.removeItem(USER_CACHE_KEY); await signOut(auth); router.push('/login'); } finally { setIsGlobalLoading(false); }
   };
 
   const buyNow = (item: any) => {
@@ -608,59 +568,26 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const createOrder = async (paymentMethod: string, gameDetails: any, directItem: CartItem) => {
     if (!rtdb || !user) return;
-    
     const counterRef = ref(rtdb, 'settings/orderCounter');
     let sequenceId = 10;
-    
     try {
       const result = await runTransaction(counterRef, (currentValue) => {
-        if (currentValue === null || typeof currentValue !== 'number' || currentValue < 10) {
-          return 10;
-        }
+        if (currentValue === null || typeof currentValue !== 'number' || currentValue < 10) return 10;
         return currentValue + 1;
       });
-      
-      if (result.committed) {
-        sequenceId = result.snapshot.val();
-      }
-    } catch (e) {
-      sequenceId = Date.now();
-    }
-
+      if (result.committed) sequenceId = result.snapshot.val();
+    } catch (e) { sequenceId = Date.now(); }
     const orderId = `iibinta${sequenceId}`;
-    
-    const newOrder: Order = {
-      id: orderId,
-      userId: user.uid,
-      items: [directItem],
-      total: directItem.price,
-      status: 'pending',
-      createdAt: Date.now(),
-      paymentMethod,
-      gameDetails
-    };
+    const newOrder: Order = { id: orderId, userId: user.uid, items: [directItem], total: directItem.price, status: 'pending', createdAt: Date.now(), paymentMethod, gameDetails };
     await set(ref(rtdb, `orders/${orderId}`), newOrder);
-
-    // Notify Admins of New Order
     await broadcastAdminNotification("New Order Received! 🛍️", `Order #${orderId.toUpperCase()} for ${directItem.title} is pending verification.`);
   };
 
   const postAccount = async (data: any) => {
     if (!rtdb || !user) return;
     const postRef = push(ref(rtdb, 'accountPosts'));
-    await set(postRef, {
-      ...data,
-      uid: user.uid,
-      authorName: enhancedUser?.name,
-      authorAvatar: enhancedUser?.photoURL,
-      status: 'pending',
-      createdAt: Date.now(),
-      views: 0,
-      sold: false
-    });
+    await set(postRef, { ...data, uid: user.uid, authorName: enhancedUser?.name, authorAvatar: enhancedUser?.photoURL, status: 'pending', createdAt: Date.now(), views: 0, sold: false });
     toast({ title: "Successfully posted!", description: "Waiting for admin approval of listing fee payment." });
-
-    // Notify Admins
     await broadcastAdminNotification("New Account Post! 🎮", `${enhancedUser?.name} listed a Lv ${data.level} account.`);
   };
 
@@ -671,17 +598,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     toast({ title: "Post Updated!" });
   };
 
-  const deleteAccountPost = async (pid: string) => {
-    if (!rtdb) return;
-    await remove(ref(rtdb, `accountPosts/${pid}`));
-    toast({ title: "Post Deleted" });
-  };
-
-  const deleteOrder = async (oid: string) => {
-    if (!rtdb) return;
-    await remove(ref(rtdb, `orders/${oid}`));
-    toast({ title: "Order Deleted" });
-  };
+  const deleteAccountPost = async (pid: string) => { if (!rtdb) return; await remove(ref(rtdb, `accountPosts/${pid}`)); toast({ title: "Post Deleted" }); };
+  const deleteOrder = async (oid: string) => { if (!rtdb) return; await remove(ref(rtdb, `orders/${oid}`)); toast({ title: "Order Deleted" }); };
 
   const buyAccountPost = (post: any) => {
     if (!user) {
@@ -698,9 +616,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const updates: any = {};
     targetUids.forEach(uid => {
       const nid = push(ref(rtdb, `notifications/${uid}`)).key;
-      updates[`notifications/${uid}/${nid}`] = { 
-        title, body, read: false, createdAt: Date.now(), type: 'broadcast', linkTo: '#notifications' 
-      };
+      updates[`notifications/${uid}/${nid}`] = { title, body, read: false, createdAt: Date.now(), type: 'broadcast', linkTo: '#notifications' };
     });
     await update(ref(rtdb), updates);
   };
@@ -708,15 +624,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const broadcastAdminNotification = async (title: string, body: string, skipPush: boolean = false) => {
     if (!rtdb) return;
     const nid = push(ref(rtdb, 'adminNotifications')).key;
-    await set(ref(rtdb, `adminNotifications/${nid}`), {
-      id: nid,
-      title,
-      body,
-      createdAt: Date.now(),
-      type: skipPush ? 'assignment_update' : 'system_alert',
-      linkTo: '#notifications',
-      readBy: {}
-    });
+    await set(ref(rtdb, `adminNotifications/${nid}`), { id: nid, title, body, createdAt: Date.now(), type: skipPush ? 'assignment_update' : 'system_alert', linkTo: '#notifications', readBy: {} });
   };
 
   const updateOrderStatus = async (oid: string, status: string) => {
@@ -724,47 +632,24 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const orderSnap = await get(ref(rtdb, `orders/${oid}`));
     const orderData = orderSnap.val();
     if (!orderData) return;
-    
-    const oldStatus = orderData.status;
-    const userId = orderData.userId;
-    const items = orderData.items || [];
-    
+    const oldStatus = orderData.status; const userId = orderData.userId; const items = orderData.items || [];
     const accountItem = items.find((i: any) => i.gameId === 'accounts' || i.gameId === 'account');
-    
     const assignmentUpdate: any = { status };
-
-    // Set Processed info if moving from pending
     if (oldStatus === 'pending' && (status === 'processing' || status === 'successful')) {
-      assignmentUpdate.processedBy = {
-        uid: enhancedUser.uid,
-        name: enhancedUser.name,
-        photoURL: enhancedUser.photoURL || ""
-      };
+      assignmentUpdate.processedBy = { uid: enhancedUser.uid, name: enhancedUser.name, photoURL: enhancedUser.photoURL || "" };
       assignmentUpdate.processedAt = Date.now();
       broadcastAdminNotification(`Order Assigned! 🤝`, `${enhancedUser.name} is now handling Order #${oid.toUpperCase()}`, true);
     }
-
-    // Set Completion or Cancellation time
-    if ((status === 'successful' || status === 'cancelled') && oldStatus !== status) {
-      assignmentUpdate.completedAt = Date.now();
-    }
-
+    if ((status === 'successful' || status === 'cancelled') && oldStatus !== status) assignmentUpdate.completedAt = Date.now();
     await update(ref(rtdb, `orders/${oid}`), assignmentUpdate);
-    
     if (status === 'successful') {
-      if (accountItem && accountItem.id) {
-        await update(ref(rtdb, `accountPosts/${accountItem.id}`), { sold: true });
-      }
-
+      if (accountItem && accountItem.id) await update(ref(rtdb, `accountPosts/${accountItem.id}`), { sold: true });
       if (userId && oldStatus !== 'successful') {
         await update(ref(rtdb, `users/${userId}`), { points: increment(1) });
         broadcastNotification("Order Successful! ✅", "Dalabkaaga waa lagu guuleystay. Waxaad heshay 1 point!", userId);
       }
     } else if (oldStatus === 'successful' && status !== 'successful') {
-      if (accountItem && accountItem.id) {
-        await update(ref(rtdb, `accountPosts/${accountItem.id}`), { sold: false });
-      }
-
+      if (accountItem && accountItem.id) await update(ref(rtdb, `accountPosts/${accountItem.id}`), { sold: false });
       if (userId) {
         await update(ref(rtdb, `users/${userId}`), { points: increment(-1) });
         broadcastNotification("Order Update: Points Revoked ⚠️", `Dalabkaaga waa la bedelay xaaladiisa.`, userId);
@@ -777,54 +662,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const postSnap = await get(ref(rtdb, `accountPosts/${pid}`));
     const postData = postSnap.val();
     if (!postData) return;
-
-    const oldStatus = postData.status;
-
-    const assignmentUpdate: any = { status };
-
+    const oldStatus = postData.status; const assignmentUpdate: any = { status };
     if (oldStatus === 'pending' && (status === 'processing' || status === 'approved')) {
-      assignmentUpdate.processedBy = {
-        uid: enhancedUser.uid,
-        name: enhancedUser.name,
-        photoURL: enhancedUser.photoURL || ""
-      };
+      assignmentUpdate.processedBy = { uid: enhancedUser.uid, name: enhancedUser.name, photoURL: enhancedUser.photoURL || "" };
       assignmentUpdate.processedAt = Date.now();
       broadcastAdminNotification(`Listing Assigned! 🤝`, `${enhancedUser.name} is now reviewing listing #${pid.toUpperCase()}`, true);
     }
-
-    // Set Approval or Rejection time
-    if ((status === 'approved' || status === 'rejected') && oldStatus !== status) {
-      assignmentUpdate.completedAt = Date.now();
-    }
-
+    if ((status === 'approved' || status === 'rejected') && oldStatus !== status) assignmentUpdate.completedAt = Date.now();
     await update(ref(rtdb, `accountPosts/${pid}`), assignmentUpdate);
-    
-    if (postData.uid) {
-      broadcastNotification(
-        status === 'approved' ? "Post Approved! ✅" : "Post Rejected ❌",
-        status === 'approved' ? "Your account is now live in the marketplace." : "Your account listing was rejected by admin.",
-        postData.uid
-      );
-    }
+    if (postData.uid) broadcastNotification(status === 'approved' ? "Post Approved! ✅" : "Post Rejected ❌", status === 'approved' ? "Your account is now live in the marketplace." : "Your account listing was rejected by admin.", postData.uid);
   };
 
-  const updateUserProfile = async (updates: any) => {
-    if (!rtdb || !user) return;
-    await update(ref(rtdb, `users/${user.uid}`), updates);
-    toast({ title: "Profile updated!" });
-  };
-
-  const manageUser = async (uid: string, updates: Partial<UserProfile>) => {
-    if (!rtdb) return;
-    await update(ref(rtdb, `users/${uid}`), updates);
-    toast({ title: "User updated!" });
-  };
-
-  const deleteUser = async (uid: string) => {
-    if (!rtdb) return;
-    await remove(ref(rtdb, `users/${uid}`));
-    toast({ title: "User account deleted." });
-  };
+  const updateUserProfile = async (updates: any) => { if (!rtdb || !user) return; await update(ref(rtdb, `users/${user.uid}`), updates); toast({ title: "Profile updated!" }); };
+  const manageUser = async (uid: string, updates: Partial<UserProfile>) => { if (!rtdb) return; await update(ref(rtdb, `users/${uid}`), updates); toast({ title: "User updated!" }); };
+  const deleteUser = async (uid: string) => { if (!rtdb) return; await remove(ref(rtdb, `users/${uid}`)); toast({ title: "User account deleted." }); };
 
   const markNotificationsAsRead = async (nid?: string) => {
     if (!rtdb || !user) return;
@@ -851,8 +702,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const tid = targetId || (enhancedUser?.isAdmin ? chatTargetId : user.uid);
     if (!tid) return;
     const msg: any = { senderId: user.uid, timestamp: Date.now(), isRead: false };
-    if (text) msg.text = text;
-    if (imageUrl) msg.imageUrl = imageUrl;
+    if (text) msg.text = text; if (imageUrl) msg.imageUrl = imageUrl;
     await push(ref(rtdb, `chats/${tid}`), msg);
     await update(ref(rtdb, `chatIndex/${tid}`), {
       lastMessage: text || "📷 Screenshot",
@@ -863,10 +713,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const markMessagesAsRead = async (tid?: string) => {
-    if (!rtdb || !user) return;
-    const id = tid || user.uid;
-    await update(ref(rtdb, `chatIndex/${id}`), { unreadCount: 0 });
+  const markMessagesAsRead = async (tid?: string) => { if (!rtdb || !user) return; const id = tid || user.uid; await update(ref(rtdb, `chatIndex/${id}`), { unreadCount: 0 }); };
+
+  const saveGame = async (g: any) => {
+    if (!rtdb) return;
+    const { id, ...data } = g;
+    if (id) await update(ref(rtdb, `games/${id}`), data);
+    else await push(ref(rtdb, 'games'), { ...data, createdAt: Date.now() });
+  };
+
+  const deleteGame = async (id: string) => {
+    if (!rtdb) return;
+    await remove(ref(rtdb, `games/${id}`));
+    const associatedProducts = products.filter(p => p.gameId === id);
+    const updates: any = {};
+    associatedProducts.forEach(p => updates[`products/${p.id}`] = null);
+    await update(ref(rtdb), updates);
   };
 
   const saveProduct = async (p: any) => {
@@ -883,22 +745,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const deleteProduct = async (id: string) => remove(ref(rtdb, `products/${id}`));
   
-  const saveEvent = async (e: any) => {
-    if (!rtdb) return;
-    const { id, ...data } = e;
-    if (id) await update(ref(rtdb, `events/${id}`), data);
-    else await push(ref(rtdb, 'events'), data);
-  };
-
+  const saveEvent = async (e: any) => { if (!rtdb) return; const { id, ...data } = e; if (id) await update(ref(rtdb, `events/${id}`), data); else await push(ref(rtdb, 'events'), data); };
   const deleteEvent = async (id: string) => remove(ref(rtdb, `events/${id}`));
 
-  const saveBanner = async (b: any) => {
-    if (!rtdb) return;
-    const { id, ...data } = b;
-    if (id) await update(ref(rtdb, `banners/${id}`), data);
-    else await push(ref(rtdb, 'banners'), { ...data, createdAt: Date.now(), active: true });
-  };
-
+  const saveBanner = async (b: any) => { if (!rtdb) return; const { id, ...data } = b; if (id) await update(ref(rtdb, `banners/${id}`), data); else await push(ref(rtdb, 'banners'), { ...data, createdAt: Date.now(), active: true }); };
   const deleteBanner = async (id: string) => remove(ref(rtdb, `banners/${id}`));
 
   const updateStoreSettings = async (s: any) => update(ref(rtdb, 'settings'), s);
@@ -906,9 +756,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   return (
     <AppContext.Provider value={{ 
       user: enhancedUser, loading, isGlobalLoading, isInitialLoading, activeTab, setActiveTab, setGlobalLoading: setIsGlobalLoading,
-      login, signup, logout, buyNow, orders, allOrders, products, allUsers, accountPosts, notifications, adminNotifications, events, banners,
+      login, signup, logout, buyNow, orders, allOrders, games, products, allUsers, accountPosts, notifications, adminNotifications, events, banners,
       createOrder, postAccount, updateAccountPost, deleteAccountPost, deleteOrder, buyAccountPost, markNotificationsAsRead, markAdminNotificationsAsRead, updateOrderStatus, updateAccountPostStatus, 
-      updateUserProfile, manageUser, deleteUser, saveProduct, deleteProduct, saveEvent, deleteEvent, saveBanner, deleteBanner, storeSettings, updateStoreSettings, 
+      updateUserProfile, manageUser, deleteUser, saveGame, deleteGame, saveProduct, deleteProduct, saveEvent, deleteEvent, saveBanner, deleteBanner, storeSettings, updateStoreSettings, 
       broadcastNotification, broadcastAdminNotification, messages, allChatSessions, chatTargetId, setChatTargetId, sendMessage, markMessagesAsRead, refreshAdminData,
       theme, toggleTheme
     }}>

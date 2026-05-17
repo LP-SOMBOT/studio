@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "UserProfile": {
@@ -17,6 +18,17 @@
         "gameUid": { "type": "string" }
       },
       "required": ["uid", "email"]
+    },
+    "Game": {
+      "title": "Game",
+      "description": "A game collection containing multiple top-up packages.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "icon": { "type": "string" },
+        "category": { "type": "string", "enum": ["top-up", "accounts"] },
+        "createdAt": { "type": "number" }
+      }
     },
     "AccountPost": {
       "title": "Account Post",
@@ -77,12 +89,13 @@
   },
   "database": {
     "users": { "description": "User profiles" },
+    "games": { "description": "Game collections (Free Fire, PUBG, etc.)" },
     "accountPosts": { "description": "Marketplace account listings" },
     "orders": { "description": "Unified orders node for top-ups and accounts" },
     "notifications": { "description": "User-specific notifications" },
     "settings": { "description": "Global shop configuration and fees" },
     "events": { "description": "Active game events" },
-    "products": { "description": "Inventory items" },
+    "products": { "description": "Inventory items belonging to specific games" },
     "chats": { "description": "Real-time support chat messages" },
     "chatIndex": { "description": "Admin dashboard for active chat sessions" }
   }
