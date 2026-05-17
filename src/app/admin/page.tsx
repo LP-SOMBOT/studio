@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -875,7 +874,7 @@ export default function AdminPage() {
                           <div className="space-y-2">
                              <Label className="text-[10px] font-bold uppercase text-slate-400">Maintenance Image</Label>
                              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                                <div className="w-full sm:w-32 aspect-video rounded-xl bg-slate-100 dark:bg-slate-800 relative overflow-hidden group border border-slate-200 dark:border-white/5 shrink-0">
+                                <div className="w-full sm:w-32 aspect-video rounded-xl bg-slate-100 dark:bg-slate-800 relative overflow-hidden group border border-slate-200 dark:border-white/5 flex items-center justify-center shrink-0">
                                    {storeSettings.appStatus?.offlineImageUrl ? (
                                      <>
                                        <Image src={storeSettings.appStatus.offlineImageUrl} alt="" fill className="object-cover" unoptimized />
@@ -1136,9 +1135,9 @@ export default function AdminPage() {
                    </div>
 
                    <div className="flex flex-col sm:flex-row gap-3 pt-4">
-                      <Button variant="outline" onClick={() => setIsOrderDetailOpen(false)} className="w-full sm:flex-1 h-16 rounded-[1.5rem] font-bold">Discard</Button>
+                      <Button variant="outline" onClick={() => setIsOrderDetailOpen(false)} className="w-full sm:flex-1 h-16 rounded-[1.5rem] font-bold">Cancel</Button>
                       <Button onClick={handleStatusSave} disabled={isSavingStatus || pendingOrderStatus === selectedOrder.status} className="w-full sm:flex-[2] h-16 rounded-[1.5rem] font-bold text-lg shadow-xl shadow-primary/20">
-                         {isSavingStatus ? <Loader2 className="animate-spin" /> : "Verify & Save Changes"}
+                         {isSavingStatus ? <Loader2 className="animate-spin" /> : "Save Changes"}
                       </Button>
                    </div>
                 </div>
