@@ -226,7 +226,7 @@ Fadlan ila soo xiriir.`;
               {isBooyahPass ? "Booyah pass" : (game?.title || "Xogta Dalabka")}
             </CardTitle>
             <CardDescription className="dark:text-slate-400">
-              {isBooyahPass ? "Fadlan buuxi xogtaada si lagugu hagaajiyo WhatsApp." : `Fadlan buuxi xogta saxda ah si laguugu soo diro ${item?.title}.`}
+              {isBooyahPass ? "Fadlan buuxi form-ka Si saxan." : `Fadlan buuxi xogta saxda ah si laguugu soo diro ${item?.title}.`}
             </CardDescription>
           </CardHeader>
           <CardContent>
