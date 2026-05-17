@@ -111,7 +111,7 @@ export default function HomeView() {
             <div className="p-3 bg-primary/10 rounded-2xl">
               <Gamepad2 className="w-6 h-6 lg:w-8 lg:h-8 text-primary" />
             </div>
-            <h2 className="text-2xl lg:text-4xl font-headline font-bold text-slate-900 dark:text-white">Active Games</h2>
+            <h2 className="text-2xl lg:text-4xl font-headline font-bold text-slate-900 dark:text-white">Dooro Game ka</h2>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
