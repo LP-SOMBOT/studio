@@ -105,6 +105,8 @@ type AccountPost = {
   createdAt: number;
   processedAt?: number;
   completedAt?: number;
+  expiresAt?: number;
+  term?: 'weekly' | 'monthly';
   views: number;
   sold: boolean;
   processedBy?: {
@@ -180,6 +182,8 @@ type StoreSettings = {
       listingFee?: number;
       listingFeeFreeFire?: number;
       listingFeeBloodStrike?: number;
+      listingFeeWeekly?: number;
+      listingFeeMonthly?: number;
     };
     adminSettings?: {
       pin: string;
@@ -232,6 +236,7 @@ type AppContextType = {
   createOrder: (paymentMethod: string, gameDetails: any, directItem: CartItem) => Promise<void>;
   postAccount: (data: Partial<AccountPost>) => Promise<void>;
   updateAccountPost: (postId: string, data: Partial<AccountPost>) => Promise<void>;
+  renewAccountPost: (postId: string, term: 'weekly' | 'monthly') => Promise<void>;
   deleteAccountPost: (postId: string) => Promise<void>;
   deleteOrder: (orderId: string) => Promise<void>;
   buyAccountPost: (post: AccountPost) => void;
@@ -639,8 +644,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const postAccount = async (data: any) => {
     if (!rtdb || !user) return;
+    const termDuration = data.term === 'monthly' ? (30 * 24 * 60 * 60 * 1000) : (7 * 24 * 60 * 60 * 1000);
+    const expiresAt = Date.now() + termDuration;
+    
     const postRef = push(ref(rtdb, 'accountPosts'));
-    await set(postRef, { ...data, uid: user.uid, authorName: enhancedUser?.name, authorAvatar: enhancedUser?.photoURL, status: 'pending', createdAt: Date.now(), views: 0, sold: false });
+    await set(postRef, { 
+      ...data, 
+      uid: user.uid, 
+      authorName: enhancedUser?.name, 
+      authorAvatar: enhancedUser?.photoURL, 
+      status: 'pending', 
+      createdAt: Date.now(), 
+      expiresAt,
+      views: 0, 
+      sold: false 
+    });
     toast({ title: "Successfully posted!", description: "Waiting for admin approval of listing fee payment." });
     await broadcastAdminNotification("New Account Post! 🎮", `${enhancedUser?.name} listed a ${data.gameType} account.`);
   };
@@ -650,6 +668,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const { price, totalCharge, fee, ...editableData } = data;
     await update(ref(rtdb, `accountPosts/${pid}`), editableData);
     toast({ title: "Post Updated!" });
+  };
+
+  const renewAccountPost = async (pid: string, term: 'weekly' | 'monthly') => {
+    if (!rtdb) return;
+    const termDuration = term === 'monthly' ? (30 * 24 * 60 * 60 * 1000) : (7 * 24 * 60 * 60 * 1000);
+    const expiresAt = Date.now() + termDuration;
+    
+    await update(ref(rtdb, `accountPosts/${pid}`), {
+      term,
+      expiresAt,
+      status: 'pending', // Back to pending for verification
+      sold: false,
+      holdingBy: null
+    });
+    toast({ title: "Renewal Initiated!", description: "Waiting for admin to verify renewal payment." });
   };
 
   const deleteAccountPost = async (pid: string) => { if (!rtdb) return; await remove(ref(rtdb, `accountPosts/${pid}`)); toast({ title: "Post Deleted" }); };
@@ -900,7 +933,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     <AppContext.Provider value={{ 
       user: enhancedUser, loading, isGlobalLoading, isInitialLoading, activeTab, setActiveTab, setGlobalLoading: setIsGlobalLoading,
       login, signup, logout, buyNow, orders, allOrders, games, products, allUsers, accountPosts, notifications, adminNotifications, events, banners,
-      createOrder, postAccount, updateAccountPost, deleteAccountPost, deleteOrder, buyAccountPost, markNotificationsAsRead, markAdminNotificationsAsRead, updateOrderStatus, updateAccountPostStatus, reportAccountOutcome,
+      createOrder, postAccount, updateAccountPost, renewAccountPost, deleteAccountPost, deleteOrder, buyAccountPost, markNotificationsAsRead, markAdminNotificationsAsRead, updateOrderStatus, updateAccountPostStatus, reportAccountOutcome,
       updateUserProfile, manageUser, deleteUser, saveGame, deleteGame, saveProduct, deleteProduct, saveEvent, deleteEvent, saveBanner, deleteBanner, savePaymentMethod, deletePaymentMethod, storeSettings, updateStoreSettings, 
       broadcastNotification, broadcastAdminNotification, messages, allChatSessions, chatTargetId, setChatTargetId, sendMessage, markMessagesAsRead, refreshAdminData,
       theme, toggleTheme, isBannedModalOpen, setIsBannedModalOpen, bannedInfo

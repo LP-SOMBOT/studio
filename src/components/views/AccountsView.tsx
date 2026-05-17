@@ -43,7 +43,7 @@ import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Image from 'next/image';
-import { format } from 'date-fns';
+import { format, differenceInSeconds } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -62,16 +62,23 @@ export default function AccountsView() {
   const [searchQuery, setSearchQuery] = useState("");
 
   const filteredPosts = useMemo(() => {
+    const now = Date.now();
     return (accountPosts || [])
-      // Rule: In holding, only Admin, Owner, and Buyer can see.
+      // Expiration Filter: Public only sees non-expired. Admins/Owners see all.
       .filter(p => {
+        const isExpired = p.expiresAt ? p.expiresAt < now : false;
+        const isOwner = p.uid === user?.uid;
+        const isAdmin = user?.isAdmin;
+
+        if (isExpired && !isOwner && !isAdmin) return false;
+
         if (p.status === 'holding') {
-           return p.uid === user?.uid || p.holdingBy === user?.uid || user?.isAdmin;
+           return isOwner || p.holdingBy === user?.uid || isAdmin;
         }
         if (p.status === 'sold') {
-           return p.uid === user?.uid || p.boughtBy === user?.uid || user?.isAdmin;
+           return isOwner || p.boughtBy === user?.uid || isAdmin;
         }
-        return p.status === 'approved' || p.uid === user?.uid || user?.isAdmin;
+        return p.status === 'approved' || isOwner || isAdmin;
       })
       .filter(p => 
         p.authorName?.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -141,7 +148,8 @@ export default function AccountsView() {
                 onClick={() => router.push(`/accounts/${post.id}`)}
                 onEdit={(e) => { e.stopPropagation(); setEditingPost(post); }}
                 onDelete={(e) => { e.stopPropagation(); setDeletingPostId(post.id); }}
-                isOwner={post.uid === user?.uid || user?.isAdmin}
+                isOwner={post.uid === user?.uid}
+                isAdmin={user?.isAdmin}
               />
             ))}
           </div>
@@ -219,8 +227,9 @@ export default function AccountsView() {
   );
 }
 
-function AccountPostCard({ post, onClick, onEdit, onDelete, isOwner }: { post: any, onClick: () => void, onEdit: (e:any)=>void, onDelete: (e:any)=>void, isOwner: boolean }) {
+function AccountPostCard({ post, onClick, onEdit, onDelete, isOwner, isAdmin }: { post: any, onClick: () => void, onEdit: (e:any)=>void, onDelete: (e:any)=>void, isOwner: boolean, isAdmin?: boolean }) {
   const isGoogle = post.platform === 'Google';
+  const isExpired = post.expiresAt ? post.expiresAt < Date.now() : false;
   
   const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -240,11 +249,45 @@ function AccountPostCard({ post, onClick, onEdit, onDelete, isOwner }: { post: a
       toast({ title: "Link-ga waa la koobiyey!" });
     }
   };
+
+  const [timeLeft, setTimeLeft] = useState("");
+
+  useEffect(() => {
+    if (!post.expiresAt || !isOwner && !isAdmin) return;
+    const interval = setInterval(() => {
+      const now = Date.now();
+      const diff = post.expiresAt - now;
+      if (diff <= 0) {
+        setTimeLeft("DHAMAADAY");
+        clearInterval(interval);
+      } else {
+        const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        setTimeLeft(`${d}d ${h}h ${m}m`);
+      }
+    }, 60000);
+    
+    // Initial run
+    const diff = post.expiresAt - Date.now();
+    if (diff <= 0) setTimeLeft("DHAMAADAY");
+    else {
+      const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      setTimeLeft(`${d}d ${h}h ${m}m`);
+    }
+
+    return () => clearInterval(interval);
+  }, [post.expiresAt, isOwner, isAdmin]);
   
   return (
     <Card 
       onClick={onClick}
-      className="rounded-[2.5rem] border-none shadow-xl bg-white dark:bg-slate-900 overflow-hidden transition-all active:scale-[0.98] group cursor-pointer h-full flex flex-col"
+      className={cn(
+        "rounded-[2.5rem] border-none shadow-xl bg-white dark:bg-slate-900 overflow-hidden transition-all active:scale-[0.98] group cursor-pointer h-full flex flex-col",
+        isExpired && "opacity-60"
+      )}
     >
       <div className="p-5 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/40">
         <div className="flex items-center gap-3">
@@ -276,7 +319,7 @@ function AccountPostCard({ post, onClick, onEdit, onDelete, isOwner }: { post: a
            >
               <Share2 size={16} />
            </button>
-           {isOwner && (
+           {(isOwner || isAdmin) && (
              <>
                 <Button size="icon" variant="ghost" className="h-8 w-8 text-blue-500" onClick={onEdit}><Edit size={16}/></Button>
                 <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500" onClick={onDelete}><Trash2 size={16}/></Button>
@@ -301,6 +344,11 @@ function AccountPostCard({ post, onClick, onEdit, onDelete, isOwner }: { post: a
              <div className="px-6 py-2 bg-red-600 text-white font-headline font-bold text-xl rounded-full transform -rotate-12 shadow-2xl">WAA LA IIBIYAY</div>
           </div>
         )}
+        {isExpired && !post.sold && (
+          <div className="absolute inset-0 bg-red-900/60 backdrop-blur-sm flex items-center justify-center z-10">
+             <div className="px-6 py-2 bg-red-600 text-white font-headline font-bold text-xl rounded-full transform -rotate-12 shadow-2xl">DHAMAADAY</div>
+          </div>
+        )}
       </div>
 
       <div className="p-6 space-y-4 flex-1 flex flex-col">
@@ -308,7 +356,14 @@ function AccountPostCard({ post, onClick, onEdit, onDelete, isOwner }: { post: a
            <div className="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-400">
              <Gamepad2 className="w-4 h-4 text-primary" /> Lv {post.level || 0}
            </div>
-           <Badge variant="secondary" className="text-[9px] uppercase font-black tracking-widest">{post.gameType}</Badge>
+           <div className="flex gap-2">
+              {(isOwner || isAdmin) && timeLeft && (
+                <Badge variant="outline" className={cn("text-[8px] font-bold border-primary/20", isExpired ? "text-red-500 border-red-500/20" : "text-primary")}>
+                  <Clock size={10} className="mr-1" /> {timeLeft}
+                </Badge>
+              )}
+              <Badge variant="secondary" className="text-[9px] uppercase font-black tracking-widest">{post.gameType}</Badge>
+           </div>
         </div>
 
         <div className="flex gap-2 overflow-x-auto scrollbar-hide py-1">
@@ -362,6 +417,7 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
     price: "",
     phone: "",
     thumbnailUrl: "",
+    term: "weekly",
     imageUrls: [] as string[]
   });
 
@@ -381,6 +437,7 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
         arrivalEmotes: editingPost.arrivalEmotes?.toString() || "",
         price: editingPost.price?.toString() || "",
         items: editingPost.items || [],
+        term: editingPost.term || "weekly",
         imageUrls: editingPost.imageUrls || []
       });
       setPreviews(editingPost.imageUrls || [editingPost.thumbnailUrl]);
@@ -402,6 +459,7 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
         price: "", 
         phone: enhancedUser?.phoneNumber || "", 
         thumbnailUrl: "", 
+        term: "weekly",
         imageUrls: [] 
       });
       setPreviews([]);
@@ -409,9 +467,9 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
     }
   }, [editingPost, open, enhancedUser]);
 
-  const listingFee = formData.gameType === 'freefire' 
-    ? (storeSettings?.config?.shop?.listingFeeFreeFire || storeSettings?.config?.shop?.listingFee || 1.00)
-    : (storeSettings?.config?.shop?.listingFeeBloodStrike || 2.00);
+  const listingFee = formData.term === 'monthly' 
+    ? (storeSettings?.config?.shop?.listingFeeMonthly || 3.00)
+    : (storeSettings?.config?.shop?.listingFeeWeekly || 1.00);
 
   const numPrice = parseFloat(formData.price) || 0;
   const isFormValid = !!(formData.level && formData.price && formData.phone && (imageFiles.length > 0 || formData.thumbnailUrl));
@@ -517,7 +575,7 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
           <div className="space-y-6">
             <div className="flex items-center gap-3">
                <div className="w-8 h-8 rounded-full bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-500"><Gamepad2 size={18} /></div>
-               <h3 className="font-headline font-bold text-lg dark:text-white">Account Type & Platform</h3>
+               <h3 className="font-headline font-bold text-lg dark:text-white">Account Type & Term</h3>
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -534,17 +592,36 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
                   </Select>
                </div>
                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1">Platform</label>
-                  <Select value={formData.platform} onValueChange={(val) => setFormData({...formData, platform: val})}>
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1">Listing Term (Muda)</label>
+                  <Select value={formData.term} onValueChange={(val) => setFormData({...formData, term: val})}>
                     <SelectTrigger className="h-14 rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-6 font-bold shadow-inner">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="rounded-2xl dark:bg-slate-900">
-                      <SelectItem value="Google" className="rounded-xl">Google</SelectItem>
-                      <SelectItem value="Facebook" className="rounded-xl">Facebook</SelectItem>
+                      <SelectItem value="weekly" className="rounded-xl">Weakly (Isbuucle) - ${storeSettings?.config?.shop?.listingFeeWeekly || 1.00}</SelectItem>
+                      <SelectItem value="monthly" className="rounded-xl">Monthly (Bile) - ${storeSettings?.config?.shop?.listingFeeMonthly || 3.00}</SelectItem>
                     </SelectContent>
                   </Select>
                </div>
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            <div className="flex items-center gap-3">
+               <div className="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-blue-500"><SmartphoneIcon size={18} /></div>
+               <h3 className="font-headline font-bold text-lg dark:text-white">Platform Information</h3>
+            </div>
+            <div className="space-y-2">
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1">Platform</label>
+                <Select value={formData.platform} onValueChange={(val) => setFormData({...formData, platform: val})}>
+                  <SelectTrigger className="h-14 rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-6 font-bold shadow-inner">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-2xl dark:bg-slate-900">
+                    <SelectItem value="Google" className="rounded-xl">Google</SelectItem>
+                    <SelectItem value="Facebook" className="rounded-xl">Facebook</SelectItem>
+                  </SelectContent>
+                </Select>
             </div>
           </div>
 
@@ -664,7 +741,7 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
                   <p className="text-xs font-bold uppercase tracking-wider">Listing Fee Charge</p>
                </div>
                <p className="text-[11px] font-medium text-amber-700 dark:text-amber-500/80 leading-relaxed">
-                  Fee-ga posting-ka ee {formData.gameType === 'freefire' ? 'Free Fire' : 'Blood Strike'} waa <span className="font-bold">${listingFee.toFixed(2)}</span>.
+                  Fee-ga posting-ka ee {formData.term === 'weekly' ? 'Isbuucle' : 'Bile'} waa <span className="font-bold">${listingFee.toFixed(2)}</span>.
                </p>
             </div>
           </div>

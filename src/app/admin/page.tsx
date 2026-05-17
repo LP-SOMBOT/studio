@@ -922,6 +922,29 @@ export default function AdminPage() {
                           />
                         </div>
                      </div>
+
+                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-bold uppercase text-slate-400">Weekly Term Fee (Isbuucle) ($)</Label>
+                          <Input 
+                            type="number" 
+                            step="0.01" 
+                            defaultValue={storeSettings?.config?.shop?.listingFeeWeekly || 1.00} 
+                            onBlur={e => updateStoreSettings({ config: { ...storeSettings.config, shop: { ...storeSettings.config?.shop, listingFeeWeekly: parseFloat(e.target.value) } } })} 
+                            className="rounded-xl dark:bg-slate-800 border-none font-bold h-12" 
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-bold uppercase text-slate-400">Monthly Term Fee (Bile) ($)</Label>
+                          <Input 
+                            type="number" 
+                            step="0.01" 
+                            defaultValue={storeSettings?.config?.shop?.listingFeeMonthly || 3.00} 
+                            onBlur={e => updateStoreSettings({ config: { ...storeSettings.config, shop: { ...storeSettings.config?.shop, listingFeeMonthly: parseFloat(e.target.value) } } })} 
+                            className="rounded-xl dark:bg-slate-800 border-none font-bold h-12" 
+                          />
+                        </div>
+                     </div>
                    </AccordionContent>
                  </AccordionItem>
 
@@ -1299,7 +1322,7 @@ export default function AdminPage() {
                   "p-4 rounded-xl border flex flex-col gap-1",
                   selectedOrder.status === 'successful' ? "bg-green-50 border-green-100 dark:bg-green-500/10 dark:border-green-500/20" : "bg-red-50 border-red-100 dark:bg-red-500/10 dark:border-red-500/20"
                 )}>
-                  <span className={cn("text-[10px] font-bold uppercase", selectedOrder.status === 'successful' ? "text-green-600" : "text-red-600")}>
+                  <span className={cn("text-[10px] font-bold uppercase", selectedOrder.status === 'successful' ? 'Completed At' : 'Cancelled At')}>
                     {selectedOrder.status === 'successful' ? 'Completed At' : 'Cancelled At'}
                   </span>
                   <span className={cn("text-xs font-bold", selectedOrder.status === 'successful' ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400")}>
@@ -1500,6 +1523,7 @@ export default function AdminPage() {
                 <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl space-y-3 border border-slate-100 dark:border-white/5 shadow-inner">
                    <div className="flex justify-between border-b dark:border-white/5 pb-2"><span className="text-xs text-muted-foreground">Seller Name</span><span className="text-xs font-bold">{selectedAccount?.authorName}</span></div>
                    <div className="flex justify-between border-b dark:border-white/5 pb-2"><span className="text-xs text-muted-foreground">Seller Phone</span><span className="text-xs font-bold text-primary">{selectedAccount?.phone}</span></div>
+                   <div className="flex justify-between border-b dark:border-white/5 pb-2"><span className="text-xs text-muted-foreground">Listing Term</span><Badge variant="secondary" className="text-[10px] rounded-full uppercase font-black">{selectedAccount?.term || 'weekly'}</Badge></div>
                    <div className="flex justify-between"><span className="text-xs text-muted-foreground">Game Type</span><Badge className="text-[10px] rounded-full uppercase font-black">{selectedAccount?.gameType}</Badge></div>
                 </div>
              </div>
