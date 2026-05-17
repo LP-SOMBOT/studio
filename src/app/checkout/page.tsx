@@ -12,7 +12,8 @@ import {
   Smartphone,
   ChevronRight,
   X,
-  CreditCard
+  CreditCard,
+  AlertTriangle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,7 +26,7 @@ import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 
 function CheckoutContent() {
-  const { products, createOrder, setGlobalLoading, setActiveTab, user, loading, storeSettings } = useApp();
+  const { products, games, createOrder, setGlobalLoading, setActiveTab, user, loading, storeSettings } = useApp();
   const router = useRouter();
   const searchParams = useSearchParams();
   const productId = searchParams.get('id');
@@ -34,10 +35,12 @@ function CheckoutContent() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("EVCPLUS");
+  
   const [gameDetails, setGameDetails] = useState({
+    fullName: "",
     playerID: "",
     playerName: "",
-    phoneNumber: "",
+    whatsappNumber: "",
     senderNumber: ""
   });
 
@@ -45,8 +48,16 @@ function CheckoutContent() {
     return (products || []).find(p => p.id === productId);
   }, [products, productId]);
 
-  const total = item ? (item.price || 0) : 0;
-  const isFreeFire = item?.gameId === 'freefire';
+  const game = useMemo(() => {
+    return (games || []).find(g => g.id === item?.gameId);
+  }, [games, item?.gameId]);
+
+  // Bug Fix: Always use the exact base price as requested, not discountedPrice
+  const total = item ? Number(item.price || 0) : 0;
+  
+  const gameTitle = game?.title?.toLowerCase() || "";
+  const isFreeFire = gameTitle.includes("free fire");
+  const isBloodStrike = gameTitle.includes("blood strike");
 
   useEffect(() => {
     if (!loading && !user && !isSuccess) {
@@ -59,11 +70,16 @@ function CheckoutContent() {
 
   const handleDetailsSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!gameDetails.senderNumber) {
+      toast({ title: "Fadlan buuxi number-ka", description: "Geli number-ka lacagta aad ka soo dirtay.", variant: "destructive" });
+      return;
+    }
     setStep(2);
   };
 
   const handlePaymentInitiation = () => {
     const paymentNum = storeSettings.paymentNumber || "613982172";
+    // We use the full total (base price)
     const formattedPrice = total.toString().replace('.', '*');
     const ussd = `*712*${paymentNum}*${formattedPrice}#`;
     
@@ -84,13 +100,21 @@ function CheckoutContent() {
     const purchaseItem = {
       id: item.id,
       title: item.title,
-      price: total,
+      price: total, // Explicitly the base price
       quantity: 1,
       gameId: item.gameId,
       thumbnail: item.thumbnail
     };
 
-    createOrder(paymentMethod, gameDetails, purchaseItem);
+    // Prepare descriptive game details for admin
+    const finalDetails = {
+      ...gameDetails,
+      gameTitle: game?.title || "Unknown Game",
+      itemTitle: item.title,
+      category: isFreeFire ? "Free Fire" : isBloodStrike ? "Blood Strike" : "General"
+    };
+
+    createOrder(paymentMethod, finalDetails, purchaseItem);
     
     setTimeout(() => {
       setIsProcessing(false);
@@ -152,7 +176,7 @@ function CheckoutContent() {
                 "text-[10px] font-bold uppercase tracking-wider",
                 step >= s ? "text-primary" : "text-gray-400 dark:text-gray-600"
               )}>
-                {s === 1 ? "Details" : s === 2 ? "Payment" : "Confirm"}
+                {s === 1 ? "Xogta" : s === 2 ? "Lacagta" : "Xaqiiji"}
               </span>
             </div>
           ))}
@@ -166,66 +190,109 @@ function CheckoutContent() {
         <Card className="rounded-[2.5rem] shadow-xl border-none p-2 bg-white dark:bg-slate-900">
           <CardHeader>
             <CardTitle className="font-headline font-bold text-2xl flex items-center gap-2 text-slate-900 dark:text-white">
-              <Gamepad2 className="w-6 h-6 text-primary" /> In-Game Details
+              <Gamepad2 className="w-6 h-6 text-primary" /> {game?.title || "Xogta Dalabka"}
             </CardTitle>
-            <CardDescription className="dark:text-slate-400">We need this to deliver your {item?.title || 'items'} accurately.</CardDescription>
+            <CardDescription className="dark:text-slate-400">Fadlan buuxi xogta saxda ah si laguugu soo diro {item?.title}.</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleDetailsSubmit} className="space-y-6 pt-4">
-              {isFreeFire && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              
+              {/* Somali Warning Note */}
+              <div className="p-4 rounded-2xl bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-900/20 flex gap-3 text-red-600 dark:text-red-400">
+                 <AlertTriangle className="shrink-0 w-5 h-5" />
+                 <p className="text-[11px] font-bold leading-relaxed">
+                   Fadlan iska hubi Xogta sida ID gaga inta aadan dalabka dirin, dalabka mar hadii la diro lama Soo celin karo FADLAN ISKA HUBI, Mahadsanid!.
+                 </p>
+              </div>
+
+              <div className="space-y-4">
+                {/* Dedicated Full Name field for both FF and BS */}
+                {(isFreeFire || isBloodStrike) && (
                   <div className="space-y-2">
-                    <Label htmlFor="playerID" className="text-sm font-bold dark:text-slate-200">Free Fire Player ID</Label>
+                    <Label className="text-sm font-bold dark:text-slate-200">Magacaaga oo buuxa</Label>
                     <Input 
-                      id="playerID" 
-                      placeholder="e.g. 123456789" 
+                      placeholder="Geli magacaaga dhameystiran" 
                       required 
-                      className="h-12 rounded-2xl bg-gray-50 dark:bg-slate-800 border-none focus-visible:ring-primary dark:text-white"
-                      value={gameDetails.playerID}
-                      onChange={(e) => setGameDetails({...gameDetails, playerID: e.target.value})}
+                      className="h-12 rounded-2xl bg-gray-50 dark:bg-slate-800 border-none px-5 font-bold"
+                      value={gameDetails.fullName}
+                      onChange={(e) => setGameDetails({...gameDetails, fullName: e.target.value})}
                     />
                   </div>
+                )}
+
+                {/* Game ID / UID Field */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-bold dark:text-slate-200">
+                    {isFreeFire ? "Game UID" : "Game ID"}
+                  </Label>
+                  <Input 
+                    placeholder={isFreeFire ? "Geli ID-Ga game ka kugu qoran" : "Geli ID game ka kugu qoran"}
+                    required 
+                    className="h-12 rounded-2xl bg-gray-50 dark:bg-slate-800 border-none px-5 font-bold"
+                    value={gameDetails.playerID}
+                    onChange={(e) => setGameDetails({...gameDetails, playerID: e.target.value})}
+                  />
+                </div>
+
+                {/* In-Game Name for Free Fire only */}
+                {isFreeFire && (
                   <div className="space-y-2">
-                    <Label htmlFor="playerName" className="text-sm font-bold dark:text-slate-200">In-Game Name</Label>
+                    <Label className="text-sm font-bold dark:text-slate-200">in-Game Name</Label>
                     <Input 
-                      id="playerName" 
-                      placeholder="e.g. OSKAR_PLAYER" 
+                      placeholder="Geli magaca game ka kugu qoran" 
                       required 
-                      className="h-12 rounded-2xl bg-gray-50 dark:bg-slate-800 border-none focus-visible:ring-primary dark:text-white"
+                      className="h-12 rounded-2xl bg-gray-50 dark:bg-slate-800 border-none px-5 font-bold"
                       value={gameDetails.playerName}
                       onChange={(e) => setGameDetails({...gameDetails, playerName: e.target.value})}
                     />
                   </div>
-                </div>
-              )}
-              <div className="space-y-2">
-                <Label htmlFor="phone" className="text-sm font-bold dark:text-slate-200">Contact Phone Number</Label>
-                <Input 
-                  id="phone" 
-                  type="tel" 
-                  placeholder="e.g. 612XXXXXX" 
-                  required 
-                  className="h-12 rounded-2xl bg-gray-50 dark:bg-slate-800 border-none focus-visible:ring-primary dark:text-white"
-                  value={gameDetails.phoneNumber}
-                  onChange={(e) => setGameDetails({...gameDetails, phoneNumber: e.target.value})}
-                />
+                )}
+
+                {/* WhatsApp Number for both */}
+                {(isFreeFire || isBloodStrike) && (
+                  <div className="space-y-2">
+                    <Label className="text-sm font-bold dark:text-slate-200">WhatsApp Number</Label>
+                    <Input 
+                      type="tel"
+                      placeholder={isFreeFire ? "Geli number ka WhatsApp kaaga" : "Geli WhatsApp number kaaga"}
+                      required 
+                      className="h-12 rounded-2xl bg-gray-50 dark:bg-slate-800 border-none px-5 font-bold"
+                      value={gameDetails.whatsappNumber}
+                      onChange={(e) => setGameDetails({...gameDetails, whatsappNumber: e.target.value})}
+                    />
+                  </div>
+                )}
+
+                {/* Fallback for other games if any */}
+                {!isFreeFire && !isBloodStrike && (
+                  <div className="space-y-2">
+                    <Label className="text-sm font-bold dark:text-slate-200">Player ID / Account</Label>
+                    <Input 
+                      placeholder="Geli ID-gaaga halkan" 
+                      required 
+                      className="h-12 rounded-2xl bg-gray-50 dark:bg-slate-800 border-none px-5 font-bold"
+                      value={gameDetails.playerID}
+                      onChange={(e) => setGameDetails({...gameDetails, playerID: e.target.value})}
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="space-y-2 pt-4 border-t dark:border-white/5">
                 <Label htmlFor="sender" className="text-sm font-bold flex items-center gap-2 text-primary">
-                  <CreditCard className="w-4 h-4" /> Geli number ka lacagta kasoo dirtay
+                  <CreditCard className="w-4 h-4" /> Lacag Diraha
                 </Label>
                 <Input 
                   id="sender" 
                   type="tel" 
-                  placeholder="e.g. 613XXXXXX" 
+                  placeholder="Geli number ka lacagta kasoo direesid" 
                   required 
                   className="h-14 rounded-2xl bg-blue-50 dark:bg-blue-900/10 border-2 border-blue-100 dark:border-blue-500/20 focus-visible:ring-primary font-bold text-lg dark:text-white"
                   value={gameDetails.senderNumber}
                   onChange={(e) => setGameDetails({...gameDetails, senderNumber: e.target.value})}
                 />
                 <p className="text-[10px] text-muted-foreground dark:text-slate-500 font-medium italic">
-                  * This is used to verify your payment in our system.
+                  * Number-kan waxaa loo isticmaali doonaa in lagu hubiyo lacag bixintaada.
                 </p>
               </div>
 
@@ -246,7 +313,7 @@ function CheckoutContent() {
       )}>
         <Card className="rounded-[2.5rem] shadow-xl border-none p-2 bg-white dark:bg-slate-900">
           <CardHeader>
-            <CardTitle className="font-headline font-bold text-2xl text-slate-900 dark:text-white">Payment Method</CardTitle>
+            <CardTitle className="font-headline font-bold text-2xl text-slate-900 dark:text-white">Lacag Bixinta</CardTitle>
           </CardHeader>
           <CardContent>
             <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-4 mb-8">
@@ -283,6 +350,7 @@ function CheckoutContent() {
                 <span className="text-base text-muted-foreground dark:text-slate-400 font-medium">Order Total:</span>
                 <span className="text-3xl font-headline font-bold text-primary">${total.toFixed(2)}</span>
               </div>
+              <p className="text-[10px] text-muted-foreground text-center mt-2 italic">* This is the fixed base price.</p>
             </div>
 
             <div className="flex gap-4">
@@ -293,7 +361,7 @@ function CheckoutContent() {
                 onClick={handlePaymentInitiation} 
                 className="flex-[2] h-14 rounded-2xl text-lg font-bold shadow-lg shadow-primary/20"
               >
-                Pay with {paymentMethod}
+                Ku bixi {paymentMethod}
               </Button>
             </div>
           </CardContent>
@@ -320,15 +388,15 @@ function CheckoutContent() {
               </div>
               <div className="space-y-1 pt-2 border-t border-primary/10 dark:border-white/5 mt-2">
                 <div className="text-xs text-muted-foreground dark:text-slate-500 flex justify-between items-center">
-                  <span>Number ka lacagta Laga Soo diray:</span>
-                  <span className="font-mono font-bold text-foreground dark:text-slate-200">{gameDetails.senderNumber || "N/A"}</span>
+                  <span>Number-ka lacagta laga soo diray:</span>
+                  <span className="font-mono font-bold text-foreground dark:text-slate-200">{gameDetails.senderNumber}</span>
                 </div>
                 <div className="text-xs text-muted-foreground dark:text-slate-500 flex justify-between items-center">
                   <span>Player ID:</span>
-                  <span className="font-mono font-bold text-foreground dark:text-slate-200">{gameDetails.playerID || "N/A"}</span>
+                  <span className="font-mono font-bold text-foreground dark:text-slate-200">{gameDetails.playerID}</span>
                 </div>
                 <div className="text-xs text-muted-foreground dark:text-slate-500 flex justify-between items-center">
-                  <span>Lacag bixinta:</span>
+                  <span>Method:</span>
                   <span className="font-bold text-foreground dark:text-slate-200">{paymentMethod}</span>
                 </div>
               </div>
@@ -344,7 +412,7 @@ function CheckoutContent() {
                     <Loader2 className="w-6 h-6 animate-spin" />
                     <span>Verifying...</span>
                   </div>
-                ) : "Xaqiiji"}
+                ) : "Waan Bixiyay (Xaqiiji)"}
               </Button>
               <Button variant="ghost" onClick={() => setStep(2)} className="h-12 rounded-xl text-muted-foreground dark:text-slate-500 hover:dark:text-slate-300">
                  Dib u noqo
@@ -369,7 +437,7 @@ function CheckoutContent() {
           
           <h1 className="text-4xl font-headline font-bold mb-4 text-slate-900 dark:text-white">Waa Lagu guuleystay!</h1>
           <p className="text-base text-muted-foreground dark:text-slate-400 max-w-sm mb-10 leading-relaxed">
-            Dalabkaaga waa la diray. Sida ugu dhaqsiyaha badan ayaa lagugu adeegi doonnaa i.a, fadlan dulqaadka badi mahadsanid. Dalabkaaga waxaad Kala socono kartaa halkaan <span onClick={() => setActiveTab('orders')} className="text-primary font-bold cursor-pointer hover:underline">dalabyada</span>.
+            Dalabkaaga waa la diray. Sida ugu dhaqsiyaha badan ayaa lagugu adeegi doonnaa i.a, fadlan dulqaadka badi mahadsanid. Dalabkaaga waxaad Kala socon kartaa halkaan <span onClick={() => setActiveTab('orders')} className="text-primary font-bold cursor-pointer hover:underline">dalabyada</span>.
           </p>
 
           <div className="grid grid-cols-1 gap-3 w-full max-w-sm">
@@ -386,7 +454,7 @@ function CheckoutContent() {
               className="h-12 rounded-2xl text-muted-foreground dark:text-slate-500"
               onClick={() => router.push('/')}
             >
-              Back to Homepage
+              Ku laabo Home-ka
             </Button>
           </div>
         </div>
