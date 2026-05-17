@@ -65,7 +65,8 @@ import {
   CreditCardIcon,
   Trophy,
   Megaphone,
-  CreditCard as PaymentIcon
+  CreditCard as PaymentIcon,
+  UserCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -1317,12 +1318,36 @@ export default function AdminPage() {
                 </div>
               )}
 
+              {/* Holder Profile Details (For Accounts) */}
+              {selectedOrder?.items?.[0]?.gameId === 'accounts' && (
+                <div className="space-y-4 animate-in slide-in-from-top-2">
+                   <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2"><UserCircle size={14}/> Buyer (Holder) Profile</h4>
+                   <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-white/5 flex items-center gap-4">
+                      {(() => {
+                        const buyer = allUsers.find(u => u.uid === selectedOrder.userId);
+                        return (
+                          <>
+                            <div className="w-12 h-12 rounded-full overflow-hidden relative border-2 border-white shadow-sm shrink-0">
+                               {buyer?.photoURL ? <Image src={buyer.photoURL} alt="" fill className="object-cover" /> : <div className="w-full h-full bg-slate-200 flex items-center justify-center text-slate-400"><User size={20} /></div>}
+                            </div>
+                            <div>
+                               <p className="text-sm font-bold">{buyer?.name || 'Unknown User'}</p>
+                               <p className="text-[10px] text-muted-foreground font-medium">{buyer?.email}</p>
+                            </div>
+                          </>
+                        )
+                      })()}
+                   </div>
+                </div>
+              )}
+
               <div className="space-y-4">
                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2"><SmartphoneIcon size={14}/> Transaction Details</h4>
                  <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl space-y-3 border border-slate-100 dark:border-white/5">
                     {selectedOrder?.items?.[0]?.gameId === 'accounts' ? (
                        <>
                         <div className="flex justify-between border-b dark:border-white/5 pb-2"><span className="text-xs text-muted-foreground">Seller Phone</span><span className="text-xs font-bold">{selectedOrder?.gameDetails?.sellerPhone || 'N/A'}</span></div>
+                        <div className="flex justify-between border-b dark:border-white/5 pb-2"><span className="text-xs text-muted-foreground">Buyer Provided Name</span><span className="text-xs font-bold">{selectedOrder?.gameDetails?.name || 'N/A'}</span></div>
                         <div className="flex justify-between border-b dark:border-white/5 pb-2"><span className="text-xs text-muted-foreground">Buyer WhatsApp</span><span className="text-xs font-bold text-primary">{selectedOrder?.gameDetails?.whatsappNumber || 'N/A'}</span></div>
                         <div className="flex justify-between"><span className="text-xs text-muted-foreground">Game Mode</span><Badge className="text-[10px] rounded-full uppercase">{selectedOrder?.gameDetails?.gameType}</Badge></div>
                        </>
