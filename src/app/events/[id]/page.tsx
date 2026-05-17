@@ -66,7 +66,7 @@ export default function EventDetailPage() {
       <header className="sticky top-0 z-50 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl border-b border-slate-100 dark:border-white/5 h-16 sm:h-20 flex items-center px-4 sm:px-8 justify-between">
          <div className="flex items-center gap-4 sm:gap-6">
             <button 
-              onClick={() => router.back()} 
+              onClick={() => router.push('/')} 
               className="p-2 sm:p-3 text-slate-900 dark:text-white rounded-full hover:bg-slate-100 dark:hover:bg-slate-900 transition-all active:scale-90"
             >
                 <ArrowLeft size={24} />
