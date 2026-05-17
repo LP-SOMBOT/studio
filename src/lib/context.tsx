@@ -134,6 +134,14 @@ type Banner = {
   createdAt: number;
 };
 
+type PaymentMethod = {
+  id: string;
+  name: string;
+  icon: string;
+  ussdTemplate: string;
+  active: boolean;
+};
+
 type StoreSettings = {
   isLive: boolean;
   announcementTicker?: string;
@@ -141,6 +149,7 @@ type StoreSettings = {
   paymentNumber?: string;
   onboardingImages?: string[];
   sliderImages?: string[]; 
+  paymentMethods?: Record<string, PaymentMethod>;
   appStatus?: {
     offline: boolean;
     offlineTitle?: string;
@@ -221,6 +230,8 @@ type AppContextType = {
   deleteEvent: (id: string) => Promise<void>;
   saveBanner: (banner: Partial<Banner>) => Promise<void>;
   deleteBanner: (id: string) => Promise<void>;
+  savePaymentMethod: (method: Partial<PaymentMethod>) => Promise<void>;
+  deletePaymentMethod: (id: string) => Promise<void>;
   storeSettings: StoreSettings;
   updateStoreSettings: (settings: any) => Promise<void>;
   broadcastNotification: (title: string, body: string, target?: string) => Promise<void>;
@@ -359,7 +370,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const handleHash = () => {
       const rawHash = typeof window !== 'undefined' ? window.location.hash.replace('#', '') : '';
-      // Support suffixes like #games-XYZ to maintain active tab
       const tabName = rawHash.split('-')[0];
       const validTabs = ['home', 'games', 'accounts', 'ranking', 'profile', 'chat', 'notifications', 'orders'];
       if (validTabs.includes(tabName)) setActiveTabState(tabName);
@@ -772,6 +782,24 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const saveBanner = async (b: any) => { if (!rtdb) return; const { id, ...data } = b; if (id) await update(ref(rtdb, `banners/${id}`), data); else await push(ref(rtdb, 'banners'), { ...data, createdAt: Date.now(), active: true }); };
   const deleteBanner = async (id: string) => remove(ref(rtdb, `banners/${id}`));
 
+  const savePaymentMethod = async (m: any) => {
+    if (!rtdb) return;
+    const { id, ...data } = m;
+    if (id) {
+      await update(ref(rtdb, `settings/paymentMethods/${id}`), data);
+    } else {
+      const newRef = push(ref(rtdb, 'settings/paymentMethods'));
+      await set(newRef, { ...data, active: true });
+    }
+    toast({ title: "Payment Method Saved" });
+  };
+
+  const deletePaymentMethod = async (id: string) => {
+    if (!rtdb) return;
+    await remove(ref(rtdb, `settings/paymentMethods/${id}`));
+    toast({ title: "Payment Method Removed" });
+  };
+
   const updateStoreSettings = async (s: any) => update(ref(rtdb, 'settings'), s);
 
   return (
@@ -779,7 +807,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       user: enhancedUser, loading, isGlobalLoading, isInitialLoading, activeTab, setActiveTab, setGlobalLoading: setIsGlobalLoading,
       login, signup, logout, buyNow, orders, allOrders, games, products, allUsers, accountPosts, notifications, adminNotifications, events, banners,
       createOrder, postAccount, updateAccountPost, deleteAccountPost, deleteOrder, buyAccountPost, markNotificationsAsRead, markAdminNotificationsAsRead, updateOrderStatus, updateAccountPostStatus, 
-      updateUserProfile, manageUser, deleteUser, saveGame, deleteGame, saveProduct, deleteProduct, saveEvent, deleteEvent, saveBanner, deleteBanner, storeSettings, updateStoreSettings, 
+      updateUserProfile, manageUser, deleteUser, saveGame, deleteGame, saveProduct, deleteProduct, saveEvent, deleteEvent, saveBanner, deleteBanner, savePaymentMethod, deletePaymentMethod, storeSettings, updateStoreSettings, 
       broadcastNotification, broadcastAdminNotification, messages, allChatSessions, chatTargetId, setChatTargetId, sendMessage, markMessagesAsRead, refreshAdminData,
       theme, toggleTheme
     }}>

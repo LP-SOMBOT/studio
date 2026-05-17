@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo, Suspense } from "react";
@@ -38,7 +39,7 @@ function CheckoutContent() {
   const [step, setStep] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState("EVCPLUS");
+  const [selectedMethodId, setSelectedMethodId] = useState<string>("");
   
   const [gameDetails, setGameDetails] = useState({
     playerID: "",
@@ -46,6 +47,19 @@ function CheckoutContent() {
     whatsappNumber: "",
     senderNumber: ""
   });
+
+  const paymentMethods = useMemo(() => {
+    if (!storeSettings.paymentMethods) return [];
+    return Object.entries(storeSettings.paymentMethods)
+      .map(([id, m]) => ({ ...m, id }))
+      .filter(m => m.active);
+  }, [storeSettings.paymentMethods]);
+
+  useEffect(() => {
+    if (paymentMethods.length > 0 && !selectedMethodId) {
+      setSelectedMethodId(paymentMethods[0].id);
+    }
+  }, [paymentMethods, selectedMethodId]);
 
   const item = useMemo(() => {
     return (products || []).find(p => p.id === productId);
@@ -107,13 +121,15 @@ Fadlan ila soo xiriir.`;
   };
 
   const handlePaymentInitiation = () => {
-    const paymentNum = storeSettings.paymentNumber || "613982172";
+    const method = paymentMethods.find(m => m.id === selectedMethodId);
+    if (!method) return;
+
     const formattedPrice = total.toString().replace('.', '*');
-    const ussd = `*712*${paymentNum}*${formattedPrice}#`;
+    const ussd = method.ussdTemplate.replace('$', formattedPrice);
     
     toast({
       title: "Opening Dialer",
-      description: "Please complete the transaction in the phone dialer.",
+      description: `Please complete the ${method.name} transaction.`,
     });
     
     window.location.href = `tel:${ussd.replace(/#/g, '%23')}`;
@@ -134,6 +150,8 @@ Fadlan ila soo xiriir.`;
       thumbnail: item.thumbnail
     };
 
+    const selectedMethod = paymentMethods.find(m => m.id === selectedMethodId);
+
     const finalDetails = {
       ...gameDetails,
       gameTitle: game?.title || "Unknown Game",
@@ -141,7 +159,7 @@ Fadlan ila soo xiriir.`;
       category: isFreeFire ? "Free Fire" : isBloodStrike ? "Blood Strike" : "General"
     };
 
-    createOrder(paymentMethod, finalDetails, purchaseItem);
+    createOrder(selectedMethod?.name || "Mobile Payment", finalDetails, purchaseItem);
     
     setTimeout(() => {
       setIsProcessing(false);
@@ -348,34 +366,41 @@ Fadlan ila soo xiriir.`;
             <CardTitle className="font-headline font-bold text-2xl text-slate-900 dark:text-white">Lacag Bixinta</CardTitle>
           </CardHeader>
           <CardContent>
-            <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-4 mb-8">
-              {['EVCPLUS', 'ZAAD'].map((method) => (
-                <div 
-                  key={method}
-                  onClick={() => setPaymentMethod(method)}
-                  className={cn(
-                    "flex items-center justify-between p-5 border-2 rounded-[2rem] cursor-pointer transition-all",
-                    paymentMethod === method 
-                      ? 'border-primary bg-primary/5 dark:bg-primary/10' 
-                      : 'border-gray-50 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-slate-800/50'
-                  )}
-                >
-                  <Label htmlFor={method} className="flex items-center gap-4 cursor-pointer w-full">
-                    <div className={cn(
-                      "w-12 h-12 rounded-2xl flex items-center justify-center transition-colors",
-                      paymentMethod === method ? "bg-primary text-white" : "bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-slate-400"
-                    )}>
-                      <Smartphone className="w-6 h-6" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-bold text-lg dark:text-white">{method}</p>
-                      <p className="text-xs text-muted-foreground dark:text-slate-500">Mobile payment integration</p>
-                    </div>
-                    <RadioGroupItem value={method} id={method} className="dark:border-white/20" />
-                  </Label>
-                </div>
-              ))}
-            </RadioGroup>
+            {paymentMethods.length === 0 ? (
+              <div className="py-10 text-center opacity-40">
+                <Smartphone className="mx-auto w-12 h-12 mb-4" />
+                <p className="text-sm font-bold">No payment methods configured.</p>
+              </div>
+            ) : (
+              <RadioGroup value={selectedMethodId} onValueChange={setSelectedMethodId} className="space-y-4 mb-8">
+                {paymentMethods.map((method) => (
+                  <div 
+                    key={method.id}
+                    onClick={() => setSelectedMethodId(method.id)}
+                    className={cn(
+                      "flex items-center justify-between p-5 border-2 rounded-[2rem] cursor-pointer transition-all",
+                      selectedMethodId === method.id 
+                        ? 'border-primary bg-primary/5 dark:bg-primary/10' 
+                        : 'border-gray-50 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-slate-800/50'
+                    )}
+                  >
+                    <Label htmlFor={method.id} className="flex items-center gap-4 cursor-pointer w-full">
+                      <div className={cn(
+                        "w-12 h-12 rounded-2xl flex items-center justify-center transition-colors relative overflow-hidden",
+                        selectedMethodId === method.id ? "bg-primary text-white" : "bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-slate-400"
+                      )}>
+                        {method.icon ? <Image src={method.icon} alt="" fill className="object-cover" unoptimized /> : <Smartphone className="w-6 h-6" />}
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-bold text-lg dark:text-white">{method.name}</p>
+                        <p className="text-xs text-muted-foreground dark:text-slate-500">Fast mobile payment</p>
+                      </div>
+                      <RadioGroupItem value={method.id} id={method.id} className="dark:border-white/20" />
+                    </Label>
+                  </div>
+                ))}
+              </RadioGroup>
+            )}
 
             <div className="bg-gray-50 dark:bg-slate-800/40 p-6 rounded-[2rem] mb-8 border border-gray-100 dark:border-white/5">
               <div className="flex justify-between items-center">
@@ -391,9 +416,10 @@ Fadlan ila soo xiriir.`;
               </Button>
               <Button 
                 onClick={handlePaymentInitiation} 
+                disabled={paymentMethods.length === 0}
                 className="flex-[2] h-14 rounded-2xl text-lg font-bold shadow-lg shadow-primary/20"
               >
-                Ku bixi {paymentMethod}
+                Ku bixi {paymentMethods.find(m => m.id === selectedMethodId)?.name || 'lacagta'}
               </Button>
             </div>
           </CardContent>
@@ -429,7 +455,9 @@ Fadlan ila soo xiriir.`;
                 </div>
                 <div className="text-xs text-muted-foreground dark:text-slate-500 flex justify-between items-center">
                   <span>Method:</span>
-                  <span className="font-bold text-foreground dark:text-slate-200">{paymentMethod}</span>
+                  <span className="font-bold text-foreground dark:text-slate-200">
+                    {paymentMethods.find(m => m.id === selectedMethodId)?.name || 'N/A'}
+                  </span>
                 </div>
               </div>
             </div>

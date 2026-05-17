@@ -82,6 +82,18 @@
         "active": { "type": "boolean" },
         "expiresAt": { "type": "number" }
       }
+    },
+    "PaymentMethod": {
+      "title": "Payment Method",
+      "description": "Configuration for a mobile payment provider.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "icon": { "type": "string" },
+        "ussdTemplate": { "type": "string", "description": "Template for USSD dialer. Use $ as price placeholder." },
+        "active": { "type": "boolean" }
+      }
     }
   },
   "auth": {
@@ -93,7 +105,7 @@
     "accountPosts": { "description": "Marketplace account listings" },
     "orders": { "description": "Unified orders node for top-ups and accounts" },
     "notifications": { "description": "User-specific notifications" },
-    "settings": { "description": "Global shop configuration and fees" },
+    "settings": { "description": "Global shop configuration, fees, and payment methods" },
     "events": { "description": "Active game events" },
     "products": { "description": "Inventory items belonging to specific games" },
     "chats": { "description": "Real-time support chat messages" },

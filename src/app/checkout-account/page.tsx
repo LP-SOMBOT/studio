@@ -21,6 +21,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import Image from "next/image";
 import { toast } from "@/hooks/use-toast";
 
@@ -33,14 +34,28 @@ export default function CheckoutAccountPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [whatsappNumber, setWhatsappNumber] = useState("");
   const [senderNumber, setSenderNumber] = useState("");
+  const [selectedMethodId, setSelectedMethodId] = useState<string>("");
 
   const post = useMemo(() => {
     return (accountPosts || []).find(p => p.id === id);
   }, [accountPosts, id]);
 
-  const paymentNum = storeSettings.paymentNumber || "613982172";
-  const formattedPrice = post ? post.price.toString().replace('.', '*') : "0";
-  const ussdCode = `*712*${paymentNum}*${formattedPrice}#`;
+  const paymentMethods = useMemo(() => {
+    if (!storeSettings.paymentMethods) return [];
+    return Object.entries(storeSettings.paymentMethods)
+      .map(([id, m]) => ({ ...m, id }))
+      .filter(m => m.active);
+  }, [storeSettings.paymentMethods]);
+
+  useEffect(() => {
+    if (paymentMethods.length > 0 && !selectedMethodId) {
+      setSelectedMethodId(paymentMethods[0].id);
+    }
+  }, [paymentMethods, selectedMethodId]);
+
+  const activeMethod = useMemo(() => {
+    return paymentMethods.find(m => m.id === selectedMethodId);
+  }, [paymentMethods, selectedMethodId]);
 
   useEffect(() => {
     if (!loading && !user && step < 4) {
@@ -54,9 +69,13 @@ export default function CheckoutAccountPage() {
   if (!post && step < 4) return null;
 
   const handleProceed = () => {
+    if (!activeMethod) return;
+    const formattedPrice = post ? post.price.toString().replace('.', '*') : "0";
+    const ussdCode = activeMethod.ussdTemplate.replace('$', formattedPrice);
+
     toast({
       title: "Opening Dialer",
-      description: "Please complete the transaction in the phone dialer.",
+      description: `Please complete the ${activeMethod.name} transaction.`,
     });
 
     window.location.href = `tel:${ussdCode.replace(/#/g, '%23')}`;
@@ -87,8 +106,7 @@ export default function CheckoutAccountPage() {
       thumbnail: post.thumbnailUrl
     };
 
-    // Create a real order record
-    createOrder('EVC/ZAAD', { 
+    createOrder(activeMethod?.name || 'Mobile Payment', { 
       platform: post.platform, 
       accountLvl: post.level,
       sellerName: post.authorName,
@@ -97,7 +115,6 @@ export default function CheckoutAccountPage() {
       senderNumber
     }, purchaseItem);
 
-    // Simulate real-time database update
     setTimeout(() => {
       setIsProcessing(false);
       setGlobalLoading(false);
@@ -164,12 +181,6 @@ export default function CheckoutAccountPage() {
                           <span className="text-2xl font-headline font-bold text-primary">${post?.price.toFixed(2)}</span>
                        </div>
                     </div>
-                    <div className="bg-amber-50 dark:bg-amber-500/10 p-4 rounded-2xl border border-amber-100 dark:border-amber-500/20 flex gap-3 text-amber-700 dark:text-amber-400">
-                       <AlertCircle className="shrink-0" />
-                       <p className="text-xs font-bold leading-relaxed">
-                          Marka aad bixiso lacagta, riix "Waan bixiyay" si codsiga loo dhameeyo. Waxaan kugu soo lifaaqi doonaa email iyo password-ka.
-                       </p>
-                    </div>
                  </div>
               </Card>
               <Button 
@@ -193,24 +204,42 @@ export default function CheckoutAccountPage() {
                  <Smartphone size={48} />
               </div>
               <h2 className="text-3xl font-headline font-bold text-slate-900 dark:text-white">Bixi Lacagta</h2>
-              <p className="text-muted-foreground dark:text-slate-400 font-medium">Waxaad bixinaysaa lacag dhan <span className="text-primary font-bold">${post?.price}</span> adigoo isticmaalaya USSD.</p>
               
-              <div className="p-8 bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-white/5 space-y-4">
-                 <p className="text-[10px] font-bold text-muted-foreground dark:text-slate-500 uppercase tracking-widest">USSD Code</p>
-                 <div className="flex items-center justify-center gap-3">
-                    <code className="text-2xl font-mono font-bold text-slate-900 dark:text-white">{ussdCode}</code>
-                    <button 
-                      onClick={() => copyToClipboard(ussdCode)}
-                      className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors text-primary active:scale-90"
-                      title="Copy Code"
-                    >
-                       <Copy size={22} />
-                    </button>
-                 </div>
+              <div className="text-left space-y-4">
+                <p className="text-muted-foreground dark:text-slate-400 font-medium text-center">Dooro habka aad u bixinayso lacag dhan <span className="text-primary font-bold">${post?.price}</span>.</p>
+                
+                {paymentMethods.length === 0 ? (
+                  <div className="p-8 text-center bg-white dark:bg-slate-900 rounded-[2.5rem] opacity-40">
+                    <p className="text-sm font-bold">No methods configured.</p>
+                  </div>
+                ) : (
+                  <RadioGroup value={selectedMethodId} onValueChange={setSelectedMethodId} className="space-y-3">
+                    {paymentMethods.map(method => (
+                      <div 
+                        key={method.id}
+                        onClick={() => setSelectedMethodId(method.id)}
+                        className={cn(
+                          "flex items-center justify-between p-5 border-2 rounded-[2rem] bg-white dark:bg-slate-900 cursor-pointer transition-all",
+                          selectedMethodId === method.id ? "border-primary ring-4 ring-primary/5" : "border-gray-50 dark:border-white/5"
+                        )}
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-2xl relative overflow-hidden bg-slate-50 dark:bg-slate-800 flex items-center justify-center">
+                            {method.icon ? <Image src={method.icon} alt="" fill className="object-cover" unoptimized /> : <Smartphone size={20} />}
+                          </div>
+                          <span className="font-bold text-lg dark:text-white">{method.name}</span>
+                        </div>
+                        <RadioGroupItem value={method.id} id={method.id} />
+                      </div>
+                    ))}
+                  </RadioGroup>
+                )}
               </div>
 
-              <div className="grid grid-cols-1 gap-3">
-                 <Button onClick={handleProceed} className="h-16 rounded-2xl font-bold shadow-lg shadow-primary/20 text-lg">FURE DIALER-KA</Button>
+              <div className="grid grid-cols-1 gap-3 pt-4">
+                 <Button onClick={handleProceed} disabled={paymentMethods.length === 0} className="h-16 rounded-2xl font-bold shadow-lg shadow-primary/20 text-lg">
+                  Bixi {activeMethod?.name || ''}
+                 </Button>
                  <Button variant="ghost" onClick={() => setStep(1)} className="h-12 rounded-2xl font-bold text-muted-foreground dark:text-slate-500">Dib u Noqo</Button>
               </div>
            </div>

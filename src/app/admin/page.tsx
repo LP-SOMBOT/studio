@@ -64,7 +64,8 @@ import {
   CalendarDays,
   CreditCardIcon,
   Trophy,
-  Megaphone
+  Megaphone,
+  CreditCard as PaymentIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -153,6 +154,8 @@ export default function AdminPage() {
     deleteEvent,
     saveBanner,
     deleteBanner,
+    savePaymentMethod,
+    deletePaymentMethod,
     deleteOrder,
     deleteAccountPost,
     logout,
@@ -171,6 +174,7 @@ export default function AdminPage() {
   const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
   const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
   const [isBannerDialogOpen, setIsBannerDialogOpen] = useState(false);
+  const [isPaymentMethodDialogOpen, setIsPaymentMethodDialogOpen] = useState(false);
   const [isUserManageOpen, setIsUserManageOpen] = useState(false);
   const [isOrderDetailOpen, setIsOrderDetailOpen] = useState(false);
   const [isAccountDetailOpen, setIsAccountDetailOpen] = useState(false);
@@ -179,13 +183,14 @@ export default function AdminPage() {
   const [editingGame, setEditingGame] = useState<any>(null);
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [editingEvent, setEditingEvent] = useState<any>(null);
+  const [editingPaymentMethod, setEditingPaymentMethod] = useState<any>(null);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [selectedAccount, setSelectedAccount] = useState<any>(null);
   const [pendingOrderStatus, setPendingStatus] = useState<string>("");
   const [pendingAccountStatus, setPendingAccountStatus] = useState<string>("");
 
-  const [deleteTarget, setDeleteTarget] = useState<{ id: string, type: 'user' | 'game' | 'product' | 'event' | 'banner' | 'account' | 'order' } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string, type: 'user' | 'game' | 'product' | 'event' | 'banner' | 'account' | 'order' | 'payment' } | null>(null);
 
   const [gameForm, setGameForm] = useState({ title: "", icon: "", category: "top-up" });
   const [productForm, setProductForm] = useState({ title: "", gameId: "", category: "top-up", description: "", price: "", discountedPrice: "", thumbnail: "", whatsappNumber: "" });
@@ -201,6 +206,7 @@ export default function AdminPage() {
     durationUnit: "days"
   });
   const [bannerForm, setBannerForm] = useState({ imageUrl: "", linkTo: "" });
+  const [paymentMethodForm, setPaymentMethodForm] = useState({ name: "", icon: "", ussdTemplate: "", active: true });
 
   const [pointAdjustment, setPointAdjustment] = useState("");
   const [isUploading, setIsUploading] = useState(false);
@@ -290,6 +296,17 @@ export default function AdminPage() {
     setIsEventDialogOpen(true);
   };
 
+  const handleOpenPaymentMethodDialog = (method?: any) => {
+    if (method) {
+      setEditingPaymentMethod(method);
+      setPaymentMethodForm({ name: method.name, icon: method.icon || "", ussdTemplate: method.ussdTemplate || "", active: method.active ?? true });
+    } else {
+      setEditingPaymentMethod(null);
+      setPaymentMethodForm({ name: "", icon: "", ussdTemplate: "", active: true });
+    }
+    setIsPaymentMethodDialogOpen(true);
+  };
+
   const handleOpenOrderDialog = (order: any) => {
     setSelectedOrder(order);
     setPendingStatus(order.status);
@@ -302,7 +319,7 @@ export default function AdminPage() {
     setIsAccountDetailOpen(true);
   };
 
-  const confirmDelete = (id: string, type: 'user' | 'game' | 'product' | 'event' | 'banner' | 'account' | 'order') => {
+  const confirmDelete = (id: string, type: 'user' | 'game' | 'product' | 'event' | 'banner' | 'account' | 'order' | 'payment') => {
     setDeleteTarget({ id, type });
     setIsDeleteDialogOpen(true);
   };
@@ -317,6 +334,7 @@ export default function AdminPage() {
       if (deleteTarget.type === 'banner') await deleteBanner(deleteTarget.id);
       if (deleteTarget.type === 'order') await deleteOrder(deleteTarget.id);
       if (deleteTarget.type === 'account') await deleteAccountPost(deleteTarget.id);
+      if (deleteTarget.type === 'payment') await deletePaymentMethod(deleteTarget.id);
       toast({ title: "Deleted Successfully" });
     } finally {
       setDeleteTarget(null);
@@ -359,6 +377,15 @@ export default function AdminPage() {
       await saveEvent({ ...eventForm, id: editingEvent?.id });
       toast({ title: "Event Saved" });
       setIsEventDialogOpen(false);
+    } finally { setIsUploading(false); }
+  };
+
+  const handleSavePaymentMethod = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsUploading(true);
+    try {
+      await savePaymentMethod({ ...paymentMethodForm, id: editingPaymentMethod?.id });
+      setIsPaymentMethodDialogOpen(false);
     } finally { setIsUploading(false); }
   };
 
@@ -435,7 +462,7 @@ export default function AdminPage() {
     }
   };
 
-  const handleImageUpload = async (file: File, target: 'game' | 'product' | 'event' | 'banner' | 'offline' | 'logo' | 'onboarding') => {
+  const handleImageUpload = async (file: File, target: 'game' | 'product' | 'event' | 'banner' | 'offline' | 'logo' | 'onboarding' | 'payment') => {
     setIsUploading(true);
     try {
       const url = await uploadToImgbb(file);
@@ -443,6 +470,7 @@ export default function AdminPage() {
       if (target === 'product') setProductForm(p => ({ ...p, thumbnail: url }));
       if (target === 'event') setEventForm(e => ({ ...e, thumbnailUrl: url }));
       if (target === 'banner') setBannerForm(b => ({ ...b, imageUrl: url }));
+      if (target === 'payment') setPaymentMethodForm(p => ({ ...p, icon: url }));
       if (target === 'offline') setAppStatusForm(a => ({ ...a, offlineImageUrl: url }));
       if (target === 'logo') updateStoreSettings({ logo: url });
       if (target === 'onboarding') {
@@ -535,6 +563,11 @@ export default function AdminPage() {
       </div>
     </div>
   );
+
+  const paymentMethods = useMemo(() => {
+    if (!storeSettings.paymentMethods) return [];
+    return Object.entries(storeSettings.paymentMethods).map(([id, m]) => ({ ...m, id }));
+  }, [storeSettings.paymentMethods]);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex overflow-hidden">
@@ -663,9 +696,9 @@ export default function AdminPage() {
                             {p.processedBy ? (
                               <div className="flex items-center gap-2">
                                 <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden relative border border-white dark:border-white/10">
-                                  {p.processedBy.photoURL ? <Image src={p.processedBy.photoURL} alt="" fill className="object-cover" /> : <User size={12} className="m-auto mt-1" />}
+                                  {p.processedBy.photoURL ? <Image src={o.processedBy.photoURL} alt="" fill className="object-cover" /> : <User size={12} className="m-auto mt-1" />}
                                 </div>
-                                <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 truncate max-w-[80px]">{p.processedBy.name}</span>
+                                <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 truncate max-w-[80px]">{o.processedBy.name}</span>
                               </div>
                             ) : <span className="text-[10px] text-slate-300 italic">Unassigned</span>}
                           </TableCell>
@@ -881,9 +914,9 @@ export default function AdminPage() {
                          <Card key={banner.id} className="relative aspect-[21/9] rounded-2xl overflow-hidden border dark:border-white/5 group shadow-sm bg-slate-50 dark:bg-slate-800">
                            <Image src={banner.imageUrl} alt="" fill className="object-cover" unoptimized />
                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
-                              <Button size="icon" variant="destructive" className="h-12 w-12 rounded-full shadow-xl" onClick={() => confirmDelete(banner.id, 'banner')}>
+                              <button className="h-12 w-12 rounded-full bg-red-600 text-white flex items-center justify-center shadow-xl hover:bg-red-700 transition-colors" onClick={() => confirmDelete(banner.id, 'banner')}>
                                  <Trash2 size={24} />
-                              </Button>
+                              </button>
                            </div>
                            {banner.linkTo && (
                              <div className="absolute bottom-2 left-2 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold text-white flex items-center gap-1">
@@ -908,19 +941,50 @@ export default function AdminPage() {
                    <AccordionTrigger className="hover:no-underline">
                      <div className="flex items-center gap-3 sm:gap-4 text-left">
                        <div className="p-2 sm:p-3 bg-green-50 dark:bg-green-500/10 text-green-500 rounded-xl sm:rounded-2xl shrink-0"><CreditCardIcon size={20} /></div>
-                       <div><h4 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white">Payment Configuration</h4><p className="text-[10px] sm:text-xs text-muted-foreground">Recipient numbers for EVC/ZAAD</p></div>
+                       <div><h4 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white">Payment Configuration</h4><p className="text-[10px] sm:text-xs text-muted-foreground">Recipient numbers and dynamic USSD</p></div>
                      </div>
                    </AccordionTrigger>
-                   <AccordionContent className="pb-6 sm:pb-8 space-y-6">
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-bold uppercase text-slate-400">Primary Payment Number (EVC Plus / ZAAD)</Label>
+                   <AccordionContent className="pb-6 sm:pb-8 space-y-8">
+                      <div className="space-y-4">
+                        <Label className="text-[10px] font-bold uppercase text-slate-400">Main Account Listing Number (Legacy)</Label>
                         <Input 
                           placeholder="e.g. 613982172" 
                           defaultValue={storeSettings.paymentNumber} 
                           onBlur={e => updateStoreSettings({ paymentNumber: e.target.value })} 
                           className="rounded-xl dark:bg-slate-800 border-none font-bold h-14 text-lg" 
                         />
-                        <p className="text-[10px] text-muted-foreground italic px-2">Used for standard top-ups and listing fee payments.</p>
+                        <p className="text-[10px] text-muted-foreground italic px-2">Used for standard account listing fee payments.</p>
+                      </div>
+
+                      <div className="h-px bg-slate-100 dark:bg-white/5" />
+
+                      <div className="space-y-6">
+                        <div className="flex items-center justify-between">
+                           <h4 className="font-bold text-slate-900 dark:text-white">Dynamic Payment Methods</h4>
+                           <Button size="sm" onClick={() => handleOpenPaymentMethodDialog()} className="rounded-full gap-2 px-4 h-9">
+                              <Plus size={16} /> Add Method
+                           </Button>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                           {paymentMethods.map(method => (
+                             <Card key={method.id} className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border-none shadow-sm flex items-center justify-between group">
+                                <div className="flex items-center gap-3">
+                                   <div className="w-12 h-12 rounded-xl bg-white dark:bg-slate-700 relative overflow-hidden shadow-inner flex items-center justify-center text-slate-400">
+                                      {method.icon ? <Image src={method.icon} alt="" fill className="object-cover" unoptimized /> : <PaymentIcon size={20} />}
+                                   </div>
+                                   <div>
+                                      <p className="font-bold text-sm">{method.name}</p>
+                                      <p className="text-[10px] font-mono text-muted-foreground truncate max-w-[120px]">{method.ussdTemplate}</p>
+                                   </div>
+                                </div>
+                                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                   <Button size="icon" variant="ghost" className="h-8 w-8 text-blue-500" onClick={() => handleOpenPaymentMethodDialog(method)}><Edit size={16} /></Button>
+                                   <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500" onClick={() => confirmDelete(method.id, 'payment')}><Trash2 size={16} /></Button>
+                                </div>
+                             </Card>
+                           ))}
+                        </div>
                       </div>
                    </AccordionContent>
                  </AccordionItem>
@@ -1405,6 +1469,43 @@ export default function AdminPage() {
                  {isUploading ? <Loader2 className="animate-spin" /> : 'Publish Banner'}
               </Button>
            </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isPaymentMethodDialogOpen} onOpenChange={setIsPaymentMethodDialogOpen}>
+        <DialogContent className="max-w-md w-[95vw] rounded-[2rem] p-0 overflow-hidden border-none shadow-2xl bg-white dark:bg-slate-900">
+          <div className="bg-green-600 p-6 text-white"><DialogTitle className="text-xl font-headline font-bold">{editingPaymentMethod ? 'Edit Method' : 'Add Payment Method'}</DialogTitle></div>
+          <form onSubmit={handleSavePaymentMethod} className="p-6 space-y-6">
+            <div className="space-y-2">
+              <Label className="text-xs font-bold uppercase text-slate-400">Method Name</Label>
+              <Input value={paymentMethodForm.name} onChange={e => setPaymentMethodForm({...paymentMethodForm, name: e.target.value})} required placeholder="e.g. EVC Plus" className="rounded-xl h-12" />
+            </div>
+            
+            <div className="space-y-2">
+              <Label className="text-xs font-bold uppercase text-slate-400">Icon / Logo</Label>
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-xl bg-slate-100 dark:bg-slate-800 relative overflow-hidden shrink-0 border border-dashed border-slate-300 dark:border-white/10 flex items-center justify-center">
+                  {paymentMethodForm.icon ? <Image src={paymentMethodForm.icon} alt="" fill className="object-cover" unoptimized /> : <ImageIcon className="text-slate-300" />}
+                </div>
+                <Input type="file" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'payment')} className="flex-1 rounded-xl h-10" />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs font-bold uppercase text-slate-400">USSD Template</Label>
+              <Input value={paymentMethodForm.ussdTemplate} onChange={e => setPaymentMethodForm({...paymentMethodForm, ussdTemplate: e.target.value})} required placeholder="*712*613982172*$#" className="rounded-xl h-12 font-mono" />
+              <p className="text-[10px] text-muted-foreground italic">* Use $ as the price placeholder.</p>
+            </div>
+
+            <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
+              <Label className="font-bold">Active Status</Label>
+              <Switch checked={paymentMethodForm.active} onCheckedChange={val => setPaymentMethodForm({...paymentMethodForm, active: val})} />
+            </div>
+
+            <Button type="submit" disabled={isUploading} className="w-full h-14 rounded-2xl font-bold bg-green-600 hover:bg-green-700 shadow-xl shadow-green-600/20">
+              {isUploading ? <Loader2 className="animate-spin" /> : editingPaymentMethod ? 'Update Payment Method' : 'Save Payment Method'}
+            </Button>
+          </form>
         </DialogContent>
       </Dialog>
 
