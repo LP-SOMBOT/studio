@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -133,7 +132,7 @@ export default function AccountsView() {
                 />
               </div>
               <button onClick={() => setIsActivityModalOpen(true)} className="hidden md:flex h-14 w-14 lg:h-16 lg:w-16 items-center justify-center bg-white dark:bg-slate-900 rounded-[1.5rem] shadow-sm text-slate-400 hover:text-primary transition-colors border border-gray-50 dark:border-white/5">
-                 <Activity size={28} />
+                 <Activity className="w-7 h-7 lg:w-8 lg:h-8" />
               </button>
            </div>
         </div>
@@ -141,7 +140,7 @@ export default function AccountsView() {
         {filteredPosts.length === 0 ? (
           <div className="py-20 md:py-32 text-center space-y-4 md:space-y-6 opacity-30 flex flex-col items-center">
             <div className="w-20 h-20 md:w-32 md:h-32 bg-slate-200 dark:bg-slate-800 rounded-full flex items-center justify-center">
-              <ShieldCheck size={40} className="md:size-16 text-slate-400 dark:text-slate-600" />
+              <ShieldCheck className="w-10 h-10 md:w-16 md:h-16 text-slate-400 dark:text-slate-600" />
             </div>
             <div>
                <h3 className="font-bold text-xl md:text-3xl text-slate-900 dark:text-white">No active listings</h3>
@@ -170,7 +169,7 @@ export default function AccountsView() {
           onClick={() => setIsPostSheetOpen(true)}
           className="fixed bottom-24 right-4 md:right-6 lg:bottom-12 lg:right-12 w-14 h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 bg-amber-500 text-white rounded-2xl md:rounded-[2rem] shadow-2xl shadow-amber-500/30 flex items-center justify-center active:scale-90 transition-all z-[90] hover:rotate-90"
         >
-          <Plus size={32} className="md:size-10" strokeWidth={3} />
+          <Plus className="w-8 h-8 md:w-10 md:h-10" strokeWidth={3} />
         </button>
       )}
 
@@ -190,7 +189,7 @@ export default function AccountsView() {
             <div className="p-6 md:p-10 pt-0 space-y-4 md:space-y-6 max-h-[60vh] overflow-y-auto scrollbar-hide">
                {myActivity.length === 0 ? (
                  <div className="py-10 md:py-16 text-center opacity-30">
-                    <Clock size={32} className="md:size-12 mx-auto mb-4" />
+                    <Clock className="w-8 h-8 md:w-12 md:h-12 mx-auto mb-4" />
                     <p className="text-sm md:text-lg font-bold">No recent activity</p>
                  </div>
                ) : (
@@ -225,7 +224,7 @@ export default function AccountsView() {
         <DialogContent className="max-w-sm rounded-[2rem] bg-white dark:bg-slate-900 p-6 md:p-8 mx-4">
            <DialogHeader className="text-center">
              <div className="w-12 h-12 md:w-16 md:h-16 bg-red-50 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500">
-               <Trash2 size={24} className="md:size-8" />
+               <Trash2 className="w-6 h-6 md:w-8 md:h-8" />
              </div>
              <DialogTitle className="text-xl md:text-2xl font-bold">Delete Post?</DialogTitle>
              <DialogDescription className="font-bold text-slate-500 pt-2 text-xs md:text-sm">
@@ -322,7 +321,7 @@ function AccountPostCard({ post, onClick, onEdit, onDelete, isOwner, isAdmin }: 
              onClick={handleShare}
              className="w-8 h-8 md:w-10 md:h-10 rounded-xl md:rounded-2xl flex items-center justify-center text-primary bg-primary/10 hover:bg-primary/20 transition-colors active:scale-90"
            >
-              <Share2 size={16} className="md:size-18" />
+              <Share2 className="w-4 h-4 md:w-[18px] md:h-[18px]" />
            </button>
            {(isOwner || isAdmin) && (
              <>
@@ -337,7 +336,7 @@ function AccountPostCard({ post, onClick, onEdit, onDelete, isOwner, isAdmin }: 
         {post.thumbnailUrl ? (
           <Image src={post.thumbnailUrl} alt="" fill className="object-contain group-hover:scale-105 transition-transform duration-1000" unoptimized />
         ) : (
-          <div className="w-full h-full flex items-center justify-center opacity-10"><Gamepad2 size={60} className="md:size-80" /></div>
+          <div className="w-full h-full flex items-center justify-center opacity-10"><Gamepad2 className="w-[60px] h-[60px] md:w-[80px] md:h-[80px]" /></div>
         )}
         
         <div className="absolute top-3 right-3 md:top-4 md:right-4 flex flex-col gap-1 md:gap-2 items-end">
@@ -370,7 +369,7 @@ function AccountPostCard({ post, onClick, onEdit, onDelete, isOwner, isAdmin }: 
            </div>
            {(isOwner || isAdmin) && timeLeft && (
              <Badge variant="outline" className={cn("text-[8px] md:text-[10px] font-black border-2 rounded-lg md:rounded-xl py-0.5 md:py-1 px-2 md:px-3 shrink-0", isExpired ? "text-red-500 border-red-500/20" : "text-primary border-primary/20 bg-primary/5")}>
-               <Clock size={10} className="md:size-12 mr-1 md:mr-1.5" /> {timeLeft}
+               <Clock className="w-2.5 h-2.5 md:w-3 md:h-3 mr-1 md:mr-1.5" /> {timeLeft}
              </Badge>
            )}
         </div>
@@ -389,7 +388,7 @@ function AccountPostCard({ post, onClick, onEdit, onDelete, isOwner, isAdmin }: 
              <p className="text-2xl md:text-4xl font-headline font-bold text-primary tracking-tighter">${post.price?.toFixed(2)}</p>
            </div>
            <Button className="rounded-xl md:rounded-[1.5rem] h-10 md:h-14 px-4 md:px-8 font-black text-xs md:text-base shadow-xl shadow-primary/20 gap-1.5 md:gap-2 uppercase tracking-wide shrink-0">
-             Details <ArrowRight size={16} className="md:size-20" />
+             Details <ArrowRight className="w-4 h-4 md:w-5 md:h-5" />
            </Button>
         </div>
       </div>
@@ -541,7 +540,7 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
              <div className="space-y-4 md:space-y-6">
                 <div className="flex items-center gap-3">
-                   <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-500"><Gamepad2 size={18} className="md:size-20" /></div>
+                   <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-500"><Gamepad2 className="w-[18px] h-[18px] md:w-5 md:h-5" /></div>
                    <h3 className="font-headline font-bold text-lg md:text-xl dark:text-white">Game Details</h3>
                 </div>
                 <div className="space-y-4">
@@ -562,7 +561,7 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
 
              <div className="space-y-4 md:space-y-6">
                 <div className="flex items-center gap-3">
-                   <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-blue-500"><Clock size={18} className="md:size-20" /></div>
+                   <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-blue-500"><Clock className="w-[18px] h-[18px] md:w-5 md:h-5" /></div>
                    <h3 className="font-headline font-bold text-lg md:text-xl dark:text-white">Listing Duration</h3>
                 </div>
                 <FormGroup label="Muda (Term)">
@@ -580,7 +579,7 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
           {/* Section: Assets */}
           <div className="space-y-6 md:space-y-8">
              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-purple-50 dark:bg-purple-500/10 flex items-center justify-center text-purple-500"><Star size={18} className="md:size-20" /></div>
+                <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-purple-50 dark:bg-purple-500/10 flex items-center justify-center text-purple-500"><Star className="w-[18px] h-[18px] md:w-5 md:h-5" /></div>
                 <h3 className="font-headline font-bold text-lg md:text-xl dark:text-white">Account Assets</h3>
              </div>
              
@@ -609,18 +608,18 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
           {/* Gallery */}
           <div className="space-y-4 md:space-y-6">
             <div className="flex items-center gap-3">
-               <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-cyan-50 dark:bg-cyan-500/10 flex items-center justify-center text-cyan-500"><ImageIcon size={18} className="md:size-20" /></div>
+               <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-cyan-50 dark:bg-cyan-500/10 flex items-center justify-center text-cyan-500"><ImageIcon className="w-[18px] h-[18px] md:w-5 md:h-5" /></div>
                <h3 className="font-headline font-bold text-lg md:text-xl dark:text-white">Account Gallery</h3>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
                {previews.map((url, idx) => (
                  <div key={idx} className="relative aspect-video rounded-xl md:rounded-[1.5rem] overflow-hidden group shadow-lg bg-slate-100 border border-slate-200 dark:border-white/5">
                     <Image src={url} alt="" fill className="object-cover" unoptimized />
-                    <button type="button" onClick={() => removeImage(idx)} className="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1.5 md:p-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-all shadow-xl active:scale-110"><X size={14} className="md:size-16" /></button>
+                    <button type="button" onClick={() => removeImage(idx)} className="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1.5 md:p-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-all shadow-xl active:scale-110"><X className="w-3.5 h-3.5 md:w-4 md:h-4" /></button>
                  </div>
                ))}
                <label className="aspect-video rounded-xl md:rounded-[1.5rem] border-2 border-dashed border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800/40 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all flex flex-col items-center justify-center gap-2 cursor-pointer text-slate-400 group h-full">
-                  <Plus size={24} className="md:size-32 group-hover:text-primary transition-colors" />
+                  <Plus className="w-6 h-6 md:w-8 md:h-8 group-hover:text-primary transition-colors" />
                   <span className="text-[8px] md:text-[10px] font-black uppercase tracking-widest">Add Media</span>
                   <input type="file" accept="image/*" multiple onChange={handleFileChange} className="hidden" />
                </label>
@@ -631,12 +630,12 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10 items-end">
              <div className="space-y-4 md:space-y-6">
                 <div className="flex items-center gap-3">
-                   <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-green-50 dark:bg-green-500/10 flex items-center justify-center text-green-500"><DollarSign size={18} className="md:size-20" /></div>
+                   <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-green-50 dark:bg-green-500/10 flex items-center justify-center text-green-500"><DollarSign className="w-[18px] h-[18px] md:w-5 md:h-5" /></div>
                    <h3 className="font-headline font-bold text-lg md:text-xl dark:text-white">Pricing & Sale</h3>
                 </div>
                 <FormInput label="WhatsApp (Seller)" value={formData.phone} onChange={v => setFormData({...formData, phone: v})} placeholder="25261..." />
                 <div className="p-6 md:p-8 bg-slate-950 rounded-2xl md:rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden">
-                   <div className="absolute top-0 right-0 p-6 md:p-10 opacity-5"><DollarSign size={60} className="md:size-100" /></div>
+                   <div className="absolute top-0 right-0 p-6 md:p-10 opacity-5"><DollarSign className="w-[60px] h-[60px] md:w-[100px] md:h-[100px]" /></div>
                    <label className="text-[9px] md:text-[11px] font-black text-white/40 uppercase tracking-[0.2em] md:tracking-[0.3em] ml-1 md:ml-2 block mb-2 md:mb-4">Account Sale Price ($)</label>
                    <div className="relative z-10 flex items-center">
                       <span className="text-2xl md:text-4xl font-headline font-bold text-primary mr-1 md:mr-2">$</span>
@@ -655,7 +654,7 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
              <div className="space-y-4 md:space-y-6">
                 <div className="p-6 md:p-8 bg-amber-50 dark:bg-amber-500/10 rounded-2xl md:rounded-[2.5rem] border border-amber-100 dark:border-amber-500/20 space-y-2 md:space-y-4">
                    <div className="flex items-center gap-2 text-amber-800 dark:text-amber-400">
-                      <Info size={18} className="md:size-24" />
+                      <Info className="w-4 h-4 md:w-6 md:h-6" />
                       <p className="text-sm md:text-base font-black uppercase tracking-widest">Listing Fee Policy</p>
                    </div>
                    <p className="text-xs md:text-sm lg:text-base font-bold text-amber-700/80 dark:text-amber-500/80 leading-relaxed">

@@ -172,7 +172,7 @@ export default function ProfileView() {
                   <div className="relative w-32 h-32 md:w-44 md:h-44 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800 group border-[4px] md:border-[6px] border-slate-50 dark:border-slate-800 shadow-2xl ring-4 md:ring-8 ring-primary/5">
                      {editData.photoURL ? <Image src={editData.photoURL} alt="" fill className="object-cover" unoptimized /> : <div className="w-full h-full flex flex-col items-center justify-center text-slate-300"><User size={50} /></div>}
                      <input type="file" accept="image/*" onChange={e => e.target.files?.[0] && handlePhotoUpload(e.target.files[0])} className="absolute inset-0 opacity-0 cursor-pointer z-10" />
-                     <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"><Camera size={24} className="md:size-32" /> <span className="text-[10px] font-black mt-2 uppercase tracking-widest">Update</span></div>
+                     <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"><Camera className="w-6 h-6 md:w-8 md:h-8" /> <span className="text-[10px] font-black mt-2 uppercase tracking-widest">Update</span></div>
                      {isSaving && <div className="absolute inset-0 bg-white/60 dark:bg-black/60 flex items-center justify-center text-primary z-20"><Loader2 className="animate-spin w-6 h-6 md:w-8 md:h-8" /></div>}
                   </div>
                </div>
