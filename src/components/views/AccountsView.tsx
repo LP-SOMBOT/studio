@@ -273,7 +273,7 @@ function PostAccountView({ editingPost, onCancel, onComplete }: { editingPost?: 
     level: editingPost?.level?.toString() || '',
     price: editingPost?.price?.toString() || '',
     phone: editingPost?.phone || '',
-    thumbnailUrl: editingPost?.thumbnailUrl || '',
+    imageUrls: editingPost?.imageUrls || (editingPost?.thumbnailUrl ? [editingPost.thumbnailUrl] : []),
     evoWeapons: editingPost?.evoWeapons?.toString() || '0',
     totalWeapons: editingPost?.totalWeapons?.toString() || '0',
     emotes: editingPost?.emotes?.toString() || '0',
@@ -289,7 +289,7 @@ function PostAccountView({ editingPost, onCancel, onComplete }: { editingPost?: 
   }, [formData.term, storeSettings]);
 
   const handleNext = () => {
-    if (!formData.level || !formData.price || !formData.phone || !formData.thumbnailUrl) {
+    if (!formData.level || !formData.price || !formData.phone || formData.imageUrls.length === 0) {
       toast({ title: "Fadlan buuxi meelaha banaan", variant: "destructive" });
       return;
     }
@@ -309,6 +309,7 @@ function PostAccountView({ editingPost, onCancel, onComplete }: { editingPost?: 
     try {
       const payload = {
         ...formData,
+        thumbnailUrl: formData.imageUrls[0] || '', // Auto-set first image as thumbnail
         level: parseInt(formData.level),
         price: parseFloat(formData.price),
         evoWeapons: parseInt(formData.evoWeapons),
@@ -337,13 +338,23 @@ function PostAccountView({ editingPost, onCancel, onComplete }: { editingPost?: 
     setIsSubmitting(true);
     try {
       const url = await uploadToImgbb(file);
-      setFormData(prev => ({ ...prev, thumbnailUrl: url }));
+      setFormData(prev => ({ 
+        ...prev, 
+        imageUrls: [...prev.imageUrls, url] 
+      }));
       toast({ title: "Sawirka waa la galiyay!" });
     } catch (e) {
       toast({ title: "Upload failed", variant: "destructive" });
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const removeImage = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      imageUrls: prev.imageUrls.filter((_, i) => i !== index)
+    }));
   };
 
   return (
@@ -383,33 +394,38 @@ function PostAccountView({ editingPost, onCancel, onComplete }: { editingPost?: 
           <div className="max-w-3xl mx-auto w-full">
              {step === 1 && (
                <div className="space-y-6 md:space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                  {/* Hero Image Section */}
-                  <div className="relative group">
-                     <div className={cn(
-                       "relative w-full aspect-video rounded-[1.5rem] md:rounded-[3rem] bg-white dark:bg-slate-900 border-2 md:border-4 border-dashed border-slate-200 dark:border-white/10 flex items-center justify-center overflow-hidden shadow-2xl transition-all",
-                       formData.thumbnailUrl ? "border-solid border-primary/20" : "hover:border-primary/40"
-                     )}>
-                        {formData.thumbnailUrl ? (
-                          <Image src={formData.thumbnailUrl} alt="" fill className="object-contain" unoptimized />
-                        ) : (
-                          <div className="flex flex-col items-center gap-4 opacity-40 group-hover:opacity-100 transition-opacity">
-                             <div className="w-16 h-16 md:w-24 md:h-24 rounded-[1.5rem] md:rounded-[2.5rem] bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-primary shadow-lg border border-slate-100 dark:border-white/5">
-                                <ImageIcon size={32} className="md:size-48" />
-                             </div>
-                             <div className="text-center">
-                                <p className="text-xs md:text-xl font-headline font-bold text-slate-900 dark:text-white uppercase tracking-tight">Sawirka Account-ka</p>
-                                <p className="text-[8px] md:text-[11px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Tap here to upload</p>
-                             </div>
-                          </div>
-                        )}
-                        <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer z-10" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0])} />
-                        {isSubmitting && <div className="absolute inset-0 bg-white/80 dark:bg-black/80 flex flex-col items-center justify-center z-20 gap-3"><Loader2 className="animate-spin text-primary w-8 h-8" /><p className="text-xs font-bold uppercase tracking-widest animate-pulse">Uploading...</p></div>}
+                  {/* Hero Gallery Section */}
+                  <div className="space-y-4">
+                     <p className="text-[10px] md:text-xs font-black text-muted-foreground uppercase tracking-[0.2em] ml-1">Account Gallery (First image is thumbnail)</p>
+                     
+                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4">
+                        {formData.imageUrls.map((url, idx) => (
+                           <div key={url + idx} className="group relative aspect-square rounded-2xl md:rounded-[2rem] overflow-hidden bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-white/5 shadow-sm">
+                              <Image src={url} alt="" fill className="object-cover" unoptimized />
+                              {idx === 0 && <Badge className="absolute top-2 left-2 bg-primary text-white text-[8px] font-black uppercase px-2 py-0">Main</Badge>}
+                              <button 
+                                onClick={() => removeImage(idx)}
+                                className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                 <X size={12} />
+                              </button>
+                           </div>
+                        ))}
                         
-                        {formData.thumbnailUrl && (
-                          <div className="absolute bottom-4 right-4 z-20">
-                             <Badge className="bg-primary text-white font-black px-4 py-1.5 rounded-full shadow-xl shadow-primary/30 uppercase text-[10px] tracking-widest border-none">CHANGE IMAGE</Badge>
-                          </div>
-                        )}
+                        <div className={cn(
+                          "relative aspect-square rounded-2xl md:rounded-[2rem] bg-white dark:bg-slate-900 border-2 border-dashed border-slate-200 dark:border-white/10 flex flex-col items-center justify-center overflow-hidden transition-all hover:border-primary/40 group",
+                          formData.imageUrls.length === 0 && "col-span-full aspect-video md:rounded-[3rem]"
+                        )}>
+                           <ImageIcon size={formData.imageUrls.length === 0 ? 32 : 24} className="text-slate-300 group-hover:text-primary transition-colors" />
+                           <p className={cn(
+                             "font-black uppercase tracking-widest mt-2 transition-colors group-hover:text-primary",
+                             formData.imageUrls.length === 0 ? "text-[10px] md:text-sm" : "text-[8px]"
+                           )}>
+                             {formData.imageUrls.length === 0 ? "Add Account Photos" : "Add More"}
+                           </p>
+                           <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer z-10" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0])} />
+                           {isSubmitting && <div className="absolute inset-0 bg-white/80 dark:bg-black/80 flex items-center justify-center z-20"><Loader2 className="animate-spin text-primary" /></div>}
+                        </div>
                      </div>
                   </div>
 
