@@ -121,6 +121,11 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
@@ -684,7 +689,16 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex overflow-hidden">
+      {/* Desktop Sidebar */}
       <aside className={cn("hidden md:flex h-screen bg-white dark:bg-slate-900 border-r border-slate-100 dark:border-white/5 flex-col transition-all duration-300 z-40", isSidebarExpanded ? "w-64" : "w-20")}><SidebarContent /></aside>
+
+      {/* Mobile Sidebar */}
+      <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+        <SheetContent side="left" className="p-0 w-72 bg-white dark:bg-slate-900 border-none">
+          <SidebarContent isMobile={true} />
+        </SheetContent>
+      </Sheet>
+
       <div className="flex-1 flex flex-col overflow-hidden w-full">
         <header className="h-20 bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border-b dark:border-white/5 flex items-center justify-between px-4 sm:px-6 md:px-10 shrink-0">
           <div className="flex items-center gap-4">
@@ -692,7 +706,40 @@ export default function AdminPage() {
             <h2 className="text-base sm:text-xl font-headline font-bold uppercase tracking-tight text-slate-900 dark:text-white truncate">{activeView.replace('-', ' ')}</h2>
           </div>
           <div className="flex items-center gap-2 sm:gap-4">
-            <button onClick={() => markAdminNotificationsAsRead()} className="relative p-2.5 bg-slate-50 dark:bg-slate-800 rounded-full text-slate-500 hover:text-primary transition-colors"><Bell size={20} />{unreadAdminNotifs > 0 && <span className="absolute top-0 right-0 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white dark:border-slate-800">{unreadAdminNotifs > 9 ? '9+' : unreadAdminNotifs}</span>}</button>
+            <Popover>
+              <PopoverTrigger asChild>
+                <button className="relative p-2.5 bg-slate-50 dark:bg-slate-800 rounded-full text-slate-500 hover:text-primary transition-colors focus:outline-none">
+                  <Bell size={20} />
+                  {unreadAdminNotifs > 0 && <span className="absolute top-0 right-0 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white dark:border-slate-800">{unreadAdminNotifs > 9 ? '9+' : unreadAdminNotifs}</span>}
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 p-0 rounded-2xl border-none shadow-2xl bg-white dark:bg-slate-900">
+                <div className="p-4 border-b dark:border-white/5 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50 rounded-t-2xl">
+                  <h3 className="font-bold text-xs uppercase tracking-widest text-slate-400">Admin Alerts</h3>
+                  <Button variant="ghost" size="sm" onClick={() => markAdminNotificationsAsRead()} className="h-7 text-[10px] font-black uppercase text-primary hover:bg-primary/5">Mark Read</Button>
+                </div>
+                <div className="max-h-[400px] overflow-y-auto p-2 space-y-1 scrollbar-hide">
+                  {adminNotifications.length === 0 ? (
+                    <div className="py-12 text-center flex flex-col items-center gap-2 opacity-30">
+                       <Bell size={24} />
+                       <p className="text-[10px] font-bold uppercase tracking-widest">No active alerts</p>
+                    </div>
+                  ) : (
+                    adminNotifications.map(n => (
+                      <div key={n.id} className={cn("p-4 rounded-xl transition-all border border-transparent", n.readBy?.[user.uid] ? "opacity-50" : "bg-primary/5 hover:bg-primary/10 border-primary/10")}>
+                        <p className="text-xs font-bold text-slate-900 dark:text-white leading-tight">{n.title}</p>
+                        <p className="text-[10px] text-muted-foreground mt-1 line-clamp-2 leading-relaxed">{n.body}</p>
+                        <div className="flex items-center gap-1.5 mt-2 opacity-60">
+                           <Clock size={10} />
+                           <p className="text-[8px] font-black uppercase tracking-tighter">{formatDistanceToNow(new Date(n.createdAt), { addSuffix: true })}</p>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </PopoverContent>
+            </Popover>
+
              <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 bg-green-50 dark:bg-green-950/20 text-green-600 dark:text-green-400 rounded-full cursor-pointer hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors" onClick={refreshAdminData}><RefreshCw size={12} className="animate-spin" /><span className="text-[10px] font-bold uppercase">Live</span></div>
             <div className="flex items-center gap-2 sm:gap-3"><div className="text-right hidden xs:block"><p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate max-w-[100px]">{user?.name}</p><p className="text-[9px] sm:text-[10px] text-primary uppercase font-bold">{user?.role}</p></div><div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-100 dark:bg-slate-800 border-2 border-white dark:border-slate-700 shadow-sm overflow-hidden relative shrink-0">{user?.photoURL ? <Image src={user.photoURL} alt="" fill className="object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-300 dark:text-slate-600"><User size={16} /></div>}</div></div>
           </div>
@@ -709,16 +756,21 @@ export default function AdminPage() {
           {activeView === 'orders' && (
             <div className="space-y-6">
               <div className="flex flex-col gap-4">
-                <Input placeholder="Search ID or Player..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full max-w-md h-12 rounded-xl dark:bg-slate-900 dark:border-white/5" />
-                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                  {["all", "pending", "processing", "successful", "cancelled"].map(s => (
-                    <Button key={s} variant={orderStatusFilter === s ? "default" : "outline"} onClick={() => setOrderStatusFilter(s)} className="rounded-full h-10 sm:h-12 px-4 sm:px-6 uppercase font-bold text-[10px] sm:text-xs shrink-0 dark:border-white/5">{s}</Button>
-                  ))}
+                <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+                  <div className="relative w-full max-w-md">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <Input placeholder="Search ID or Player..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-11 h-12 rounded-xl dark:bg-slate-900 dark:border-white/5 font-bold" />
+                  </div>
+                  <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide w-full sm:w-auto">
+                    {["all", "pending", "processing", "successful", "cancelled"].map(s => (
+                      <Button key={s} variant={orderStatusFilter === s ? "default" : "outline"} onClick={() => setOrderStatusFilter(s)} className="rounded-full h-10 px-6 uppercase font-black text-[10px] shrink-0 dark:border-white/5">{s}</Button>
+                    ))}
+                  </div>
                 </div>
               </div>
               <Card className="rounded-[1.5rem] sm:rounded-[2rem] border-none shadow-xl overflow-hidden bg-white dark:bg-slate-900">
                 <div className="overflow-x-auto scrollbar-hide">
-                  <Table className="min-w-[600px]">
+                  <Table className="min-w-[800px]">
                     <TableHeader className="bg-slate-50/50 dark:bg-slate-800/40">
                       <TableRow className="border-none">
                         <TableHead className="font-bold px-4 sm:px-8">Reference</TableHead>
@@ -985,7 +1037,7 @@ export default function AdminPage() {
                                   {reportDelay.isUrgent && (
                                      <Button 
                                        onClick={() => setIsEnforceDialogOpen(true)}
-                                       className="w-full h-14 rounded-2xl bg-red-600 hover:bg-red-700 font-black gap-2 text-white shadow-xl shadow-red-600/20 uppercase tracking-widest"
+                                       className="w-full h-14 rounded-2xl bg-red-600 hover:bg-red-700 font-black gap-2 text-white shadow-xl shadow-green-600/20 uppercase tracking-widest"
                                      >
                                         <Gavel className="w-5 h-5" /> Enforce 24H Penalty
                                      </Button>
@@ -1463,7 +1515,7 @@ export default function AdminPage() {
                              <Card key={method.id} className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border-none shadow-sm flex items-center justify-between group">
                                 <div className="flex items-center gap-3">
                                    <div className="w-12 h-12 rounded-xl bg-white dark:bg-slate-700 relative overflow-hidden shadow-inner flex items-center justify-center text-slate-400">
-                                      {method.icon ? <Image src={method.icon} alt="" fill className="object-cover" unoptimized /> : <PaymentIcon size={20} />}
+                                      {method.icon ? <Image src={method.icon} alt={method.name} fill className="object-cover" unoptimized /> : <PaymentIcon size={20} />}
                                    </div>
                                    <div>
                                       <p className="font-bold text-sm">{method.name}</p>
