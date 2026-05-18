@@ -109,7 +109,6 @@ export default function GamesView() {
                     <h3 className="font-headline font-bold text-sm md:text-lg lg:text-2xl text-slate-900 dark:text-white truncate uppercase tracking-tight group-hover:text-primary transition-colors">
                       {game.title}
                     </h3>
-                    <p className="text-[8px] lg:text-[9px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-widest mt-0.5">Global</p>
                   </div>
                   <button className="h-full px-4 md:px-8 lg:px-12 bg-primary text-white font-bold text-xs md:text-lg lg:text-2xl flex items-center justify-center group-hover:bg-primary/90 transition-colors uppercase tracking-widest">
                     iibso
@@ -142,3 +141,4 @@ export default function GamesView() {
     </div>
   );
 }
+
