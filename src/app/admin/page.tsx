@@ -1073,6 +1073,7 @@ export default function AdminPage() {
                                                <div className="min-w-0 flex-1">
                                                   <p className="text-xs font-bold truncate">{profile?.name || claim.gameDetails?.name}</p>
                                                   <p className="text-[8px] text-primary font-bold">{claim.gameDetails?.whatsappNumber}</p>
+                                                  <p className="text-[7px] text-muted-foreground uppercase mt-1">Claimed: {getSmartTimestamp(claim.gameDetails?.buyerReportedAt)}</p>
                                                </div>
                                                <Button size="sm" variant="outline" className="h-7 px-3 bg-white/50 text-[8px] font-black uppercase" onClick={() => respondToSaleReport(selectedAccount.id, true, claim.userId)}>Force Sold</Button>
                                             </div>
@@ -1314,6 +1315,69 @@ export default function AdminPage() {
                      </div>
                    </AccordionContent>
                  </AccordionItem>
+
+                 <AccordionItem value="offline" className="border-none bg-white dark:bg-slate-900 rounded-[1.5rem] sm:rounded-[2rem] px-4 sm:px-8 shadow-lg">
+                    <AccordionTrigger className="hover:no-underline">
+                       <div className="flex items-center gap-3 sm:gap-4 text-left">
+                          <div className="p-2 sm:p-3 bg-red-50 dark:bg-red-500/10 text-red-500 rounded-xl sm:rounded-2xl shrink-0"><MonitorOff size={20} /></div>
+                          <div><h4 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white">Real-time Maintenance</h4><p className="text-[10px] sm:text-xs text-muted-foreground">Toggle app access and offline page</p></div>
+                       </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pb-6 sm:pb-8 space-y-6">
+                       <div className="flex items-center justify-between p-4 bg-red-50 dark:bg-red-950/20 rounded-xl sm:rounded-2xl border border-red-100 dark:border-red-900/20">
+                          <div className="space-y-0.5">
+                             <p className="text-xs sm:text-sm font-bold text-red-600 dark:text-red-400 uppercase tracking-widest">Maintenance Mode</p>
+                             <p className="text-[10px] text-muted-foreground">Redirects all non-admin users instantly.</p>
+                          </div>
+                          <Switch checked={appStatusForm.offline} onCheckedChange={val => setAppStatusForm(p => ({ ...p, offline: val }))} />
+                       </div>
+                       <div className="space-y-4">
+                          <div className="space-y-2">
+                             <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Offline Page Title</Label>
+                             <Input value={appStatusForm.offlineTitle} onChange={e => setAppStatusForm(p => ({ ...p, offlineTitle: e.target.value }))} className="h-12 rounded-xl dark:bg-slate-800 border-none px-4" placeholder="Oskar Shop is maintenance..." />
+                          </div>
+                          <div className="space-y-2">
+                             <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Offline Message (Somali/English)</Label>
+                             <Textarea value={appStatusForm.offlineBody} onChange={e => setAppStatusForm(p => ({ ...p, offlineBody: e.target.value }))} className="rounded-2xl dark:bg-slate-800 border-none p-4 min-h-[100px]" placeholder="Explain why we are offline..." />
+                          </div>
+                          <Button onClick={handleSaveAppStatus} disabled={isUploading} className="w-full h-12 rounded-xl bg-slate-900 text-white font-bold">{isUploading ? <Loader2 className="animate-spin" /> : "Update Real-time Status"}</Button>
+                       </div>
+                    </AccordionContent>
+                 </AccordionItem>
+
+                 <AccordionItem value="payment-methods" className="border-none bg-white dark:bg-slate-900 rounded-[1.5rem] sm:rounded-[2rem] px-4 sm:px-8 shadow-lg">
+                    <AccordionTrigger className="hover:no-underline">
+                       <div className="flex items-center gap-3 sm:gap-4 text-left">
+                          <div className="p-2 sm:p-3 bg-green-50 dark:bg-green-500/10 text-green-500 rounded-xl sm:rounded-2xl shrink-0"><CreditCardIcon size={20} /></div>
+                          <div><h4 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white">Mobile Payments (USSD)</h4><p className="text-[10px] sm:text-xs text-muted-foreground">Configure templates for EVC, Premier, etc.</p></div>
+                       </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pb-6 sm:pb-8 space-y-6">
+                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          {paymentMethods.map(m => (
+                            <Card key={m.id} className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border-none group">
+                               <div className="flex items-center justify-between mb-4">
+                                  <div className="flex items-center gap-3">
+                                     <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-900 overflow-hidden relative border border-slate-100 dark:border-white/5">
+                                        {m.icon ? <Image src={m.icon} alt="" fill className="object-cover" /> : <Smartphone className="m-auto mt-2 text-slate-300" />}
+                                     </div>
+                                     <span className="font-bold text-xs">{m.name}</span>
+                                  </div>
+                                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                     <Button size="icon" variant="ghost" className="h-8 w-8 text-blue-500" onClick={() => handleOpenPaymentMethodDialog(m)}><Edit size={16}/></Button>
+                                     <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500" onClick={() => confirmDelete(m.id, 'payment')}><Trash2 size={16}/></Button>
+                                  </div>
+                               </div>
+                               <p className="text-[10px] font-mono bg-white/50 dark:bg-black/20 p-2 rounded-lg truncate">{m.ussdTemplate}</p>
+                            </Card>
+                          ))}
+                          <button onClick={() => handleOpenPaymentMethodDialog()} className="h-full min-h-[100px] rounded-2xl border-2 border-dashed border-slate-200 dark:border-white/5 flex flex-col items-center justify-center gap-2 text-slate-400 hover:border-primary hover:text-primary transition-all">
+                             <PlusCircle size={24} />
+                             <span className="text-[10px] font-black uppercase">Add Method</span>
+                          </button>
+                       </div>
+                    </AccordionContent>
+                 </AccordionItem>
               </Accordion>
             </div>
           )}
@@ -1439,12 +1503,137 @@ export default function AdminPage() {
         )}
       </div>
 
+      <Dialog open={isUserManageOpen} onOpenChange={setIsUserManageOpen}>
+        <DialogContent className="max-w-md w-[95vw] rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl bg-white dark:bg-slate-900 animate-in zoom-in duration-300">
+           <div className="h-32 bg-primary relative shrink-0">
+              <div className="absolute -bottom-10 left-8 w-24 h-24 rounded-full border-4 border-white dark:border-slate-900 bg-slate-100 overflow-hidden shadow-xl">
+                 {selectedUser?.photoURL ? <Image src={selectedUser.photoURL} alt="" fill className="object-cover" /> : <User size={40} className="m-auto mt-6 text-slate-300" />}
+              </div>
+           </div>
+           <div className="p-8 pt-14 space-y-6">
+              <div><h3 className="text-2xl font-headline font-bold text-slate-900 dark:text-white">{selectedUser?.name}</h3><p className="text-xs font-bold text-muted-foreground">{selectedUser?.email}</p></div>
+              <div className="grid grid-cols-2 gap-4"><div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border dark:border-white/5"><p className="text-[10px] font-black uppercase text-slate-400 mb-1">Balance</p><p className="text-2xl font-headline font-bold text-primary">{selectedUser?.points || 0}</p></div><div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border dark:border-white/5"><p className="text-[10px] font-black uppercase text-slate-400 mb-1">Role</p><Badge variant="secondary" className="font-bold uppercase text-[10px]">{selectedUser?.role}</Badge></div></div>
+              <div className="space-y-4">
+                 <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Adjust Points</Label>
+                 <div className="flex gap-3">
+                    <Input type="number" placeholder="Amount" value={pointAdjustment} onChange={e => setPointAdjustment(e.target.value)} className="h-12 rounded-xl dark:bg-slate-800 border-none shadow-inner font-bold" />
+                    <Button onClick={() => handleAdjustPoints('credit')} className="h-12 rounded-xl bg-green-500 hover:bg-green-600 px-4"><ArrowUpCircle size={20}/></Button>
+                    <Button onClick={() => handleAdjustPoints('debit')} className="h-12 rounded-xl bg-red-500 hover:bg-red-600 px-4"><ArrowDownCircle size={20}/></Button>
+                 </div>
+              </div>
+              <Button variant={selectedUser?.banned ? "default" : "destructive"} onClick={handleBanUser} className="w-full h-14 rounded-2xl font-bold gap-2 uppercase tracking-widest">
+                 {selectedUser?.banned ? <><ShieldCheck size={20} /> Unban User</> : <><Ban size={20} /> Ban User Account</>}
+              </Button>
+           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isGameDialogOpen} onOpenChange={setIsGameDialogOpen}>
+        <DialogContent className="max-w-md w-[95vw] rounded-[3rem] p-8 border-none shadow-2xl bg-white dark:bg-slate-900">
+           <DialogHeader><DialogTitle className="text-2xl font-headline font-bold">{editingGame ? 'Edit Game' : 'Add New Game'}</DialogTitle></DialogHeader>
+           <form onSubmit={handleSaveGame} className="space-y-6 mt-4">
+              <div className="flex justify-center mb-4">
+                 <div className="relative w-24 h-24 rounded-2xl bg-slate-50 dark:bg-slate-800 border-2 border-dashed border-slate-200 dark:border-white/5 flex items-center justify-center group overflow-hidden">
+                    {gameForm.icon ? <Image src={gameForm.icon} alt="" fill className="object-cover" /> : <ImageIcon className="text-slate-300" />}
+                    <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'game')} />
+                 </div>
+              </div>
+              <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Title</Label><Input value={gameForm.title} onChange={e => setGameForm({ ...gameForm, title: e.target.value })} className="h-12 rounded-xl dark:bg-slate-800 border-none px-4" placeholder="Free Fire, PUBG, etc." required /></div>
+              <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Category</Label><Select value={gameForm.category} onValueChange={v => setGameForm({ ...gameForm, category: v as any })}><SelectTrigger className="h-12 rounded-xl dark:bg-slate-800 border-none"><SelectValue /></SelectTrigger><SelectContent className="rounded-xl"><SelectItem value="top-up">Top-Up Packages</SelectItem><SelectItem value="accounts">Account Marketplace</SelectItem></SelectContent></Select></div>
+              <Button type="submit" disabled={isUploading} className="w-full h-14 rounded-2xl font-bold shadow-lg uppercase tracking-widest">{isUploading ? <Loader2 className="animate-spin" /> : "Save Game Collection"}</Button>
+           </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isProductDialogOpen} onOpenChange={setIsProductDialogOpen}>
+        <DialogContent className="max-w-xl w-[95vw] rounded-[3rem] p-8 border-none shadow-2xl bg-white dark:bg-slate-900 max-h-[90vh] overflow-y-auto scrollbar-hide">
+           <DialogHeader><DialogTitle className="text-2xl font-headline font-bold">{editingProduct ? 'Edit Item' : 'New Package'}</DialogTitle></DialogHeader>
+           <form onSubmit={handleSaveProduct} className="space-y-6 mt-4">
+              <div className="flex justify-center gap-6 mb-4">
+                 <div className="relative w-32 h-32 rounded-[2rem] bg-slate-50 dark:bg-slate-800 border-2 border-dashed border-slate-200 dark:border-white/5 flex items-center justify-center group overflow-hidden shrink-0">
+                    {productForm.thumbnail ? <Image src={productForm.thumbnail} alt="" fill className="object-cover" unoptimized /> : <ImageIcon className="text-slate-300" />}
+                    <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'product')} />
+                 </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                 <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Item Title</Label><Input value={productForm.title} onChange={e => setProductForm({ ...productForm, title: e.target.value })} className="h-12 rounded-xl dark:bg-slate-800 border-none" placeholder="100 Diamonds" required /></div>
+                 <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Parent Game</Label><Select value={productForm.gameId} onValueChange={v => setProductForm({ ...productForm, gameId: v })}><SelectTrigger className="h-12 rounded-xl dark:bg-slate-800 border-none"><SelectValue placeholder="Select Game" /></SelectTrigger><SelectContent className="rounded-xl">{games.filter(g => g.category === 'top-up').map(g => <SelectItem key={g.id} value={g.id}>{g.title}</SelectItem>)}</SelectContent></Select></div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                 <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Base Price ($)</Label><Input type="number" step="0.01" value={productForm.price} onChange={e => setProductForm({ ...productForm, price: e.target.value })} className="h-12 rounded-xl dark:bg-slate-800 border-none" placeholder="2.99" required /></div>
+                 <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Promo Price ($) - Opt</Label><Input type="number" step="0.01" value={productForm.discountedPrice} onChange={e => setProductForm({ ...productForm, discountedPrice: e.target.value })} className="h-12 rounded-xl dark:bg-slate-800 border-none" placeholder="1.99" /></div>
+              </div>
+              <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Short Description</Label><Textarea value={productForm.description} onChange={e => setProductForm({ ...productForm, description: e.target.value })} className="rounded-xl dark:bg-slate-800 border-none" placeholder="Get 100 FF diamonds fast" /></div>
+              <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Admin WhatsApp (For Booyah Pass)</Label><Input value={productForm.whatsappNumber} onChange={e => setProductForm({ ...productForm, whatsappNumber: e.target.value })} className="h-12 rounded-xl dark:bg-slate-800 border-none" placeholder="252613982172" /></div>
+              <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Special Category</Label><Select value={productForm.category} onValueChange={v => setProductForm({ ...productForm, category: v as any })}><SelectTrigger className="h-12 rounded-xl dark:bg-slate-800 border-none"><SelectValue /></SelectTrigger><SelectContent className="rounded-xl"><SelectItem value="top-up">Normal Top-Up</SelectItem><SelectItem value="booyah-pass">Booyah Pass (Direct WA)</SelectItem></SelectContent></Select></div>
+              <Button type="submit" disabled={isUploading} className="w-full h-14 rounded-2xl font-bold shadow-lg uppercase tracking-widest">{isUploading ? <Loader2 className="animate-spin" /> : "Save Inventory Package"}</Button>
+           </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isEventDialogOpen} onOpenChange={setIsEventDialogOpen}>
+        <DialogContent className="max-w-md w-[95vw] rounded-[3rem] p-8 border-none shadow-2xl bg-white dark:bg-slate-900">
+           <DialogHeader><DialogTitle className="text-2xl font-headline font-bold">{editingEvent ? 'Edit Event' : 'New Event'}</DialogTitle></DialogHeader>
+           <form onSubmit={handleSaveEvent} className="space-y-6 mt-4">
+              <div className="flex justify-center mb-4">
+                 <div className="relative w-full aspect-video rounded-2xl bg-slate-50 dark:bg-slate-800 border-2 border-dashed border-slate-200 dark:border-white/5 flex items-center justify-center group overflow-hidden">
+                    {eventForm.thumbnailUrl ? <Image src={eventForm.thumbnailUrl} alt="" fill className="object-cover" unoptimized /> : <ImageIcon className="text-slate-300" />}
+                    <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'event')} />
+                 </div>
+              </div>
+              <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Event Title</Label><Input value={eventForm.title} onChange={e => setEventForm({ ...eventForm, title: e.target.value })} className="h-12 rounded-xl dark:bg-slate-800 border-none" placeholder="Flash Sale Sunday!" required /></div>
+              <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Short Tagline</Label><Input value={eventForm.shortDescription} onChange={e => setEventForm({ ...eventForm, shortDescription: e.target.value })} className="h-12 rounded-xl dark:bg-slate-800 border-none" placeholder="30% off for 24 hours" required /></div>
+              <div className="grid grid-cols-2 gap-4">
+                 <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Duration Value</Label><Input type="number" value={eventForm.duration} onChange={e => setEventForm({ ...eventForm, duration: e.target.value })} className="h-12 rounded-xl dark:bg-slate-800 border-none" placeholder="24" /></div>
+                 <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Unit</Label><Select value={eventForm.durationUnit} onValueChange={v => setEventForm({ ...eventForm, durationUnit: v })}><SelectTrigger className="h-12 rounded-xl dark:bg-slate-800 border-none"><SelectValue /></SelectTrigger><SelectContent className="rounded-xl"><SelectItem value="days">Days</SelectItem><SelectItem value="hours">Hours</SelectItem><SelectItem value="minutes">Minutes</SelectItem></SelectContent></Select></div>
+              </div>
+              <Button type="submit" disabled={isUploading} className="w-full h-14 rounded-2xl font-bold shadow-lg uppercase tracking-widest">{isUploading ? <Loader2 className="animate-spin" /> : "Save Live Event"}</Button>
+           </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isPaymentMethodDialogOpen} onOpenChange={setIsPaymentMethodDialogOpen}>
+        <DialogContent className="max-w-md w-[95vw] rounded-[3rem] p-8 border-none shadow-2xl bg-white dark:bg-slate-900">
+           <DialogHeader><DialogTitle className="text-2xl font-headline font-bold">{editingPaymentMethod ? 'Edit Method' : 'Add Payment Method'}</DialogTitle></DialogHeader>
+           <form onSubmit={handleSavePaymentMethod} className="space-y-6 mt-4">
+              <div className="flex justify-center mb-4">
+                 <div className="relative w-20 h-20 rounded-2xl bg-slate-50 dark:bg-slate-800 border-2 border-dashed border-slate-200 dark:border-white/5 flex items-center justify-center group overflow-hidden">
+                    {paymentMethodForm.icon ? <Image src={paymentMethodForm.icon} alt="" fill className="object-cover" /> : <SmartphoneIcon className="text-slate-300" />}
+                    <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'payment')} />
+                 </div>
+              </div>
+              <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Provider Name</Label><Input value={paymentMethodForm.name} onChange={e => setPaymentMethodForm({ ...paymentMethodForm, name: e.target.value })} className="h-12 rounded-xl dark:bg-slate-800 border-none" placeholder="EVC Plus, Premier, etc." required /></div>
+              <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400 ml-1">USSD Template (Use $ for price)</Label><Input value={paymentMethodForm.ussdTemplate} onChange={e => setPaymentMethodForm({ ...paymentMethodForm, ussdTemplate: e.target.value })} className="h-12 rounded-xl dark:bg-slate-800 border-none font-mono" placeholder="*712*613982172*$#" required /></div>
+              <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
+                 <span className="text-xs font-bold">Active Method</span>
+                 <Switch checked={paymentMethodForm.active} onCheckedChange={v => setPaymentMethodForm({ ...paymentMethodForm, active: v })} />
+              </div>
+              <Button type="submit" disabled={isUploading} className="w-full h-14 rounded-2xl font-bold shadow-lg uppercase tracking-widest">{isUploading ? <Loader2 className="animate-spin" /> : "Save Payment Method"}</Button>
+           </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="max-w-sm w-[90vw] rounded-[2rem] p-8 border-none shadow-2xl bg-white dark:bg-slate-900">
+           <div className="flex flex-col items-center text-center space-y-4">
+              <div className="w-16 h-16 bg-red-50 dark:bg-red-950/20 rounded-full flex items-center justify-center text-red-500 mb-2"><AlertCircle size={32} /></div>
+              <DialogTitle className="text-xl font-headline font-bold">Confirm Deletion</DialogTitle>
+              <DialogDescription>This action is permanent. Are you sure you want to delete this {deleteTarget?.type} record?</DialogDescription>
+              <div className="flex gap-3 w-full pt-4">
+                 <Button variant="ghost" onClick={() => setIsDeleteDialogOpen(false)} className="flex-1 rounded-xl h-12 font-bold">Cancel</Button>
+                 <Button variant="destructive" onClick={executeDelete} className="flex-1 rounded-xl h-12 font-bold uppercase tracking-widest shadow-lg shadow-red-500/20">Delete Now</Button>
+              </div>
+           </div>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={isEnforceDialogOpen} onOpenChange={setIsEnforceDialogOpen}>
         <DialogContent className="max-w-md w-[95vw] rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl bg-white dark:bg-slate-900 animate-in zoom-in duration-300">
            <div className="bg-red-600 p-8 text-white">
               <div className="flex justify-between items-start">
                  <div>
                     <DialogTitle className="text-2xl font-headline font-bold">Penalty Enforcement</DialogTitle>
+                    <p className="text-white/60 text-xs font-bold uppercase tracking-widest mt-1">Listing: #{selectedAccount?.id.toUpperCase()}</p>
                  </div>
               </div>
            </div>
@@ -1465,6 +1654,17 @@ export default function AdminPage() {
                     ))}
                  </div>
               </div>
+
+              <div className="space-y-4">
+                 <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Seller Message (Will be displayed to them)</Label>
+                 <Textarea 
+                   value={enforceMessage}
+                   onChange={e => setEnforceMessage(e.target.value)}
+                   className="rounded-2xl dark:bg-slate-800 border-none p-4 min-h-[120px] shadow-inner font-medium italic"
+                   placeholder="e.g. Your listing was removed due to invalid proof. Listing fee is non-refundable."
+                 />
+              </div>
+
               <Button onClick={handleEnforceAccountPenalty} disabled={isSavingStatus || !enforceMessage} className="w-full h-16 rounded-2xl bg-slate-900 hover:bg-black text-white font-black text-lg gap-2 shadow-2xl active:scale-95 transition-all uppercase tracking-widest">
                 {isSavingStatus ? <Loader2 className="animate-spin" /> : <><Send size={20} /> Apply Penalty</>}
               </Button>
