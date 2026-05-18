@@ -973,7 +973,7 @@ export default function AdminPage() {
                         <div className="space-y-4 md:space-y-6 pt-4 md:pt-6 border-t dark:border-white/5">
                            <div className="flex items-center gap-3">
                               <RefreshCw className="text-amber-500" size={20} />
-                              h4 className="font-bold text-lg uppercase">Lifecycle Control</h4>
+                              <h4 className="font-bold text-lg uppercase">Lifecycle Control</h4>
                            </div>
                            
                            <div className="space-y-4">
