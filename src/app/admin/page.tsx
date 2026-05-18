@@ -664,9 +664,11 @@ export default function AdminPage() {
 
   const SidebarContent = ({ isMobile = false }) => (
     <div className="flex flex-col h-full">
-      <SheetHeader className="sr-only">
-        <SheetTitle>Admin Navigation Menu</SheetTitle>
-      </SheetHeader>
+      {isMobile && (
+        <SheetHeader className="sr-only">
+          <SheetTitle>Admin Navigation Menu</SheetTitle>
+        </SheetHeader>
+      )}
       {!isMobile && (
         <div className="h-20 px-6 flex items-center justify-between shrink-0">
           {isSidebarExpanded && <span className="font-headline font-bold text-lg text-slate-900 dark:text-white">Oskar Control</span>}
