@@ -11,7 +11,9 @@ import {
   User,
   RefreshCw,
   XCircle,
-  ShieldAlert
+  ShieldAlert,
+  CreditCard,
+  MessageCircle
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -56,6 +58,19 @@ export default function OrdersView() {
            {orders.map((order) => ( <OrderCard key={order.id} order={order} /> ))}
         </div>
       )}
+    </div>
+  );
+}
+
+function DetailRow({ icon: Icon, label, value, color }: { icon: any, label: string, value: string, color?: string }) {
+  return (
+    <div className="flex justify-between items-center gap-3">
+       <span className="text-muted-foreground font-black uppercase tracking-widest text-[7px] sm:text-[9px] lg:text-[11px] flex items-center gap-1.5 md:gap-2 shrink-0">
+          <Icon size={12} className="opacity-60" /> {label}
+       </span>
+       <span className={cn("font-bold text-slate-900 dark:text-white text-[10px] sm:text-sm lg:text-base truncate", color)}>
+          {value || "---"}
+       </span>
     </div>
   );
 }
@@ -107,28 +122,23 @@ function OrderCard({ order }: { order: any }) {
              </Badge>
           </div>
 
-          <div className="bg-slate-50/80 dark:bg-slate-800/40 rounded-[1.5rem] sm:rounded-[2.5rem] p-4 sm:p-6 lg:p-8 space-y-4 md:space-y-5 border border-slate-100 dark:border-white/5 flex-1 shadow-inner">
+          <div className="bg-slate-50/80 dark:bg-slate-800/40 rounded-[1.5rem] sm:rounded-[2.5rem] p-4 sm:p-6 lg:p-8 space-y-3 sm:space-y-4 border border-slate-100 dark:border-white/5 flex-1 shadow-inner">
              {isAccount ? (
                <>
-                 <div className="flex justify-between items-center text-xs sm:text-sm lg:text-lg">
-                    <span className="text-muted-foreground font-black uppercase tracking-widest text-[8px] sm:text-[10px] lg:text-[12px] flex items-center gap-1.5 md:gap-2"><User size={14} /> Seller</span>
-                    <span className="font-bold text-slate-900 dark:text-white truncate max-w-[120px]">{order.gameDetails?.sellerName || "Market Seller"}</span>
-                 </div>
-                 <div className="flex justify-between items-center text-xs sm:text-sm lg:text-lg">
-                    <span className="text-muted-foreground font-black uppercase tracking-widest text-[8px] sm:text-[10px] lg:text-[12px] flex items-center gap-1.5 md:gap-2"><ShieldCheck size={14} /> Platform</span>
-                    <Badge variant="outline" className="border-slate-200 dark:border-slate-700 font-black text-[8px] md:text-[10px] uppercase px-2 md:px-4 py-0 md:py-0.5 rounded-lg md:rounded-xl">{order.gameDetails?.platform || "Google"}</Badge>
-                 </div>
+                 <DetailRow icon={User} label="Seller" value={order.gameDetails?.sellerName || "Market Seller"} />
+                 <DetailRow icon={ShieldCheck} label="Platform" value={order.gameDetails?.platform || "Google"} />
+                 <DetailRow icon={MessageCircle} label="WhatsApp" value={order.gameDetails?.whatsappNumber} color="text-primary" />
                </>
              ) : (
-               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 text-xs sm:text-sm lg:text-lg">
-                  <span className="text-muted-foreground font-black uppercase tracking-widest text-[8px] sm:text-[10px] lg:text-[12px] flex items-center gap-1.5 md:gap-2"><Gamepad2 size={14} /> Player ID</span>
-                  <span className="font-mono font-bold text-slate-900 dark:text-white tracking-widest bg-white dark:bg-slate-900 px-3 py-1.5 sm:px-5 sm:py-2 rounded-xl sm:rounded-2xl border border-slate-100 dark:border-white/5 shadow-sm text-sm sm:text-lg text-center truncate">
-                    {order.gameDetails?.playerID || "---"}
-                  </span>
-               </div>
+               <>
+                 <DetailRow icon={Gamepad2} label="Player ID" value={order.gameDetails?.playerID} color="font-mono text-primary text-xs sm:text-sm" />
+                 <DetailRow icon={User} label="Game Name" value={order.gameDetails?.playerName} />
+                 <DetailRow icon={CreditCard} label="Sender No" value={order.gameDetails?.senderNumber} color="text-green-600" />
+                 <DetailRow icon={MessageCircle} label="WhatsApp" value={order.gameDetails?.whatsappNumber} />
+               </>
              )}
              
-             <div className="pt-4 md:pt-5 border-t border-slate-200/50 dark:border-white/5 flex justify-between items-center">
+             <div className="pt-3 md:pt-4 border-t border-slate-200/50 dark:border-white/5 flex justify-between items-center">
                 <span className="text-muted-foreground font-black text-[8px] sm:text-[10px] lg:text-[14px] uppercase tracking-[0.1em] sm:tracking-[0.2em]">Final Amount</span>
                 <span className="font-headline font-bold text-primary text-xl sm:text-3xl lg:text-4xl">${order.total.toFixed(2)}</span>
              </div>
