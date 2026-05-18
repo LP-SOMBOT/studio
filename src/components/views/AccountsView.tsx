@@ -184,7 +184,7 @@ export default function AccountsView() {
         </button>
       )}
 
-      {/* Activity Tracker - Remains a Dialog as it is a small utility view */}
+      {/* Activity Tracker */}
       <Dialog open={isActivityModalOpen} onOpenChange={setIsActivityModalOpen}>
          <DialogContent className="max-w-xl rounded-[2rem] md:rounded-[3rem] p-0 border-none shadow-2xl bg-white dark:bg-slate-900 mx-4">
             <DialogHeader className="p-6 md:p-10 pb-4 md:pb-6">
@@ -365,8 +365,8 @@ function PostAccountView({ editingPost, onCancel, onComplete }: { editingPost?: 
   };
 
   return (
-    <div className="min-h-screen w-full bg-white dark:bg-slate-950 flex flex-col page-transition overflow-hidden fixed inset-0 z-[100]">
-      <header className="sticky top-0 z-[110] bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-4 md:px-10 pt-5 md:pt-10 pb-4 md:pb-6 flex items-center justify-between border-b dark:border-white/5 shrink-0">
+    <div className="min-h-screen w-full bg-white dark:bg-slate-950 flex flex-col page-transition">
+      <header className="sticky top-0 z-[40] bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-4 md:px-10 pt-5 md:pt-10 pb-4 md:pb-6 flex items-center justify-between border-b dark:border-white/5 shrink-0">
          <div className="flex items-center gap-2 md:gap-4 min-w-0">
             <button onClick={onCancel} className="p-2 text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full shrink-0 transition-colors"><ArrowLeft size={24} /></button>
             <div className="min-w-0">
@@ -600,7 +600,7 @@ function AccountPostCard({ post, onClick, onEdit, onDelete, isOwner, isAdmin }: 
             {post.authorAvatar ? (
               <Image src={post.authorAvatar} alt="" fill className="object-cover" />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-slate-300 dark:text-slate-600"><User size={16} /></div>
+              <div className="w-full h-full flex items-center justify-center text-slate-300 dark:text-slate-700"><User size={16} /></div>
             )}
           </div>
           <div className="min-w-0">
