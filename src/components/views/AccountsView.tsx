@@ -53,7 +53,16 @@ import { uploadToImgbb } from '@/lib/imgbb';
 import { useRouter } from 'next/navigation';
 
 export default function AccountsView() {
-  const { accountPosts, user, orders, setActiveTab, isInitialLoading, setIsPostingAccount } = useApp();
+  const { 
+    accountPosts, 
+    user, 
+    orders, 
+    setActiveTab, 
+    isInitialLoading, 
+    setIsPostingAccount,
+    deleteAccountPost 
+  } = useApp();
+  
   const router = useRouter();
   const [isPosting, setIsPosting] = useState(false);
   const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
@@ -212,7 +221,7 @@ export default function AccountsView() {
           </DialogHeader>
           <DialogFooter className="gap-2 mt-4 flex-col sm:flex-row">
              <Button variant="ghost" onClick={() => setDeletingPostId(null)} className="rounded-xl flex-1 h-10 sm:h-12 order-2 sm:order-1">Maya</Button>
-             <Button variant="destructive" onClick={async () => { if(deletingPostId) { await useApp().deleteAccountPost(deletingPostId); setDeletingPostId(null); } }} className="rounded-xl flex-1 h-10 sm:h-12 order-1 sm:order-2">Haa, Tirtir</Button>
+             <Button variant="destructive" onClick={async () => { if(deletingPostId) { await deleteAccountPost(deletingPostId); setDeletingPostId(null); } }} className="rounded-xl flex-1 h-10 sm:h-12 order-1 sm:order-2">Haa, Tirtir</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
