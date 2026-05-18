@@ -64,6 +64,14 @@ export default function AccountDetailPage() {
   const showSuccess = post?.status === 'holding' && hasBought && isBuyer;
   const showHolding = post?.status === 'holding' && !isBuyer;
 
+  const buyButtonText = useMemo(() => {
+    if (showSold) return "Waa la iibiyay";
+    if (showSuccess) return "Waa lagu guuleystay!";
+    if (isOwner) return "Post-kaaga waaye";
+    if (showHolding) return "Account-ka waa la xajiyay";
+    return "Laxariir Seller-ka";
+  }, [showSold, showSuccess, isOwner, showHolding]);
+
   const handleShare = async () => {
     if (!post) return;
     const shareUrl = `${window.location.origin}/accounts/${post.id}`;
@@ -207,10 +215,10 @@ export default function AccountDetailPage() {
                 <div className="hidden lg:block">
                   <Button 
                     onClick={() => buyAccountPost(post)}
-                    disabled={showSold || showSuccess || (showHolding && !isOwner && !isAdmin)}
+                    disabled={isOwner || showSold || showSuccess || (showHolding && !isOwner && !isAdmin)}
                     className="w-full h-16 rounded-[2rem] text-xl font-bold shadow-xl shadow-primary/30"
                   >
-                    {showSold ? "Waa la iibiyay" : showSuccess ? "Waa lagu guuleystay!" : showHolding ? "Account-ka waa la xajiyay" : "Laxariir Seller-ka"}
+                    {buyButtonText}
                   </Button>
                 </div>
              </div>
@@ -222,10 +230,10 @@ export default function AccountDetailPage() {
       <div className="lg:hidden fixed bottom-0 left-0 right-0 p-6 bg-white/60 dark:bg-slate-950/60 backdrop-blur-xl border-t dark:border-white/5 z-50">
          <Button 
            onClick={() => buyAccountPost(post)}
-           disabled={showSold || showSuccess || (showHolding && !isOwner && !isAdmin)}
+           disabled={isOwner || showSold || showSuccess || (showHolding && !isOwner && !isAdmin)}
            className="w-full h-16 rounded-[2rem] text-xl font-bold shadow-2xl"
          >
-            {showSold ? "Waa la iibiyay" : showSuccess ? "Waa lagu guuleystay!" : showHolding ? "Account-ka waa la xajiyay" : "Laxariir Seller-ka"}
+            {buyButtonText}
          </Button>
       </div>
 
