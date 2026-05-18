@@ -57,8 +57,6 @@ export default function AccountDetailPage() {
   const isOwner = post?.uid === user?.uid;
   const isAdmin = user?.isAdmin;
   
-  // Logic Fix: hasBought only restricts if the post is still in holding or sold.
-  // If the admin releases the account (Approved), the buyer can contact again.
   const hasBought = associatedOrder?.buyerOutcome === 'bought';
   
   const showSold = post?.status === 'sold';
@@ -91,8 +89,8 @@ export default function AccountDetailPage() {
 
   if (!post) {
     return (
-      <div className="min-h-screen pb-24 space-y-6 bg-slate-50 dark:bg-slate-950">
-        <Skeleton className="h-64 w-full" />
+      <div className="min-h-screen pb-24 space-y-6 bg-white dark:bg-slate-950">
+        <Skeleton className="h-64 md:h-[400px] w-full" />
         <div className="px-6 space-y-4 max-w-4xl mx-auto">
            <Skeleton className="h-10 w-3/4 rounded-xl" />
            <Skeleton className="h-40 w-full rounded-2xl" />
@@ -104,19 +102,19 @@ export default function AccountDetailPage() {
   const images = (post.imageUrls && post.imageUrls.length > 0) ? post.imageUrls : [post.thumbnailUrl];
 
   return (
-    <div className="min-h-screen pb-32 bg-slate-50 dark:bg-transparent page-transition">
-      <header className="sticky top-0 z-50 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b dark:border-white/5 h-16 flex items-center px-4 justify-between">
-         <div className="flex items-center gap-4">
-            <button onClick={() => router.push('/#accounts')} className="p-2 rounded-full hover:bg-slate-100 transition-colors"><ArrowLeft size={24} /></button>
-            <h1 className="text-lg font-headline font-bold">Details</h1>
+    <div className="min-h-screen pb-32 bg-slate-50 dark:bg-transparent page-transition overflow-x-hidden">
+      <header className="sticky top-0 z-50 bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl border-b dark:border-white/5 h-14 md:h-16 flex items-center px-4 md:px-6 justify-between">
+         <div className="flex items-center gap-2 md:gap-4">
+            <button onClick={() => router.push('/#accounts')} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors active:scale-90"><ArrowLeft size={20} className="md:w-6 md:h-6" /></button>
+            <h1 className="text-base md:text-lg font-headline font-bold">Details</h1>
          </div>
-         <button onClick={handleShare} className="p-2.5 text-primary bg-primary/10 rounded-full"><Share2 size={20} /></button>
+         <button onClick={handleShare} className="p-2 text-primary bg-primary/10 rounded-full active:scale-90 transition-transform"><Share2 size={18} className="md:w-5 md:h-5" /></button>
       </header>
 
-      <main className="max-w-6xl mx-auto lg:mt-10 lg:px-6">
-        <div className="flex flex-col lg:flex-row gap-10">
+      <main className="max-w-6xl mx-auto md:mt-6 lg:mt-10 md:px-6">
+        <div className="flex flex-col lg:flex-row gap-6 md:gap-10">
           {/* Image Carousel */}
-          <section className="lg:flex-1 relative aspect-[4/3] w-full bg-slate-900 lg:rounded-[3rem] overflow-hidden shadow-2xl">
+          <section className="lg:flex-1 relative aspect-[4/3] w-full bg-slate-900 md:rounded-[2rem] lg:rounded-[3rem] overflow-hidden shadow-xl">
              {images.map((url, idx) => (
                <div key={url + idx} className={cn("absolute inset-0 transition-opacity duration-500 flex items-center justify-center", idx === currentImageIndex ? "opacity-100 z-10" : "opacity-0 z-0")}>
                  <Image src={url} alt="" fill className="object-contain cursor-pointer" unoptimized onClick={() => setFullScreenImage(url)} />
@@ -124,28 +122,33 @@ export default function AccountDetailPage() {
              ))}
              {images.length > 1 && (
                <>
-                 <button onClick={() => setCurrentImageIndex((p) => (p > 0 ? p - 1 : images.length - 1))} className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/30 text-white rounded-full flex items-center justify-center z-20"><ChevronLeft /></button>
-                 <button onClick={() => setCurrentImageIndex((p) => (p < images.length - 1 ? p + 1 : 0))} className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/30 text-white rounded-full flex items-center justify-center z-20"><ChevronRight /></button>
+                 <button onClick={() => setCurrentImageIndex((p) => (p > 0 ? p - 1 : images.length - 1))} className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 w-8 h-8 md:w-10 md:h-10 bg-black/40 text-white rounded-full flex items-center justify-center z-20 active:scale-90"><ChevronLeft size={18} className="md:w-5 md:h-5" /></button>
+                 <button onClick={() => setCurrentImageIndex((p) => (p < images.length - 1 ? p + 1 : 0))} className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 w-8 h-8 md:w-10 md:h-10 bg-black/40 text-white rounded-full flex items-center justify-center z-20 active:scale-90"><ChevronRight size={18} className="md:w-5 md:h-5" /></button>
+                 <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-20">
+                    {images.map((_, i) => (
+                      <div key={i} className={cn("w-1.5 h-1.5 rounded-full transition-all", i === currentImageIndex ? "bg-white w-4" : "bg-white/40")} />
+                    ))}
+                 </div>
                </>
              )}
           </section>
 
           {/* Content */}
-          <div className="px-6 lg:px-0 lg:flex-1 space-y-8">
+          <div className="px-4 md:px-0 lg:flex-1 space-y-6 md:space-y-8">
              <div className="flex justify-between items-start">
-                <div>
-                   <div className="flex items-center gap-3 mb-1">
-                     <h2 className="text-3xl font-headline font-bold">{post.authorName}</h2>
-                     <Badge className="rounded-full bg-blue-500">{post.platform}</Badge>
+                <div className="min-w-0 pr-4">
+                   <div className="flex flex-wrap items-center gap-2 mb-1">
+                     <h2 className="text-xl md:text-3xl font-headline font-bold truncate max-w-[200px] md:max-w-none">{post.authorName}</h2>
+                     <Badge className="rounded-full bg-blue-500 font-bold text-[8px] md:text-[10px] uppercase tracking-wider">{post.platform}</Badge>
                    </div>
-                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{post.gameType}</p>
+                   <p className="text-[9px] md:text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">{post.gameType}</p>
                 </div>
-                <div className="text-right">
-                   <p className="text-4xl font-headline font-bold text-primary">${post.price.toFixed(2)}</p>
+                <div className="text-right shrink-0">
+                   <p className="text-2xl md:text-4xl font-headline font-bold text-primary tracking-tighter">${post.price.toFixed(2)}</p>
                 </div>
              </div>
 
-             <div className="grid grid-cols-3 gap-4">
+             <div className="grid grid-cols-3 gap-2 md:gap-4">
                 <StatItem label="Lvl" value={post.level} icon={Star} color="text-amber-500" />
                 {post.gameType === 'freefire' ? (
                   <>
@@ -160,13 +163,15 @@ export default function AccountDetailPage() {
                 )}
              </div>
 
-             <div className="space-y-4">
-                <h3 className="text-xl font-headline font-bold">Premium Assets</h3>
-                <div className="flex flex-wrap gap-2">
+             <div className="space-y-3 md:space-y-4">
+                <h3 className="text-lg md:text-xl font-headline font-bold flex items-center gap-2 uppercase tracking-tight">
+                  <ShieldCheck className="text-primary w-4 h-4 md:w-5 md:h-5" /> Account Assets
+                </h3>
+                <div className="flex flex-wrap gap-1.5 md:gap-2">
                    {post.gameType === 'bloodstrike' ? (
                      <>
-                        <AssetBadge icon={Sword} label="Evo weapons" value={post.evoWeapons} />
-                        <AssetBadge icon={Target} label="Internal weapons" value={post.internalWeapons} />
+                        <AssetBadge icon={Sword} label="Evo" value={post.evoWeapons} />
+                        <AssetBadge icon={Target} label="Internal" value={post.internalWeapons} />
                         <AssetBadge icon={Zap} label="Emotes" value={post.emotes} />
                         <AssetBadge icon={Bomb} label="Execution" value={post.executionEmotes} />
                         <AssetBadge icon={Star} label="Arrival" value={post.arrivalEmotes} />
@@ -174,7 +179,7 @@ export default function AccountDetailPage() {
                    ) : (
                      <>
                         <AssetBadge icon={Sword} label="Evo" value={post.evoWeapons} />
-                        <AssetBadge icon={Target} label="All Weapons" value={post.totalWeapons} />
+                        <AssetBadge icon={Target} label="Weapons" value={post.totalWeapons} />
                         <AssetBadge icon={Zap} label="Emote" value={post.emotes} />
                         <AssetBadge icon={Star} label="Arrival" value={post.arrivalEmotes} />
                         <AssetBadge icon={ShoppingBag} label="Dharka" value={post.dharka} />
@@ -184,31 +189,31 @@ export default function AccountDetailPage() {
              </div>
 
              {/* Dynamic Action Area */}
-             <div className="pt-6 space-y-4">
+             <div className="pt-2 md:pt-6 space-y-4">
                 {isBuyer && post.status === 'holding' && (
-                  <div className="p-6 bg-primary/5 rounded-[2rem] border border-primary/20 space-y-6 animate-in slide-in-from-bottom-2">
+                  <div className="p-4 md:p-6 bg-primary/5 rounded-2xl md:rounded-[2rem] border border-primary/20 space-y-4 md:space-y-6 animate-in slide-in-from-bottom-2">
                     {hasBought ? (
                       <div className="flex flex-col items-center text-center gap-3 py-2">
-                        <div className="w-16 h-16 bg-green-100 dark:bg-green-500/20 rounded-full flex items-center justify-center text-green-600">
-                          <CheckCircle2 size={32} />
+                        <div className="w-12 h-12 md:w-16 md:h-16 bg-green-100 dark:bg-green-500/20 rounded-full flex items-center justify-center text-green-600">
+                          <CheckCircle2 size={28} className="md:w-8 md:h-8" />
                         </div>
-                        <h4 className="font-bold text-lg">Mahadsanid!</h4>
-                        <p className="text-xs text-muted-foreground">Waad ku guuleysatay iibsiga. Admin-ka ayaa hadda hubinaya dalabkaaga.</p>
+                        <h4 className="font-bold text-base md:text-lg">Mahadsanid!</h4>
+                        <p className="text-[10px] md:text-xs text-muted-foreground max-w-[200px] md:max-w-none">Waad ku guuleysatay iibsiga. Admin-ka ayaa hadda hubinaya dalabkaaga.</p>
                       </div>
                     ) : (
                       <>
                         <div className="flex items-center gap-3">
-                          <History className="text-primary" />
+                          <History className="text-primary w-5 h-5 md:w-6 md:h-6" />
                           <div>
-                            <h4 className="font-bold text-sm">Account-kan waa laguu hayaa!</h4>
-                            <p className="text-[11px] text-muted-foreground">Ma iibsatay account-kan mise wali?</p>
+                            <h4 className="font-bold text-xs md:text-sm">Account-kan waa laguu hayaa!</h4>
+                            <p className="text-[10px] md:text-[11px] text-muted-foreground">Ma iibsatay account-kan mise wali?</p>
                           </div>
                         </div>
-                        <div className="flex gap-3">
-                          <Button onClick={() => reportAccountOutcome(post.id, 'bought')} className="flex-1 h-12 rounded-xl bg-green-600 hover:bg-green-700 font-bold gap-2">
-                             <Check size={18} /> Waan iibsaday
+                        <div className="flex flex-col xs:flex-row gap-2 md:gap-3">
+                          <Button onClick={() => reportAccountOutcome(post.id, 'bought')} className="flex-1 h-11 md:h-12 rounded-xl bg-green-600 hover:bg-green-700 font-bold gap-2 text-xs md:text-sm">
+                             <Check size={16} /> Waan iibsaday
                           </Button>
-                          <Button onClick={() => reportAccountOutcome(post.id, 'not_bought')} variant="outline" className="flex-1 h-12 rounded-xl font-bold border-red-200 text-red-500">
+                          <Button onClick={() => reportAccountOutcome(post.id, 'not_bought')} variant="outline" className="flex-1 h-11 md:h-12 rounded-xl font-bold border-red-200 text-red-500 text-xs md:text-sm">
                              Ma iibsanin
                           </Button>
                         </div>
@@ -217,11 +222,11 @@ export default function AccountDetailPage() {
                   </div>
                 )}
 
-                <div className="hidden lg:block">
+                <div className="hidden md:block">
                   <Button 
                     onClick={() => buyAccountPost(post)}
                     disabled={isOwner || showSold || showSuccess || (showHolding && !isOwner && !isAdmin)}
-                    className="w-full h-16 rounded-[2rem] text-xl font-bold shadow-xl shadow-primary/30"
+                    className="w-full h-14 md:h-16 rounded-xl md:rounded-[2rem] text-lg md:text-xl font-bold shadow-xl shadow-primary/30 active:scale-95 transition-all"
                   >
                     {buyButtonText}
                   </Button>
@@ -232,11 +237,11 @@ export default function AccountDetailPage() {
       </main>
 
       {/* Floating Button (Mobile) */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 p-6 bg-white/60 dark:bg-slate-950/60 backdrop-blur-xl border-t dark:border-white/5 z-50">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 p-4 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl border-t dark:border-white/5 z-50">
          <Button 
            onClick={() => buyAccountPost(post)}
            disabled={isOwner || showSold || showSuccess || (showHolding && !isOwner && !isAdmin)}
-           className="w-full h-16 rounded-[2rem] text-xl font-bold shadow-2xl"
+           className="w-full h-14 rounded-xl text-base font-bold shadow-lg"
          >
             {buyButtonText}
          </Button>
@@ -244,8 +249,8 @@ export default function AccountDetailPage() {
 
       {/* Full Screen Image Modal */}
       {fullScreenImage && (
-        <div className="fixed inset-0 z-[100] bg-black flex items-center justify-center animate-in fade-in duration-300">
-          <button onClick={() => setFullScreenImage(null)} className="absolute top-10 right-6 text-white p-2 bg-white/10 rounded-full hover:bg-white/20"><X size={30} /></button>
+        <div className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center animate-in fade-in duration-300">
+          <button onClick={() => setFullScreenImage(null)} className="absolute top-6 right-4 text-white p-2 bg-white/10 rounded-full hover:bg-white/20 active:scale-90 transition-transform"><X size={24} /></button>
           <div className="relative w-full h-full p-4">
             <Image src={fullScreenImage} alt="" fill className="object-contain" unoptimized />
           </div>
@@ -257,11 +262,11 @@ export default function AccountDetailPage() {
 
 function StatItem({ label, value, icon: Icon, color }: { label: string, value: any, icon: any, color: string }) {
   return (
-    <div className="bg-white dark:bg-slate-900 p-4 rounded-3xl flex flex-col items-center text-center gap-2 border dark:border-white/5 shadow-sm">
-       <Icon size={20} className={color} />
-       <div>
-         <p className="text-sm font-bold truncate max-w-[80px]">{value}</p>
-         <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">{label}</p>
+    <div className="bg-white dark:bg-slate-900 p-2 md:p-4 rounded-xl md:rounded-3xl flex flex-col items-center text-center gap-1 md:gap-2 border dark:border-white/5 shadow-sm">
+       <Icon size={16} className={cn(color, "md:w-5 md:h-5")} />
+       <div className="min-w-0 w-full">
+         <p className="text-xs md:text-sm font-bold truncate w-full">{value}</p>
+         <p className="text-[8px] md:text-[9px] font-black text-muted-foreground uppercase tracking-widest leading-none mt-0.5">{label}</p>
        </div>
     </div>
   );
@@ -269,10 +274,10 @@ function StatItem({ label, value, icon: Icon, color }: { label: string, value: a
 
 function AssetBadge({ icon: Icon, label, value }: { icon: any, label: string, value: number }) {
   return (
-    <Badge className="bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-none px-4 py-2 rounded-xl flex items-center gap-2 font-bold shadow-sm">
-       <Icon size={14} className="text-primary" />
-       <span className="text-[10px]">{label}:</span>
-       <span className="text-xs text-primary">{value || 0}</span>
+    <Badge className="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-none px-2.5 md:px-4 py-1.5 md:py-2 rounded-lg md:rounded-xl flex items-center gap-1.5 md:gap-2 font-bold shadow-sm ring-1 ring-slate-100 dark:ring-white/5">
+       <Icon size={12} className="text-primary md:w-3.5 md:h-3.5" />
+       <span className="text-[8px] md:text-[10px] uppercase tracking-tight">{label}:</span>
+       <span className="text-[10px] md:text-xs text-primary font-black">{value || 0}</span>
     </Badge>
   );
 }
