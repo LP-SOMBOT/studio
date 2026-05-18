@@ -23,7 +23,7 @@ export default function BottomNav() {
   ];
 
   return (
-    <div className="fixed bottom-5 left-0 right-0 z-40 flex justify-center px-4 pointer-events-none">
+    <div className="fixed bottom-5 left-0 right-0 z-40 flex justify-center px-4 pointer-events-none md:hidden">
       <nav className="w-full max-w-[500px] h-16 bg-white dark:bg-slate-900/90 dark:backdrop-blur-xl rounded-[40px] shadow-[0_8px_30px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.4)] flex items-center justify-around px-2 py-2 pointer-events-auto border border-gray-50/50 dark:border-white/5">
         {navItems.map((item) => {
           const isActive = activeTab === item.id;

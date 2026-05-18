@@ -1,10 +1,11 @@
-
 "use client";
 
 import { usePathname } from "next/navigation";
 import Header from "./Header";
 import BottomNav from "./BottomNav";
+import DesktopSidebar from "./DesktopSidebar";
 import { useApp } from "@/lib/context";
+import { cn } from "@/lib/utils";
 
 export default function MainAppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -17,7 +18,7 @@ export default function MainAppLayout({ children }: { children: React.ReactNode 
 
   // Offline mode check
   const isOffline = storeSettings?.appStatus?.offline;
-  const isAdminUser = user?.role === 'admin' || user?.role === 'super_admin';
+  const isAdminUser = user?.role === 'admin' || user?.role === 'super_admin' || user?.role === 'staff';
 
   // If we are on an auth page, admin page, or the app is offline (for non-admins), show full screen content without Header/Nav
   if (isAuthPage || isAdminPage || (isOffline && !isAdminUser)) {
@@ -25,12 +26,33 @@ export default function MainAppLayout({ children }: { children: React.ReactNode 
   }
 
   return (
-    <div className="min-h-screen">
-      {!isSpecialFlow && <Header />}
-      <main className="page-transition">
-        {children}
-      </main>
-      {!isSpecialFlow && <BottomNav />}
+    <div className="flex min-h-screen bg-background">
+      {/* Desktop Sidebar (Left) */}
+      {!isSpecialFlow && <DesktopSidebar />}
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Mobile Header (Top) */}
+        {!isSpecialFlow && (
+          <div className="md:hidden">
+            <Header />
+          </div>
+        )}
+
+        <main className={cn(
+          "page-transition flex-1",
+          !isSpecialFlow && "md:p-8 lg:p-12 xl:p-16"
+        )}>
+          {children}
+        </main>
+
+        {/* Mobile Navigation (Bottom) */}
+        {!isSpecialFlow && (
+          <div className="md:hidden">
+            <BottomNav />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

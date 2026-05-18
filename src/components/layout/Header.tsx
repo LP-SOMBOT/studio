@@ -12,7 +12,7 @@ export default function Header() {
   const unreadNotifs = (notifications || []).filter(n => !n.read).length;
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-gray-100 dark:border-white/5 shadow-sm">
+    <header className="sticky top-0 z-40 w-full bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-gray-100 dark:border-white/5 shadow-sm md:hidden">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <div onClick={() => setActiveTab('home')} className="flex items-center gap-2 cursor-pointer">
           <div className="relative w-10 h-10 overflow-hidden rounded-xl">
