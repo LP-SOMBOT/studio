@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -33,7 +32,11 @@ import {
   Bomb,
   ShoppingBag,
   User,
-  CreditCard
+  CreditCard,
+  Target as TargetIcon,
+  Layers,
+  Sparkles,
+  Trophy
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -72,15 +75,12 @@ export default function AccountsView() {
     return (accountPosts || [])
       .filter(p => {
         const isOwner = userId && p.uid === userId;
-        // User is involved if they have an active order for this post (Claimant)
         const isInvolvedInDeal = userId && (orders || []).some(o => o.gameDetails?.postId === p.id && o.userId === userId);
         
-        // Admins, Owners, and active Claimants can see the listing regardless of status
         if (isAdmin || isOwner || isInvolvedInDeal) {
           return true;
         }
 
-        // Public visibility: Must be APPROVED AND NOT SOLD AND NOT HIDDEN
         if (p.status !== 'approved') return false;
         if (p.sold === true) return false;
         if (p.hiddenFromMarket === true) return false;
@@ -202,7 +202,6 @@ export default function AccountsView() {
         </button>
       )}
 
-      {/* Delete Confirmation Dialog */}
       <Dialog open={!!deletingPostId} onOpenChange={(v) => !v && setDeletingPostId(null)}>
         <DialogContent className="max-w-sm w-[90vw] rounded-[1.5rem] sm:rounded-[2rem]">
           <DialogHeader>
@@ -220,7 +219,7 @@ export default function AccountsView() {
          <DialogContent className="max-w-xl rounded-[2rem] md:rounded-[3rem] p-0 border-none shadow-2xl bg-white dark:bg-slate-900 mx-4">
             <DialogHeader className="p-6 md:p-10 pb-4 md:pb-6">
                <DialogTitle className="text-xl md:text-3xl font-headline font-bold text-slate-900 dark:text-white">My Market Activity</DialogTitle>
-               <DialogDescription className="text-xs md:text-sm font-bold">Track the status of your listed and pending accounts.</DialogDescription>
+               <DialogDescription className="text-xs md:text-sm font-bold text-slate-500">Track the status of your listed and pending accounts.</DialogDescription>
             </DialogHeader>
             <div className="p-6 md:p-10 pt-0 space-y-4 md:space-y-6 max-h-[60vh] overflow-y-auto scrollbar-hide">
                {myActivity.length === 0 ? (
@@ -348,175 +347,241 @@ function PostAccountView({ editingPost, onCancel, onComplete }: { editingPost?: 
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-white dark:bg-slate-950 flex flex-col overflow-hidden animate-in slide-in-from-right-4 duration-500">
-       <header className="h-16 md:h-20 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b dark:border-white/5 flex items-center justify-between px-4 sm:px-10 shrink-0">
+    <div className="fixed inset-0 z-[100] bg-[#F8FAFC] dark:bg-slate-950 flex flex-col overflow-hidden animate-in slide-in-from-right-4 duration-500">
+       <header className="h-16 md:h-20 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-b border-slate-100 dark:border-white/5 flex items-center justify-between px-4 sm:px-10 shrink-0 shadow-sm">
           <div className="flex items-center gap-3">
-             <Button variant="ghost" size="icon" onClick={onCancel} className="rounded-full h-10 w-10">
-                <ArrowLeft className="w-6 h-6" />
+             <Button variant="ghost" size="icon" onClick={onCancel} className="rounded-full h-10 w-10 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                <ArrowLeft className="w-6 h-6 text-slate-900 dark:text-white" />
              </Button>
-             <h2 className="font-headline font-bold text-lg md:text-2xl uppercase tracking-tight">
-               {editingPost ? 'Edit Listing' : 'Post Account'}
-             </h2>
+             <div>
+                <h2 className="font-headline font-bold text-lg md:text-2xl uppercase tracking-tight text-slate-900 dark:text-white">
+                  {editingPost ? 'Edit Listing' : 'Post Account'}
+                </h2>
+                <p className="text-[9px] md:text-xs font-black text-primary uppercase tracking-widest leading-none mt-1">Verified Marketplace</p>
+             </div>
           </div>
-          <div className="flex items-center gap-2">
+          
+          <div className="flex items-center gap-1.5 md:gap-4 bg-slate-50 dark:bg-slate-800 px-3 md:px-6 py-1.5 md:py-2.5 rounded-full border border-slate-100 dark:border-white/5">
              {[1, 2, 3].map(s => (
-               <div key={s} className={cn("w-2 h-2 rounded-full transition-all duration-300", step === s ? "bg-primary w-6" : "bg-slate-200 dark:bg-slate-800")} />
+               <div key={s} className="flex items-center gap-1 md:gap-2">
+                  <div className={cn(
+                    "w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-all duration-500", 
+                    step === s ? "bg-primary scale-125 shadow-[0_0_8px_rgba(14,165,233,0.6)]" : "bg-slate-300 dark:bg-slate-700"
+                  )} />
+                  <span className={cn(
+                    "text-[8px] md:text-[10px] font-black uppercase tracking-tighter hidden xs:inline",
+                    step === s ? "text-primary" : "text-slate-400"
+                  )}>
+                    {s === 1 ? 'Xogta' : s === 2 ? 'Payment' : 'Done'}
+                  </span>
+               </div>
              ))}
           </div>
        </header>
 
        <div className="flex-1 overflow-y-auto p-4 sm:p-10 space-y-8 scrollbar-hide">
-          <div className="max-w-2xl mx-auto w-full">
+          <div className="max-w-3xl mx-auto w-full">
              {step === 1 && (
-               <div className="space-y-6 sm:space-y-10 animate-in fade-in slide-in-from-bottom-4">
-                  <div className="flex justify-center">
-                     <div className="relative w-full aspect-video rounded-[1.5rem] md:rounded-[2.5rem] bg-slate-50 dark:bg-slate-900 border-4 border-dashed border-slate-200 dark:border-white/5 flex items-center justify-center group overflow-hidden shadow-inner">
+               <div className="space-y-6 md:space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                  {/* Hero Image Section */}
+                  <div className="relative group">
+                     <div className={cn(
+                       "relative w-full aspect-video rounded-[1.5rem] md:rounded-[3rem] bg-white dark:bg-slate-900 border-2 md:border-4 border-dashed border-slate-200 dark:border-white/10 flex items-center justify-center overflow-hidden shadow-2xl transition-all",
+                       formData.thumbnailUrl ? "border-solid border-primary/20" : "hover:border-primary/40"
+                     )}>
                         {formData.thumbnailUrl ? (
                           <Image src={formData.thumbnailUrl} alt="" fill className="object-contain" unoptimized />
                         ) : (
-                          <div className="flex flex-col items-center gap-3 opacity-30">
-                             <ImageIcon size={48} className="md:size-16" />
-                             <p className="text-[10px] md:text-sm font-black uppercase tracking-widest">Sawirka Account-ka</p>
+                          <div className="flex flex-col items-center gap-4 opacity-40 group-hover:opacity-100 transition-opacity">
+                             <div className="w-16 h-16 md:w-24 md:h-24 rounded-[1.5rem] md:rounded-[2.5rem] bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-primary shadow-lg border border-slate-100 dark:border-white/5">
+                                <ImageIcon size={32} className="md:size-48" />
+                             </div>
+                             <div className="text-center">
+                                <p className="text-xs md:text-xl font-headline font-bold text-slate-900 dark:text-white uppercase tracking-tight">Sawirka Account-ka</p>
+                                <p className="text-[8px] md:text-[11px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Tap here to upload</p>
+                             </div>
                           </div>
                         )}
                         <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer z-10" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0])} />
-                        {isSubmitting && <div className="absolute inset-0 bg-white/60 dark:bg-black/60 flex items-center justify-center z-20"><Loader2 className="animate-spin text-primary" /></div>}
+                        {isSubmitting && <div className="absolute inset-0 bg-white/80 dark:bg-black/80 flex flex-col items-center justify-center z-20 gap-3"><Loader2 className="animate-spin text-primary w-8 h-8" /><p className="text-xs font-bold uppercase tracking-widest animate-pulse">Uploading...</p></div>}
+                        
+                        {formData.thumbnailUrl && (
+                          <div className="absolute bottom-4 right-4 z-20">
+                             <Badge className="bg-primary text-white font-black px-4 py-1.5 rounded-full shadow-xl shadow-primary/30 uppercase text-[10px] tracking-widest border-none">CHANGE IMAGE</Badge>
+                          </div>
+                        )}
                      </div>
                   </div>
 
+                  {/* Core Settings Cards */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
-                     <FormGroup label="Game Type">
-                        <Select value={formData.gameType} onValueChange={v => setFormData({...formData, gameType: v})}>
-                           <SelectTrigger className="h-12 md:h-16 rounded-xl md:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-6 font-bold text-sm md:text-lg">
-                              <SelectValue />
-                           </SelectTrigger>
-                           <SelectContent className="rounded-xl">
-                              <SelectItem value="freefire">Free Fire</SelectItem>
-                              <SelectItem value="bloodstrike">Blood Strike</SelectItem>
-                           </SelectContent>
-                        </Select>
-                     </FormGroup>
-                     <FormGroup label="Login Platform">
-                        <Select value={formData.platform} onValueChange={v => setFormData({...formData, platform: v})}>
-                           <SelectTrigger className="h-12 md:h-16 rounded-xl md:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-6 font-bold text-sm md:text-lg">
-                              <SelectValue />
-                           </SelectTrigger>
-                           <SelectContent className="rounded-xl">
-                              <SelectItem value="Google">Google</SelectItem>
-                              <SelectItem value="Facebook">Facebook</SelectItem>
-                           </SelectContent>
-                        </Select>
-                     </FormGroup>
+                     <Card className="p-5 md:p-8 rounded-[1.5rem] md:rounded-[2.5rem] border-none shadow-lg bg-white dark:bg-slate-900 space-y-6 md:space-y-8">
+                        <div className="flex items-center gap-3 text-primary mb-2">
+                           <Layers size={18} />
+                           <h4 className="font-headline font-bold text-sm md:text-lg uppercase tracking-tight">Game Identity</h4>
+                        </div>
+                        <FormGroup label="Game Type">
+                           <Select value={formData.gameType} onValueChange={v => setFormData({...formData, gameType: v})}>
+                              <SelectTrigger className="h-12 md:h-16 rounded-xl md:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-6 font-bold text-sm md:text-lg focus:ring-2 focus:ring-primary shadow-inner">
+                                 <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="rounded-2xl border-none shadow-2xl bg-white dark:bg-slate-900">
+                                 <SelectItem value="freefire" className="rounded-xl font-bold uppercase text-xs p-3">Free Fire</SelectItem>
+                                 <SelectItem value="bloodstrike" className="rounded-xl font-bold uppercase text-xs p-3">Blood Strike</SelectItem>
+                              </SelectContent>
+                           </Select>
+                        </FormGroup>
+                        <FormGroup label="Login Method">
+                           <Select value={formData.platform} onValueChange={v => setFormData({...formData, platform: v})}>
+                              <SelectTrigger className="h-12 md:h-16 rounded-xl md:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-6 font-bold text-sm md:text-lg focus:ring-2 focus:ring-primary shadow-inner">
+                                 <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="rounded-2xl border-none shadow-2xl bg-white dark:bg-slate-900">
+                                 <SelectItem value="Google" className="rounded-xl font-bold uppercase text-xs p-3">Google Account</SelectItem>
+                                 <SelectItem value="Facebook" className="rounded-xl font-bold uppercase text-xs p-3">Facebook Login</SelectItem>
+                              </SelectContent>
+                           </Select>
+                        </FormGroup>
+                     </Card>
+
+                     <Card className="p-5 md:p-8 rounded-[1.5rem] md:rounded-[2.5rem] border-none shadow-lg bg-white dark:bg-slate-900 space-y-6 md:space-y-8">
+                        <div className="flex items-center gap-3 text-amber-500 mb-2">
+                           <Star size={18} />
+                           <h4 className="font-headline font-bold text-sm md:text-lg uppercase tracking-tight">Level & Pricing</h4>
+                        </div>
+                        <FormInput label="Account Level" value={formData.level} type="number" onChange={v => setFormData({...formData, level: v})} placeholder="e.g. 65" />
+                        <FormInput label="Selling Price ($)" value={formData.price} type="number" onChange={v => setFormData({...formData, price: v})} placeholder="e.g. 50" highlight />
+                     </Card>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
-                     <FormInput label="Account Level" value={formData.level} type="number" onChange={v => setFormData({...formData, level: v})} placeholder="e.g. 65" />
-                     <FormInput label="Price Value ($)" value={formData.price} type="number" onChange={v => setFormData({...formData, price: v})} placeholder="e.g. 50" />
-                  </div>
+                  {/* Asset Management Grid */}
+                  <Card className="p-6 md:p-10 rounded-[1.5rem] md:rounded-[3rem] border-none shadow-lg bg-white dark:bg-slate-900">
+                     <div className="flex items-center gap-3 text-indigo-500 mb-8 md:mb-12">
+                        <TargetIcon size={20} />
+                        <div>
+                           <h4 className="font-headline font-bold text-base md:text-2xl uppercase tracking-tight">Premium Assets</h4>
+                           <p className="text-[10px] md:text-xs text-muted-foreground font-black uppercase tracking-widest mt-0.5">Xaqiiji waxyaabaha uu leeyahay</p>
+                        </div>
+                     </div>
+                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 md:gap-8 lg:gap-12">
+                        <FormInput label="Evo Guns" icon={Sword} value={formData.evoWeapons} type="number" onChange={v => setFormData({...formData, evoWeapons: v})} placeholder="0" />
+                        <FormInput label="Total Guns" icon={Target} value={formData.totalWeapons} type="number" onChange={v => setFormData({...formData, totalWeapons: v})} placeholder="0" />
+                        <FormInput label="Emotes" icon={Zap} value={formData.emotes} type="number" onChange={v => setFormData({...formData, emotes: v})} placeholder="0" />
+                        <FormInput label="Arrivals" icon={Star} value={formData.arrivalEmotes} type="number" onChange={v => setFormData({...formData, arrivalEmotes: v})} placeholder="0" />
+                        <FormInput label="Execution" icon={Bomb} value={formData.executionEmotes} type="number" onChange={v => setFormData({...formData, executionEmotes: v})} placeholder="0" />
+                        <FormInput label="Dharka" icon={ShoppingBag} value={formData.dharka} type="number" onChange={v => setFormData({...formData, dharka: v})} placeholder="0" />
+                     </div>
+                  </Card>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 md:gap-6">
-                     <FormInput label="Evo Guns" value={formData.evoWeapons} type="number" onChange={v => setFormData({...formData, evoWeapons: v})} placeholder="0" />
-                     <FormInput label="Total Guns" value={formData.totalWeapons} type="number" onChange={v => setFormData({...formData, totalWeapons: v})} placeholder="0" />
-                     <FormInput label="Emotes" value={formData.emotes} type="number" onChange={v => setFormData({...formData, emotes: v})} placeholder="0" />
-                     <FormInput label="Arrivals" value={formData.arrivalEmotes} type="number" onChange={v => setFormData({...formData, arrivalEmotes: v})} placeholder="0" />
-                     <FormInput label="Execution" value={formData.executionEmotes} type="number" onChange={v => setFormData({...formData, executionEmotes: v})} placeholder="0" />
-                     <FormInput label="Dharka" value={formData.dharka} type="number" onChange={v => setFormData({...formData, dharka: v})} placeholder="0" />
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
-                     <FormGroup label="Listing Term (Fee)">
+                  {/* Final Listing Settings */}
+                  <Card className="p-6 md:p-10 rounded-[1.5rem] md:rounded-[3rem] border-none shadow-lg bg-white dark:bg-slate-900 grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
+                     <FormGroup label="Listing Duration">
                         <Select value={formData.term} onValueChange={v => setFormData({...formData, term: v})}>
-                           <SelectTrigger className="h-12 md:h-16 rounded-xl md:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-6 font-bold text-sm md:text-lg">
+                           <SelectTrigger className="h-12 md:h-20 rounded-xl md:rounded-[1.5rem] bg-slate-50 dark:bg-slate-800 border-none px-6 font-bold text-sm md:text-xl shadow-inner">
                               <SelectValue />
                            </SelectTrigger>
-                           <SelectContent className="rounded-xl">
-                              <SelectItem value="weekly">Weekly - ${storeSettings?.config?.shop?.listingFeeWeekly || 1.00}</SelectItem>
-                              <SelectItem value="monthly">Monthly - ${storeSettings?.config?.shop?.listingFeeMonthly || 3.00}</SelectItem>
+                           <SelectContent className="rounded-2xl border-none shadow-2xl">
+                              <SelectItem value="weekly" className="p-4 rounded-xl font-bold uppercase text-xs">Weekly - ${storeSettings?.config?.shop?.listingFeeWeekly || 1.00}</SelectItem>
+                              <SelectItem value="monthly" className="p-4 rounded-xl font-bold uppercase text-xs">Monthly - ${storeSettings?.config?.shop?.listingFeeMonthly || 3.00}</SelectItem>
                            </SelectContent>
                         </Select>
                      </FormGroup>
-                     <FormInput label="WhatsApp Number" value={formData.phone} type="tel" onChange={v => setFormData({...formData, phone: v})} placeholder="e.g. 613982172" />
-                  </div>
+                     <FormInput label="WhatsApp for Support" value={formData.phone} type="tel" onChange={v => setFormData({...formData, phone: v})} placeholder="e.g. 613982172" />
+                  </Card>
 
-                  <Button onClick={handleNext} className="w-full h-16 md:h-20 rounded-xl md:rounded-[2.5rem] font-black text-sm md:text-xl shadow-2xl shadow-primary/20 bg-primary hover:bg-primary/90 uppercase tracking-widest active:scale-95 transition-all">
-                     Next Step <ChevronRight size={24} className="ml-2" />
-                  </Button>
+                  <div className="pt-4 md:pt-10">
+                     <Button onClick={handleNext} className="w-full h-14 md:h-24 rounded-2xl md:rounded-[2.5rem] font-black text-sm md:text-3xl shadow-2xl shadow-primary/30 bg-primary hover:bg-primary/90 text-white uppercase tracking-[0.1em] active:scale-95 transition-all">
+                        Hagaag, Next Step <ChevronRight size={28} className="ml-2 md:ml-4" />
+                     </Button>
+                  </div>
                </div>
              )}
 
              {step === 2 && (
-               <div className="space-y-6 sm:space-y-10 animate-in fade-in slide-in-from-right-4 text-center">
-                  <div className="mx-auto w-20 h-20 md:w-32 md:h-32 bg-amber-50 dark:bg-amber-500/10 rounded-full flex items-center justify-center mb-6">
-                     <CreditCard className="text-amber-500 w-10 h-10 md:w-16 md:h-16" />
+               <div className="space-y-6 sm:space-y-12 animate-in fade-in slide-in-from-right-4 duration-700 text-center max-w-xl mx-auto">
+                  <div className="relative mx-auto w-24 h-24 md:w-40 md:h-40">
+                     <div className="absolute inset-0 bg-amber-400 rounded-full blur-[60px] opacity-20 animate-pulse" />
+                     <div className="relative w-full h-full bg-white dark:bg-slate-900 rounded-[1.5rem] md:rounded-[3rem] flex items-center justify-center text-amber-500 shadow-2xl border border-slate-100 dark:border-white/5 ring-4 ring-amber-50 dark:ring-amber-500/10">
+                        <CreditCard className="w-10 h-10 md:w-20 md:h-20" />
+                     </div>
                   </div>
                   
-                  <div className="space-y-2 md:space-y-4">
-                     <h3 className="text-2xl md:text-4xl font-headline font-bold uppercase tracking-tight">Listing Payment</h3>
-                     <p className="text-sm md:text-lg text-muted-foreground font-medium max-w-sm mx-auto leading-relaxed">
-                        Fadlan bixi qarashka soo gelinta account-ka oo ah <span className="text-primary font-bold">${listingFee.toFixed(2)}</span>
+                  <div className="space-y-3 md:space-y-6">
+                     <h3 className="text-2xl md:text-5xl font-headline font-bold uppercase tracking-tight text-slate-900 dark:text-white leading-tight">Qarashka Xajinta</h3>
+                     <p className="text-xs md:text-xl text-muted-foreground font-medium leading-relaxed">
+                        Fadlan bixi qarashka soo gelinta account-ka si marketplace-ka loogu daro. Qiimuhu waa <span className="text-primary font-black">${listingFee.toFixed(2)}</span>
                      </p>
                   </div>
 
-                  <Card className="p-6 md:p-10 rounded-[2rem] md:rounded-[3.5rem] border-none shadow-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-white/5 space-y-6 md:space-y-8">
-                     <div className="flex justify-between items-center text-[10px] md:text-base font-black uppercase tracking-widest text-muted-foreground border-b dark:border-white/5 pb-4">
-                        <span>Description</span>
-                        <span>Amount</span>
-                     </div>
-                     <div className="flex justify-between items-center">
-                        <div className="text-left">
-                           <p className="font-bold text-sm md:text-2xl uppercase">{formData.gameType} Account</p>
-                           <p className="text-[8px] md:text-xs text-muted-foreground font-medium">{formData.term} Listing Fee</p>
-                        </div>
-                        <p className="font-headline font-bold text-2xl md:text-4xl text-primary">${listingFee.toFixed(2)}</p>
-                     </div>
-
-                     {!hasTriggeredUssd ? (
-                       <Button onClick={handleTriggerUssd} className="w-full h-14 md:h-20 rounded-xl md:rounded-[2rem] bg-slate-900 text-white hover:bg-black font-black text-sm md:text-xl gap-3 shadow-xl active:scale-95 transition-all">
-                          <Smartphone size={24} /> KU BIXI EVC / PREMIER
-                       </Button>
-                     ) : (
-                       <div className="space-y-4 animate-in zoom-in">
-                          <div className="p-4 bg-green-50 dark:bg-green-500/10 rounded-2xl border border-green-200 dark:border-green-500/20 text-green-700 dark:text-green-400 font-bold text-xs md:text-base flex items-center gap-3">
-                             <CheckCircle2 size={24} /> Dialed Successfully!
-                          </div>
-                          <Button onClick={handleSubmit} disabled={isSubmitting} className="w-full h-14 md:h-20 rounded-xl md:rounded-[2rem] bg-primary text-white font-black text-sm md:text-xl gap-3 shadow-xl active:scale-95 transition-all">
-                             {isSubmitting ? <Loader2 className="animate-spin" /> : "I'VE PAID (SUBMIT LISTING)"}
-                          </Button>
-                       </div>
-                     )}
+                  <Card className="p-6 md:p-12 rounded-[2rem] md:rounded-[4rem] border-none shadow-2xl bg-white dark:bg-slate-900 overflow-hidden relative border border-slate-100 dark:border-white/5">
+                     <div className="absolute top-0 left-0 right-0 h-2 bg-primary" />
                      
-                     <p className="text-[8px] md:text-xs text-muted-foreground italic">
-                        * Admin-ka ayaa hubin doona payment-kaaga ka hor inta aan post-ga la fasaxin.
-                     </p>
+                     <div className="space-y-6 md:space-y-10">
+                        <div className="flex justify-between items-center text-[10px] md:text-base font-black uppercase tracking-widest text-muted-foreground border-b dark:border-white/5 pb-4 md:pb-6">
+                           <span>Description</span>
+                           <span>Amount</span>
+                        </div>
+                        
+                        <div className="flex justify-between items-center text-left">
+                           <div>
+                              <p className="font-headline font-bold text-lg md:text-3xl text-slate-900 dark:text-white uppercase tracking-tight">{formData.gameType} Listing</p>
+                              <Badge className="bg-primary/10 text-primary border-none text-[8px] md:text-[10px] font-black uppercase mt-1 md:mt-2">{formData.term} access</Badge>
+                           </div>
+                           <p className="font-headline font-bold text-3xl md:text-6xl text-primary tracking-tighter">${listingFee.toFixed(2)}</p>
+                        </div>
+
+                        {!hasTriggeredUssd ? (
+                          <Button onClick={handleTriggerUssd} className="w-full h-14 md:h-24 rounded-2xl md:rounded-[2.5rem] bg-slate-900 text-white hover:bg-black font-black text-sm md:text-xl gap-3 shadow-2xl active:scale-95 transition-all uppercase tracking-widest">
+                             <Smartphone size={24} className="md:size-8" /> KU BIXI EVC / PREMIER
+                          </Button>
+                        ) : (
+                          <div className="space-y-4 md:space-y-8 animate-in zoom-in duration-500">
+                             <div className="p-4 md:p-8 bg-green-50 dark:bg-green-500/10 rounded-2xl md:rounded-[2.5rem] border-2 border-green-200 dark:border-green-500/30 text-green-700 dark:text-green-400 font-bold text-xs md:text-xl flex items-center justify-center gap-3 md:gap-4 shadow-inner">
+                                <CheckCircle2 size={24} className="md:size-8" /> Waa lagu wacay! Dialed.
+                             </div>
+                             <Button onClick={handleSubmit} disabled={isSubmitting} className="w-full h-14 md:h-24 rounded-2xl md:rounded-[2.5rem] bg-primary text-white font-black text-sm md:text-2xl gap-3 shadow-2xl shadow-primary/30 active:scale-95 transition-all uppercase tracking-widest">
+                                {isSubmitting ? <Loader2 className="animate-spin w-8 h-8" /> : "I'VE PAID (SUBMIT LISTING)"}
+                             </Button>
+                          </div>
+                        )}
+                        
+                        <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-xl md:rounded-2xl border dark:border-white/5 flex gap-3 text-left">
+                           <Info className="text-primary shrink-0 w-4 h-4 md:w-5 md:h-5 mt-0.5" />
+                           <p className="text-[8px] md:text-xs text-muted-foreground italic leading-relaxed">
+                              Admin-ka ayaa hubin doona payment-kaaga ka hor inta aan post-ga la fasaxin. Waxay qaadataa inta badan 5-15 daqiiqo.
+                           </p>
+                        </div>
+                     </div>
                   </Card>
 
-                  <Button variant="ghost" onClick={() => setStep(1)} className="text-muted-foreground font-bold hover:text-foreground">
-                     Back to Details
+                  <Button variant="ghost" onClick={() => setStep(1)} className="text-slate-400 font-bold hover:text-slate-900 dark:hover:text-white uppercase text-[10px] md:text-sm tracking-widest">
+                     <ArrowLeft size={16} className="mr-2" /> Back to Account Details
                   </Button>
                </div>
              )}
 
              {step === 3 && (
-               <div className="py-10 md:py-20 flex flex-col items-center text-center space-y-6 sm:space-y-10 animate-in zoom-in duration-700">
+               <div className="py-10 md:py-24 flex flex-col items-center text-center space-y-8 md:space-y-16 animate-in zoom-in duration-1000">
                   <div className="relative">
-                     <div className="absolute inset-0 bg-green-400 rounded-full blur-3xl opacity-20 animate-pulse" />
-                     <div className="relative w-24 h-24 md:w-40 md:h-40 bg-green-50 dark:bg-green-500/20 rounded-full flex items-center justify-center text-green-600 dark:text-green-400 shadow-2xl border-4 md:border-8 border-white dark:border-slate-900">
-                        <CheckCircle2 size={48} className="md:size-24" />
+                     <div className="absolute inset-0 bg-green-400 rounded-full blur-[100px] opacity-30 animate-pulse" />
+                     <div className="relative w-28 h-28 md:w-56 md:h-56 bg-green-50 dark:bg-green-500/20 rounded-[2rem] md:rounded-[4rem] flex items-center justify-center text-green-600 dark:text-green-400 shadow-2xl border-4 md:border-8 border-white dark:border-slate-900 ring-8 md:ring-[16px] ring-green-500/5">
+                        <CheckCircle2 size={48} className="md:size-32" />
                      </div>
+                     <Sparkles className="absolute -top-4 -right-4 md:-top-8 md:-right-8 w-10 h-10 md:w-20 md:h-20 text-amber-400 animate-bounce" />
                   </div>
                   
-                  <div className="space-y-2 md:space-y-4">
-                     <h2 className="text-2xl md:text-5xl font-headline font-bold tracking-tight">Post Successfully!</h2>
-                     <p className="text-sm md:text-xl text-muted-foreground font-medium max-w-sm mx-auto leading-relaxed">
-                        Waad ku mahadsantahay! Post-kaaga hadda waa "Pending". Admin-ka ayaa hadda hubinaya payment-kaaga. Waxaa lagu soo ogaysiin doonaa marka la fasaxo.
+                  <div className="space-y-3 md:space-y-6">
+                     <h2 className="text-3xl md:text-7xl font-headline font-bold tracking-tight text-slate-900 dark:text-white uppercase leading-none">Waa lagu guuleystay!</h2>
+                     <p className="text-sm md:text-2xl text-muted-foreground font-medium max-w-lg mx-auto leading-relaxed">
+                        Waad ku mahadsantahay! Post-kaaga waa "Pending". Admin-ka ayaa hadda hubinaya payment-kaaga si loo fasaxo Account-kaaga.
                      </p>
                   </div>
 
-                  <div className="flex flex-col gap-3 w-full max-w-xs mx-auto">
-                     <Button onClick={onComplete} className="h-12 md:h-16 rounded-xl md:rounded-2xl font-bold text-sm md:text-lg shadow-lg">
+                  <div className="flex flex-col gap-3 md:gap-5 w-full max-w-md mx-auto">
+                     <Button onClick={onComplete} className="h-14 md:h-24 rounded-2xl md:rounded-[2.5rem] font-black text-sm md:text-2xl shadow-2xl shadow-primary/30 bg-primary hover:bg-primary/90 text-white uppercase tracking-widest transition-transform active:scale-95">
                         Eeg Marketplace-ka
                      </Button>
-                     <Button variant="ghost" onClick={onComplete} className="h-12 rounded-xl text-muted-foreground font-bold">
+                     <Button variant="ghost" onClick={onComplete} className="h-12 md:h-16 rounded-xl text-slate-400 font-bold hover:text-slate-900 dark:hover:text-white uppercase tracking-widest text-[10px] md:text-base">
                         Back to Home
                      </Button>
                   </div>
@@ -675,20 +740,35 @@ function AccountPostCard({ post, onClick, onEdit, onDelete, isOwner, isBuyer, is
   );
 }
 
-function FormGroup({ label, children }: { label: string, children: React.ReactNode }) {
+function FormGroup({ label, children, icon: Icon }: { label: string, children: React.ReactNode, icon?: any }) {
   return (
     <div className="space-y-2 md:space-y-3">
-       <label className="text-[8px] md:text-xs font-black text-muted-foreground uppercase tracking-[0.1em] md:tracking-[0.3em] ml-1 md:ml-3">{label}</label>
+       <label className="text-[10px] md:text-xs font-black text-muted-foreground uppercase tracking-[0.2em] ml-1 flex items-center gap-1.5">
+          {Icon && <Icon size={12} className="text-primary/60" />}
+          {label}
+       </label>
        {children}
     </div>
   );
 }
 
-function FormInput({ label, value, onChange, placeholder, type = "text", className }: { label: string, value: string, onChange: (v: string) => void, placeholder: string, type?: string, className?: string }) {
+function FormInput({ label, value, onChange, placeholder, type = "text", className, highlight, icon: Icon }: { label: string, value: string, onChange: (v: string) => void, placeholder: string, type?: string, className?: string, highlight?: boolean, icon?: any }) {
   return (
     <div className={cn("space-y-2 md:space-y-3", className)}>
-       <label className="text-[8px] md:text-xs font-black text-muted-foreground uppercase tracking-[0.1em] md:tracking-[0.3em] ml-1 md:ml-3">{label}</label>
-       <Input type={type} placeholder={placeholder} value={value} onChange={e => onChange(e.target.value)} className="h-12 md:h-16 rounded-xl md:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-4 md:px-8 font-bold text-xs md:text-lg focus-visible:ring-primary shadow-inner" />
+       <label className="text-[10px] md:text-xs font-black text-muted-foreground uppercase tracking-[0.2em] ml-1 flex items-center gap-1.5">
+          {Icon && <Icon size={12} className="text-primary/60" />}
+          {label}
+       </label>
+       <Input 
+        type={type} 
+        placeholder={placeholder} 
+        value={value} 
+        onChange={e => onChange(e.target.value)} 
+        className={cn(
+          "h-12 md:h-16 rounded-xl md:rounded-2xl border-none px-4 md:px-8 font-bold text-xs md:text-lg shadow-inner transition-all focus:ring-2 focus:ring-primary",
+          highlight ? "bg-primary/5 text-primary" : "bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white"
+        )} 
+       />
     </div>
   );
 }
