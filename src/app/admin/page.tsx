@@ -744,43 +744,43 @@ export default function AdminPage() {
           )}
 
           {activeView === 'account-posts' && selectedAccountId && selectedAccount && (
-            <div className="max-w-5xl mx-auto space-y-8 animate-in slide-in-from-right-4 duration-500 pb-20">
-               <div className="flex items-center gap-4">
-                  <Button variant="ghost" onClick={() => setSelectedAccountId(null)} className="rounded-full h-10 px-4">
+            <div className="max-w-5xl mx-auto space-y-6 md:space-y-8 animate-in slide-in-from-right-4 duration-500 pb-20 px-2 md:px-0">
+               <div className="flex flex-col md:flex-row md:items-center gap-4">
+                  <Button variant="ghost" onClick={() => setSelectedAccountId(null)} className="rounded-full h-10 px-4 w-fit">
                      <ChevronLeft className="w-5 h-5 mr-2" /> Marketplace List
                   </Button>
-                  <h3 className="font-headline font-bold text-2xl dark:text-white uppercase tracking-tight">Listing Detail: #{selectedAccount.id.toUpperCase()}</h3>
+                  <h3 className="font-headline font-bold text-xl md:text-2xl dark:text-white uppercase tracking-tight truncate">Detail: #{selectedAccount.id.toUpperCase()}</h3>
                </div>
 
-               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
                   {/* Left Column: Post Details */}
-                  <div className="lg:col-span-2 space-y-8">
-                     <Card className="rounded-[2.5rem] border-none shadow-xl bg-white dark:bg-slate-900 overflow-hidden">
+                  <div className="lg:col-span-2 space-y-6 md:space-y-8">
+                     <Card className="rounded-[1.5rem] md:rounded-[2.5rem] border-none shadow-xl bg-white dark:bg-slate-900 overflow-hidden">
                         <div className="aspect-video relative bg-slate-950">
                            <Image src={selectedAccount.thumbnailUrl} alt="" fill className="object-contain" unoptimized />
                         </div>
-                        <div className="p-8 space-y-8">
+                        <div className="p-5 md:p-8 space-y-6 md:space-y-8">
                            <div className="flex justify-between items-start">
-                              <div>
-                                 <h4 className="text-3xl font-headline font-bold uppercase tracking-tight">{selectedAccount.gameType} Account</h4>
-                                 <p className="text-sm text-muted-foreground font-medium mt-1">Ref: #{selectedAccount.id.toUpperCase()}</p>
+                              <div className="min-w-0 flex-1">
+                                 <h4 className="text-xl md:text-3xl font-headline font-bold uppercase tracking-tight truncate">{selectedAccount.gameType} Account</h4>
+                                 <p className="text-xs md:text-sm text-muted-foreground font-medium mt-1">Ref: #{selectedAccount.id.toUpperCase()}</p>
                               </div>
-                              <div className="text-right">
-                                 <p className="text-3xl font-headline font-bold text-primary">${selectedAccount.price.toFixed(2)}</p>
-                                 <Badge variant="outline" className="uppercase font-black text-[10px] tracking-widest mt-2">{selectedAccount.term} listing</Badge>
+                              <div className="text-right shrink-0">
+                                 <p className="text-2xl md:text-3xl font-headline font-bold text-primary">${selectedAccount.price.toFixed(2)}</p>
+                                 <Badge variant="outline" className="uppercase font-black text-[8px] md:text-[10px] tracking-widest mt-2">{selectedAccount.term} listing</Badge>
                               </div>
                            </div>
 
-                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
-                              <StatItem icon={Calendar} label="Posted At" value={getSmartTimestamp(selectedAccount.createdAt)} />
+                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 md:gap-6">
+                              <StatItem icon={Calendar} label="Posted" value={getSmartTimestamp(selectedAccount.createdAt)} />
                               <StatItem icon={Star} label="Level" value={selectedAccount.level} />
                               <StatItem icon={Smartphone} label="Platform" value={selectedAccount.platform} />
                               <StatItem icon={ShieldCheck} label="Status" value={selectedAccount.status.toUpperCase()} color="text-primary" />
                            </div>
 
                            <div className="space-y-4 pt-4 border-t dark:border-white/5">
-                              <h5 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Premium Assets Breakdown</h5>
-                              <div className="flex flex-wrap gap-3">
+                              <h5 className="text-[8px] md:text-[10px] font-black uppercase text-slate-400 tracking-widest">Premium Assets Breakdown</h5>
+                              <div className="flex flex-wrap gap-2 md:gap-3">
                                  <AssetBadge icon={Sword} label="Evo" value={selectedAccount.evoWeapons} />
                                  <AssetBadge icon={Target} label="Weapons" value={selectedAccount.totalWeapons} />
                                  <AssetBadge icon={Zap} label="Emotes" value={selectedAccount.emotes} />
@@ -792,14 +792,14 @@ export default function AdminPage() {
                         </div>
                      </Card>
 
-                     <Card className="rounded-[2.5rem] border-none shadow-xl bg-white dark:bg-slate-900 p-8 space-y-6">
+                     <Card className="rounded-[1.5rem] md:rounded-[2.5rem] border-none shadow-xl bg-white dark:bg-slate-900 p-5 md:p-8 space-y-4 md:space-y-6">
                         <div className="flex items-center gap-3">
-                           <ImageIcon className="text-primary" />
-                           <h4 className="font-bold text-xl uppercase tracking-tight">Full Gallery</h4>
+                           <ImageIcon className="text-primary" size={20} />
+                           <h4 className="font-bold text-lg md:text-xl uppercase tracking-tight">Full Gallery</h4>
                         </div>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-4">
                            {selectedAccount.imageUrls?.map((url: string, i: number) => (
-                             <div key={i} className="aspect-video relative rounded-2xl overflow-hidden shadow-sm border dark:border-white/5">
+                             <div key={i} className="aspect-video relative rounded-xl md:rounded-2xl overflow-hidden shadow-sm border dark:border-white/5">
                                 <Image src={url} alt="" fill className="object-cover" unoptimized />
                              </div>
                            ))}
@@ -808,56 +808,56 @@ export default function AdminPage() {
                   </div>
 
                   {/* Right Column: Transaction Management */}
-                  <div className="space-y-8">
-                     <Card className="rounded-[2.5rem] border-none shadow-xl bg-white dark:bg-slate-900 p-8 space-y-8">
-                        <div className="space-y-6">
+                  <div className="space-y-6 md:space-y-8">
+                     <Card className="rounded-[1.5rem] md:rounded-[2.5rem] border-none shadow-xl bg-white dark:bg-slate-900 p-5 md:p-8 space-y-6 md:space-y-8">
+                        <div className="space-y-4 md:space-y-6">
                            <div className="flex items-center gap-3">
-                              <UserCircle className="text-primary" />
+                              <UserCircle className="text-primary" size={20} />
                               <h4 className="font-bold text-lg uppercase">Stakeholders</h4>
                            </div>
 
-                           <div className="space-y-4">
-                              <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border dark:border-white/5">
-                                 <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-3">Seller (Owner)</p>
+                           <div className="space-y-3 md:space-y-4">
+                              <div className="p-3 md:p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl md:rounded-2xl border dark:border-white/5">
+                                 <p className="text-[8px] md:text-[9px] font-black uppercase text-slate-400 tracking-widest mb-2 md:mb-3">Seller (Owner)</p>
                                  <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-full overflow-hidden relative bg-slate-200">
+                                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-full overflow-hidden relative bg-slate-200">
                                        {selectedAccount.authorAvatar && <Image src={selectedAccount.authorAvatar} alt="" fill className="object-cover" />}
                                     </div>
-                                    <div>
-                                       <p className="text-sm font-bold">{selectedAccount.authorName}</p>
-                                       <p className="text-[10px] text-muted-foreground">{selectedAccount.phone}</p>
+                                    <div className="min-w-0">
+                                       <p className="text-xs md:text-sm font-bold truncate">{selectedAccount.authorName}</p>
+                                       <p className="text-[8px] md:text-[10px] text-muted-foreground truncate">{selectedAccount.phone}</p>
                                     </div>
                                  </div>
                               </div>
 
                               {(selectedAccount.status === 'holding' || selectedAccount.status === 'sold') && (
                                 <div className={cn(
-                                  "p-4 rounded-2xl border transition-all",
+                                  "p-3 md:p-4 rounded-xl md:rounded-2xl border transition-all",
                                   selectedAccount.conflict ? "bg-red-50 dark:bg-red-950/20 border-red-200" : "bg-blue-50 dark:bg-blue-950/20 border-blue-200"
                                 )}>
-                                   <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-3">Holder / Final Buyer</p>
+                                   <p className="text-[8px] md:text-[9px] font-black uppercase text-slate-400 tracking-widest mb-2 md:mb-3">Holder / Final Buyer</p>
                                    {(() => {
                                       const buyerId = selectedAccount.holdingBy || selectedAccount.boughtBy;
                                       const buyer = allUsers.find(u => u.uid === buyerId);
                                       const order = allOrders.find(o => o.gameDetails?.postId === selectedAccount.id && o.userId === buyerId);
                                       return (
-                                        <div className="space-y-4">
+                                        <div className="space-y-3 md:space-y-4">
                                            <div className="flex items-center gap-3">
-                                              <div className="w-10 h-10 rounded-full overflow-hidden relative bg-slate-200">
+                                              <div className="w-8 h-8 md:w-10 md:h-10 rounded-full overflow-hidden relative bg-slate-200">
                                                  {buyer?.photoURL && <Image src={buyer.photoURL} alt="" fill className="object-cover" />}
                                               </div>
-                                              <div>
-                                                 <p className="text-sm font-bold">{buyer?.name || 'System User'}</p>
-                                                 <p className="text-[10px] text-muted-foreground">{buyer?.email}</p>
+                                              <div className="min-w-0">
+                                                 <p className="text-xs md:text-sm font-bold truncate">{buyer?.name || 'System User'}</p>
+                                                 <p className="text-[8px] md:text-[10px] text-muted-foreground truncate">{buyer?.email}</p>
                                               </div>
                                            </div>
                                            {order && (
-                                              <div className="pt-3 border-t border-black/5 dark:border-white/5 space-y-2">
-                                                 <div className="flex justify-between"><span className="text-[9px] text-muted-foreground">Checkout Name</span><span className="text-[10px] font-bold">{order.gameDetails?.name}</span></div>
-                                                 <div className="flex justify-between"><span className="text-[9px] text-muted-foreground">Checkout WhatsApp</span><span className="text-[10px] font-bold text-primary">{order.gameDetails?.whatsappNumber}</span></div>
-                                                 <div className="flex justify-between mt-2 pt-2 border-t border-black/5">
-                                                    <span className="text-[9px] font-black uppercase">Buyer Outcome</span>
-                                                    <Badge className={cn("h-4 text-[7px]", order.buyerOutcome === 'bought' ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700")}>{order.buyerOutcome?.toUpperCase() || 'NOT REPORTED'}</Badge>
+                                              <div className="pt-2 md:pt-3 border-t border-black/5 dark:border-white/5 space-y-1.5 md:space-y-2">
+                                                 <div className="flex justify-between gap-2"><span className="text-[8px] md:text-[9px] text-muted-foreground">Name</span><span className="text-[9px] md:text-[10px] font-bold truncate">{order.gameDetails?.name}</span></div>
+                                                 <div className="flex justify-between gap-2"><span className="text-[8px] md:text-[9px] text-muted-foreground">WhatsApp</span><span className="text-[9px] md:text-[10px] font-bold text-primary truncate">{order.gameDetails?.whatsappNumber}</span></div>
+                                                 <div className="flex justify-between mt-1 md:mt-2 pt-1.5 md:pt-2 border-t border-black/5">
+                                                    <span className="text-[8px] md:text-[9px] font-black uppercase">Report</span>
+                                                    <Badge className={cn("h-3.5 md:h-4 text-[6px] md:text-[7px]", order.buyerOutcome === 'bought' ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700")}>{order.buyerOutcome?.toUpperCase() || 'NOT REPORTED'}</Badge>
                                                  </div>
                                               </div>
                                            )}
@@ -869,54 +869,54 @@ export default function AdminPage() {
                            </div>
                         </div>
 
-                        <div className="space-y-6 pt-6 border-t dark:border-white/5">
+                        <div className="space-y-4 md:space-y-6 pt-4 md:pt-6 border-t dark:border-white/5">
                            <div className="flex items-center gap-3">
-                              <RefreshCw className="text-amber-500" />
+                              <RefreshCw className="text-amber-500" size={20} />
                               <h4 className="font-bold text-lg uppercase">Lifecycle Control</h4>
                            </div>
                            
                            <div className="space-y-4">
-                              <div className="space-y-2">
-                                 <Label className="text-[10px] font-black uppercase text-slate-400 ml-2">Override Global Status</Label>
+                              <div className="space-y-1.5 md:space-y-2">
+                                 <Label className="text-[8px] md:text-[10px] font-black uppercase text-slate-400 ml-1 md:ml-2">Override Status</Label>
                                  <Select value={pendingAccountStatus} onValueChange={setPendingAccountStatus}>
-                                    <SelectTrigger className="h-14 rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-6 font-bold"><SelectValue /></SelectTrigger>
-                                    <SelectContent className="rounded-2xl">
-                                       {["pending", "processing", "approved", "rejected", "holding", "sold"].map(s => <SelectItem key={s} value={s} className="rounded-xl uppercase font-bold text-xs">{s}</SelectItem>)}
+                                    <SelectTrigger className="h-12 md:h-14 rounded-xl md:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-4 md:px-6 font-bold text-xs md:text-sm"><SelectValue /></SelectTrigger>
+                                    <SelectContent className="rounded-xl md:rounded-2xl">
+                                       {["pending", "processing", "approved", "rejected", "holding", "sold"].map(s => <SelectItem key={s} value={s} className="rounded-lg md:rounded-xl uppercase font-bold text-[10px] md:text-xs">{s}</SelectItem>)}
                                     </SelectContent>
                                  </Select>
                               </div>
 
                               {pendingAccountStatus === 'sold' && (
-                                 <div className="space-y-2 animate-in slide-in-from-top-2">
-                                    <Label className="text-[10px] font-black uppercase text-primary ml-2">Assign Final Verified Buyer</Label>
+                                 <div className="space-y-1.5 md:space-y-2 animate-in slide-in-from-top-2">
+                                    <Label className="text-[8px] md:text-[10px] font-black uppercase text-primary ml-1 md:ml-2">Final Buyer</Label>
                                     <Select value={assignBuyerId} onValueChange={setAssignBuyerId}>
-                                       <SelectTrigger className="h-14 rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-6 font-bold"><SelectValue placeholder="Select Final Buyer" /></SelectTrigger>
-                                       <SelectContent className="rounded-2xl">
-                                          {allUsers.map(u => <SelectItem key={u.uid} value={u.uid} className="text-xs">{u.name} ({u.email})</SelectItem>)}
+                                       <SelectTrigger className="h-12 md:h-14 rounded-xl md:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-4 md:px-6 font-bold text-xs md:text-sm"><SelectValue placeholder="Select Final Buyer" /></SelectTrigger>
+                                       <SelectContent className="rounded-xl md:rounded-2xl">
+                                          {allUsers.map(u => <SelectItem key={u.uid} value={u.uid} className="text-[10px] md:text-xs">{u.name} ({u.email.slice(0, 15)}...)</SelectItem>)}
                                        </SelectContent>
                                     </Select>
                                  </div>
                               )}
 
                               {selectedAccount.conflict && (
-                                <div className="p-4 bg-red-600/10 border border-red-600/20 rounded-2xl space-y-3">
+                                <div className="p-3 md:p-4 bg-red-600/10 border border-red-600/20 rounded-xl md:rounded-2xl space-y-2 md:space-y-3">
                                    <div className="flex items-center gap-2 text-red-600">
-                                      <ShieldAlert size={16} />
-                                      <p className="text-[10px] font-black uppercase tracking-widest">Dispute Warning</p>
+                                      <ShieldAlert size={14} />
+                                      <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest">Dispute Warning</p>
                                    </div>
-                                   <p className="text-xs font-bold leading-relaxed text-red-700 dark:text-red-400">Seller has disagreed with the buyer's purchase claim. Verify payments before finalizing status.</p>
+                                   <p className="text-[10px] md:text-xs font-bold leading-relaxed text-red-700 dark:text-red-400">Seller has disagreed with the purchase claim. Verify payments before finalizing.</p>
                                 </div>
                               )}
 
-                              <Button onClick={handleAccountStatusSave} disabled={isSavingStatus} className="w-full h-16 rounded-2xl font-black text-lg shadow-xl shadow-primary/20 bg-primary hover:bg-primary/90 uppercase tracking-widest">
-                                 {isSavingStatus ? <Loader2 className="animate-spin" /> : "Save Marketplace Updates"}
+                              <Button onClick={handleAccountStatusSave} disabled={isSavingStatus} className="w-full h-14 md:h-16 rounded-xl md:rounded-2xl font-black text-sm md:text-lg shadow-xl shadow-primary/20 bg-primary hover:bg-primary/90 uppercase tracking-widest">
+                                 {isSavingStatus ? <Loader2 className="animate-spin" /> : "Save Updates"}
                               </Button>
                            </div>
                         </div>
                      </Card>
 
-                     <Button variant="ghost" className="w-full h-14 rounded-2xl font-bold text-red-500 hover:bg-red-50" onClick={() => confirmDelete(selectedAccount.id, 'account')}>
-                        <Trash2 className="w-5 h-5 mr-2" /> Delete Permanent Listing
+                     <Button variant="ghost" className="w-full h-12 md:h-14 rounded-xl md:rounded-2xl font-bold text-red-500 hover:bg-red-50 text-xs md:text-sm" onClick={() => confirmDelete(selectedAccount.id, 'account')}>
+                        <Trash2 className="w-4 h-4 md:w-5 md:h-5 mr-2" /> Delete Permanent Listing
                      </Button>
                   </div>
                </div>
@@ -1580,7 +1580,7 @@ export default function AdminPage() {
                        </>
                     ) : (
                       <>
-                        <div className="flex justify-between border-b dark:border-white/5 pb-2"><span className="text-xs text-muted-foreground">Player ID / Game ID</span><span className="text-xs font-bold font-mono tracking-wider">{selectedOrder?.gameDetails?.playerID || selectedOrder?.gameDetails?.postId || 'N/A'}</span></div>
+                        <div className="flex justify-between border-b dark:border-white/5 pb-2"><span className="text-xs text-muted-foreground">Player ID / Game ID</span><span className="text-xs font-bold font-mono tracking-wider">{selectedOrder?.playerID || selectedOrder?.gameDetails?.playerID || selectedOrder?.gameDetails?.postId || 'N/A'}</span></div>
                         <div className="flex justify-between border-b dark:border-white/5 pb-2"><span className="text-xs text-muted-foreground">In-Game Name</span><span className="text-xs font-bold">{selectedOrder?.gameDetails?.playerName || selectedOrder?.gameDetails?.name || 'N/A'}</span></div>
                         <div className="flex justify-between border-b dark:border-white/5 pb-2"><span className="text-xs text-muted-foreground">Sender Number</span><span className="text-xs font-bold text-primary">{selectedOrder?.gameDetails?.senderNumber || 'N/A'}</span></div>
                         <div className="flex justify-between border-b dark:border-white/5 pb-2"><span className="text-xs text-muted-foreground">WhatsApp</span><span className="text-xs font-bold">{selectedOrder?.gameDetails?.whatsappNumber || 'N/A'}</span></div>
