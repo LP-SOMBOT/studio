@@ -106,6 +106,7 @@ type AccountPost = {
   buyerReported?: boolean;
   buyerReportedAt?: number;
   sellerReported?: boolean;
+  sellerReportedAt?: number;
   conflict?: boolean;
   createdAt: number;
   processedAt?: number;
@@ -687,6 +688,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       buyerReported: false,
       buyerReportedAt: null,
       sellerReported: false,
+      sellerReportedAt: null,
       conflict: false,
       adminMessage: null,
       hiddenFromMarket: false,
@@ -724,6 +726,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         buyerReported: false,
         buyerReportedAt: null,
         sellerReported: false,
+        sellerReportedAt: null,
         conflict: false
       });
       if (targetOrder) {
@@ -775,6 +778,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         status: 'sold',
         sold: true,
         sellerReported: true,
+        sellerReportedAt: Date.now(),
         completedAt: Date.now(),
         boughtBy: post.holdingBy,
         conflict: false 
@@ -789,6 +793,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       await update(postRef, {
         status: 'holding', 
         sellerReported: true,
+        sellerReportedAt: Date.now(),
         conflict: true
       });
       toast({ title: "Reported Disagreement", description: "Admin will review this transaction." });

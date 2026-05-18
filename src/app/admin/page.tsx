@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -1155,11 +1156,16 @@ export default function AdminPage() {
                                     </div>
                                  </div>
                                  {selectedAccount.sellerReported && (
-                                    <div className="flex justify-between mt-2 pt-2 border-t border-black/5 dark:border-white/5">
-                                       <span className="text-[8px] md:text-[9px] font-black uppercase">Report</span>
-                                       <Badge className={cn("h-3.5 md:h-4 text-[6px] md:text-[7px] font-black uppercase", selectedAccount.conflict ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700")}>
-                                          {selectedAccount.conflict ? 'DISAGREED' : 'CONFIRMED SOLD'}
-                                       </Badge>
+                                    <div className="flex flex-col gap-1 mt-2 pt-2 border-t border-black/5 dark:border-white/5">
+                                       <div className="flex justify-between items-center">
+                                          <span className="text-[8px] md:text-[9px] font-black uppercase">Report</span>
+                                          <Badge className={cn("h-3.5 md:h-4 text-[6px] md:text-[7px] font-black uppercase", selectedAccount.conflict ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700")}>
+                                             {selectedAccount.conflict ? 'DISAGREED' : 'CONFIRMED SOLD'}
+                                          </Badge>
+                                       </div>
+                                       <span className="text-[7px] md:text-[8px] font-bold text-muted-foreground text-right uppercase">
+                                          Started: {getSmartTimestamp(selectedAccount.sellerReportedAt || selectedAccount.completedAt)}
+                                       </span>
                                     </div>
                                  )}
                               </div>
@@ -1189,9 +1195,14 @@ export default function AdminPage() {
                                               <div className="pt-2 md:pt-3 border-t border-black/5 dark:border-white/5 space-y-1.5 md:space-y-2">
                                                  <div className="flex justify-between gap-2"><span className="text-xs text-muted-foreground">Name</span><span className="text-sm font-bold truncate">{order.gameDetails?.name}</span></div>
                                                  <div className="flex justify-between gap-2"><span className="text-xs text-muted-foreground">WhatsApp</span><span className="text-sm font-bold text-primary truncate">{order.gameDetails?.whatsappNumber}</span></div>
-                                                 <div className="flex justify-between mt-2 pt-2 border-t border-black/5">
-                                                    <span className="text-xs font-black uppercase">Report</span>
-                                                    <Badge className={cn("h-4 text-[7px] font-black uppercase", order.buyerOutcome === 'bought' ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700")}>{order.buyerOutcome === 'bought' ? 'SOLD' : (order.buyerOutcome?.toUpperCase() || 'NOT REPORTED')}</Badge>
+                                                 <div className="flex flex-col gap-1 mt-2 pt-2 border-t border-black/5">
+                                                    <div className="flex justify-between items-center">
+                                                       <span className="text-xs font-black uppercase">Report</span>
+                                                       <Badge className={cn("h-4 text-[7px] font-black uppercase", order.buyerOutcome === 'bought' ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700")}>{order.buyerOutcome === 'bought' ? 'SOLD' : (order.buyerOutcome?.toUpperCase() || 'NOT REPORTED')}</Badge>
+                                                    </div>
+                                                    <span className="text-[8px] font-bold text-muted-foreground text-right uppercase">
+                                                       Started: {getSmartTimestamp(selectedAccount.buyerReportedAt)}
+                                                    </span>
                                                  </div>
                                               </div>
                                            )}
@@ -2241,7 +2252,7 @@ export default function AdminPage() {
       </Dialog>
 
       <Dialog open={isBannerDialogOpen} onOpenChange={setIsBannerDialogOpen}>
-        <DialogContent className="max-w-md w-[95vw] rounded-[2rem] p-0 overflow-hidden border-none shadow-2xl bg-white dark:bg-slate-900">
+        <DialogContent className="max-md w-[95vw] rounded-[2rem] p-0 overflow-hidden border-none shadow-2xl bg-white dark:bg-slate-900">
            <div className="bg-primary p-6 text-white"><DialogTitle className="text-xl font-headline font-bold">Add Promotion Banner</DialogTitle></div>
            <div className="p-6 space-y-6">
               <div className="space-y-2">
