@@ -721,31 +721,30 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const targetOrder = orders.find(o => o.gameDetails?.postId === postId && o.userId === user.uid);
     
     if (outcome === 'not_bought') {
-      // If he was the specific 'holding' user, release the hold
+      const updates: any = {};
       if (postData.holdingBy === user.uid) {
-        await update(postRef, {
-          status: 'approved',
-          holdingBy: null,
-          buyerReported: false,
-          buyerReportedAt: null,
-          sellerReported: false,
-          sellerReportedAt: null,
-          conflict: false
-        });
+        updates[`accountPosts/${postId}/status`] = 'approved';
+        updates[`accountPosts/${postId}/holdingBy`] = null;
+        updates[`accountPosts/${postId}/conflict`] = false;
+        updates[`accountPosts/${postId}/buyerReported`] = false;
+        updates[`accountPosts/${postId}/buyerReportedAt`] = null;
+        updates[`accountPosts/${postId}/sellerReported`] = false;
+        updates[`accountPosts/${postId}/sellerReportedAt`] = null;
       }
       if (targetOrder) {
-        await update(ref(rtdb, `orders/${targetOrder.id}`), { buyerOutcome: outcome, status: 'cancelled' });
+        updates[`orders/${targetOrder.id}/buyerOutcome`] = outcome;
+        updates[`orders/${targetOrder.id}/status`] = 'cancelled';
+      }
+      if (Object.keys(updates).length > 0) {
+        await update(ref(rtdb), updates);
       }
       toast({ title: "Deal Cancelled", description: "You've cancelled your report for this account." });
     } else {
       const reportTime = Date.now();
-      // NOTE: We now allow multi-reporting. 
-      // We flag the post as having at least one report, but we don't lock holdingBy yet 
-      // unless it was previously set.
+      // Restore Logic: Do NOT change status to 'holding' on report. Account stays 'approved'.
       await update(postRef, { 
         buyerReported: true, 
-        buyerReportedAt: reportTime,
-        status: 'holding' // Ensure it's hidden from new public users
+        buyerReportedAt: reportTime
       });
 
       if (targetOrder) {
@@ -774,7 +773,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const post = postSnap.val();
     if (!post) return;
 
-    // Use specific buyerId if provided (multi-holder scenario), otherwise use holdingBy
     const targetBuyerId = buyerId || post.holdingBy;
     if (!targetBuyerId) return;
 
@@ -791,13 +789,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       });
       toast({ title: "Account Sold!", description: "Transaction finalized successfully." });
       broadcastNotification("Purchase Confirmed! 🤑", "Seller has confirmed your purchase. The account is yours!", targetBuyerId);
-      
-      // Notify other potential buyers that the account is gone
-      // (Optional: loop through all other orders for this postId and notify them)
     } else {
-      // CONFLICT: Seller disagrees with this specific buyer
-      // If there's only one claimant, we set general conflict. 
-      // If multi, we might want to flag this specific order.
+      // CONFLICT: Logic restored - only switch to 'holding' (hidden) when conflict occurs.
       await update(postRef, {
         status: 'holding', 
         sellerReported: true,
@@ -818,7 +811,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     const updates: any = { 
       adminMessage: message,
-      sellerReported: true, // Mark as resolved by admin
+      sellerReported: true, 
       conflict: false,
       buyerReported: false,
       buyerReportedAt: null
@@ -889,7 +882,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         broadcastNotification("Order Successful! ✅", "Dalabkaaga waa lagu guuleystay. Waxaad heshay 1 point!", userId);
       }
     } else if (status === 'cancelled') {
-      // If it was an account, only release if it was the ONLY active claim or handle carefully
       if (userId) {
         if (oldStatus === 'successful') {
           await update(ref(rtdb, `users/${userId}`), { points: increment(-1) });
