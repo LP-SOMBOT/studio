@@ -66,13 +66,13 @@ export default function AccountsView() {
 
   const filteredPosts = useMemo(() => {
     const now = Date.now();
-    const isAdmin = user?.isAdmin;
+    const isAdmin = !!user?.isAdmin;
     const userId = user?.uid;
 
     return (accountPosts || [])
       .filter(p => {
-        const isOwner = p.uid === userId;
-        const isBuyerOrHolder = (p.holdingBy && p.holdingBy === userId) || (p.boughtBy && p.boughtBy === userId);
+        const isOwner = userId && p.uid === userId;
+        const isBuyerOrHolder = userId && ((p.holdingBy && p.holdingBy === userId) || (p.boughtBy && p.boughtBy === userId));
         
         // 1. Privilege check: Admins, Owners, and involved Buyers/Holders see their relevant posts regardless of status
         if (isAdmin || isOwner || isBuyerOrHolder) {
@@ -80,19 +80,16 @@ export default function AccountsView() {
         }
 
         // 2. Visibility check for everyone else (the public):
-        // Hide if status is any of these restricted categories
-        const restrictedStatuses = ['pending', 'holding', 'sold', 'processing', 'rejected', 'cancelled'];
-        if (restrictedStatuses.includes(p.status)) return false;
+        // STRICT RULE: Only show if status is 'approved' AND not sold/hidden/expired
+        if (p.status !== 'approved') return false;
+        if (p.sold === true) return false;
+        if (p.hiddenFromMarket === true) return false;
 
-        // Hide if expired
+        // Check expiration
         const isExpired = p.expiresAt ? p.expiresAt < now : false;
         if (isExpired) return false;
 
-        // Hide if explicitly hidden from market by admin
-        if (p.hiddenFromMarket) return false;
-
-        // Only show 'approved' posts to the general public
-        return p.status === 'approved';
+        return true;
       })
       .filter(p => 
         p.authorName?.toLowerCase().includes(searchQuery.toLowerCase()) || 
