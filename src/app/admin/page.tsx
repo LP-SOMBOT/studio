@@ -664,6 +664,9 @@ export default function AdminPage() {
 
   const SidebarContent = ({ isMobile = false }) => (
     <div className="flex flex-col h-full">
+      <SheetHeader className="sr-only">
+        <SheetTitle>Admin Navigation Menu</SheetTitle>
+      </SheetHeader>
       {!isMobile && (
         <div className="h-20 px-6 flex items-center justify-between shrink-0">
           {isSidebarExpanded && <span className="font-headline font-bold text-lg text-slate-900 dark:text-white">Oskar Control</span>}
@@ -695,9 +698,6 @@ export default function AdminPage() {
       {/* Mobile Sidebar */}
       <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
         <SheetContent side="left" className="p-0 w-72 bg-white dark:bg-slate-900 border-none">
-          <SheetHeader className="sr-only">
-            <SheetTitle>Admin Navigation Menu</SheetTitle>
-          </SheetHeader>
           <SidebarContent isMobile={true} />
         </SheetContent>
       </Sheet>
@@ -884,12 +884,13 @@ export default function AdminPage() {
 
                <Card className="rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden border-none shadow-xl bg-white dark:bg-slate-900">
                 <div className="overflow-x-auto scrollbar-hide">
-                  <Table className="min-w-[1000px]">
+                  <Table className="min-w-[1100px]">
                     <TableHeader className="bg-slate-50/50 dark:bg-slate-800/40">
                       <TableRow className="border-none">
                         <TableHead className="px-4 sm:px-8">Seller</TableHead>
                         <TableHead>Game & Info</TableHead>
                         <TableHead>Buyer Claim</TableHead>
+                        <TableHead>Admin Handling</TableHead>
                         <TableHead>Wait Time</TableHead>
                         <TableHead>Expiration</TableHead>
                         <TableHead>Status</TableHead>
@@ -899,7 +900,7 @@ export default function AdminPage() {
                     <TableBody>
                       {sortedAndFilteredAccounts.length === 0 ? (
                         <TableRow>
-                           <TableCell colSpan={7} className="h-40 text-center text-slate-400 italic">No listings match filters.</TableCell>
+                           <TableCell colSpan={8} className="h-40 text-center text-slate-400 italic">No listings match filters.</TableCell>
                         </TableRow>
                       ) : (
                         sortedAndFilteredAccounts.map(p => {
@@ -931,6 +932,16 @@ export default function AdminPage() {
                                     {associatedOrder.buyerOutcome === 'bought' ? 'CLAIMED SOLD' : 'NOT SOLD'}
                                   </Badge>
                                 ) : <span className="text-[10px] text-slate-300">No claim</span>}
+                              </TableCell>
+                              <TableCell>
+                                {p.processedBy ? (
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden relative border border-white dark:border-white/10">
+                                      {p.processedBy.photoURL ? <Image src={p.processedBy.photoURL} alt="" fill className="object-cover" /> : <User size={12} className="m-auto mt-1" />}
+                                    </div>
+                                    <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 truncate max-w-[80px]">{p.processedBy.name}</span>
+                                  </div>
+                                ) : <span className="text-[10px] text-slate-300 italic">Unassigned</span>}
                               </TableCell>
                               <TableCell>
                                  {p.buyerReported && !p.sellerReported ? (
@@ -971,6 +982,18 @@ export default function AdminPage() {
                   </Button>
                   <h3 className="font-headline font-bold text-xl md:text-2xl dark:text-white uppercase tracking-tight truncate">Detail: #{selectedAccount.id.toUpperCase()}</h3>
                </div>
+
+               {selectedAccount?.processedBy && selectedAccount.processedBy.uid !== user?.uid && (
+                  <div className="p-4 bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 rounded-2xl flex items-center gap-4 animate-in fade-in zoom-in mb-6">
+                    <div className="w-12 h-12 rounded-full overflow-hidden relative shrink-0 border-2 border-indigo-200">
+                      {selectedAccount.processedBy.photoURL ? <Image src={selectedAccount.processedBy.photoURL} alt="" fill className="object-cover" /> : <User className="m-auto mt-2 text-indigo-300" />}
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-indigo-900 dark:text-indigo-300">Staff Handling</p>
+                      <p className="text-sm font-medium text-indigo-700 dark:text-indigo-400"><span className="font-bold">{selectedAccount.processedBy.name}</span> is currently reviewing this listing.</p>
+                    </div>
+                  </div>
+                )}
 
                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
                   {/* Left Column: Post Details */}
@@ -1559,7 +1582,7 @@ export default function AdminPage() {
                  <AccordionItem value="app-status" className="border-none bg-white dark:bg-slate-900 rounded-[1.5rem] sm:rounded-[2rem] px-4 sm:px-8 shadow-lg">
                    <AccordionTrigger className="hover:no-underline">
                      <div className="flex items-center gap-3 sm:gap-4 text-left">
-                       <div className="p-2 sm:p-3 bg-red-50 dark:bg-red-500/10 text-red-500 rounded-xl sm:rounded-2xl shrink-0"><MonitorOff size={20} /></div>
+                       <div className="p-2 sm:p-3 bg-red-50 dark:bg-red-950/10 text-red-500 rounded-xl sm:rounded-2xl shrink-0"><MonitorOff size={20} /></div>
                        <div><h4 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white">App Status (Offline Mode)</h4><p className="text-[10px] sm:text-xs text-muted-foreground">Maintenance mode and updates</p></div>
                      </div>
                    </AccordionTrigger>
