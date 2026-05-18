@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef } from 'react';
@@ -639,9 +638,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const orderId = `iibinta${sequenceId}`;
     const newOrder: Order = { id: orderId, userId: user.uid, items: [directItem], total: directItem.price, status: 'pending', createdAt: Date.now(), paymentMethod, gameDetails };
     
-    // UPDATE: "la xariir" no longer changes status to holding automatically.
-    // This will be handled during the reportAccountOutcome phase.
-
     await set(ref(rtdb, `orders/${orderId}`), newOrder);
     await broadcastAdminNotification("New Order Received! 🛍️", `Order #${orderId.toUpperCase()} for ${directItem.title} is pending verification.`);
   };
@@ -682,6 +678,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       sold: false,
       holdingBy: null,
       buyerReported: false,
+      buyerReportedAt: null,
       sellerReported: false,
       conflict: false
     });
@@ -711,7 +708,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const targetOrder = orders.find(o => o.gameDetails?.postId === postId && o.userId === user.uid);
     
     if (outcome === 'not_bought') {
-      // Release the hold (if it was holding)
       await update(postRef, {
         status: 'approved',
         holdingBy: null,
@@ -725,13 +721,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
       toast({ title: "Hold Released", description: "Account is now available for others." });
     } else {
-      // If someone else already reported bought while this user was negotiating:
       if (postData.holdingBy && postData.holdingBy !== user.uid) {
          toast({ title: "Daqiiqado ka hor!", description: "Account-kan waxaa horey u sheegtay qof kale. Fadlan mid kale fiiri.", variant: "destructive" });
          return;
       }
 
-      // Mark as reported bought and LOCK the account to this buyer
       await update(postRef, { 
         buyerReported: true, 
         buyerReportedAt: Date.now(),
@@ -745,7 +739,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
       toast({ title: "Report Sent!", description: "Seller has been notified to verify the sale." });
       
-      // Notify Seller
       if (postData.uid) {
          broadcastNotification(
            "New Sale Report! 💰", 
@@ -767,20 +760,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (!post) return;
 
     if (confirmed) {
-      // Seller agrees: Account is Sold
       await update(postRef, {
         status: 'sold',
         sold: true,
         sellerReported: true,
         completedAt: Date.now(),
-        boughtBy: post.holdingBy
+        boughtBy: post.holdingBy,
+        conflict: false // Reset any conflict flag on agreement
       });
       toast({ title: "Account Sold!", description: "Transaction finalized successfully." });
       if (post.holdingBy) {
         broadcastNotification("Purchase Confirmed! 🤑", "Seller has confirmed your purchase. The account is yours!", post.holdingBy);
       }
     } else {
-      // Seller disagrees: Conflict
       await update(postRef, {
         sellerReported: true,
         conflict: true
@@ -830,13 +822,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     await update(ref(rtdb, `orders/${oid}`), assignmentUpdate);
     
     if (status === 'successful') {
-      if (accountItem && accountItem.id) await update(ref(rtdb, `accountPosts/${accountItem.id}`), { status: 'sold', sold: true });
+      if (accountItem && accountItem.id) await update(ref(rtdb, `accountPosts/${accountItem.id}`), { status: 'sold', sold: true, boughtBy: userId });
       if (userId && oldStatus !== 'successful') {
         await update(ref(rtdb, `users/${userId}`), { points: increment(1) });
         broadcastNotification("Order Successful! ✅", "Dalabkaaga waa lagu guuleystay. Waxaad heshay 1 point!", userId);
       }
     } else if (status === 'cancelled') {
-      if (accountItem && accountItem.id) await update(ref(rtdb, `accountPosts/${accountItem.id}`), { status: 'approved', sold: false, holdingBy: null });
+      if (accountItem && accountItem.id) await update(ref(rtdb, `accountPosts/${accountItem.id}`), { status: 'approved', sold: false, holdingBy: null, buyerReported: false, conflict: false });
       if (userId) {
         if (oldStatus === 'successful') {
           await update(ref(rtdb, `users/${userId}`), { points: increment(-1) });
@@ -858,9 +850,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const oldStatus = postData.status; 
     const assignmentUpdate: any = { status };
     
-    if (boughtBy) {
-      assignmentUpdate.boughtBy = boughtBy;
+    if (status === 'sold') {
       assignmentUpdate.sold = true;
+      assignmentUpdate.boughtBy = boughtBy || postData.holdingBy || postData.boughtBy;
+      assignmentUpdate.conflict = false; // Admin intervention resolves conflict
+      assignmentUpdate.sellerReported = true; // Mark as verified by admin
     }
 
     if (status === 'approved') {

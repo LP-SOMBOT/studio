@@ -70,7 +70,8 @@ import {
   Sword,
   Target,
   Zap,
-  Bomb
+  Bomb,
+  Gavel
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -327,7 +328,12 @@ export default function AdminPage() {
     if (!acc) return;
     setSelectedAccountId(id);
     setPendingAccountStatus(acc.status);
-    setAssignBuyerId(acc.boughtBy || acc.holdingBy || "");
+    
+    // AUTO-FILL INTELLIGENCE: Try to find the buyer ID
+    // 1. From existing sold/hold record
+    // 2. From associated orders where buyer claimed purchase
+    const associatedOrder = allOrders.find(o => o.gameDetails?.postId === acc.id && o.buyerOutcome === 'bought');
+    setAssignBuyerId(acc.boughtBy || acc.holdingBy || associatedOrder?.userId || "");
   };
 
   const handleOpenGameDialog = (game?: any) => {
@@ -931,7 +937,7 @@ export default function AdminPage() {
                                  )}
                               </div>
 
-                              {(selectedAccount.status === 'holding' || selectedAccount.status === 'sold') && (
+                              {(selectedAccount.status === 'holding' || selectedAccount.status === 'sold' || selectedAccount.buyerReported) && (
                                 <div className={cn(
                                   "p-3 md:p-4 rounded-xl md:rounded-2xl border transition-all",
                                   selectedAccount.conflict ? "bg-red-50 dark:bg-red-950/20 border-red-200" : "bg-blue-50 dark:bg-blue-950/20 border-blue-200"
@@ -970,6 +976,7 @@ export default function AdminPage() {
                            </div>
                         </div>
 
+                        {/* Lifecycle Control with decision logic */}
                         <div className="space-y-4 md:space-y-6 pt-4 md:pt-6 border-t dark:border-white/5">
                            <div className="flex items-center gap-3">
                               <RefreshCw className="text-amber-500" size={20} />
@@ -977,6 +984,23 @@ export default function AdminPage() {
                            </div>
                            
                            <div className="space-y-4">
+                              {/* Decider Box for Conflict */}
+                              {selectedAccount.conflict && (
+                                <div className="p-4 md:p-6 bg-amber-50 dark:bg-amber-500/10 rounded-[1.5rem] border-2 border-amber-200 dark:border-amber-500/20 space-y-4 animate-in zoom-in-95">
+                                   <div className="flex items-center gap-3 text-amber-700 dark:text-amber-400">
+                                      <Gavel size={20} />
+                                      <h5 className="font-black text-sm uppercase tracking-tight">Admin Intervention Required</h5>
+                                   </div>
+                                   <p className="text-xs font-bold leading-relaxed text-amber-800 dark:text-amber-500/70">
+                                      The seller has DISAGREED with the purchase claim. Verify the transaction and make a final decision below.
+                                   </p>
+                                   <div className="grid grid-cols-2 gap-2">
+                                      <Button size="sm" variant="outline" className="bg-white/50 dark:bg-slate-900 border-amber-200 font-bold text-[10px]" onClick={() => setPendingAccountStatus('sold')}>Force Sold</Button>
+                                      <Button size="sm" variant="outline" className="bg-white/50 dark:bg-slate-900 border-amber-200 font-bold text-[10px]" onClick={() => setPendingAccountStatus('approved')}>Force Release</Button>
+                                   </div>
+                                </div>
+                              )}
+
                               <div className="space-y-1.5 md:space-y-2">
                                  <Label className="text-[8px] md:text-[10px] font-black uppercase text-slate-400 ml-1 md:ml-2">Override Status</Label>
                                  <Select value={pendingAccountStatus} onValueChange={setPendingAccountStatus}>
@@ -989,7 +1013,7 @@ export default function AdminPage() {
 
                               {pendingAccountStatus === 'sold' && (
                                  <div className="space-y-1.5 md:space-y-2 animate-in slide-in-from-top-2">
-                                    <Label className="text-[8px] md:text-[10px] font-black text-primary ml-1 md:ml-2">Final Buyer</Label>
+                                    <Label className="text-[8px] md:text-[10px] font-black text-primary ml-1 md:ml-2">Final Buyer (Auto-detected if possible)</Label>
                                     <Select value={assignBuyerId} onValueChange={setAssignBuyerId}>
                                        <SelectTrigger className="h-12 md:h-14 rounded-xl md:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-4 md:px-6 font-bold text-xs md:text-sm"><SelectValue placeholder="Select Final Buyer" /></SelectTrigger>
                                        <SelectContent className="rounded-xl md:rounded-2xl">
@@ -999,18 +1023,8 @@ export default function AdminPage() {
                                  </div>
                               )}
 
-                              {selectedAccount.conflict && (
-                                <div className="p-3 md:p-4 bg-red-600/10 border border-red-600/20 rounded-xl md:rounded-2xl space-y-2 md:space-y-3">
-                                   <div className="flex items-center gap-2 text-red-600">
-                                      <ShieldAlert size={14} />
-                                      <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest">Dispute Warning</p>
-                                   </div>
-                                   <p className="text-[10px] md:text-xs font-bold leading-relaxed text-red-700 dark:text-red-400">Seller has disagreed with the purchase claim. Verify payments before finalizing.</p>
-                                </div>
-                              )}
-
                               <Button onClick={handleAccountStatusSave} disabled={isSavingStatus} className="w-full h-14 md:h-16 rounded-xl md:rounded-2xl font-black text-sm md:text-lg shadow-xl shadow-primary/20 bg-primary hover:bg-primary/90 uppercase tracking-widest">
-                                 {isSavingStatus ? <Loader2 className="animate-spin" /> : "Save Marketplace Updates"}
+                                 {isSavingStatus ? <Loader2 className="animate-spin" /> : "Finalize Marketplace Decision"}
                               </Button>
                            </div>
                         </div>
