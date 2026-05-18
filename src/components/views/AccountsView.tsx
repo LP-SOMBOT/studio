@@ -106,7 +106,7 @@ export default function AccountsView() {
         <button onClick={() => setIsActivityModalOpen(true)} className="relative p-2 text-slate-400 bg-slate-50 dark:bg-slate-900 rounded-full">
            <Activity className="w-5 h-5" />
            {myActivity.some(p => p.status === 'pending' || p.status === 'holding') && (
-             <span className="absolute top-1 right-1 w-2 h-2 bg-amber-500 rounded-full border-2 border-white dark:border-slate-900" />
+             <span className="absolute top-1 right-1 w-2 h-2 bg-amber-50 rounded-full border-2 border-white dark:border-slate-900" />
            )}
         </button>
       </header>
@@ -257,7 +257,7 @@ function AccountPostCard({ post, onClick, onEdit, onDelete, isOwner, isAdmin }: 
   const [timeLeft, setTimeLeft] = useState("");
 
   useEffect(() => {
-    if (!post.expiresAt || !isOwner && !isAdmin) return;
+    if (!post.expiresAt || (!isOwner && !isAdmin)) return;
     const interval = setInterval(() => {
       const now = Date.now();
       const diff = post.expiresAt - now;
@@ -512,13 +512,13 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
 
   return (
     <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if(!v) setHasTriggeredUssd(false); }}>
-      <DialogContent className="max-w-none w-screen h-full md:h-[94vh] md:max-w-4xl md:rounded-[3.5rem] overflow-y-auto p-0 border-none shadow-none md:shadow-2xl bg-white dark:bg-slate-900 scrollbar-hide fixed inset-0 z-[100] left-0 top-0 translate-x-0 translate-y-0 data-[state=open]:translate-x-0 data-[state=open]:translate-y-0">
-        <div className="sticky top-0 z-[110] bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-5 md:px-10 pt-6 md:pt-10 pb-4 md:pb-6 flex items-center justify-between border-b md:border-none dark:border-white/5">
-           <div className="flex items-center gap-3 md:gap-4">
-              <button onClick={() => onOpenChange(false)} className="p-2 md:hidden text-slate-900 dark:text-white"><ArrowLeft className="w-6 h-6" /></button>
-              <div>
-                <DialogTitle className="text-xl md:text-4xl font-headline font-bold text-slate-900 dark:text-white leading-none">{editingPost ? 'Update' : 'Sell'} Account</DialogTitle>
-                <p className="text-[8px] md:text-xs font-black text-muted-foreground uppercase tracking-[0.2em] md:tracking-[0.3em] mt-1 md:mt-2">Gamer Marketplace Listing</p>
+      <DialogContent className="max-w-none w-screen h-full md:h-[94vh] md:max-w-4xl md:rounded-[3.5rem] overflow-y-auto p-0 border-none shadow-none md:shadow-2xl bg-white dark:bg-slate-900 scrollbar-hide fixed inset-0 z-[100] left-0 top-0 translate-x-0 translate-y-0 data-[state=open]:translate-x-0 data-[state=open]:translate-y-0 flex flex-col">
+        <div className="sticky top-0 z-[110] bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-4 md:px-10 pt-5 md:pt-10 pb-4 md:pb-6 flex items-center justify-between border-b md:border-none dark:border-white/5 shrink-0">
+           <div className="flex items-center gap-2 md:gap-4 min-w-0">
+              <button onClick={() => onOpenChange(false)} className="p-2 md:hidden text-slate-900 dark:text-white shrink-0"><ArrowLeft size={24} /></button>
+              <div className="min-w-0">
+                <DialogTitle className="text-lg md:text-4xl font-headline font-bold text-slate-900 dark:text-white leading-tight truncate">{editingPost ? 'Update' : 'Sell'} Account</DialogTitle>
+                <p className="text-[7px] md:text-xs font-black text-muted-foreground uppercase tracking-[0.2em] mt-0.5 md:mt-2 truncate">Gamer Marketplace Listing</p>
               </div>
            </div>
            <button onClick={() => onOpenChange(false)} className="hidden md:flex p-3 bg-slate-100 dark:bg-slate-800 rounded-2xl text-slate-400 hover:bg-slate-200 transition-colors">
@@ -526,147 +526,165 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
            </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="px-5 md:px-10 space-y-8 md:space-y-12 pb-24 md:pb-32 mt-4 md:mt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-             <div className="space-y-4 md:space-y-6">
-                <div className="flex items-center gap-3">
-                   <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-500"><Gamepad2 className="w-4 h-4 md:w-5 md:h-5" /></div>
-                   <h3 className="font-headline font-bold text-base md:text-xl dark:text-white">Game Details</h3>
-                </div>
-                <div className="space-y-4">
-                   <FormGroup label="Select Game">
-                      <Select value={formData.gameType} onValueChange={(val) => setFormData({...formData, gameType: val})}>
-                        <SelectTrigger className="h-12 md:h-14 lg:h-16 rounded-xl md:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-4 md:px-6 font-bold text-sm md:text-base"><SelectValue /></SelectTrigger>
-                        <SelectContent className="rounded-xl md:rounded-2xl"><SelectItem value="freefire" className="rounded-lg md:rounded-xl">Free Fire</SelectItem><SelectItem value="bloodstrike" className="rounded-lg md:rounded-xl">Blood Strike</SelectItem></SelectContent>
-                      </Select>
-                   </FormGroup>
-                   <FormGroup label="Platform">
-                      <Select value={formData.platform} onValueChange={(val) => setFormData({...formData, platform: val})}>
-                        <SelectTrigger className="h-12 md:h-14 lg:h-16 rounded-xl md:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-4 md:px-6 font-bold text-sm md:text-base"><SelectValue /></SelectTrigger>
-                        <SelectContent className="rounded-xl md:rounded-2xl"><SelectItem value="Google" className="rounded-lg md:rounded-xl">Google</SelectItem><SelectItem value="Facebook" className="rounded-lg md:rounded-xl">Facebook</SelectItem></SelectContent>
-                      </Select>
-                   </FormGroup>
-                </div>
-             </div>
+        <div className="flex-1 overflow-y-auto scrollbar-hide">
+          <form onSubmit={handleSubmit} className="px-4 md:px-10 space-y-8 md:space-y-12 pb-24 md:pb-32 mt-4 md:mt-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+               <div className="space-y-4 md:space-y-6">
+                  <div className="flex items-center gap-3">
+                     <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-500"><Gamepad2 size={18} /></div>
+                     <h3 className="font-headline font-bold text-sm md:text-xl dark:text-white uppercase tracking-tight">Game Details</h3>
+                  </div>
+                  <div className="space-y-4">
+                     <FormGroup label="Select Game">
+                        <Select value={formData.gameType} onValueChange={(val) => setFormData({...formData, gameType: val})}>
+                          <SelectTrigger className="h-12 md:h-14 rounded-xl md:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-4 md:px-6 font-bold text-xs md:text-base">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="rounded-xl md:rounded-2xl z-[150]">
+                            <SelectItem value="freefire" className="rounded-lg md:rounded-xl text-xs md:text-sm">Free Fire</SelectItem>
+                            <SelectItem value="bloodstrike" className="rounded-lg md:rounded-xl text-xs md:text-sm">Blood Strike</SelectItem>
+                          </SelectContent>
+                        </Select>
+                     </FormGroup>
+                     <FormGroup label="Platform">
+                        <Select value={formData.platform} onValueChange={(val) => setFormData({...formData, platform: val})}>
+                          <SelectTrigger className="h-12 md:h-14 rounded-xl md:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-4 md:px-6 font-bold text-xs md:text-base">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="rounded-xl md:rounded-2xl z-[150]">
+                            <SelectItem value="Google" className="rounded-lg md:rounded-xl text-xs md:text-sm">Google</SelectItem>
+                            <SelectItem value="Facebook" className="rounded-lg md:rounded-xl text-xs md:text-sm">Facebook</SelectItem>
+                          </SelectContent>
+                        </Select>
+                     </FormGroup>
+                  </div>
+               </div>
 
-             <div className="space-y-4 md:space-y-6">
-                <div className="flex items-center gap-3">
-                   <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-blue-500"><Clock className="w-4 h-4 md:w-5 md:h-5" /></div>
-                   <h3 className="font-headline font-bold text-base md:text-xl dark:text-white">Listing Duration</h3>
-                </div>
-                <FormGroup label="Muda (Term)">
-                   <Select value={formData.term} onValueChange={(val) => setFormData({...formData, term: val})}>
-                      <SelectTrigger className="h-12 md:h-14 lg:h-16 rounded-xl md:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-4 md:px-6 font-bold text-sm md:text-base"><SelectValue /></SelectTrigger>
-                      <SelectContent className="rounded-xl md:rounded-2xl">
-                         <SelectItem value="weekly" className="rounded-lg md:rounded-xl text-xs md:text-sm">Weakly (Isbuucle) - ${storeSettings?.config?.shop?.listingFeeWeekly || 1.00}</SelectItem>
-                         <SelectItem value="monthly" className="rounded-lg md:rounded-xl text-xs md:text-sm">Monthly (Bile) - ${storeSettings?.config?.shop?.listingFeeMonthly || 3.00}</SelectItem>
-                      </SelectContent>
-                   </Select>
-                </FormGroup>
-             </div>
-          </div>
-
-          <div className="space-y-6 md:space-y-8">
-             <div className="flex items-center gap-3">
-                <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-purple-50 dark:bg-purple-500/10 flex items-center justify-center text-purple-500"><Star className="w-4 h-4 md:w-5 md:h-5" /></div>
-                <h3 className="font-headline font-bold text-base md:text-xl dark:text-white">Account Assets</h3>
-             </div>
-             
-             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-                <FormInput label="Level" type="number" value={formData.level} onChange={v => setFormData({...formData, level: v})} placeholder="e.g. 80" />
-                {formData.gameType === 'freefire' ? (
-                   <FormGroup label="Prime Level">
-                      <Select value={formData.primeLevel} onValueChange={v => setFormData({...formData, primeLevel: v})}>
-                         <SelectTrigger className="h-12 md:h-14 lg:h-16 rounded-xl md:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-4 md:px-6 font-bold"><SelectValue /></SelectTrigger>
-                         <SelectContent className="rounded-xl md:rounded-2xl">{[1,2,3,4,5,6,7,8].map(l => <SelectItem key={l} value={l.toString()} className="rounded-lg md:rounded-xl">Level {l}</SelectItem>)}</SelectContent>
-                      </Select>
-                   </FormGroup>
-                ) : (
-                   <FormInput label="Account ID" value={formData.accountId} onChange={v => setFormData({...formData, accountId: v})} placeholder="ID-ga" />
-                )}
-                <FormInput label="Evo weapons" type="number" value={formData.evoWeapons} onChange={v => setFormData({...formData, evoWeapons: v})} placeholder="Count" />
-                <FormInput label="All Weapons" type="number" value={formData.totalWeapons} onChange={v => setFormData({...formData, totalWeapons: v})} placeholder="Count" />
-                <FormInput label="Emote" type="number" value={formData.emotes} onChange={v => setFormData({...formData, emotes: v})} placeholder="Count" />
-                <FormInput label="Arrival" type="number" value={formData.arrivalEmotes} onChange={v => setFormData({...formData, arrivalEmotes: v})} placeholder="Count" />
-                {formData.gameType === 'freefire' && (
-                   <FormInput label="Dharka" type="number" value={formData.dharka} onChange={v => setFormData({...formData, dharka: v})} placeholder="Count" />
-                )}
-             </div>
-          </div>
-
-          <div className="space-y-4 md:space-y-6">
-            <div className="flex items-center gap-3">
-               <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-cyan-50 dark:bg-cyan-500/10 flex items-center justify-center text-cyan-500"><ImageIcon className="w-4 h-4 md:w-5 md:h-5" /></div>
-               <h3 className="font-headline font-bold text-base md:text-xl dark:text-white">Account Gallery</h3>
+               <div className="space-y-4 md:space-y-6">
+                  <div className="flex items-center gap-3">
+                     <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-blue-500"><Clock size={18} /></div>
+                     <h3 className="font-headline font-bold text-sm md:text-xl dark:text-white uppercase tracking-tight">Listing Duration</h3>
+                  </div>
+                  <FormGroup label="Muda (Term)">
+                     <Select value={formData.term} onValueChange={(val) => setFormData({...formData, term: val})}>
+                        <SelectTrigger className="h-12 md:h-14 rounded-xl md:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-4 md:px-6 font-bold text-xs md:text-base">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl md:rounded-2xl z-[150]">
+                           <SelectItem value="weekly" className="rounded-lg md:rounded-xl text-[10px] md:text-sm">Weakly (Isbuucle) - ${storeSettings?.config?.shop?.listingFeeWeekly || 1.00}</SelectItem>
+                           <SelectItem value="monthly" className="rounded-lg md:rounded-xl text-[10px] md:text-sm">Monthly (Bile) - ${storeSettings?.config?.shop?.listingFeeMonthly || 3.00}</SelectItem>
+                        </SelectContent>
+                     </Select>
+                  </FormGroup>
+               </div>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
-               {previews.map((url, idx) => (
-                 <div key={idx} className="relative aspect-video rounded-xl md:rounded-[1.5rem] overflow-hidden group shadow-lg bg-slate-100 border border-slate-200 dark:border-white/5">
-                    <Image src={url} alt="" fill className="object-cover" unoptimized />
-                    <button type="button" onClick={() => removeImage(idx)} className="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1.5 md:p-2 shadow-xl active:scale-110"><X className="w-3.5 h-3.5 md:w-4 md:h-4" /></button>
-                 </div>
-               ))}
-               <label className="aspect-video rounded-xl md:rounded-[1.5rem] border-2 border-dashed border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800/40 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all flex flex-col items-center justify-center gap-1.5 cursor-pointer text-slate-400 group h-full">
-                  <Plus className="w-5 h-5 md:w-8 md:h-8 group-hover:text-primary transition-colors" />
-                  <span className="text-[7px] md:text-[10px] font-black uppercase tracking-widest">Add Media</span>
-                  <input type="file" accept="image/*" multiple onChange={handleFileChange} className="hidden" />
-               </label>
+
+            <div className="space-y-6 md:space-y-8">
+               <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-purple-50 dark:bg-purple-500/10 flex items-center justify-center text-purple-500"><Star size={18} /></div>
+                  <h3 className="font-headline font-bold text-sm md:text-xl dark:text-white uppercase tracking-tight">Account Assets</h3>
+               </div>
+               
+               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                  <FormInput label="Level" type="number" value={formData.level} onChange={v => setFormData({...formData, level: v})} placeholder="e.g. 80" />
+                  {formData.gameType === 'freefire' ? (
+                     <FormGroup label="Prime Level">
+                        <Select value={formData.primeLevel} onValueChange={v => setFormData({...formData, primeLevel: v})}>
+                           <SelectTrigger className="h-12 md:h-14 rounded-xl md:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-4 md:px-6 font-bold text-xs md:text-base">
+                             <SelectValue />
+                           </SelectTrigger>
+                           <SelectContent className="rounded-xl md:rounded-2xl z-[150]">
+                             {[1,2,3,4,5,6,7,8].map(l => <SelectItem key={l} value={l.toString()} className="rounded-lg md:rounded-xl text-xs md:text-sm">Level {l}</SelectItem>)}
+                           </SelectContent>
+                        </Select>
+                     </FormGroup>
+                  ) : (
+                     <FormInput label="Account ID" value={formData.accountId} onChange={v => setFormData({...formData, accountId: v})} placeholder="ID-ga" />
+                  )}
+                  <FormInput label="Evo weapons" type="number" value={formData.evoWeapons} onChange={v => setFormData({...formData, evoWeapons: v})} placeholder="Count" />
+                  <FormInput label="All Weapons" type="number" value={formData.totalWeapons} onChange={v => setFormData({...formData, totalWeapons: v})} placeholder="Count" />
+                  <FormInput label="Emote" type="number" value={formData.emotes} onChange={v => setFormData({...formData, emotes: v})} placeholder="Count" />
+                  <FormInput label="Arrival" type="number" value={formData.arrivalEmotes} onChange={v => setFormData({...formData, arrivalEmotes: v})} placeholder="Count" />
+                  {formData.gameType === 'freefire' && (
+                     <FormInput label="Dharka" type="number" value={formData.dharka} onChange={v => setFormData({...formData, dharka: v})} placeholder="Count" />
+                  )}
+               </div>
             </div>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10 items-end">
-             <div className="space-y-4 md:space-y-6">
-                <div className="flex items-center gap-3">
-                   <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-green-50 dark:bg-green-500/10 flex items-center justify-center text-green-500"><DollarSign className="w-4 h-4 md:w-5 md:h-5" /></div>
-                   <h3 className="font-headline font-bold text-base md:text-xl dark:text-white">Pricing & Sale</h3>
-                </div>
-                <FormInput label="WhatsApp (Seller)" value={formData.phone} onChange={v => setFormData({...formData, phone: v})} placeholder="25261..." />
-                <div className="p-5 md:p-8 bg-slate-950 rounded-2xl md:rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden">
-                   <div className="absolute top-0 right-0 p-6 md:p-10 opacity-5"><DollarSign className="w-12 h-12 md:w-24 md:h-24" /></div>
-                   <label className="text-[8px] md:text-[11px] font-black text-white/40 uppercase tracking-[0.2em] md:tracking-[0.3em] ml-1 md:ml-2 block mb-1.5 md:mb-4">Account Sale Price ($)</label>
-                   <div className="relative z-10 flex items-center">
-                      <span className="text-xl md:text-4xl font-headline font-bold text-primary mr-1 md:mr-2">$</span>
-                      <input 
-                        type="number" 
-                        required 
-                        value={formData.price} 
-                        onChange={e => setFormData({...formData, price: e.target.value})} 
-                        className="bg-transparent border-none text-3xl md:text-6xl lg:text-7xl font-headline font-bold text-white focus:outline-none w-full tracking-tighter" 
-                        placeholder="0.00"
-                      />
+            <div className="space-y-4 md:space-y-6">
+              <div className="flex items-center gap-3">
+                 <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-cyan-50 dark:bg-cyan-500/10 flex items-center justify-center text-cyan-500"><ImageIcon size={18} /></div>
+                 <h3 className="font-headline font-bold text-sm md:text-xl dark:text-white uppercase tracking-tight">Account Gallery</h3>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
+                 {previews.map((url, idx) => (
+                   <div key={idx} className="relative aspect-video rounded-xl md:rounded-[1.5rem] overflow-hidden group shadow-lg bg-slate-100 border border-slate-200 dark:border-white/5">
+                      <Image src={url} alt="" fill className="object-cover" unoptimized />
+                      <button type="button" onClick={() => removeImage(idx)} className="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1.5 md:p-2 shadow-xl active:scale-110"><X size={14} /></button>
                    </div>
-                </div>
-             </div>
+                 ))}
+                 <label className="aspect-video rounded-xl md:rounded-[1.5rem] border-2 border-dashed border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800/40 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all flex flex-col items-center justify-center gap-1 md:gap-1.5 cursor-pointer text-slate-400 group h-full min-h-[80px]">
+                    <Plus size={20} className="md:size-8 group-hover:text-primary transition-colors" />
+                    <span className="text-[7px] md:text-[10px] font-black uppercase tracking-widest">Add Media</span>
+                    <input type="file" accept="image/*" multiple onChange={handleFileChange} className="hidden" />
+                 </label>
+              </div>
+            </div>
 
-             <div className="space-y-4 md:space-y-6">
-                <div className="p-5 md:p-8 bg-amber-50 dark:bg-amber-500/10 rounded-2xl md:rounded-[2.5rem] border border-amber-100 dark:border-amber-500/20 space-y-2 md:space-y-4">
-                   <div className="flex items-center gap-2 text-amber-800 dark:text-amber-400">
-                      <Info className="w-4 h-4 md:w-5 md:h-5" />
-                      <p className="text-xs md:text-base font-black uppercase tracking-widest">Listing Fee Policy</p>
-                   </div>
-                   <p className="text-[10px] md:text-sm lg:text-base font-bold text-amber-700/80 dark:text-amber-500/80 leading-relaxed">
-                      Fee-ga posting-ka ee {formData.term === 'weekly' ? 'Isbuucle' : 'Bile'} waa <span className="font-black text-amber-800 dark:text-amber-300 text-sm md:text-2xl">${listingFee.toFixed(2)}</span>.
-                   </p>
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10 items-end">
+               <div className="space-y-4 md:space-y-6">
+                  <div className="flex items-center gap-3">
+                     <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-green-50 dark:bg-green-500/10 flex items-center justify-center text-green-500"><DollarSign size={18} /></div>
+                     <h3 className="font-headline font-bold text-sm md:text-xl dark:text-white uppercase tracking-tight">Pricing & Sale</h3>
+                  </div>
+                  <FormInput label="WhatsApp (Seller)" value={formData.phone} onChange={v => setFormData({...formData, phone: v})} placeholder="25261..." />
+                  <div className="p-5 md:p-8 bg-slate-950 rounded-2xl md:rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden">
+                     <div className="absolute top-0 right-0 p-6 md:p-10 opacity-5"><DollarSign size={40} className="md:size-24" /></div>
+                     <label className="text-[8px] md:text-[11px] font-black text-white/40 uppercase tracking-[0.2em] md:tracking-[0.3em] ml-1 md:ml-2 block mb-1.5 md:mb-4">Account Sale Price ($)</label>
+                     <div className="relative z-10 flex items-center">
+                        <span className="text-xl md:text-4xl font-headline font-bold text-primary mr-1 md:mr-2">$</span>
+                        <input 
+                          type="number" 
+                          required 
+                          value={formData.price} 
+                          onChange={e => setFormData({...formData, price: e.target.value})} 
+                          className="bg-transparent border-none text-2xl md:text-6xl lg:text-7xl font-headline font-bold text-white focus:outline-none w-full tracking-tighter" 
+                          placeholder="0.00"
+                        />
+                     </div>
+                  </div>
+               </div>
 
-                {!editingPost ? (
-                   !hasTriggeredUssd ? (
-                      <Button type="button" onClick={handleUssdPay} disabled={!isFormValid} className="w-full h-14 md:h-20 rounded-xl md:rounded-[2rem] text-sm md:text-2xl font-black shadow-2xl bg-primary hover:bg-primary/90 transition-all uppercase tracking-widest">
-                         PAY ${listingFee.toFixed(2)} FEE
-                      </Button>
-                   ) : (
-                      <Button disabled={loading || !isFormValid} type="submit" className="w-full h-14 md:h-20 rounded-xl md:rounded-[2rem] text-sm md:text-2xl font-black shadow-2xl bg-green-600 hover:bg-green-700 transition-all uppercase tracking-widest">
-                         {loading ? <Loader2 className="animate-spin w-5 h-5 md:w-6 md:h-6" /> : 'CONFIRM & POST'}
-                      </Button>
-                   )
-                ) : (
-                   <Button disabled={loading || !isFormValid} type="submit" className="w-full h-14 md:h-20 rounded-xl md:rounded-[2rem] text-sm md:text-2xl font-black shadow-2xl bg-primary hover:bg-primary/90 transition-all uppercase tracking-widest">
-                      {loading ? <Loader2 className="animate-spin w-5 h-5 md:w-6 md:h-6" /> : 'SAVE CHANGES'}
-                   </Button>
-                )}
-             </div>
-          </div>
-        </form>
+               <div className="space-y-4 md:space-y-6">
+                  <div className="p-4 md:p-8 bg-amber-50 dark:bg-amber-500/10 rounded-2xl md:rounded-[2.5rem] border border-amber-100 dark:border-amber-500/20 space-y-2 md:space-y-4">
+                     <div className="flex items-center gap-2 text-amber-800 dark:text-amber-400">
+                        <Info size={16} className="md:size-5" />
+                        <p className="text-[10px] md:text-base font-black uppercase tracking-widest">Listing Fee Policy</p>
+                     </div>
+                     <p className="text-[9px] md:text-sm lg:text-base font-bold text-amber-700/80 dark:text-amber-500/80 leading-relaxed">
+                        Fee-ga posting-ka ee {formData.term === 'weekly' ? 'Isbuucle' : 'Bile'} waa <span className="font-black text-amber-800 dark:text-amber-300 text-xs md:text-2xl">${listingFee.toFixed(2)}</span>.
+                     </p>
+                  </div>
+
+                  {!editingPost ? (
+                     !hasTriggeredUssd ? (
+                        <Button type="button" onClick={handleUssdPay} disabled={!isFormValid} className="w-full h-14 md:h-20 rounded-xl md:rounded-[2rem] text-sm md:text-2xl font-black shadow-2xl bg-primary hover:bg-primary/90 transition-all uppercase tracking-widest">
+                           PAY ${listingFee.toFixed(2)} FEE
+                        </Button>
+                     ) : (
+                        <Button disabled={loading || !isFormValid} type="submit" className="w-full h-14 md:h-20 rounded-xl md:rounded-[2rem] text-sm md:text-2xl font-black shadow-2xl bg-green-600 hover:bg-green-700 transition-all uppercase tracking-widest">
+                           {loading ? <Loader2 className="animate-spin w-5 h-5 md:w-6 md:h-6" /> : 'CONFIRM & POST'}
+                        </Button>
+                     )
+                  ) : (
+                     <Button disabled={loading || !isFormValid} type="submit" className="w-full h-14 md:h-20 rounded-xl md:rounded-[2rem] text-sm md:text-2xl font-black shadow-2xl bg-primary hover:bg-primary/90 transition-all uppercase tracking-widest">
+                        {loading ? <Loader2 className="animate-spin w-5 h-5 md:w-6 md:h-6" /> : 'SAVE CHANGES'}
+                     </Button>
+                  )}
+               </div>
+            </div>
+          </form>
+        </div>
       </DialogContent>
     </Dialog>
   );
@@ -685,7 +703,7 @@ function FormInput({ label, value, onChange, placeholder, type = "text", classNa
   return (
     <div className={cn("space-y-1.5", className)}>
        <label className="text-[8px] md:text-[11px] font-black text-muted-foreground uppercase tracking-[0.1em] md:tracking-[0.2em] ml-1 md:ml-2">{label}</label>
-       <Input type={type} placeholder={placeholder} value={value} onChange={e => onChange(e.target.value)} className="h-11 md:h-14 lg:h-16 rounded-xl md:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-4 md:px-6 font-bold text-xs md:text-base focus-visible:ring-primary shadow-inner" />
+       <Input type={type} placeholder={placeholder} value={value} onChange={e => onChange(e.target.value)} className="h-12 md:h-14 lg:h-16 rounded-xl md:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-4 md:px-6 font-bold text-xs md:text-base focus-visible:ring-primary shadow-inner" />
     </div>
   );
 }
