@@ -16,7 +16,10 @@ import {
   AlertCircle,
   XCircle,
   ArrowRight,
-  RefreshCw
+  RefreshCw,
+  User,
+  MessageCircle,
+  Check
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -44,9 +47,8 @@ import { useState, useMemo, useEffect } from 'react';
 import { toast } from '@/hooks/use-toast';
 
 export default function MyAccountsView() {
-  const { accountPosts, user, setActiveTab, deleteAccountPost, updateAccountPostStatus, renewAccountPost, storeSettings, isInitialLoading } = useApp();
+  const { accountPosts, user, allUsers, orders, setActiveTab, deleteAccountPost, respondToSaleReport, renewAccountPost, storeSettings, isInitialLoading } = useApp();
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [markingSoldId, setMarkingSoldId] = useState<string | null>(null);
   const [renewingPost, setRenewingPost] = useState<any>(null);
   const [renewTerm, setRenewTerm] = useState<'weekly' | 'monthly'>('weekly');
   const [hasTriggeredRenewUssd, setHasTriggeredRenewUssd] = useState(false);
@@ -60,13 +62,6 @@ export default function MyAccountsView() {
     if (!deletingId) return;
     await deleteAccountPost(deletingId);
     setDeletingId(null);
-  };
-
-  const handleSetSold = async () => {
-    if (!markingSoldId) return;
-    await updateAccountPostStatus(markingSoldId, 'sold');
-    setMarkingSoldId(null);
-    toast({ title: "Account marked as Sold!" });
   };
 
   const handleRenewUssd = () => {
@@ -125,15 +120,22 @@ export default function MyAccountsView() {
         </div>
       ) : (
         <div className="space-y-6">
-          {myPosts.map((post) => (
-            <AccountManagedCard 
-              key={post.id} 
-              post={post} 
-              onDelete={() => setDeletingId(post.id)}
-              onSold={() => setMarkingSoldId(post.id)}
-              onRenew={() => setRenewingPost(post)}
-            />
-          ))}
+          {myPosts.map((post) => {
+            const buyerProfile = allUsers.find(u => u.uid === post.holdingBy);
+            const buyerOrder = (orders || []).find(o => o.gameDetails?.postId === post.id && o.userId === post.holdingBy);
+            
+            return (
+              <AccountManagedCard 
+                key={post.id} 
+                post={post} 
+                buyer={buyerProfile}
+                buyerOrder={buyerOrder}
+                onDelete={() => setDeletingId(post.id)}
+                onRespond={(confirmed) => respondToSaleReport(post.id, confirmed)}
+                onRenew={() => setRenewingPost(post)}
+              />
+            );
+          })}
         </div>
       )}
 
@@ -181,21 +183,11 @@ export default function MyAccountsView() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      <Dialog open={!!markingSoldId} onOpenChange={(v) => !v && setMarkingSoldId(null)}>
-        <DialogContent className="max-w-sm rounded-[2rem]">
-          <DialogHeader><DialogTitle>Waa la iibiyay?</DialogTitle><DialogDescription>Account-kan waxaa laga saari doonaa marketplace-ka dadweynaha.</DialogDescription></DialogHeader>
-          <DialogFooter className="gap-2">
-             <Button variant="ghost" onClick={() => setMarkingSoldId(null)} className="rounded-xl">Maya</Button>
-             <Button className="bg-green-600 hover:bg-green-700 rounded-xl font-bold" onClick={handleSetSold}>Haa, Mark as Sold</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
 
-function AccountManagedCard({ post, onDelete, onSold, onRenew }: { post: any, onDelete: () => void, onSold: () => void, onRenew: () => void }) {
+function AccountManagedCard({ post, buyer, buyerOrder, onDelete, onRespond, onRenew }: { post: any, buyer?: any, buyerOrder?: any, onDelete: () => void, onRespond: (conf: boolean) => void, onRenew: () => void }) {
   const isExpired = post.expiresAt ? post.expiresAt < Date.now() : false;
   const [timeLeft, setTimeLeft] = useState("");
 
@@ -218,81 +210,128 @@ function AccountManagedCard({ post, onDelete, onSold, onRenew }: { post: any, on
     return () => clearInterval(interval);
   }, [post.expiresAt]);
 
+  const showVerification = post.status === 'holding' && post.buyerReported && !post.sellerReported;
+
   return (
     <Card className={cn(
-      "rounded-[2.5rem] border-none shadow-xl bg-white dark:bg-slate-900 overflow-hidden group",
-      isExpired && !post.sold && "border-l-4 border-l-red-500"
+      "rounded-[2.5rem] border-none shadow-xl bg-white dark:bg-slate-900 overflow-hidden group transition-all",
+      isExpired && !post.sold && "border-l-4 border-l-red-500",
+      showVerification && "ring-2 ring-primary"
     )}>
-       <div className="p-6 sm:p-8 flex flex-col md:flex-row gap-6">
-          <div className="w-full md:w-40 aspect-video md:aspect-square relative rounded-3xl overflow-hidden bg-slate-100 shrink-0">
-             {post.thumbnailUrl ? (
-               <Image src={post.thumbnailUrl} alt="" fill className="object-cover" unoptimized />
-             ) : <Gamepad2 className="m-auto absolute inset-0 text-slate-300" />}
-             {post.status === 'sold' && (
-               <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center">
-                  <Badge className="bg-red-600 text-white border-none font-bold uppercase tracking-widest text-[10px]">SOLD</Badge>
+       <div className="p-6 sm:p-8 space-y-6">
+          <div className="flex flex-col md:flex-row gap-6">
+            <div className="w-full md:w-40 aspect-video md:aspect-square relative rounded-3xl overflow-hidden bg-slate-100 shrink-0">
+               {post.thumbnailUrl ? (
+                 <Image src={post.thumbnailUrl} alt="" fill className="object-cover" unoptimized />
+               ) : <Gamepad2 className="m-auto absolute inset-0 text-slate-300" />}
+               {post.status === 'sold' && (
+                 <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center">
+                    <Badge className="bg-red-600 text-white border-none font-bold uppercase tracking-widest text-[10px]">SOLD</Badge>
+                 </div>
+               )}
+               {isExpired && !post.sold && (
+                 <div className="absolute inset-0 bg-red-900/60 backdrop-blur-sm flex items-center justify-center">
+                    <Badge className="bg-red-600 text-white border-none font-bold uppercase tracking-widest text-[10px]">EXPIRED</Badge>
+                 </div>
+               )}
+            </div>
+
+            <div className="flex-1 space-y-4">
+               <div className="flex justify-between items-start">
+                  <div>
+                     <h3 className="font-bold text-xl text-slate-900 dark:text-white uppercase">{post.gameType} Account</h3>
+                     <p className="text-xs text-muted-foreground font-medium">Ref: #{post.id.toUpperCase()}</p>
+                  </div>
+                  <div className="flex flex-col items-end gap-2">
+                     <Badge className={cn(
+                       "rounded-full px-4 py-1 font-bold text-[10px] border-none uppercase tracking-wider",
+                       post.status === 'approved' ? "bg-green-100 text-green-700" : (post.status === 'pending' || post.status === 'holding') ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"
+                     )}>
+                        {post.status}
+                     </Badge>
+                     {post.status !== 'sold' && timeLeft && (
+                       <p className={cn("text-[9px] font-black uppercase tracking-tighter", isExpired ? "text-red-500" : "text-primary")}>
+                         {timeLeft}
+                       </p>
+                     )}
+                  </div>
                </div>
-             )}
-             {isExpired && !post.sold && (
-               <div className="absolute inset-0 bg-red-900/60 backdrop-blur-sm flex items-center justify-center">
-                  <Badge className="bg-red-600 text-white border-none font-bold uppercase tracking-widest text-[10px]">EXPIRED</Badge>
+
+               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  <StatusInfo icon={Calendar} label="Posted" value={format(new Date(post.createdAt), 'MMM d')} />
+                  <StatusInfo icon={Gamepad2} label="Level" value={post.level} />
+                  <StatusInfo icon={Smartphone} label="Platform" value={post.platform} />
+                  <StatusInfo icon={DollarSign} label="Price" value={`$${post.price}`} />
                </div>
-             )}
+
+               {post.status === 'holding' && buyer && (
+                 <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-white/5 space-y-3">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Active Holder (Potential Buyer)</p>
+                    <div className="flex items-center gap-3">
+                       <div className="w-10 h-10 rounded-full overflow-hidden relative border-2 border-white">
+                          {buyer.photoURL ? <Image src={buyer.photoURL} alt="" fill className="object-cover" /> : <User className="m-auto mt-2 text-slate-300" />}
+                       </div>
+                       <div>
+                          <p className="text-sm font-bold">{buyer.name}</p>
+                          <p className="text-[10px] text-muted-foreground">{buyer.phoneNumber}</p>
+                       </div>
+                       {buyerOrder?.buyerOutcome === 'bought' && (
+                         <Badge className="ml-auto bg-green-100 text-green-700 border-none text-[8px] font-black uppercase">Reports: BOUGHT</Badge>
+                       )}
+                    </div>
+                 </div>
+               )}
+            </div>
           </div>
 
-          <div className="flex-1 space-y-4">
-             <div className="flex justify-between items-start">
-                <div>
-                   <h3 className="font-bold text-xl text-slate-900 dark:text-white uppercase">{post.gameType} Account</h3>
-                   <p className="text-xs text-muted-foreground font-medium">Ref: #{post.id.toUpperCase()}</p>
-                </div>
-                <div className="flex flex-col items-end gap-2">
-                   <Badge className={cn(
-                     "rounded-full px-4 py-1 font-bold text-[10px] border-none uppercase tracking-wider",
-                     post.status === 'approved' ? "bg-green-100 text-green-700" : (post.status === 'pending' || post.status === 'holding') ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"
-                   )}>
-                      {post.status}
-                   </Badge>
-                   {post.status !== 'sold' && timeLeft && (
-                     <p className={cn("text-[9px] font-black uppercase tracking-tighter", isExpired ? "text-red-500" : "text-primary")}>
-                       {timeLeft}
-                     </p>
-                   )}
-                </div>
-             </div>
+          {showVerification && (
+            <div className="p-6 bg-primary/5 rounded-[2rem] border border-primary/20 space-y-6 animate-in slide-in-from-top-2">
+               <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-primary text-white rounded-full flex items-center justify-center">
+                     <AlertCircle size={24} />
+                  </div>
+                  <div>
+                     <h4 className="font-bold text-lg">Xaqiiji Iibsiga</h4>
+                     <p className="text-xs text-muted-foreground">Buyer-ku wuxuu sheegay inuu account-ka iibsaday. Fadlan xaqiiji.</p>
+                  </div>
+               </div>
 
-             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <StatusInfo icon={Calendar} label="Posted" value={format(new Date(post.createdAt), 'MMM d')} />
-                <StatusInfo icon={Gamepad2} label="Level" value={post.level} />
-                <StatusInfo icon={Smartphone} label="Platform" value={post.platform} />
-                <StatusInfo icon={DollarSign} label="Price" value={`$${post.price}`} />
-             </div>
+               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <Button onClick={() => onRespond(true)} className="h-14 rounded-2xl bg-green-600 hover:bg-green-700 font-bold gap-2 text-lg">
+                     <Check size={20} /> Haa, Waa la iibiyay
+                  </Button>
+                  <Button onClick={() => onRespond(false)} variant="outline" className="h-14 rounded-2xl font-bold border-red-200 text-red-500 hover:bg-red-50">
+                     <XCircle size={20} /> Ma iibsanin
+                  </Button>
+               </div>
+            </div>
+          )}
 
-             <div className="pt-4 border-t dark:border-white/5 flex flex-wrap gap-3">
-                {!post.sold && isExpired && (
-                  <Button 
-                    onClick={onRenew}
-                    className="h-10 rounded-xl bg-primary hover:bg-primary/90 font-bold text-xs gap-2 shadow-lg shadow-primary/20"
-                  >
-                     <RefreshCw size={16} /> Renew Term
-                  </Button>
-                )}
-                {post.status !== 'sold' && !isExpired && (
-                  <Button 
-                    onClick={onSold}
-                    className="h-10 rounded-xl bg-green-600 hover:bg-green-700 font-bold text-xs gap-2"
-                  >
-                     <CheckCircle2 size={16} /> Mark as Sold
-                  </Button>
-                )}
-                <Button 
-                  variant="ghost" 
-                  className="h-10 rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 font-bold text-xs gap-2"
-                  onClick={onDelete}
-                >
-                   <Trash2 size={16} /> Delete Post
-                </Button>
-             </div>
+          {post.conflict && (
+            <div className="p-4 bg-red-50 dark:bg-red-950/20 rounded-2xl border border-red-100 dark:border-red-900/20 flex items-center gap-3">
+               <AlertCircle className="text-red-500 shrink-0" size={20} />
+               <p className="text-xs font-bold text-red-700 dark:text-red-400">
+                  Transaction is in dispute. Admin-ka ayaa dib u eegis ku sameynaya xogta labada dhinac.
+               </p>
+            </div>
+          )}
+
+          <div className="pt-4 border-t dark:border-white/5 flex flex-wrap gap-3">
+             {!post.sold && isExpired && (
+               <Button 
+                 onClick={onRenew}
+                 className="h-10 rounded-xl bg-primary hover:bg-primary/90 font-bold text-xs gap-2 shadow-lg shadow-primary/20"
+               >
+                  <RefreshCw size={16} /> Renew Term
+               </Button>
+             )}
+             <Button 
+               variant="ghost" 
+               className="h-10 rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 font-bold text-xs gap-2"
+               onClick={onDelete}
+             >
+                <Trash2 size={16} /> Delete Post
+             </Button>
           </div>
        </div>
     </Card>

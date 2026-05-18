@@ -103,6 +103,9 @@ type AccountPost = {
   status: 'pending' | 'approved' | 'rejected' | 'processing' | 'holding' | 'sold';
   holdingBy?: string;
   boughtBy?: string;
+  buyerReported?: boolean;
+  sellerReported?: boolean;
+  conflict?: boolean;
   createdAt: number;
   processedAt?: number;
   completedAt?: number;
@@ -246,6 +249,7 @@ type AppContextType = {
   updateOrderStatus: (orderId: string, status: string, cancellationReason?: string) => Promise<void>;
   updateAccountPostStatus: (postId: string, status: string, boughtBy?: string) => Promise<void>;
   reportAccountOutcome: (postId: string, outcome: 'bought' | 'not_bought') => Promise<void>;
+  respondToSaleReport: (postId: string, confirmed: boolean) => Promise<void>;
   updateUserProfile: (updates: Partial<UserProfile>) => Promise<void>;
   manageUser: (uid: string, updates: Partial<UserProfile>) => Promise<void>;
   deleteUser: (uid: string) => Promise<void>;
@@ -638,7 +642,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (directItem.gameId === 'accounts' && gameDetails.postId) {
       await update(ref(rtdb, `accountPosts/${gameDetails.postId}`), {
         status: 'holding',
-        holdingBy: user.uid
+        holdingBy: user.uid,
+        buyerReported: false,
+        sellerReported: false,
+        conflict: false
       });
     }
 
@@ -680,7 +687,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       expiresAt: null, // Reset and wait for re-approval
       status: 'pending', // Back to pending for verification
       sold: false,
-      holdingBy: null
+      holdingBy: null,
+      buyerReported: false,
+      sellerReported: false,
+      conflict: false
     });
     toast({ title: "Renewal Initiated!", description: "Waiting for admin to verify renewal payment." });
   };
@@ -700,16 +710,62 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const reportAccountOutcome = async (postId: string, outcome: 'bought' | 'not_bought') => {
     if (!rtdb || !user) return;
     
-    // Use the local synchronized orders state to find the correct order
-    // This avoids the "Index not defined" error for gameDetails/postId
     const targetOrder = orders.find(o => o.gameDetails?.postId === postId && o.userId === user.uid);
     
-    if (targetOrder) {
-      await update(ref(rtdb, `orders/${targetOrder.id}`), { buyerOutcome: outcome });
-      await broadcastAdminNotification("Buyer Report!", `Buyer reported "${outcome}" for account #${postId.toUpperCase()}.`);
+    if (outcome === 'not_bought') {
+      // Release the hold
+      await update(ref(rtdb, `accountPosts/${postId}`), {
+        status: 'approved',
+        holdingBy: null,
+        buyerReported: false,
+        sellerReported: false,
+        conflict: false
+      });
+      if (targetOrder) {
+        await update(ref(rtdb, `orders/${targetOrder.id}`), { buyerOutcome: outcome, status: 'cancelled' });
+      }
+      toast({ title: "Hold Released", description: "Account is now available for others." });
+    } else {
+      // Mark as reported bought
+      await update(ref(rtdb, `accountPosts/${postId}`), { buyerReported: true });
+      if (targetOrder) {
+        await update(ref(rtdb, `orders/${targetOrder.id}`), { buyerOutcome: outcome });
+      }
+      toast({ title: "Report Sent!", description: "Seller has been notified to verify the sale." });
+      await broadcastAdminNotification("Buyer Report!", `Buyer reported purchase for account #${postId.toUpperCase()}.`);
     }
+  };
 
-    toast({ title: "Report Sent!", description: "Admin will verify and update status." });
+  const respondToSaleReport = async (postId: string, confirmed: boolean) => {
+    if (!rtdb || !user) return;
+    
+    const postRef = ref(rtdb, `accountPosts/${postId}`);
+    const postSnap = await get(postRef);
+    const post = postSnap.val();
+    if (!post) return;
+
+    if (confirmed) {
+      // Seller agrees: Account is Sold
+      await update(postRef, {
+        status: 'sold',
+        sold: true,
+        sellerReported: true,
+        completedAt: Date.now(),
+        boughtBy: post.holdingBy
+      });
+      toast({ title: "Account Sold!", description: "Transaction finalized successfully." });
+      if (post.holdingBy) {
+        broadcastNotification("Purchase Confirmed! 🤑", "Seller has confirmed your purchase. The account is yours!", post.holdingBy);
+      }
+    } else {
+      // Seller disagrees: Conflict
+      await update(postRef, {
+        sellerReported: true,
+        conflict: true
+      });
+      toast({ title: "Reported Disagreement", description: "Admin will review this transaction." });
+      await broadcastAdminNotification("Conflict Detected! ⚠️", `Seller disagreed with buyer report for account #${postId.toUpperCase()}.`);
+    }
   };
 
   const broadcastNotification = async (title: string, body: string, target?: string) => {
@@ -769,12 +825,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           userId
         );
       }
-    } else if (oldStatus === 'successful' && status !== 'successful' && status !== 'cancelled') {
-      if (accountItem && accountItem.id) await update(ref(rtdb, `accountPosts/${accountItem.id}`), { status: 'approved', sold: false, holdingBy: null });
-      if (userId) {
-        await update(ref(rtdb, `users/${userId}`), { points: increment(-1) });
-        broadcastNotification("Order Update: Points Revoked ⚠️", `Dalabkaaga waa la bedelay xaaladiisa.`, userId);
-      }
     }
   };
 
@@ -795,8 +845,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       assignmentUpdate.holdingBy = null;
       assignmentUpdate.boughtBy = null;
       assignmentUpdate.sold = false;
+      assignmentUpdate.conflict = false;
+      assignmentUpdate.buyerReported = false;
+      assignmentUpdate.sellerReported = false;
 
-      // Start countdown only on initial approval or renewal approval
       if (oldStatus !== 'approved' || !postData.expiresAt) {
         const term = postData.term || 'weekly';
         const duration = term === 'monthly' ? (30 * 24 * 60 * 60 * 1000) : (7 * 24 * 60 * 60 * 1000);
@@ -942,7 +994,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     <AppContext.Provider value={{ 
       user: enhancedUser, loading, isGlobalLoading, isInitialLoading, activeTab, setActiveTab, setGlobalLoading: setIsGlobalLoading,
       login, signup, logout, buyNow, orders, allOrders, games, products, allUsers, accountPosts, notifications, adminNotifications, events, banners,
-      createOrder, postAccount, updateAccountPost, renewAccountPost, deleteAccountPost, deleteOrder, buyAccountPost, markNotificationsAsRead, markAdminNotificationsAsRead, updateOrderStatus, updateAccountPostStatus, reportAccountOutcome,
+      createOrder, postAccount, updateAccountPost, renewAccountPost, deleteAccountPost, deleteOrder, buyAccountPost, markNotificationsAsRead, markAdminNotificationsAsRead, updateOrderStatus, updateAccountPostStatus, reportAccountOutcome, respondToSaleReport,
       updateUserProfile, manageUser, deleteUser, saveGame, deleteGame, saveProduct, deleteProduct, saveEvent, deleteEvent, saveBanner, deleteBanner, savePaymentMethod, deletePaymentMethod, storeSettings, updateStoreSettings, 
       broadcastNotification, broadcastAdminNotification, messages, allChatSessions, chatTargetId, setChatTargetId, sendMessage, markMessagesAsRead, refreshAdminData,
       theme, toggleTheme, isBannedModalOpen, setIsBannedModalOpen, bannedInfo, isPostingAccount, setIsPostingAccount
