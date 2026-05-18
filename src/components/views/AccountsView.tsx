@@ -14,6 +14,7 @@ import {
   CheckCircle2,
   XCircle,
   Loader2,
+  ArrowLeft,
   ArrowRight,
   SmartphoneIcon,
   X,
@@ -29,7 +30,8 @@ import {
   Target,
   Zap,
   Bomb,
-  ShoppingBag
+  ShoppingBag,
+  User
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -81,13 +83,13 @@ export default function AccountsView() {
 
   if (isInitialLoading) {
     return (
-      <div className="min-h-screen pb-24 space-y-10 max-w-[1600px] mx-auto px-6 pt-10">
+      <div className="min-h-screen pb-24 space-y-6 md:space-y-10 max-w-[1600px] mx-auto px-4 md:px-6 pt-6 md:pt-10">
         <div className="flex justify-between items-center">
-           <Skeleton className="h-12 w-64 rounded-2xl" />
-           <Skeleton className="h-12 w-12 rounded-full" />
+           <Skeleton className="h-10 md:h-12 w-48 md:w-64 rounded-2xl" />
+           <Skeleton className="h-10 md:h-12 w-10 md:w-12 rounded-full" />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8">
-           {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-[450px] rounded-[3rem] w-full" />)}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 md:gap-8">
+           {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-[400px] md:h-[450px] rounded-[2rem] md:rounded-[3rem] w-full" />)}
         </div>
       </div>
     );
@@ -96,30 +98,30 @@ export default function AccountsView() {
   return (
     <div className="min-h-screen pb-24 page-transition bg-slate-50 dark:bg-transparent">
       {/* Mobile Header (Hidden on Desktop Sidebar view) */}
-      <header className="sticky top-0 z-50 bg-white dark:bg-slate-950/80 dark:backdrop-blur-md shadow-sm border-b border-gray-100 dark:border-white/5 h-16 flex items-center justify-between px-6 md:hidden">
-        <h1 className="text-xl font-headline font-bold text-slate-900 dark:text-white tracking-tight">Marketplace</h1>
+      <header className="sticky top-0 z-50 bg-white dark:bg-slate-950/80 dark:backdrop-blur-md shadow-sm border-b border-gray-100 dark:border-white/5 h-16 flex items-center justify-between px-4 md:hidden">
+        <h1 className="text-lg font-headline font-bold text-slate-900 dark:text-white tracking-tight">Marketplace</h1>
         <button onClick={() => setIsActivityModalOpen(true)} className="relative p-2 text-slate-400 bg-slate-50 dark:bg-slate-900 rounded-full">
            <Activity size={20} />
            {myActivity.some(p => p.status === 'pending' || p.status === 'holding') && (
-             <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-amber-500 rounded-full border-2 border-white dark:border-slate-900" />
+             <span className="absolute top-1 right-1 w-2 h-2 bg-amber-500 rounded-full border-2 border-white dark:border-slate-900" />
            )}
         </button>
       </header>
 
-      <main className="px-4 md:px-8 py-8 lg:py-12 space-y-10 lg:space-y-16 max-w-[1600px] mx-auto">
+      <main className="px-4 md:px-8 py-6 md:py-12 space-y-6 md:space-y-16 max-w-[1600px] mx-auto">
         {/* Desktop Title & Search Row */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6">
            <div className="hidden md:block">
-              <h1 className="text-4xl lg:text-5xl font-headline font-bold text-slate-900 dark:text-white">Account Marketplace</h1>
+              <h1 className="text-3xl lg:text-5xl font-headline font-bold text-slate-900 dark:text-white">Account Marketplace</h1>
               <p className="text-muted-foreground font-medium uppercase tracking-[0.2em] text-xs lg:text-sm mt-1">Verified Gamer Accounts</p>
            </div>
            
-           <div className="flex items-center gap-4 w-full md:w-auto">
+           <div className="flex items-center gap-2 md:gap-4 w-full md:w-auto">
               <div className="relative flex-1 md:w-96 lg:w-[500px]">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-slate-400" />
                 <Input 
-                  placeholder="Search levels, games, or platforms..." 
-                  className="pl-12 h-14 lg:h-16 rounded-[1.5rem] bg-white dark:bg-slate-900 border-none shadow-sm dark:shadow-none font-bold text-lg"
+                  placeholder="Search accounts..." 
+                  className="pl-10 md:pl-12 h-12 md:h-14 lg:h-16 rounded-2xl md:rounded-[1.5rem] bg-white dark:bg-slate-900 border-none shadow-sm dark:shadow-none font-bold text-sm md:text-lg"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -131,17 +133,17 @@ export default function AccountsView() {
         </div>
 
         {filteredPosts.length === 0 ? (
-          <div className="py-32 text-center space-y-6 opacity-30 flex flex-col items-center">
-            <div className="w-32 h-32 bg-slate-200 dark:bg-slate-800 rounded-full flex items-center justify-center">
-              <ShieldCheck size={64} className="text-slate-400 dark:text-slate-600" />
+          <div className="py-20 md:py-32 text-center space-y-4 md:space-y-6 opacity-30 flex flex-col items-center">
+            <div className="w-20 h-20 md:w-32 md:h-32 bg-slate-200 dark:bg-slate-800 rounded-full flex items-center justify-center">
+              <ShieldCheck size={40} className="md:size-16 text-slate-400 dark:text-slate-600" />
             </div>
             <div>
-               <h3 className="font-bold text-3xl text-slate-900 dark:text-white">No active listings</h3>
-               <p className="text-lg">Check back later or post your own account today!</p>
+               <h3 className="font-bold text-xl md:text-3xl text-slate-900 dark:text-white">No active listings</h3>
+               <p className="text-sm md:text-lg">Check back later or post your own account!</p>
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8 lg:gap-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 md:gap-8 lg:gap-10">
             {filteredPosts.map((post) => (
               <AccountPostCard 
                 key={post.id} 
@@ -160,9 +162,9 @@ export default function AccountsView() {
       {user && (
         <button 
           onClick={() => setIsPostSheetOpen(true)}
-          className="fixed bottom-24 right-6 lg:bottom-12 lg:right-12 w-16 h-16 lg:w-20 lg:h-20 bg-amber-500 text-white rounded-[2rem] shadow-2xl shadow-amber-500/30 flex items-center justify-center active:scale-90 transition-all z-[90] hover:rotate-90"
+          className="fixed bottom-24 right-4 md:right-6 lg:bottom-12 lg:right-12 w-14 h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 bg-amber-500 text-white rounded-2xl md:rounded-[2rem] shadow-2xl shadow-amber-500/30 flex items-center justify-center active:scale-90 transition-all z-[90] hover:rotate-90"
         >
-          <Plus size={40} strokeWidth={3} />
+          <Plus size={32} className="md:size-10" strokeWidth={3} />
         </button>
       )}
 
@@ -174,34 +176,34 @@ export default function AccountsView() {
       />
       
       <Dialog open={isActivityModalOpen} onOpenChange={setIsActivityModalOpen}>
-         <DialogContent className="max-w-xl rounded-[3rem] p-0 border-none shadow-2xl bg-white dark:bg-slate-900">
-            <DialogHeader className="p-10 pb-6">
-               <DialogTitle className="text-3xl font-headline font-bold text-slate-900 dark:text-white">My Market Activity</DialogTitle>
-               <DialogDescription className="font-bold">Track the status of your listed and pending accounts.</DialogDescription>
+         <DialogContent className="max-w-xl rounded-[2rem] md:rounded-[3rem] p-0 border-none shadow-2xl bg-white dark:bg-slate-900 mx-4">
+            <DialogHeader className="p-6 md:p-10 pb-4 md:pb-6">
+               <DialogTitle className="text-xl md:text-3xl font-headline font-bold text-slate-900 dark:text-white">My Market Activity</DialogTitle>
+               <DialogDescription className="text-xs md:text-sm font-bold">Track the status of your listed and pending accounts.</DialogDescription>
             </DialogHeader>
-            <div className="p-10 pt-0 space-y-6 max-h-[60vh] overflow-y-auto scrollbar-hide">
+            <div className="p-6 md:p-10 pt-0 space-y-4 md:space-y-6 max-h-[60vh] overflow-y-auto scrollbar-hide">
                {myActivity.length === 0 ? (
-                 <div className="py-16 text-center opacity-30">
-                    <Clock size={48} className="mx-auto mb-4" />
-                    <p className="text-lg font-bold">No recent activity</p>
+                 <div className="py-10 md:py-16 text-center opacity-30">
+                    <Clock size={32} className="md:size-12 mx-auto mb-4" />
+                    <p className="text-sm md:text-lg font-bold">No recent activity</p>
                  </div>
                ) : (
                  myActivity.map(p => (
-                   <Card key={p.id} className="p-5 rounded-[1.5rem] border-none bg-slate-50 dark:bg-slate-800 flex items-center justify-between group hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors cursor-pointer" onClick={() => { setIsActivityModalOpen(false); router.push(`/accounts/${p.id}`); }}>
-                      <div className="flex items-center gap-4">
-                         <div className="w-14 h-14 rounded-2xl overflow-hidden bg-slate-200 dark:bg-slate-700 relative shadow-sm">
+                   <Card key={p.id} className="p-4 md:p-5 rounded-2xl md:rounded-[1.5rem] border-none bg-slate-50 dark:bg-slate-800 flex items-center justify-between group hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors cursor-pointer" onClick={() => { setIsActivityModalOpen(false); router.push(`/accounts/${p.id}`); }}>
+                      <div className="flex items-center gap-3 md:gap-4">
+                         <div className="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl overflow-hidden bg-slate-200 dark:bg-slate-700 relative shadow-sm shrink-0">
                             {p.thumbnailUrl && <Image src={p.thumbnailUrl} alt="" fill className="object-cover" />}
                          </div>
-                         <div>
-                            <p className="text-base font-bold text-slate-900 dark:text-white uppercase tracking-tight">{p.gameType} - Level {p.level}</p>
+                         <div className="min-w-0">
+                            <p className="text-sm md:text-base font-bold text-slate-900 dark:text-white uppercase tracking-tight truncate max-w-[120px] md:max-w-none">{p.gameType} - Lv {p.level}</p>
                             <div className="flex items-center gap-2 mt-0.5">
-                               <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{p.platform}</p>
-                               {p.uid === user?.uid ? <Badge className="h-4 text-[8px] bg-indigo-500 text-white border-none py-0 font-black">SELLER</Badge> : <Badge className="h-4 text-[8px] bg-green-500 text-white border-none py-0 font-black">BUYING</Badge>}
+                               <p className="text-[8px] md:text-[10px] font-black text-muted-foreground uppercase tracking-widest">{p.platform}</p>
+                               {p.uid === user?.uid ? <Badge className="h-4 text-[7px] md:text-[8px] bg-indigo-500 text-white border-none py-0 font-black">SELLER</Badge> : <Badge className="h-4 text-[7px] md:text-[8px] bg-green-500 text-white border-none py-0 font-black">BUYING</Badge>}
                             </div>
                          </div>
                       </div>
                       <Badge className={cn(
-                        "rounded-full px-4 py-1 text-[10px] font-black uppercase tracking-widest border-none shadow-sm",
+                        "rounded-full px-2 md:px-4 py-0.5 md:py-1 text-[8px] md:text-[10px] font-black uppercase tracking-widest border-none shadow-sm shrink-0",
                         p.status === 'approved' ? "bg-green-100 text-green-700" : (p.status === 'pending' || p.status === 'holding') ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"
                       )}>
                         {p.status}
@@ -214,19 +216,19 @@ export default function AccountsView() {
       </Dialog>
 
       <Dialog open={!!deletingPostId} onOpenChange={(open) => !open && setDeletingPostId(null)}>
-        <DialogContent className="max-w-sm rounded-[2.5rem] bg-white dark:bg-slate-900 p-8">
+        <DialogContent className="max-w-sm rounded-[2rem] bg-white dark:bg-slate-900 p-6 md:p-8 mx-4">
            <DialogHeader className="text-center">
-             <div className="w-16 h-16 bg-red-50 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500">
-               <Trash2 size={32} />
+             <div className="w-12 h-12 md:w-16 md:h-16 bg-red-50 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500">
+               <Trash2 size={24} className="md:size-8" />
              </div>
-             <DialogTitle className="text-2xl font-bold">Delete Post?</DialogTitle>
-             <DialogDescription className="font-bold text-slate-500 pt-2 leading-relaxed">
+             <DialogTitle className="text-xl md:text-2xl font-bold">Delete Post?</DialogTitle>
+             <DialogDescription className="font-bold text-slate-500 pt-2 text-xs md:text-sm">
                Ma hubtaa inaad tirtirto post-kan? Tallaabadan dib loogama noqon karo.
              </DialogDescription>
            </DialogHeader>
-           <DialogFooter className="gap-3 pt-8 sm:flex-col">
-             <Button variant="ghost" onClick={() => setDeletingPostId(null)} className="rounded-2xl h-14 font-bold order-2 sm:order-1">Maya, Dib u noqo</Button>
-             <Button variant="destructive" onClick={() => { if(deletingPostId) deleteAccountPost(deletingPostId); setDeletingPostId(null); }} className="rounded-2xl h-14 font-bold shadow-xl shadow-red-500/20 order-1 sm:order-2">Haa, Tirtir</Button>
+           <DialogFooter className="gap-2 md:gap-3 pt-6 md:pt-8 flex-col sm:flex-col">
+             <Button variant="ghost" onClick={() => setDeletingPostId(null)} className="rounded-xl md:rounded-2xl h-12 md:h-14 font-bold order-2 sm:order-1">Maya, Dib u noqo</Button>
+             <Button variant="destructive" onClick={() => { if(deletingPostId) deleteAccountPost(deletingPostId); setDeletingPostId(null); }} className="rounded-xl md:rounded-2xl h-12 md:h-14 font-bold shadow-xl shadow-red-500/20 order-1 sm:order-2">Haa, Tirtir</Button>
            </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -282,44 +284,44 @@ function AccountPostCard({ post, onClick, onEdit, onDelete, isOwner, isAdmin }: 
     <Card 
       onClick={onClick}
       className={cn(
-        "rounded-[3rem] border-none shadow-xl bg-white dark:bg-slate-900 overflow-hidden transition-all hover:-translate-y-2 hover:shadow-2xl active:scale-[0.98] group cursor-pointer h-full flex flex-col relative",
+        "rounded-[2rem] md:rounded-[3rem] border-none shadow-lg md:shadow-xl bg-white dark:bg-slate-900 overflow-hidden transition-all hover:-translate-y-1 md:hover:-translate-y-2 hover:shadow-2xl active:scale-[0.98] group cursor-pointer h-full flex flex-col relative",
         isExpired && "opacity-60 grayscale-[0.5]"
       )}
     >
-      <div className="p-6 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/40 border-b dark:border-white/5">
-        <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden relative border-2 border-white dark:border-white/10 shadow-sm">
+      <div className="p-4 md:p-6 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/40 border-b dark:border-white/5">
+        <div className="flex items-center gap-2 md:gap-3 min-w-0">
+          <div className="w-9 h-9 md:w-11 md:h-11 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden relative border-2 border-white dark:border-white/10 shadow-sm shrink-0">
             {post.authorAvatar ? (
               <Image src={post.authorAvatar} alt="" fill className="object-cover" />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-slate-300 dark:text-slate-600"><User size={22} /></div>
+              <div className="w-full h-full flex items-center justify-center text-slate-300 dark:text-slate-600"><User size={18} /></div>
             )}
           </div>
           <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <p className="font-bold text-sm text-slate-900 dark:text-white truncate max-w-[80px]">{post.authorName}</p>
+            <div className="flex items-center gap-1.5 md:gap-2">
+              <p className="font-bold text-xs md:text-sm text-slate-900 dark:text-white truncate max-w-[60px] md:max-w-[80px]">{post.authorName}</p>
               <Badge className={cn(
-                "rounded-full text-[8px] font-black px-2 py-0 border-none uppercase tracking-widest",
+                "rounded-full text-[7px] md:text-[8px] font-black px-1.5 md:px-2 py-0 border-none uppercase tracking-widest shrink-0",
                 isGoogle ? "bg-blue-500 text-white" : "bg-[#1877F2] text-white"
               )}>
                 {post.platform}
               </Badge>
             </div>
-            <p className="text-[9px] text-muted-foreground font-black uppercase tracking-tighter">{post.createdAt ? format(new Date(post.createdAt), 'MMM d, h:mm a') : 'Now'}</p>
+            <p className="text-[8px] md:text-[9px] text-muted-foreground font-black uppercase tracking-tighter">{post.createdAt ? format(new Date(post.createdAt), 'MMM d, h:mm a') : 'Now'}</p>
           </div>
         </div>
         
-        <div className="flex gap-1">
+        <div className="flex gap-1 shrink-0">
            <button 
              onClick={handleShare}
-             className="w-10 h-10 rounded-2xl flex items-center justify-center text-primary bg-primary/10 hover:bg-primary/20 transition-colors active:scale-90"
+             className="w-8 h-8 md:w-10 md:h-10 rounded-xl md:rounded-2xl flex items-center justify-center text-primary bg-primary/10 hover:bg-primary/20 transition-colors active:scale-90"
            >
-              <Share2 size={18} />
+              <Share2 size={16} className="md:size-18" />
            </button>
            {(isOwner || isAdmin) && (
              <>
-                <Button size="icon" variant="ghost" className="h-10 w-10 text-blue-500 rounded-2xl" onClick={onEdit}><Edit size={18}/></Button>
-                <Button size="icon" variant="ghost" className="h-10 w-10 text-red-500 rounded-2xl" onClick={onDelete}><Trash2 size={18}/></Button>
+                <Button size="icon" variant="ghost" className="h-8 w-8 md:h-10 md:w-10 text-blue-500 rounded-xl md:rounded-2xl" onClick={onEdit}><Edit size={16}/></Button>
+                <Button size="icon" variant="ghost" className="h-8 w-8 md:h-10 md:w-10 text-red-500 rounded-xl md:rounded-2xl" onClick={onDelete}><Trash2 size={16}/></Button>
              </>
            )}
         </div>
@@ -327,61 +329,61 @@ function AccountPostCard({ post, onClick, onEdit, onDelete, isOwner, isAdmin }: 
 
       <div className="aspect-[4/3] relative bg-slate-900 overflow-hidden flex items-center justify-center">
         {post.thumbnailUrl ? (
-          <Image src={post.thumbnailUrl} alt="" fill className="object-contain group-hover:scale-110 transition-transform duration-1000" unoptimized />
+          <Image src={post.thumbnailUrl} alt="" fill className="object-contain group-hover:scale-105 transition-transform duration-1000" unoptimized />
         ) : (
-          <div className="w-full h-full flex items-center justify-center opacity-10"><Gamepad2 size={80} /></div>
+          <div className="w-full h-full flex items-center justify-center opacity-10"><Gamepad2 size={60} className="md:size-80" /></div>
         )}
         
-        <div className="absolute top-4 right-4 flex flex-col gap-2 items-end">
-           <Badge className="bg-primary/90 backdrop-blur-md text-white border-none rounded-2xl px-4 py-2 text-[10px] font-black uppercase tracking-widest shadow-xl">
+        <div className="absolute top-3 right-3 md:top-4 md:right-4 flex flex-col gap-1 md:gap-2 items-end">
+           <Badge className="bg-primary/90 backdrop-blur-md text-white border-none rounded-xl md:rounded-2xl px-3 md:px-4 py-1 md:py-2 text-[8px] md:text-[10px] font-black uppercase tracking-widest shadow-xl">
              Lv {post.level || 0}
            </Badge>
            {post.status === 'holding' && (
-             <Badge className="bg-blue-600 text-white border-none rounded-2xl px-4 py-2 text-[10px] font-black uppercase tracking-widest shadow-xl">
+             <Badge className="bg-blue-600 text-white border-none rounded-xl md:rounded-2xl px-3 md:px-4 py-1 md:py-2 text-[8px] md:text-[10px] font-black uppercase tracking-widest shadow-xl">
                HOLDING
              </Badge>
            )}
            {post.status === 'sold' && (
-             <Badge className="bg-red-600 text-white border-none rounded-2xl px-4 py-2 text-[10px] font-black uppercase tracking-widest shadow-xl">
+             <Badge className="bg-red-600 text-white border-none rounded-xl md:rounded-2xl px-3 md:px-4 py-1 md:py-2 text-[8px] md:text-[10px] font-black uppercase tracking-widest shadow-xl">
                SOLD
              </Badge>
            )}
         </div>
 
         {isExpired && !post.sold && (
-          <div className="absolute inset-0 bg-red-950/70 backdrop-blur-sm flex items-center justify-center z-10 px-8">
-             <div className="px-8 py-3 bg-red-600 text-white font-headline font-bold text-2xl rounded-3xl transform -rotate-12 shadow-[0_20px_50px_rgba(239,68,68,0.5)] border-4 border-white/20">DHAMAADAY</div>
+          <div className="absolute inset-0 bg-red-950/70 backdrop-blur-sm flex items-center justify-center z-10 px-4 md:px-8">
+             <div className="px-5 md:px-8 py-2 md:py-3 bg-red-600 text-white font-headline font-bold text-lg md:text-2xl rounded-2xl md:rounded-3xl transform -rotate-12 shadow-[0_15px_40px_rgba(239,68,68,0.5)] border-2 md:border-4 border-white/20">DHAMAADAY</div>
           </div>
         )}
       </div>
 
-      <div className="p-8 space-y-6 flex-1 flex flex-col">
+      <div className="p-5 md:p-8 space-y-4 md:space-y-6 flex-1 flex flex-col">
         <div className="flex justify-between items-center">
-           <div className="flex gap-2">
-              <Badge variant="secondary" className="text-[10px] uppercase font-black tracking-widest rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-4 py-1">{post.gameType}</Badge>
+           <div className="flex gap-1.5 md:gap-2 min-w-0">
+              <Badge variant="secondary" className="text-[8px] md:text-[10px] uppercase font-black tracking-widest rounded-lg md:rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-3 md:px-4 py-0.5 md:py-1 truncate">{post.gameType}</Badge>
            </div>
            {(isOwner || isAdmin) && timeLeft && (
-             <Badge variant="outline" className={cn("text-[10px] font-black border-2 rounded-xl py-1 px-3", isExpired ? "text-red-500 border-red-500/20" : "text-primary border-primary/20 bg-primary/5")}>
-               <Clock size={12} className="mr-1.5" /> {timeLeft}
+             <Badge variant="outline" className={cn("text-[8px] md:text-[10px] font-black border-2 rounded-lg md:rounded-xl py-0.5 md:py-1 px-2 md:px-3 shrink-0", isExpired ? "text-red-500 border-red-500/20" : "text-primary border-primary/20 bg-primary/5")}>
+               <Clock size={10} className="md:size-12 mr-1 md:mr-1.5" /> {timeLeft}
              </Badge>
            )}
         </div>
 
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide py-1">
-           <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 border-none rounded-[1.25rem] px-4 py-2 text-[11px] font-black shadow-sm shrink-0">Evo: {post.evoWeapons || 0}</Badge>
-           <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 border-none rounded-[1.25rem] px-4 py-2 text-[11px] font-black shadow-sm shrink-0">Emotes: {post.emotes || 0}</Badge>
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide py-0.5">
+           <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 border-none rounded-xl px-3 md:px-4 py-1 md:py-2 text-[9px] md:text-[11px] font-black shadow-sm shrink-0">Evo: {post.evoWeapons || 0}</Badge>
+           <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 border-none rounded-xl px-3 md:px-4 py-1 md:py-2 text-[9px] md:text-[11px] font-black shadow-sm shrink-0">Emotes: {post.emotes || 0}</Badge>
            {post.gameType === 'freefire' && (
-             <Badge className="bg-indigo-100 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400 border-none rounded-[1.25rem] px-4 py-2 text-[11px] font-black shadow-sm shrink-0">Items: {post.dharka || 0}</Badge>
+             <Badge className="bg-indigo-100 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400 border-none rounded-xl px-3 md:px-4 py-1 md:py-2 text-[9px] md:text-[11px] font-black shadow-sm shrink-0">Items: {post.dharka || 0}</Badge>
            )}
         </div>
 
-        <div className="flex items-center justify-between pt-6 border-t border-slate-50 dark:border-white/5 mt-auto">
-           <div>
-             <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest mb-1 opacity-60">Price Value</p>
-             <p className="text-4xl font-headline font-bold text-primary tracking-tighter">${post.price?.toFixed(2)}</p>
+        <div className="flex items-center justify-between pt-4 md:pt-6 border-t border-slate-50 dark:border-white/5 mt-auto">
+           <div className="min-w-0">
+             <p className="text-[9px] md:text-[11px] font-black text-muted-foreground uppercase tracking-widest mb-0.5 md:mb-1 opacity-60">Price Value</p>
+             <p className="text-2xl md:text-4xl font-headline font-bold text-primary tracking-tighter">${post.price?.toFixed(2)}</p>
            </div>
-           <Button className="rounded-[1.5rem] h-14 px-8 font-black text-base shadow-xl shadow-primary/20 gap-2 uppercase tracking-wide">
-             Details <ArrowRight size={20} />
+           <Button className="rounded-xl md:rounded-[1.5rem] h-10 md:h-14 px-4 md:px-8 font-black text-xs md:text-base shadow-xl shadow-primary/20 gap-1.5 md:gap-2 uppercase tracking-wide shrink-0">
+             Details <ArrowRight size={16} className="md:size-20" />
            </Button>
         </div>
       </div>
@@ -451,7 +453,7 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
     ? (storeSettings?.config?.shop?.listingFeeMonthly || 3.00)
     : (storeSettings?.config?.shop?.listingFeeWeekly || 1.00);
 
-  const isFormValid = !!(formData.level && formData.price && formData.phone && (imageFiles.length > 0 || formData.thumbnailUrl));
+  const isFormValid = !!(formData.level && formData.price && formData.phone && (imageFiles.length > 0 || formData.thumbnailUrl || (formData.imageUrls && formData.imageUrls.length > 0)));
 
   const handleUssdPay = () => {
     const paymentNum = storeSettings.paymentNumber || "613982172";
@@ -508,52 +510,61 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
 
   return (
     <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if(!v) setHasTriggeredUssd(false); }}>
-      <DialogContent className="max-w-3xl h-[94vh] overflow-y-auto rounded-[3.5rem] p-0 border-none shadow-2xl bg-white dark:bg-slate-900 scrollbar-hide">
-        <div className="sticky top-0 z-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md px-10 pt-10 pb-6 flex items-center justify-between">
-           <div>
-              <DialogTitle className="text-4xl font-headline font-bold text-slate-900 dark:text-white">{editingPost ? 'Update' : 'Sell'} Account</DialogTitle>
-              <p className="text-xs font-black text-muted-foreground uppercase tracking-[0.3em] mt-2">Gamer Marketplace Listing</p>
+      {/* Full-Page Modal Implementation */}
+      <DialogContent className="max-w-none w-screen h-full md:h-[94vh] md:max-w-4xl md:rounded-[3.5rem] overflow-y-auto p-0 border-none shadow-none md:shadow-2xl bg-white dark:bg-slate-900 scrollbar-hide fixed inset-0 z-[100]">
+        <div className="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-6 md:px-10 pt-6 md:pt-10 pb-4 md:pb-6 flex items-center justify-between border-b md:border-none dark:border-white/5">
+           <div className="flex items-center gap-4">
+              <button 
+                onClick={() => onOpenChange(false)} 
+                className="p-2 md:hidden text-slate-900 dark:text-white"
+              >
+                 <ArrowLeft size={24} />
+              </button>
+              <div>
+                <DialogTitle className="text-xl md:text-4xl font-headline font-bold text-slate-900 dark:text-white leading-none">{editingPost ? 'Update' : 'Sell'} Account</DialogTitle>
+                <p className="text-[9px] md:text-xs font-black text-muted-foreground uppercase tracking-[0.2em] md:tracking-[0.3em] mt-1 md:mt-2">Gamer Marketplace Listing</p>
+              </div>
            </div>
-           <button onClick={() => onOpenChange(false)} className="p-3 bg-slate-100 dark:bg-slate-800 rounded-2xl text-slate-400 hover:bg-slate-200 transition-colors">
+           <button onClick={() => onOpenChange(false)} className="hidden md:flex p-3 bg-slate-100 dark:bg-slate-800 rounded-2xl text-slate-400 hover:bg-slate-200 transition-colors">
               <X size={24} />
            </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="px-10 space-y-12 pb-24 mt-4">
+        <form onSubmit={handleSubmit} className="px-6 md:px-10 space-y-8 md:space-y-12 pb-24 md:pb-32 mt-6">
           {/* Section: Basic Info */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-             <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+             <div className="space-y-4 md:space-y-6">
                 <div className="flex items-center gap-3">
-                   <div className="w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-500"><Gamepad2 size={20} /></div>
-                   <h3 className="font-headline font-bold text-xl dark:text-white">Game Details</h3>
+                   <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-500"><Gamepad2 size={18} className="md:size-20" /></div>
+                   <h3 className="font-headline font-bold text-lg md:text-xl dark:text-white">Game Details</h3>
                 </div>
                 <div className="space-y-4">
                    <FormGroup label="Select Game">
                       <Select value={formData.gameType} onValueChange={(val) => setFormData({...formData, gameType: val})}>
-                        <SelectTrigger className="h-14 lg:h-16 rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-6 font-bold text-base"><SelectValue /></SelectTrigger>
-                        <SelectContent className="rounded-2xl"><SelectItem value="freefire" className="rounded-xl">Free Fire</SelectItem><SelectItem value="bloodstrike" className="rounded-xl">Blood Strike</SelectItem></SelectContent>
+                        <SelectTrigger className="h-12 md:h-14 lg:h-16 rounded-xl md:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-4 md:px-6 font-bold text-sm md:text-base"><SelectValue /></SelectTrigger>
+                        <SelectContent className="rounded-xl md:rounded-2xl"><SelectItem value="freefire" className="rounded-lg md:rounded-xl">Free Fire</SelectItem><SelectItem value="bloodstrike" className="rounded-lg md:rounded-xl">Blood Strike</SelectItem></SelectContent>
                       </Select>
                    </FormGroup>
                    <FormGroup label="Platform">
                       <Select value={formData.platform} onValueChange={(val) => setFormData({...formData, platform: val})}>
-                        <SelectTrigger className="h-14 lg:h-16 rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-6 font-bold text-base"><SelectValue /></SelectTrigger>
-                        <SelectContent className="rounded-2xl"><SelectItem value="Google" className="rounded-xl">Google</SelectItem><SelectItem value="Facebook" className="rounded-xl">Facebook</SelectItem></SelectContent>
+                        <SelectTrigger className="h-12 md:h-14 lg:h-16 rounded-xl md:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-4 md:px-6 font-bold text-sm md:text-base"><SelectValue /></SelectTrigger>
+                        <SelectContent className="rounded-xl md:rounded-2xl"><SelectItem value="Google" className="rounded-lg md:rounded-xl">Google</SelectItem><SelectItem value="Facebook" className="rounded-lg md:rounded-xl">Facebook</SelectItem></SelectContent>
                       </Select>
                    </FormGroup>
                 </div>
              </div>
 
-             <div className="space-y-6">
+             <div className="space-y-4 md:space-y-6">
                 <div className="flex items-center gap-3">
-                   <div className="w-10 h-10 rounded-2xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-blue-500"><Clock size={20} /></div>
-                   <h3 className="font-headline font-bold text-xl dark:text-white">Listing Duration</h3>
+                   <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-blue-500"><Clock size={18} className="md:size-20" /></div>
+                   <h3 className="font-headline font-bold text-lg md:text-xl dark:text-white">Listing Duration</h3>
                 </div>
                 <FormGroup label="Muda (Term)">
                    <Select value={formData.term} onValueChange={(val) => setFormData({...formData, term: val})}>
-                      <SelectTrigger className="h-14 lg:h-16 rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-6 font-bold text-base"><SelectValue /></SelectTrigger>
-                      <SelectContent className="rounded-2xl">
-                         <SelectItem value="weekly" className="rounded-xl">Weakly (Isbuucle) - ${storeSettings?.config?.shop?.listingFeeWeekly || 1.00}</SelectItem>
-                         <SelectItem value="monthly" className="rounded-xl">Monthly (Bile) - ${storeSettings?.config?.shop?.listingFeeMonthly || 3.00}</SelectItem>
+                      <SelectTrigger className="h-12 md:h-14 lg:h-16 rounded-xl md:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-4 md:px-6 font-bold text-sm md:text-base"><SelectValue /></SelectTrigger>
+                      <SelectContent className="rounded-xl md:rounded-2xl">
+                         <SelectItem value="weekly" className="rounded-lg md:rounded-xl text-xs md:text-sm">Weakly (Isbuucle) - ${storeSettings?.config?.shop?.listingFeeWeekly || 1.00}</SelectItem>
+                         <SelectItem value="monthly" className="rounded-lg md:rounded-xl text-xs md:text-sm">Monthly (Bile) - ${storeSettings?.config?.shop?.listingFeeMonthly || 3.00}</SelectItem>
                       </SelectContent>
                    </Select>
                 </FormGroup>
@@ -561,104 +572,104 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
           </div>
 
           {/* Section: Assets */}
-          <div className="space-y-8">
+          <div className="space-y-6 md:space-y-8">
              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-purple-50 dark:bg-purple-500/10 flex items-center justify-center text-purple-500"><Star size={20} /></div>
-                <h3 className="font-headline font-bold text-xl dark:text-white">Account Assets & Statistics</h3>
+                <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-purple-50 dark:bg-purple-500/10 flex items-center justify-center text-purple-500"><Star size={18} className="md:size-20" /></div>
+                <h3 className="font-headline font-bold text-lg md:text-xl dark:text-white">Account Assets</h3>
              </div>
              
-             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                <FormInput label="Account Level" type="number" value={formData.level} onChange={v => setFormData({...formData, level: v})} placeholder="e.g. 80" />
+             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                <FormInput label="Level" type="number" value={formData.level} onChange={v => setFormData({...formData, level: v})} placeholder="e.g. 80" />
                 {formData.gameType === 'freefire' ? (
                    <FormGroup label="Prime Level">
                       <Select value={formData.primeLevel} onValueChange={v => setFormData({...formData, primeLevel: v})}>
-                         <SelectTrigger className="h-14 lg:h-16 rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-6 font-bold"><SelectValue /></SelectTrigger>
-                         <SelectContent className="rounded-2xl">{[1,2,3,4,5,6,7,8].map(l => <SelectItem key={l} value={l.toString()} className="rounded-xl">Level {l}</SelectItem>)}</SelectContent>
+                         <SelectTrigger className="h-12 md:h-14 lg:h-16 rounded-xl md:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-4 md:px-6 font-bold"><SelectValue /></SelectTrigger>
+                         <SelectContent className="rounded-xl md:rounded-2xl">{[1,2,3,4,5,6,7,8].map(l => <SelectItem key={l} value={l.toString()} className="rounded-lg md:rounded-xl">Level {l}</SelectItem>)}</SelectContent>
                       </Select>
                    </FormGroup>
                 ) : (
                    <FormInput label="Account ID" value={formData.accountId} onChange={v => setFormData({...formData, accountId: v})} placeholder="ID-ga" />
                 )}
-                <FormInput label="Evo Weapons" type="number" value={formData.evoWeapons} onChange={v => setFormData({...formData, evoWeapons: v})} placeholder="Count" />
-                <FormInput label="Total Weapons" type="number" value={formData.totalWeapons} onChange={v => setFormData({...formData, totalWeapons: v})} placeholder="Count" />
-                <FormInput label="Total Emotes" type="number" value={formData.emotes} onChange={v => setFormData({...formData, emotes: v})} placeholder="Count" />
-                <FormInput label="Arrival Emotes" type="number" value={formData.arrivalEmotes} onChange={v => setFormData({...formData, arrivalEmotes: v})} placeholder="Count" />
+                <FormInput label="Evo weapons" type="number" value={formData.evoWeapons} onChange={v => setFormData({...formData, evoWeapons: v})} placeholder="Count" />
+                <FormInput label="All Weapons" type="number" value={formData.totalWeapons} onChange={v => setFormData({...formData, totalWeapons: v})} placeholder="Count" />
+                <FormInput label="Emote" type="number" value={formData.emotes} onChange={v => setFormData({...formData, emotes: v})} placeholder="Count" />
+                <FormInput label="Arrival" type="number" value={formData.arrivalEmotes} onChange={v => setFormData({...formData, arrivalEmotes: v})} placeholder="Count" />
                 {formData.gameType === 'freefire' && (
-                   <FormInput label="Dharka (Outfits)" type="number" value={formData.dharka} onChange={v => setFormData({...formData, dharka: v})} placeholder="Count" className="md:col-span-2 lg:col-span-2" />
+                   <FormInput label="Dharka" type="number" value={formData.dharka} onChange={v => setFormData({...formData, dharka: v})} placeholder="Count" />
                 )}
              </div>
           </div>
 
           {/* Gallery */}
-          <div className="space-y-6">
+          <div className="space-y-4 md:space-y-6">
             <div className="flex items-center gap-3">
-               <div className="w-10 h-10 rounded-2xl bg-cyan-50 dark:bg-cyan-500/10 flex items-center justify-center text-cyan-500"><ImageIcon size={20} /></div>
-               <h3 className="font-headline font-bold text-xl dark:text-white">Account Gallery</h3>
+               <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-cyan-50 dark:bg-cyan-500/10 flex items-center justify-center text-cyan-500"><ImageIcon size={18} className="md:size-20" /></div>
+               <h3 className="font-headline font-bold text-lg md:text-xl dark:text-white">Account Gallery</h3>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
                {previews.map((url, idx) => (
-                 <div key={idx} className="relative aspect-video lg:aspect-square rounded-[1.5rem] overflow-hidden group shadow-lg bg-slate-100 border border-slate-200 dark:border-white/5">
+                 <div key={idx} className="relative aspect-video rounded-xl md:rounded-[1.5rem] overflow-hidden group shadow-lg bg-slate-100 border border-slate-200 dark:border-white/5">
                     <Image src={url} alt="" fill className="object-cover" unoptimized />
-                    <button type="button" onClick={() => removeImage(idx)} className="absolute top-2 right-2 bg-red-600 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-all shadow-xl hover:scale-110"><X size={16} /></button>
+                    <button type="button" onClick={() => removeImage(idx)} className="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1.5 md:p-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-all shadow-xl active:scale-110"><X size={14} className="md:size-16" /></button>
                  </div>
                ))}
-               <label className="aspect-video lg:aspect-square rounded-[1.5rem] border-2 border-dashed border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800/40 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all flex flex-col items-center justify-center gap-2 cursor-pointer text-slate-400 group">
-                  <Plus size={32} className="group-hover:text-primary transition-colors" />
-                  <span className="text-[10px] font-black uppercase tracking-widest">Add Media</span>
+               <label className="aspect-video rounded-xl md:rounded-[1.5rem] border-2 border-dashed border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800/40 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all flex flex-col items-center justify-center gap-2 cursor-pointer text-slate-400 group h-full">
+                  <Plus size={24} className="md:size-32 group-hover:text-primary transition-colors" />
+                  <span className="text-[8px] md:text-[10px] font-black uppercase tracking-widest">Add Media</span>
                   <input type="file" accept="image/*" multiple onChange={handleFileChange} className="hidden" />
                </label>
             </div>
           </div>
 
           {/* Pricing & Contact */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-end">
-             <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10 items-end">
+             <div className="space-y-4 md:space-y-6">
                 <div className="flex items-center gap-3">
-                   <div className="w-10 h-10 rounded-2xl bg-green-50 dark:bg-green-500/10 flex items-center justify-center text-green-500"><DollarSign size={20} /></div>
-                   <h3 className="font-headline font-bold text-xl dark:text-white">Pricing & Sale</h3>
+                   <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-green-50 dark:bg-green-500/10 flex items-center justify-center text-green-500"><DollarSign size={18} className="md:size-20" /></div>
+                   <h3 className="font-headline font-bold text-lg md:text-xl dark:text-white">Pricing & Sale</h3>
                 </div>
                 <FormInput label="WhatsApp (Seller)" value={formData.phone} onChange={v => setFormData({...formData, phone: v})} placeholder="25261..." />
-                <div className="p-8 bg-slate-950 rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden">
-                   <div className="absolute top-0 right-0 p-10 opacity-5"><DollarSign size={100} /></div>
-                   <label className="text-[11px] font-black text-white/40 uppercase tracking-[0.3em] ml-2 block mb-4">Account Sale Price ($)</label>
+                <div className="p-6 md:p-8 bg-slate-950 rounded-2xl md:rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden">
+                   <div className="absolute top-0 right-0 p-6 md:p-10 opacity-5"><DollarSign size={60} className="md:size-100" /></div>
+                   <label className="text-[9px] md:text-[11px] font-black text-white/40 uppercase tracking-[0.2em] md:tracking-[0.3em] ml-1 md:ml-2 block mb-2 md:mb-4">Account Sale Price ($)</label>
                    <div className="relative z-10 flex items-center">
-                      <span className="text-4xl font-headline font-bold text-primary mr-2">$</span>
+                      <span className="text-2xl md:text-4xl font-headline font-bold text-primary mr-1 md:mr-2">$</span>
                       <input 
                         type="number" 
                         required 
                         value={formData.price} 
                         onChange={e => setFormData({...formData, price: e.target.value})} 
-                        className="bg-transparent border-none text-6xl lg:text-7xl font-headline font-bold text-white focus:outline-none w-full tracking-tighter" 
+                        className="bg-transparent border-none text-4xl md:text-6xl lg:text-7xl font-headline font-bold text-white focus:outline-none w-full tracking-tighter" 
                         placeholder="0.00"
                       />
                    </div>
                 </div>
              </div>
 
-             <div className="space-y-6">
-                <div className="p-8 bg-amber-50 dark:bg-amber-500/10 rounded-[2.5rem] border border-amber-100 dark:border-amber-500/20 space-y-4">
+             <div className="space-y-4 md:space-y-6">
+                <div className="p-6 md:p-8 bg-amber-50 dark:bg-amber-500/10 rounded-2xl md:rounded-[2.5rem] border border-amber-100 dark:border-amber-500/20 space-y-2 md:space-y-4">
                    <div className="flex items-center gap-2 text-amber-800 dark:text-amber-400">
-                      <Info size={24} />
-                      <p className="text-base font-black uppercase tracking-widest">Listing Fee Policy</p>
+                      <Info size={18} className="md:size-24" />
+                      <p className="text-sm md:text-base font-black uppercase tracking-widest">Listing Fee Policy</p>
                    </div>
-                   <p className="text-sm lg:text-base font-bold text-amber-700/80 dark:text-amber-500/80 leading-relaxed">
-                      Fee-ga posting-ka ee {formData.term === 'weekly' ? 'Isbuucle' : 'Bile'} waa <span className="font-black text-amber-800 dark:text-amber-300 text-xl lg:text-2xl">${listingFee.toFixed(2)}</span>. This ensures your post is promoted to thousands of verified buyers.
+                   <p className="text-xs md:text-sm lg:text-base font-bold text-amber-700/80 dark:text-amber-500/80 leading-relaxed">
+                      Fee-ga posting-ka ee {formData.term === 'weekly' ? 'Isbuucle' : 'Bile'} waa <span className="font-black text-amber-800 dark:text-amber-300 text-lg md:text-2xl">${listingFee.toFixed(2)}</span>. This ensures your post is promoted to thousands of verified buyers.
                    </p>
                 </div>
 
                 {!editingPost ? (
                    !hasTriggeredUssd ? (
-                      <Button type="button" onClick={handleUssdPay} disabled={!isFormValid} className="w-full h-20 rounded-[2rem] text-2xl font-black shadow-2xl bg-primary hover:bg-primary/90 transition-all uppercase tracking-widest">
+                      <Button type="button" onClick={handleUssdPay} disabled={!isFormValid} className="w-full h-16 md:h-20 rounded-2xl md:rounded-[2rem] text-lg md:text-2xl font-black shadow-2xl bg-primary hover:bg-primary/90 transition-all uppercase tracking-widest">
                          PAY ${listingFee.toFixed(2)} FEE
                       </Button>
                    ) : (
-                      <Button disabled={loading || !isFormValid} type="submit" className="w-full h-20 rounded-[2rem] text-2xl font-black shadow-2xl bg-green-600 hover:bg-green-700 transition-all uppercase tracking-widest">
-                         {loading ? <Loader2 className="animate-spin w-8 h-8" /> : 'CONFIRM & POST'}
+                      <Button disabled={loading || !isFormValid} type="submit" className="w-full h-16 md:h-20 rounded-2xl md:rounded-[2rem] text-lg md:text-2xl font-black shadow-2xl bg-green-600 hover:bg-green-700 transition-all uppercase tracking-widest">
+                         {loading ? <Loader2 className="animate-spin w-6 h-6 md:w-8 md:h-8" /> : 'CONFIRM & POST'}
                       </Button>
                    )
                 ) : (
-                   <Button disabled={loading || !isFormValid} type="submit" className="w-full h-20 rounded-[2rem] text-2xl font-black shadow-2xl bg-primary hover:bg-primary/90 transition-all uppercase tracking-widest">
-                      {loading ? <Loader2 className="animate-spin w-8 h-8" /> : 'SAVE CHANGES'}
+                   <Button disabled={loading || !isFormValid} type="submit" className="w-full h-16 md:h-20 rounded-2xl md:rounded-[2rem] text-lg md:text-2xl font-black shadow-2xl bg-primary hover:bg-primary/90 transition-all uppercase tracking-widest">
+                      {loading ? <Loader2 className="animate-spin w-6 h-6 md:w-8 md:h-8" /> : 'SAVE CHANGES'}
                    </Button>
                 )}
              </div>
@@ -671,8 +682,8 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
 
 function FormGroup({ label, children }: { label: string, children: React.ReactNode }) {
   return (
-    <div className="space-y-2">
-       <label className="text-[11px] font-black text-muted-foreground uppercase tracking-[0.2em] ml-2">{label}</label>
+    <div className="space-y-1.5 md:space-y-2">
+       <label className="text-[9px] md:text-[11px] font-black text-muted-foreground uppercase tracking-[0.1em] md:tracking-[0.2em] ml-1 md:ml-2">{label}</label>
        {children}
     </div>
   );
@@ -680,9 +691,9 @@ function FormGroup({ label, children }: { label: string, children: React.ReactNo
 
 function FormInput({ label, value, onChange, placeholder, type = "text", className }: { label: string, value: string, onChange: (v: string) => void, placeholder: string, type?: string, className?: string }) {
   return (
-    <div className={cn("space-y-2", className)}>
-       <label className="text-[11px] font-black text-muted-foreground uppercase tracking-[0.2em] ml-2">{label}</label>
-       <Input type={type} placeholder={placeholder} value={value} onChange={e => onChange(e.target.value)} className="h-14 lg:h-16 rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-6 font-bold text-base focus-visible:ring-primary shadow-inner" />
+    <div className={cn("space-y-1.5 md:space-y-2", className)}>
+       <label className="text-[9px] md:text-[11px] font-black text-muted-foreground uppercase tracking-[0.1em] md:tracking-[0.2em] ml-1 md:ml-2">{label}</label>
+       <Input type={type} placeholder={placeholder} value={value} onChange={e => onChange(e.target.value)} className="h-12 md:h-14 lg:h-16 rounded-xl md:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-4 md:px-6 font-bold text-sm md:text-base focus-visible:ring-primary shadow-inner" />
     </div>
   );
 }

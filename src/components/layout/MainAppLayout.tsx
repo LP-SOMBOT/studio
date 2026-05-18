@@ -41,7 +41,7 @@ export default function MainAppLayout({ children }: { children: React.ReactNode 
 
         <main className={cn(
           "page-transition flex-1",
-          !isSpecialFlow && "md:p-8 lg:p-12 xl:p-16"
+          !isSpecialFlow && "md:p-4 lg:p-8 xl:p-12"
         )}>
           {children}
         </main>
