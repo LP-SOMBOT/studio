@@ -828,6 +828,14 @@ export default function AdminPage() {
                                        <p className="text-[8px] md:text-[10px] text-muted-foreground truncate">{selectedAccount.phone}</p>
                                     </div>
                                  </div>
+                                 {selectedAccount.sellerReported && (
+                                    <div className="flex justify-between mt-2 pt-2 border-t border-black/5 dark:border-white/5">
+                                       <span className="text-[8px] md:text-[9px] font-black uppercase">Report</span>
+                                       <Badge className={cn("h-3.5 md:h-4 text-[6px] md:text-[7px]", selectedAccount.conflict ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700")}>
+                                          {selectedAccount.conflict ? 'DISAGREED' : 'CONFIRMED SALE'}
+                                       </Badge>
+                                    </div>
+                                 )}
                               </div>
 
                               {(selectedAccount.status === 'holding' || selectedAccount.status === 'sold') && (
@@ -1347,8 +1355,8 @@ export default function AdminPage() {
                            <Input 
                             value={helpLinksForm.whatsappNumber} 
                             onChange={e => setHelpLinksForm(prev => ({...prev, whatsappNumber: e.target.value}))} 
-                            placeholder="e.g. 252613982172" 
-                            className="rounded-xl dark:bg-slate-800 border-none font-bold h-12" 
+                            placeholder="e.g. 25261xxxxxx" 
+                            className="rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold h-12" 
                            />
                         </div>
                         <div className="space-y-1">
@@ -1357,10 +1365,10 @@ export default function AdminPage() {
                             value={helpLinksForm.tutorialUrl} 
                             onChange={e => setHelpLinksForm(prev => ({...prev, tutorialUrl: e.target.value}))} 
                             placeholder="https://youtube.com/..." 
-                            className="rounded-xl dark:bg-slate-800 border-none font-bold h-12" 
+                            className="rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold h-12" 
                            />
                         </div>
-                        <Button onClick={handleSaveHelpLinks} disabled={isUploading} className="w-full h-12 rounded-2xl font-bold">
+                        <Button onClick={handleSaveHelpLinks} disabled={isUploading} className="w-full h-12 rounded-2xl font-bold shadow-xl shadow-primary/20">
                            {isUploading ? <Loader2 className="animate-spin" /> : "Save Support Links"}
                         </Button>
                       </div>
@@ -1705,7 +1713,7 @@ export default function AdminPage() {
               </div>
             </div>
 
-            <div className="space-y-2"><Label className="text-xs font-bold uppercase text-slate-400">Description</Label><Textarea value={productForm.description} onChange={e => setProductForm({...productForm, description: e.target.value})} className="rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold min-h-[80px]" /></div>
+            <div className="space-y-2"><Label className="text-xs font-bold uppercase text-slate-400">Description</Label><Textarea value={productForm.description} onChange={e => setProductForm({...description: e.target.value})} className="rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold min-h-[80px]" /></div>
             <div className="space-y-2">
               <Label className="text-xs font-bold uppercase text-slate-400">Item Image</Label>
               <div className="flex items-center gap-4">
