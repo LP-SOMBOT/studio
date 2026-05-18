@@ -64,6 +64,7 @@ export default function MyAccountsView() {
       .sort((a, b) => b.createdAt - a.createdAt);
   }, [accountPosts, user]);
 
+  // Logic: Post is "Late" if a buyer reported purchase over 1 hour ago and seller hasn't responded
   const latePosts = useMemo(() => {
     const now = Date.now();
     return myPosts.filter(p => p.buyerReported && !p.sellerReported && p.buyerReportedAt && (now - p.buyerReportedAt) > 3600000);
@@ -95,6 +96,7 @@ export default function MyAccountsView() {
     setHasTriggeredRenewUssd(false);
   };
 
+  // Automated 24h Warning for Admin
   useEffect(() => {
     if (latePosts.length > 0) {
       const now = Date.now();
@@ -131,6 +133,7 @@ export default function MyAccountsView() {
         </div>
       </header>
 
+      {/* Persistent High-Impact Warning (Appears after 1 hour delay) */}
       {latePosts.length > 0 && (
         <Card className="mb-8 p-6 md:p-8 rounded-[2rem] border-2 border-red-500 bg-red-50 dark:bg-red-950/20 shadow-xl shadow-red-500/10 animate-in slide-in-from-top-4 duration-700">
            <div className="flex items-start gap-5">
@@ -248,6 +251,7 @@ function AccountManagedCard({ post, claimants, onDelete, onRespond, onRenew, onS
     return () => clearInterval(interval);
   }, [post.expiresAt]);
 
+  // Logic: 30 minute countdown after seller acknowledges rejection
   useEffect(() => {
     if (post.sellerSeenDeletionAt) {
       const interval = setInterval(() => {
@@ -315,6 +319,7 @@ function AccountManagedCard({ post, claimants, onDelete, onRespond, onRenew, onS
                   <StatusInfo icon={DollarSign} label="Price" value={`$${post.price || 0}`} />
                </div>
 
+               {/* Admin Feedback Block */}
                {(post.adminMessage || isRejected) && (
                   <div className="p-4 bg-slate-900 text-white rounded-2xl sm:rounded-[2rem] border-4 border-red-500/30 space-y-4">
                      <div className="flex items-center gap-3">

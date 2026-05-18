@@ -741,7 +741,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       toast({ title: "Deal Cancelled", description: "You've cancelled your report for this account." });
     } else {
       const reportTime = Date.now();
-      // Logic: Status stays 'approved' until conflict or sale. 
+      // Multi-Buyer Logic: Status stays approved so others can still see it.
       await update(postRef, { 
         buyerReported: true, 
         buyerReportedAt: reportTime
@@ -790,7 +790,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       toast({ title: "Account Sold!", description: "Transaction finalized successfully." });
       broadcastNotification("Purchase Confirmed! 🤑", "Seller has confirmed your purchase. The account is yours!", targetBuyerId);
     } else {
-      // Logic: Conflict triggers holding status.
+      // Conflict triggers "holding" status and flags admin
       await update(postRef, {
         status: 'holding', 
         sellerReported: true,
