@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -6,13 +7,11 @@ import { useApp } from "@/lib/context";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChevronLeft, Gamepad2, Search } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import Image from "next/image";
 
 export default function GamesView() {
   const { games, products, isInitialLoading } = useApp();
   const [selectedGameId, setSelectedGameId] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
 
   // Sync selection logic with URL Hash to enable browser "back" support
   useEffect(() => {
@@ -48,12 +47,8 @@ export default function GamesView() {
 
   const filteredProducts = useMemo(() => {
     if (!selectedGameId) return [];
-    return (products || []).filter(p => {
-      const matchesGame = p.gameId === selectedGameId;
-      const matchesSearch = p.title.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesGame && matchesSearch;
-    });
-  }, [products, selectedGameId, searchQuery]);
+    return (products || []).filter(p => p.gameId === selectedGameId);
+  }, [products, selectedGameId]);
 
   if (isInitialLoading) {
     return (
@@ -90,18 +85,6 @@ export default function GamesView() {
               </p>
             </div>
           </div>
-
-          {selectedGameId && (
-            <div className="relative w-full max-w-md">
-               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-slate-400" />
-               <Input 
-                 placeholder="Search packages..." 
-                 value={searchQuery}
-                 onChange={e => setSearchQuery(e.target.value)}
-                 className="h-11 md:h-12 lg:h-16 pl-10 md:pl-12 rounded-xl md:rounded-2xl bg-white dark:bg-slate-900 border-none shadow-sm dark:shadow-none font-bold text-sm md:text-base"
-               />
-            </div>
-          )}
         </div>
 
         {!selectedGameId ? (
