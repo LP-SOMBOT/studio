@@ -419,7 +419,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const handleHash = () => {
       const rawHash = typeof window !== 'undefined' ? window.location.hash.replace('#', '') : '';
       const tabName = rawHash.split('-')[0];
-      const validTabs = ['home', 'games', 'accounts', 'ranking', 'profile', 'chat', 'notifications', 'orders'];
+      const validTabs = ['home', 'games', 'accounts', 'ranking', 'profile', 'chat', 'notifications', 'orders', 'my-accounts'];
       if (validTabs.includes(tabName)) setActiveTabState(tabName);
     };
     handleHash();
@@ -741,7 +741,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       toast({ title: "Deal Cancelled", description: "You've cancelled your report for this account." });
     } else {
       const reportTime = Date.now();
-      // Multi-Buyer Logic: Status stays approved so others can still see it.
+      // Logic: Status stays approved so others can still see it.
       await update(postRef, { 
         buyerReported: true, 
         buyerReportedAt: reportTime
