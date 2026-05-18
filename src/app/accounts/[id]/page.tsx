@@ -249,11 +249,22 @@ export default function AccountDetailPage() {
 
       {/* Full Screen Image Modal */}
       {fullScreenImage && (
-        <div className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center animate-in fade-in duration-300">
-          <button onClick={() => setFullScreenImage(null)} className="absolute top-6 right-4 text-white p-2 bg-white/10 rounded-full hover:bg-white/20 active:scale-90 transition-transform"><X size={24} /></button>
-          <div className="relative w-full h-full p-4">
+        <div 
+          className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center animate-in fade-in duration-300"
+          onClick={() => setFullScreenImage(null)}
+        >
+          <div className="relative w-full h-full flex items-center justify-center p-4">
             <Image src={fullScreenImage} alt="" fill className="object-contain" unoptimized />
           </div>
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              setFullScreenImage(null);
+            }} 
+            className="absolute top-6 right-4 text-white p-3 bg-white/10 rounded-full hover:bg-white/20 active:scale-90 transition-all z-[110]"
+          >
+            <X size={24} />
+          </button>
         </div>
       )}
     </div>
