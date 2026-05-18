@@ -77,10 +77,12 @@ export default function AccountsView() {
         const isOwner = userId && p.uid === userId;
         const isInvolvedInDeal = userId && (orders || []).some(o => o.gameDetails?.postId === p.id && o.userId === userId);
         
+        // Admins, Owners, and active Claimants always see the account
         if (isAdmin || isOwner || isInvolvedInDeal) {
           return true;
         }
 
+        // General public only see approved, unsold, unhidden, non-expired accounts
         if (p.status !== 'approved') return false;
         if (p.sold === true) return false;
         if (p.hiddenFromMarket === true) return false;
@@ -262,7 +264,7 @@ export default function AccountsView() {
 }
 
 function PostAccountView({ editingPost, onCancel, onComplete }: { editingPost?: any, onCancel: () => void, onComplete: () => void }) {
-  const { postAccount, updateAccountPost, storeSettings, user: enhancedUser } = useApp() as any;
+  const { postAccount, updateAccountPost, storeSettings } = useApp();
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasTriggeredUssd, setHasTriggeredUssd] = useState(false);
@@ -309,7 +311,7 @@ function PostAccountView({ editingPost, onCancel, onComplete }: { editingPost?: 
     try {
       const payload = {
         ...formData,
-        thumbnailUrl: formData.imageUrls[0] || '', // Auto-set first image as thumbnail
+        thumbnailUrl: formData.imageUrls[0] || '', 
         level: parseInt(formData.level),
         price: parseFloat(formData.price),
         evoWeapons: parseInt(formData.evoWeapons),
@@ -441,7 +443,7 @@ function PostAccountView({ editingPost, onCancel, onComplete }: { editingPost?: 
                               <SelectTrigger className="h-12 md:h-16 rounded-xl md:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-6 font-bold text-sm md:text-lg focus:ring-2 focus:ring-primary shadow-inner">
                                  <SelectValue />
                               </SelectTrigger>
-                              <SelectContent className="rounded-2xl border-none shadow-2xl bg-white dark:bg-slate-900">
+                              <SelectContent className="rounded-2xl border-none shadow-2xl bg-white dark:bg-slate-900 z-[200]">
                                  <SelectItem value="freefire" className="rounded-xl font-bold uppercase text-xs p-3">Free Fire</SelectItem>
                                  <SelectItem value="bloodstrike" className="rounded-xl font-bold uppercase text-xs p-3">Blood Strike</SelectItem>
                               </SelectContent>
@@ -452,7 +454,7 @@ function PostAccountView({ editingPost, onCancel, onComplete }: { editingPost?: 
                               <SelectTrigger className="h-12 md:h-16 rounded-xl md:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-6 font-bold text-sm md:text-lg focus:ring-2 focus:ring-primary shadow-inner">
                                  <SelectValue />
                               </SelectTrigger>
-                              <SelectContent className="rounded-2xl border-none shadow-2xl bg-white dark:bg-slate-900">
+                              <SelectContent className="rounded-2xl border-none shadow-2xl bg-white dark:bg-slate-900 z-[200]">
                                  <SelectItem value="Google" className="rounded-xl font-bold uppercase text-xs p-3">Google Account</SelectItem>
                                  <SelectItem value="Facebook" className="rounded-xl font-bold uppercase text-xs p-3">Facebook Login</SelectItem>
                               </SelectContent>
@@ -496,7 +498,7 @@ function PostAccountView({ editingPost, onCancel, onComplete }: { editingPost?: 
                            <SelectTrigger className="h-12 md:h-20 rounded-xl md:rounded-[1.5rem] bg-slate-50 dark:bg-slate-800 border-none px-6 font-bold text-sm md:text-xl shadow-inner">
                               <SelectValue />
                            </SelectTrigger>
-                           <SelectContent className="rounded-2xl border-none shadow-2xl">
+                           <SelectContent className="rounded-2xl border-none shadow-2xl z-[200]">
                               <SelectItem value="weekly" className="p-4 rounded-xl font-bold uppercase text-xs">Weekly - ${storeSettings?.config?.shop?.listingFeeWeekly || 1.00}</SelectItem>
                               <SelectItem value="monthly" className="p-4 rounded-xl font-bold uppercase text-xs">Monthly - ${storeSettings?.config?.shop?.listingFeeMonthly || 3.00}</SelectItem>
                            </SelectContent>
@@ -638,7 +640,7 @@ function AccountPostCard({ post, onClick, onEdit, onDelete, isOwner, isBuyer, is
         const d = Math.floor(diff / (1000 * 60 * 60 * 24));
         const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        setTimeLeft(`${d}d ${h}h ${m}m`);
+        setTimeLeft(`${d}d ${h}h ${m}m remaining`);
       }
     };
     updateTime();
