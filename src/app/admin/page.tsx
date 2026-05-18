@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -71,7 +72,10 @@ import {
   Target,
   Zap,
   Bomb,
-  Gavel
+  Gavel,
+  History,
+  AlertTriangle,
+  Send
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -135,7 +139,6 @@ import { format, formatDistanceToNow } from "date-fns";
 
 /**
  * CountdownDisplay Helper Component
- * Displays a live countdown timer for marketplace listings in the admin table.
  */
 function CountdownDisplay({ expiresAt }: { expiresAt?: number }) {
   const [timeLeft, setTimeLeft] = useState("");
@@ -187,6 +190,7 @@ export default function AdminPage() {
     markAdminNotificationsAsRead,
     updateOrderStatus,
     updateAccountPostStatus,
+    enforceAccountAction,
     deleteUser,
     manageUser,
     saveGame,
@@ -227,6 +231,7 @@ export default function AdminPage() {
   const [isUserManageOpen, setIsUserManageOpen] = useState(false);
   const [isOrderDetailOpen, setIsOrderDetailOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isEnforceDialogOpen, setIsEnforceDialogOpen] = useState(false);
 
   const [editingGame, setEditingGame] = useState<any>(null);
   const [editingProduct, setEditingProduct] = useState<any>(null);
@@ -238,9 +243,10 @@ export default function AdminPage() {
   const [pendingOrderStatus, setPendingStatus] = useState<string>("");
   const [cancellationReason, setCancellationReason] = useState<string>("");
   
-  // Account Detail View State
   const [pendingAccountStatus, setPendingAccountStatus] = useState<string>("");
   const [assignBuyerId, setAssignBuyerId] = useState<string>("");
+  const [enforceMessage, setEnforceMessage] = useState("");
+  const [enforceAction, setEnforceAction] = useState<'delete' | 'holding' | 'approved' | 'pending'>('delete');
 
   const [deleteTarget, setDeleteTarget] = useState<{ id: string, type: 'user' | 'game' | 'product' | 'event' | 'banner' | 'account' | 'order' | 'payment' } | null>(null);
 
@@ -310,7 +316,16 @@ export default function AdminPage() {
     return accountPosts.find(p => p.id === selectedAccountId);
   }, [selectedAccountId, accountPosts]);
 
-  // TIMER LOGIC for Admin Intervention
+  const lateAccounts = useMemo(() => {
+    const now = Date.now();
+    return accountPosts.filter(p => p.buyerReported && !p.sellerReported && p.buyerReportedAt && (now - p.buyerReportedAt) > 3600000);
+  }, [accountPosts]);
+
+  const urgentAccounts = useMemo(() => {
+    const now = Date.now();
+    return lateAccounts.filter(p => p.buyerReportedAt && (now - p.buyerReportedAt) > 86400000); // 24 Hours
+  }, [lateAccounts]);
+
   const reportDelay = useMemo(() => {
     if (!selectedAccount?.buyerReportedAt || selectedAccount.sellerReported) return null;
     const diff = Date.now() - selectedAccount.buyerReportedAt;
@@ -319,7 +334,8 @@ export default function AdminPage() {
     return { 
       hours, 
       minutes: minutes % 60, 
-      isLate: diff > 3600000 // 1 Hour
+      isLate: diff > 3600000, 
+      isUrgent: diff > 86400000 
     };
   }, [selectedAccount]);
 
@@ -328,10 +344,6 @@ export default function AdminPage() {
     if (!acc) return;
     setSelectedAccountId(id);
     setPendingAccountStatus(acc.status);
-    
-    // AUTO-FILL INTELLIGENCE: Try to find the buyer ID
-    // 1. From existing sold/hold record
-    // 2. From associated orders where buyer claimed purchase
     const associatedOrder = allOrders.find(o => o.gameDetails?.postId === acc.id && o.buyerOutcome === 'bought');
     setAssignBuyerId(acc.boughtBy || acc.holdingBy || associatedOrder?.userId || "");
   };
@@ -541,6 +553,19 @@ export default function AdminPage() {
     }
   };
 
+  const handleEnforceAction = async () => {
+    if (!selectedAccount || !enforceMessage) return;
+    setIsSavingStatus(true);
+    try {
+      await enforceAccountAction(selectedAccount.id, enforceAction, enforceMessage);
+      setIsEnforceDialogOpen(false);
+      setSelectedAccountId(null);
+      setEnforceMessage("");
+    } finally {
+      setIsSavingStatus(false);
+    }
+  };
+
   const handleImageUpload = async (file: File, target: 'game' | 'product' | 'event' | 'banner' | 'offline' | 'logo' | 'onboarding' | 'payment') => {
     setIsUploading(true);
     try {
@@ -552,10 +577,8 @@ export default function AdminPage() {
       if (target === 'payment') setPaymentMethodForm(p => ({ ...p, icon: url }));
       if (target === 'offline') setAppStatusForm(a => ({ ...a, offlineImageUrl: url }));
       if (target === 'logo') updateStoreSettings({ logo: url });
-      if (target === 'onboarding') {
-          return url;
-      }
       toast({ title: "Image Uploaded" });
+      return url;
     } catch (e) { 
       toast({ title: "Upload Failed", variant: "destructive" }); 
     } finally { 
@@ -631,7 +654,7 @@ export default function AdminPage() {
         <div className="h-px bg-slate-50 dark:bg-white/5 my-4 mx-2" />
         <SideNavItem active={activeView === 'dashboard'} expanded={isSidebarExpanded || isMobile} onClick={() => { setActiveView('dashboard'); setIsMobileMenuOpen(false); setSelectedAccountId(null); }} icon={LayoutDashboard} label="Dashboard" />
         <SideNavItem active={activeView === 'orders'} expanded={isSidebarExpanded || isMobile} onClick={() => { setActiveView('orders'); setIsMobileMenuOpen(false); setSelectedAccountId(null); }} icon={ShoppingBag} label="Orders" badge={allOrders.filter(o => o.status === 'pending').length} />
-        <SideNavItem active={activeView === 'account-posts'} expanded={isSidebarExpanded || isMobile} onClick={() => { setActiveView('account-posts'); setIsMobileMenuOpen(false); }} icon={Gamepad2} label="Marketplace" badge={accountPosts.filter(p => p.status === 'pending' || p.conflict).length} />
+        <SideNavItem active={activeView === 'account-posts'} expanded={isSidebarExpanded || isMobile} onClick={() => { setActiveView('account-posts'); setIsMobileMenuOpen(false); }} icon={Gamepad2} label="Marketplace" badge={accountPosts.filter(p => p.status === 'pending' || p.conflict || (p.buyerReported && !p.sellerReported)).length} />
         <SideNavItem active={activeView === 'inventory'} expanded={isSidebarExpanded || isMobile} onClick={() => { setActiveView('inventory'); setIsMobileMenuOpen(false); setSelectedAccountId(null); }} icon={Package} label="Inventory" />
         <SideNavItem active={activeView === 'events'} expanded={isSidebarExpanded || isMobile} onClick={() => { setActiveView('events'); setIsMobileMenuOpen(false); setSelectedAccountId(null); }} icon={Calendar} label="Live Events" />
         <SideNavItem active={activeView === 'users'} expanded={isSidebarExpanded || isMobile} onClick={() => { setActiveView('users'); setIsMobileMenuOpen(false); setSelectedAccountId(null); }} icon={Users} label="Users" />
@@ -735,16 +758,42 @@ export default function AdminPage() {
           )}
 
           {activeView === 'account-posts' && !selectedAccountId && (
-            <div className="space-y-6">
+            <div className="space-y-8">
+               {/* LATE RESPONSE MONITORING CARD */}
+               {urgentAccounts.length > 0 && (
+                 <Card className="p-6 md:p-8 rounded-[2rem] border-2 border-red-500 bg-red-50 dark:bg-red-950/20 shadow-xl shadow-red-500/10 animate-in zoom-in duration-500">
+                    <div className="flex items-center gap-4 mb-6">
+                       <div className="w-14 h-14 rounded-2xl bg-red-600 text-white flex items-center justify-center shadow-lg animate-pulse">
+                          <AlertTriangle size={32} />
+                       </div>
+                       <div>
+                          <h3 className="text-xl md:text-2xl font-headline font-bold text-red-700 dark:text-red-400">Critical Delays: 24+ Hours</h3>
+                          <p className="text-sm font-medium text-red-600/80 dark:text-red-400/60 uppercase tracking-widest">Immediate admin intervention required for {urgentAccounts.length} listings.</p>
+                       </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                       {urgentAccounts.map(p => (
+                         <div key={p.id} onClick={() => handleOpenAccountPage(p.id)} className="p-4 bg-white dark:bg-slate-900 rounded-2xl flex items-center justify-between border border-red-200 dark:border-red-900/40 cursor-pointer hover:scale-[1.02] transition-transform">
+                            <div className="flex items-center gap-3">
+                               <div className="w-10 h-10 rounded-xl bg-slate-100 overflow-hidden relative"><Image src={p.thumbnailUrl} alt="" fill className="object-cover" /></div>
+                               <div className="min-w-0"><p className="text-xs font-bold truncate">#{p.id.toUpperCase()}</p><p className="text-[10px] text-muted-foreground uppercase">{p.authorName}</p></div>
+                            </div>
+                            <Button size="sm" variant="ghost" className="text-red-500"><ChevronRight size={20} /></Button>
+                         </div>
+                       ))}
+                    </div>
+                 </Card>
+               )}
+
                <Card className="rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden border-none shadow-xl bg-white dark:bg-slate-900">
                 <div className="overflow-x-auto scrollbar-hide">
-                  <Table className="min-w-[800px]">
+                  <Table className="min-w-[1000px]">
                     <TableHeader className="bg-slate-50/50 dark:bg-slate-800/40">
                       <TableRow className="border-none">
                         <TableHead className="px-4 sm:px-8">Seller</TableHead>
                         <TableHead>Game & Info</TableHead>
-                        <TableHead>Buyer Claim (Sold)</TableHead>
-                        <TableHead>Seller Verification</TableHead>
+                        <TableHead>Buyer Claim</TableHead>
+                        <TableHead>Wait Time</TableHead>
                         <TableHead>Expiration</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead className="text-right px-4 sm:px-8">Actions</TableHead>
@@ -753,10 +802,14 @@ export default function AdminPage() {
                     <TableBody>
                       {accountPosts.map(p => {
                         const associatedOrder = allOrders.find(o => o.gameDetails?.postId === p.id);
+                        const delayMs = (p.buyerReported && !p.sellerReported && p.buyerReportedAt) ? Date.now() - p.buyerReportedAt : 0;
+                        const isLate = delayMs > 3600000;
+                        const isUrgent = delayMs > 86400000;
+                        
                         return (
-                          <TableRow key={p.id} className="border-slate-50 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-slate-800/30">
+                          <TableRow key={p.id} className={cn("border-slate-50 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-slate-800/30", isUrgent && "bg-red-50/30")}>
                             <TableCell className="px-4 sm:px-8 relative">
-                              {(p.status === 'pending' || p.conflict) && <div className="absolute left-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />}
+                              {(p.status === 'pending' || p.conflict || (p.buyerReported && !p.sellerReported)) && <div className={cn("absolute left-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full animate-pulse", isUrgent ? "bg-red-600 scale-150" : "bg-amber-500")} />}
                               <div className="flex items-center gap-3">
                                 <div className="w-8 h-8 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800 relative shrink-0">
                                   {p.authorAvatar && <Image src={p.authorAvatar} alt="" fill className="object-cover" />}
@@ -773,16 +826,19 @@ export default function AdminPage() {
                             <TableCell>
                               {associatedOrder?.buyerOutcome ? (
                                 <Badge className={cn("rounded-full text-[8px] font-black uppercase", associatedOrder.buyerOutcome === 'bought' ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700")}>
-                                  {associatedOrder.buyerOutcome === 'bought' ? 'SOLD' : 'NOT SOLD'}
+                                  {associatedOrder.buyerOutcome === 'bought' ? 'CLAIMED SOLD' : 'NOT SOLD'}
                                 </Badge>
                               ) : <span className="text-[10px] text-slate-300">No claim</span>}
                             </TableCell>
                             <TableCell>
-                               {p.sellerReported ? (
-                                 <Badge className={cn("rounded-full text-[8px] font-black uppercase", p.conflict ? "bg-red-100 text-red-700 animate-pulse" : "bg-green-100 text-green-700")}>
-                                   {p.conflict ? 'DISAGREED' : 'CONFIRMED'}
-                                 </Badge>
-                               ) : <span className="text-[10px] text-slate-300">Pending</span>}
+                               {p.buyerReported && !p.sellerReported ? (
+                                 <div className="flex flex-col">
+                                    <span className={cn("text-[10px] font-black", isUrgent ? "text-red-600" : isLate ? "text-amber-600" : "text-slate-400")}>
+                                       {Math.floor(delayMs / 3600000)}h {Math.floor((delayMs % 3600000) / 60000)}m
+                                    </span>
+                                    {isUrgent && <span className="text-[7px] font-black text-red-500 uppercase">24H EXCEEDED</span>}
+                                 </div>
+                               ) : <span className="text-[10px] text-slate-300 italic">None</span>}
                             </TableCell>
                             <TableCell>
                                <CountdownDisplay expiresAt={p.expiresAt} />
@@ -843,9 +899,9 @@ export default function AdminPage() {
                            {reportDelay && (
                              <div className={cn(
                                "p-6 rounded-[2rem] border animate-in slide-in-from-top-2",
-                               reportDelay.isLate 
-                                ? "bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-900/40" 
-                                : "bg-blue-50 border-blue-200 dark:bg-blue-950/20 dark:border-blue-900/40"
+                               reportDelay.isUrgent ? "bg-red-100 border-red-300 dark:bg-red-950/40" :
+                               reportDelay.isLate ? "bg-red-50 border-red-200 dark:bg-red-950/20" : 
+                               "bg-blue-50 border-blue-200 dark:bg-blue-950/20"
                              )}>
                                <div className="flex items-center justify-between mb-4">
                                   <div className="flex items-center gap-3">
@@ -858,22 +914,35 @@ export default function AdminPage() {
                                </div>
 
                                <p className="text-xs font-medium leading-relaxed opacity-80 mb-6">
-                                  {reportDelay.isLate 
-                                    ? "Seller has exceeded the 1-hour confirmation window. Please contact them directly to verify the sale." 
+                                  {reportDelay.isUrgent 
+                                    ? "URGENT: Seller has failed to respond for over 24 hours. Marketplace integrity at risk. Enforce action required." 
+                                    : reportDelay.isLate 
+                                    ? "Seller has exceeded the 1-hour confirmation window. Warning notification has been sent automatically." 
                                     : "The seller still has time to confirm the buyer's claim. Admin monitoring is active."}
                                </p>
 
-                               {reportDelay.isLate && (
-                                 <Button 
-                                   onClick={() => {
-                                      const text = encodeURIComponent(`Asc, Oskar Shop Admin-ka waaye. Account-kaaga #${selectedAccount.id.toUpperCase()} ee marketplace-ka waxaa sheegtay buyer, laakiin wali maadan xaqiijinin in kabadan hal saac. Fadlan nala soo xariir.`);
-                                      window.open(`https://wa.me/${selectedAccount.phone}?text=${text}`, '_blank');
-                                   }}
-                                   className="w-full h-14 rounded-2xl bg-green-600 hover:bg-green-700 font-bold gap-2 text-white shadow-xl shadow-green-600/20"
-                                 >
-                                    <MessageCircle className="w-5 h-5" /> Contact Seller on WhatsApp
-                                 </Button>
-                               )}
+                               <div className="flex flex-col gap-3">
+                                  {reportDelay.isLate && (
+                                    <Button 
+                                      onClick={() => {
+                                         const text = encodeURIComponent(`Asc, Oskar Shop Admin-ka waaye. Account-kaaga #${selectedAccount.id.toUpperCase()} ee marketplace-ka waxaa sheegtay buyer, laakiin wali maadan xaqiijinin. Fadlan nala soo xariir.`);
+                                         window.open(`https://wa.me/${selectedAccount.phone}?text=${text}`, '_blank');
+                                      }}
+                                      className="w-full h-14 rounded-2xl bg-green-600 hover:bg-green-700 font-bold gap-2 text-white shadow-xl shadow-green-600/20"
+                                    >
+                                       <MessageCircle className="w-5 h-5" /> Contact Seller on WhatsApp
+                                    </Button>
+                                  )}
+
+                                  {reportDelay.isUrgent && (
+                                     <Button 
+                                       onClick={() => setIsEnforceDialogOpen(true)}
+                                       className="w-full h-14 rounded-2xl bg-red-600 hover:bg-red-700 font-black gap-2 text-white shadow-xl shadow-red-600/20 uppercase tracking-widest"
+                                     >
+                                        <Gavel className="w-5 h-5" /> Enforce 24H Penalty
+                                     </Button>
+                                  )}
+                               </div>
                              </div>
                            )}
 
@@ -976,7 +1045,7 @@ export default function AdminPage() {
                            </div>
                         </div>
 
-                        {/* Lifecycle Control with decision logic */}
+                        {/* Lifecycle Control */}
                         <div className="space-y-4 md:space-y-6 pt-4 md:pt-6 border-t dark:border-white/5">
                            <div className="flex items-center gap-3">
                               <RefreshCw className="text-amber-500" size={20} />
@@ -984,7 +1053,6 @@ export default function AdminPage() {
                            </div>
                            
                            <div className="space-y-4">
-                              {/* Decider Box for Conflict */}
                               {selectedAccount.conflict && (
                                 <div className="p-4 md:p-6 bg-amber-50 dark:bg-amber-500/10 rounded-[1.5rem] border-2 border-amber-200 dark:border-amber-500/20 space-y-4 animate-in zoom-in-95">
                                    <div className="flex items-center gap-3 text-amber-700 dark:text-amber-400">
@@ -1511,6 +1579,67 @@ export default function AdminPage() {
         </main>
       </div>
 
+      {/* Admin Penalty / Enforcement Dialog */}
+      <Dialog open={isEnforceDialogOpen} onOpenChange={setIsEnforceDialogOpen}>
+        <DialogContent className="max-w-md w-[95vw] rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl bg-white dark:bg-slate-900 animate-in zoom-in duration-300">
+           <div className="bg-red-600 p-8 text-white">
+              <div className="flex justify-between items-start">
+                 <div>
+                    <DialogTitle className="text-2xl font-headline font-bold">24H Penalty Enforcement</DialogTitle>
+                    <p className="text-[10px] font-black uppercase text-red-200 tracking-[0.2em] mt-2">ID: #{selectedAccountId?.toUpperCase()}</p>
+                 </div>
+                 <Badge className="bg-white/20 text-white font-black border-none px-4 py-1">LATE SELLER</Badge>
+              </div>
+           </div>
+           
+           <div className="p-8 space-y-6">
+              <div className="p-5 bg-red-50 dark:bg-red-950/20 rounded-2xl border border-red-100 dark:border-red-900/20 flex gap-4">
+                 <ShieldAlert className="text-red-600 shrink-0" size={24} />
+                 <p className="text-xs font-bold text-red-800 dark:text-red-400 leading-relaxed">
+                   Seller has exceeded the 24-hour response window. Select an enforcement action and provide a Somali explanation message.
+                 </p>
+              </div>
+
+              <div className="space-y-4">
+                 <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Enforcement Action</Label>
+                 <div className="grid grid-cols-2 gap-3">
+                    {['delete', 'holding', 'approved', 'pending'].map((act) => (
+                       <Button 
+                        key={act}
+                        variant={enforceAction === act ? 'default' : 'outline'}
+                        onClick={() => setEnforceAction(act as any)}
+                        className={cn(
+                          "h-12 rounded-xl font-bold uppercase text-[10px] transition-all",
+                          enforceAction === act && act === 'delete' ? 'bg-red-600 hover:bg-red-700 shadow-lg' : ''
+                        )}
+                       >
+                          {act}
+                       </Button>
+                    ))}
+                 </div>
+              </div>
+
+              <div className="space-y-2">
+                 <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Admin Message (Somali)</Label>
+                 <Textarea 
+                  placeholder="Sababta tallaabadan loo qaaday... (Fadlan qor Somali)" 
+                  value={enforceMessage}
+                  onChange={(e) => setEnforceMessage(e.target.value)}
+                  className="rounded-2xl bg-slate-50 dark:bg-slate-800 border-none font-bold h-32 focus-visible:ring-red-500 shadow-inner"
+                 />
+              </div>
+
+              <Button 
+                onClick={handleEnforceAction}
+                disabled={isSavingStatus || !enforceMessage}
+                className="w-full h-16 rounded-2xl bg-slate-900 hover:bg-black text-white font-black text-lg gap-2 shadow-2xl active:scale-95 transition-all uppercase tracking-widest"
+              >
+                {isSavingStatus ? <Loader2 className="animate-spin" /> : <><Send size={20} /> Apply Penalty</>}
+              </Button>
+           </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Modern User Management Dialog */}
       <Dialog open={isUserManageOpen} onOpenChange={setIsUserManageOpen}>
         <DialogContent className="max-w-md w-[95vw] rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl bg-white dark:bg-slate-900">
@@ -1660,21 +1789,21 @@ export default function AdminPage() {
                 </div>
               )}
 
-              {/* Holder Profile Details (For Accounts) */}
+              {/* Holder Profile Details */}
               {selectedOrder?.items?.[0]?.gameId === 'accounts' && (
                 <div className="space-y-4 animate-in slide-in-from-top-2">
                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2"><UserCircle size={14}/> Buyer (Holder) Profile</h4>
                    <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-white/5 flex items-center gap-4">
                       {(() => {
-                        const buyer = allUsers.find(u => u.uid === selectedOrder.userId);
+                        const buyerProfile = allUsers.find(u => u.uid === selectedOrder.userId);
                         return (
                           <>
                             <div className="w-12 h-12 rounded-full overflow-hidden relative border-2 border-white shadow-sm shrink-0">
-                               {buyer?.photoURL ? <Image src={buyer.photoURL} alt="" fill className="object-cover" /> : <div className="w-full h-full bg-slate-200 flex items-center justify-center text-slate-400"><User size={20} /></div>}
+                               {buyerProfile?.photoURL ? <Image src={buyerProfile.photoURL} alt="" fill className="object-cover" /> : <div className="w-full h-full bg-slate-200 flex items-center justify-center text-slate-400"><User size={20} /></div>}
                             </div>
                             <div>
-                               <p className="text-sm font-bold">{buyer?.name || 'Unknown User'}</p>
-                               <p className="text-[10px] text-muted-foreground font-medium">{buyer?.email}</p>
+                               <p className="text-sm font-bold">{buyerProfile?.name || 'Unknown User'}</p>
+                               <p className="text-[10px] text-muted-foreground font-medium">{buyerProfile?.email}</p>
                             </div>
                           </>
                         )
@@ -1838,14 +1967,12 @@ export default function AdminPage() {
            <div className="bg-primary p-6 text-white"><DialogTitle className="text-xl font-headline font-bold">{editingEvent ? 'Edit Live Event' : 'Add New Live Event'}</DialogTitle></div>
            <form onSubmit={handleSaveEvent} className="p-6 space-y-6 max-h-[70vh] overflow-y-auto scrollbar-hide">
               <div className="space-y-2"><Label className="text-xs font-bold uppercase text-slate-400">Event Title</Label><Input value={eventForm.title} onChange={e => setEventForm({...eventForm, title: e.target.value})} required className="rounded-xl h-12" /></div>
-              
-              <div className="space-y-2"><Label className="text-xs font-bold uppercase text-slate-400">Short Description (Home Screen)</Label><Input value={eventForm.shortDescription} onChange={e => setEventForm({...eventForm, shortDescription: e.target.value})} placeholder="Show in home card..." required className="rounded-xl h-12" /></div>
-              
-              <div className="space-y-2"><Label className="text-xs font-bold uppercase text-slate-400">Long Content (Event Page)</Label><Textarea value={eventForm.content} onChange={e => setEventForm({...eventForm, content: e.target.value})} placeholder="Detailed information for the full-screen view..." required className="rounded-xl min-h-[150px]" /></div>
+              <div className="space-y-2"><Label className="text-xs font-bold uppercase text-slate-400">Short Description</Label><Input value={eventForm.shortDescription} onChange={e => setEventForm({...eventForm, shortDescription: e.target.value})} required className="rounded-xl h-12" /></div>
+              <div className="space-y-2"><Label className="text-xs font-bold uppercase text-slate-400">Long Content</Label><Textarea value={eventForm.content} onChange={e => setEventForm({...eventForm, content: e.target.value})} required className="rounded-xl min-h-[150px]" /></div>
 
               <div className="grid grid-cols-2 gap-4">
                  <div className="space-y-2">
-                    <Label className="text-xs font-bold uppercase text-slate-400">Duration (Scheduling)</Label>
+                    <Label className="text-xs font-bold uppercase text-slate-400">Duration</Label>
                     <Input type="number" placeholder="e.g. 5" value={eventForm.duration} onChange={e => setEventForm({...eventForm, duration: e.target.value})} className="rounded-xl h-12" />
                  </div>
                  <div className="space-y-2">
@@ -1862,7 +1989,7 @@ export default function AdminPage() {
               </div>
 
               <div className="space-y-2">
-                 <Label className="text-xs font-bold uppercase text-slate-400">Thumbnail / Banner</Label>
+                 <Label className="text-xs font-bold uppercase text-slate-400">Thumbnail</Label>
                  <div className="flex items-center gap-4">
                     <div className="w-24 h-16 rounded-xl bg-slate-50 dark:bg-slate-800 relative overflow-hidden shrink-0">
                        {eventForm.thumbnailUrl ? <Image src={eventForm.thumbnailUrl} alt="" fill className="object-cover" unoptimized /> : <ImageIcon className="m-auto absolute inset-0 text-slate-300" />}
@@ -1870,12 +1997,7 @@ export default function AdminPage() {
                     <Input type="file" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'event')} className="flex-1 rounded-xl h-10" />
                  </div>
               </div>
-              
-              <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
-                 <Label className="font-bold">Active Status</Label>
-                 <Switch checked={eventForm.active} onCheckedChange={val => setEventForm({...eventForm, active: val})} />
-              </div>
-
+              <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-xl"><Label className="font-bold">Active Status</Label><Switch checked={eventForm.active} onCheckedChange={val => setEventForm({...eventForm, active: val})} /></div>
               <Button type="submit" disabled={isUploading} className="w-full h-14 rounded-2xl font-bold shadow-xl shadow-primary/20">{isUploading ? <Loader2 className="animate-spin" /> : 'Save Live Event'}</Button>
            </form>
          </DialogContent>
@@ -1918,28 +2040,20 @@ export default function AdminPage() {
               <Label className="text-xs font-bold uppercase text-slate-400">Method Name</Label>
               <Input value={paymentMethodForm.name} onChange={e => setPaymentMethodForm({...paymentMethodForm, name: e.target.value})} required placeholder="e.g. EVC Plus" className="rounded-xl h-12" />
             </div>
-            
             <div className="space-y-2">
               <Label className="text-xs font-bold uppercase text-slate-400">Icon / Logo</Label>
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 rounded-xl bg-slate-100 dark:bg-slate-800 relative overflow-hidden shrink-0 border border-dashed border-slate-300 dark:border-white/10 flex items-center justify-center">
-                  {paymentMethodForm.icon ? <Image src={paymentMethodForm.icon} alt="" fill className="object-cover" unoptimized /> : <PaymentIcon size={20} />}
+                  {paymentMethodForm.icon ? <Image src={paymentMethodForm.icon} alt={paymentMethodForm.name} fill className="object-cover" unoptimized /> : <PaymentIcon size={20} />}
                 </div>
                 <Input type="file" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'payment')} className="flex-1 rounded-xl h-10" />
               </div>
             </div>
-
             <div className="space-y-2">
               <Label className="text-xs font-bold uppercase text-slate-400">USSD Template</Label>
               <Input value={paymentMethodForm.ussdTemplate} onChange={e => setPaymentMethodForm({...paymentMethodForm, ussdTemplate: e.target.value})} required placeholder="*712*613982172*$#" className="rounded-xl h-12 font-mono" />
-              <p className="text-[10px] text-muted-foreground italic">* Use $ as the price placeholder.</p>
             </div>
-
-            <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
-              <Label className="font-bold">Active Status</Label>
-              <Switch checked={paymentMethodForm.active} onCheckedChange={val => setPaymentMethodForm({...paymentMethodForm, active: val})} />
-            </div>
-
+            <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-xl"><Label className="font-bold">Active Status</Label><Switch checked={paymentMethodForm.active} onCheckedChange={val => setPaymentMethodForm({...paymentMethodForm, active: val})} /></div>
             <Button type="submit" disabled={isUploading} className="w-full h-14 rounded-2xl font-bold bg-green-600 hover:bg-green-700 shadow-xl shadow-green-600/20">
               {isUploading ? <Loader2 className="animate-spin" /> : editingPaymentMethod ? 'Update Payment Method' : 'Save Payment Method'}
             </Button>

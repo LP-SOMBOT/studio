@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -67,6 +68,9 @@ export default function AccountsView() {
     const now = Date.now();
     return (accountPosts || [])
       .filter(p => {
+        // PERMANENTLY HIDE DELETED/penalty accounts from market
+        if (p.hiddenFromMarket || p.status === 'rejected') return false;
+
         const isExpired = p.expiresAt ? p.expiresAt < now : false;
         const isOwner = p.uid === user?.uid;
         const isAdmin = user?.isAdmin;

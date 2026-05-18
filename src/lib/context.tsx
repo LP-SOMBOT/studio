@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef } from 'react';
@@ -113,6 +114,9 @@ type AccountPost = {
   term?: 'weekly' | 'monthly';
   views: number;
   sold: boolean;
+  adminMessage?: string;
+  hiddenFromMarket?: boolean;
+  sellerSeenDeletionAt?: number;
   processedBy?: {
     uid: string;
     name: string;
@@ -130,6 +134,7 @@ type AppNotification = {
   linkTo: string;
   icon?: string;
   isAdminOnly?: boolean;
+  readBy?: Record<string, boolean>;
 };
 
 type GameEvent = {
@@ -250,6 +255,8 @@ type AppContextType = {
   updateAccountPostStatus: (postId: string, status: string, boughtBy?: string) => Promise<void>;
   reportAccountOutcome: (postId: string, outcome: 'bought' | 'not_bought') => Promise<void>;
   respondToSaleReport: (postId: string, confirmed: boolean) => Promise<void>;
+  enforceAccountAction: (postId: string, action: 'delete' | 'holding' | 'approved' | 'pending', message: string) => Promise<void>;
+  markDeletionAsSeen: (postId: string) => Promise<void>;
   updateUserProfile: (updates: Partial<UserProfile>) => Promise<void>;
   manageUser: (uid: string, updates: Partial<UserProfile>) => Promise<void>;
   deleteUser: (uid: string) => Promise<void>;
@@ -653,7 +660,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       authorAvatar: enhancedUser?.photoURL, 
       status: 'pending', 
       createdAt: Date.now(), 
-      expiresAt: null, // Only set upon admin approval
+      expiresAt: null, 
       views: 0, 
       sold: false 
     });
@@ -673,14 +680,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     
     await update(ref(rtdb, `accountPosts/${pid}`), {
       term,
-      expiresAt: null, // Reset and wait for re-approval
-      status: 'pending', // Back to pending for verification
+      expiresAt: null, 
+      status: 'pending', 
       sold: false,
       holdingBy: null,
       buyerReported: false,
       buyerReportedAt: null,
       sellerReported: false,
-      conflict: false
+      conflict: false,
+      adminMessage: null,
+      hiddenFromMarket: false,
+      sellerSeenDeletionAt: null
     });
     toast({ title: "Renewal Initiated!", description: "Waiting for admin to verify renewal payment." });
   };
@@ -726,9 +736,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
          return;
       }
 
+      const reportTime = Date.now();
       await update(postRef, { 
         buyerReported: true, 
-        buyerReportedAt: Date.now(),
+        buyerReportedAt: reportTime,
         status: 'holding',
         holdingBy: user.uid
       });
@@ -766,7 +777,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         sellerReported: true,
         completedAt: Date.now(),
         boughtBy: post.holdingBy,
-        conflict: false // Reset any conflict flag on agreement
+        conflict: false 
       });
       toast({ title: "Account Sold!", description: "Transaction finalized successfully." });
       if (post.holdingBy) {
@@ -780,6 +791,40 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       toast({ title: "Reported Disagreement", description: "Admin will review this transaction." });
       await broadcastAdminNotification("Conflict Detected! ⚠️", `Seller disagreed with buyer report for account #${postId.toUpperCase()}.`);
     }
+  };
+
+  const enforceAccountAction = async (postId: string, action: 'delete' | 'holding' | 'approved' | 'pending', message: string) => {
+    if (!rtdb || !enhancedUser?.isAdmin) return;
+    const postRef = ref(rtdb, `accountPosts/${postId}`);
+    const postSnap = await get(postRef);
+    const postData = postSnap.val();
+    if (!postData) return;
+
+    const updates: any = { 
+      adminMessage: message,
+      sellerReported: true, // Mark as resolved by admin
+      conflict: false,
+      buyerReported: false,
+      buyerReportedAt: null
+    };
+
+    if (action === 'delete') {
+      updates.status = 'rejected';
+      updates.hiddenFromMarket = true;
+      updates.sold = false;
+    } else {
+      updates.status = action;
+      updates.hiddenFromMarket = false;
+    }
+
+    await update(postRef, updates);
+    broadcastNotification("Admin Action Taken 👮", message, postData.uid);
+    toast({ title: `Action "${action}" Applied` });
+  };
+
+  const markDeletionAsSeen = async (postId: string) => {
+    if (!rtdb) return;
+    await update(ref(rtdb, `accountPosts/${postId}`), { sellerSeenDeletionAt: Date.now() });
   };
 
   const broadcastNotification = async (title: string, body: string, target?: string) => {
@@ -853,8 +898,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (status === 'sold') {
       assignmentUpdate.sold = true;
       assignmentUpdate.boughtBy = boughtBy || postData.holdingBy || postData.boughtBy;
-      assignmentUpdate.conflict = false; // Admin intervention resolves conflict
-      assignmentUpdate.sellerReported = true; // Mark as verified by admin
+      assignmentUpdate.conflict = false; 
+      assignmentUpdate.sellerReported = true; 
     }
 
     if (status === 'approved') {
@@ -865,6 +910,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       assignmentUpdate.buyerReported = false;
       assignmentUpdate.buyerReportedAt = null;
       assignmentUpdate.sellerReported = false;
+      assignmentUpdate.adminMessage = null;
+      assignmentUpdate.hiddenFromMarket = false;
 
       if (oldStatus !== 'approved' || !postData.expiresAt) {
         const term = postData.term || 'weekly';
@@ -1011,7 +1058,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     <AppContext.Provider value={{ 
       user: enhancedUser, loading, isGlobalLoading, isInitialLoading, activeTab, setActiveTab, setGlobalLoading: setIsGlobalLoading,
       login, signup, logout, buyNow, orders, allOrders, games, products, allUsers, accountPosts, notifications, adminNotifications, events, banners,
-      createOrder, postAccount, updateAccountPost, renewAccountPost, deleteAccountPost, deleteOrder, buyAccountPost, markNotificationsAsRead, markAdminNotificationsAsRead, updateOrderStatus, updateAccountPostStatus, reportAccountOutcome, respondToSaleReport,
+      createOrder, postAccount, updateAccountPost, renewAccountPost, deleteAccountPost, deleteOrder, buyAccountPost, markNotificationsAsRead, markAdminNotificationsAsRead, updateOrderStatus, updateAccountPostStatus, reportAccountOutcome, respondToSaleReport, enforceAccountAction, markDeletionAsSeen,
       updateUserProfile, manageUser, deleteUser, saveGame, deleteGame, saveProduct, deleteProduct, saveEvent, deleteEvent, saveBanner, deleteBanner, savePaymentMethod, deletePaymentMethod, storeSettings, updateStoreSettings, 
       broadcastNotification, broadcastAdminNotification, messages, allChatSessions, chatTargetId, setChatTargetId, sendMessage, markMessagesAsRead, refreshAdminData,
       theme, toggleTheme, isBannedModalOpen, setIsBannedModalOpen, bannedInfo, isPostingAccount, setIsPostingAccount

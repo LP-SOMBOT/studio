@@ -44,7 +44,7 @@ export default function CheckoutAccountPage() {
 
   const associatedOrder = useMemo(() => {
     if (!post || !user) return null;
-    return (orders || []).find(o => o.gameDetails?.postId === post.id);
+    return (orders || []).find(o => o.gameDetails?.postId === post.id && o.userId === user.uid);
   }, [orders, post, user]);
 
   const hasBought = associatedOrder?.buyerOutcome === 'bought';
@@ -67,7 +67,8 @@ export default function CheckoutAccountPage() {
     setGlobalLoading(true);
 
     try {
-      // 1. Create temporary holding order record (DO NOT LOCK ACCOUNT YET)
+      // Create initial order record for contact tracking
+      // NOTE: We no longer set status to 'holding' here. Account stays active in market.
       const purchaseItem = {
         id: post.id,
         title: `Account: ${post.authorName}`,
@@ -82,10 +83,11 @@ export default function CheckoutAccountPage() {
         whatsappNumber,
         postId: post.id,
         sellerPhone: post.phone,
-        gameType: post.gameType
+        gameType: post.gameType,
+        sellerName: post.authorName,
+        platform: post.platform
       }, purchaseItem);
 
-      // 2. Format Somali message for WhatsApp
       let msg = "";
       if (post.gameType === 'bloodstrike') {
         msg = `Asc, waxaan rabaa inaan iibsado account-kaaga Blood Strike.
@@ -104,11 +106,8 @@ Ma ii diyaar yahay? Waxaan ahay ${name}.`;
       }
 
       const encoded = encodeURIComponent(msg);
-      
-      // 3. Complete step and open WhatsApp
       setStep(3);
       window.open(`https://wa.me/${post.phone}?text=${encoded}`, '_blank');
-      
       toast({ title: "Opening WhatsApp!", description: "Lala xariir seller-ka hadda." });
     } catch (e: any) {
        toast({ title: "Failed", description: e.message, variant: "destructive" });
