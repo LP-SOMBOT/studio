@@ -275,6 +275,8 @@ type AppContextType = {
   isBannedModalOpen: boolean;
   setIsBannedModalOpen: (open: boolean) => void;
   bannedInfo: BannedInfo | null;
+  isPostingAccount: boolean;
+  setIsPostingAccount: (isPosting: boolean) => void;
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -329,6 +331,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   
   const [isBannedModalOpen, setIsBannedModalOpen] = useState(false);
   const [bannedInfo, setBannedInfo] = useState<BannedInfo | null>(null);
+  const [isPostingAccount, setIsPostingAccount] = useState(false);
 
   const [syncStatus, setSyncStatus] = useState({
     settings: false,
@@ -942,7 +945,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       createOrder, postAccount, updateAccountPost, renewAccountPost, deleteAccountPost, deleteOrder, buyAccountPost, markNotificationsAsRead, markAdminNotificationsAsRead, updateOrderStatus, updateAccountPostStatus, reportAccountOutcome,
       updateUserProfile, manageUser, deleteUser, saveGame, deleteGame, saveProduct, deleteProduct, saveEvent, deleteEvent, saveBanner, deleteBanner, savePaymentMethod, deletePaymentMethod, storeSettings, updateStoreSettings, 
       broadcastNotification, broadcastAdminNotification, messages, allChatSessions, chatTargetId, setChatTargetId, sendMessage, markMessagesAsRead, refreshAdminData,
-      theme, toggleTheme, isBannedModalOpen, setIsBannedModalOpen, bannedInfo
+      theme, toggleTheme, isBannedModalOpen, setIsBannedModalOpen, bannedInfo, isPostingAccount, setIsPostingAccount
     }}>
       {children}
     </AppContext.Provider>

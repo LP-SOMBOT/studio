@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -48,7 +49,7 @@ import { uploadToImgbb } from '@/lib/imgbb';
 import { useRouter } from 'next/navigation';
 
 export default function AccountsView() {
-  const { accountPosts, user, setActiveTab, isInitialLoading, postAccount, deleteAccountPost, updateAccountPost } = useApp();
+  const { accountPosts, user, setActiveTab, isInitialLoading, postAccount, deleteAccountPost, updateAccountPost, setIsPostingAccount } = useApp();
   const router = useRouter();
   const [isPostSheetOpen, setIsPostSheetOpen] = useState(false);
   const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
@@ -80,6 +81,11 @@ export default function AccountsView() {
     if (!user) return [];
     return (accountPosts || []).filter(p => p.uid === user.uid || p.holdingBy === user.uid || p.boughtBy === user.uid);
   }, [accountPosts, user]);
+
+  // Handle global posting state for Layout
+  useEffect(() => {
+    setIsPostingAccount(isPostSheetOpen || !!editingPost);
+  }, [isPostSheetOpen, editingPost, setIsPostingAccount]);
 
   if (isInitialLoading) {
     return (
@@ -511,8 +517,8 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
   return (
     <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if(!v) setHasTriggeredUssd(false); }}>
       {/* Full-Page Modal Implementation */}
-      <DialogContent className="max-w-none w-screen h-full md:h-[94vh] md:max-w-4xl md:rounded-[3.5rem] overflow-y-auto p-0 border-none shadow-none md:shadow-2xl bg-white dark:bg-slate-900 scrollbar-hide fixed inset-0 z-[100]">
-        <div className="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-6 md:px-10 pt-6 md:pt-10 pb-4 md:pb-6 flex items-center justify-between border-b md:border-none dark:border-white/5">
+      <DialogContent className="max-w-none w-screen h-full md:h-[94vh] md:max-w-4xl md:rounded-[3.5rem] overflow-y-auto p-0 border-none shadow-none md:shadow-2xl bg-white dark:bg-slate-900 scrollbar-hide fixed inset-0 z-[100] left-0 top-0 translate-x-0 translate-y-0 data-[state=open]:translate-x-0 data-[state=open]:translate-y-0">
+        <div className="sticky top-0 z-[110] bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-6 md:px-10 pt-6 md:pt-10 pb-4 md:pb-6 flex items-center justify-between border-b md:border-none dark:border-white/5">
            <div className="flex items-center gap-4">
               <button 
                 onClick={() => onOpenChange(false)} 

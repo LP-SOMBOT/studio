@@ -1,3 +1,4 @@
+
 "use client";
 
 import { usePathname } from "next/navigation";
@@ -9,12 +10,12 @@ import { cn } from "@/lib/utils";
 
 export default function MainAppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { activeTab, storeSettings, user } = useApp();
+  const { activeTab, storeSettings, user, isPostingAccount } = useApp();
   
   // Routes where the standard app layout should not be visible
   const isAuthPage = pathname === "/login" || pathname === "/signup";
   const isAdminPage = pathname.startsWith("/admin");
-  const isSpecialFlow = pathname === "/checkout" || pathname === "/checkout-account" || pathname.startsWith("/accounts/") || pathname.startsWith("/events/") || activeTab === 'chat';
+  const isSpecialFlow = pathname === "/checkout" || pathname === "/checkout-account" || pathname.startsWith("/accounts/") || pathname.startsWith("/events/") || activeTab === 'chat' || isPostingAccount;
 
   // Offline mode check
   const isOffline = storeSettings?.appStatus?.offline;
