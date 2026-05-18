@@ -471,6 +471,11 @@ function PostAccountView({ editingPost, onCancel, onComplete }: { editingPost?: 
                                  <SelectItem value="1" className="rounded-xl font-bold uppercase text-xs p-3">Level 1</SelectItem>
                                  <SelectItem value="2" className="rounded-xl font-bold uppercase text-xs p-3">Level 2</SelectItem>
                                  <SelectItem value="3" className="rounded-xl font-bold uppercase text-xs p-3">Level 3</SelectItem>
+                                 <SelectItem value="4" className="rounded-xl font-bold uppercase text-xs p-3">Level 4</SelectItem>
+                                 <SelectItem value="5" className="rounded-xl font-bold uppercase text-xs p-3">Level 5</SelectItem>
+                                 <SelectItem value="6" className="rounded-xl font-bold uppercase text-xs p-3">Level 6</SelectItem>
+                                 <SelectItem value="7" className="rounded-xl font-bold uppercase text-xs p-3">Level 7</SelectItem>
+                                 <SelectItem value="8" className="rounded-xl font-bold uppercase text-xs p-3">Level 8</SelectItem>
                               </SelectContent>
                            </Select>
                         </FormGroup>
