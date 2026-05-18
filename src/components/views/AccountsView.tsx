@@ -81,7 +81,6 @@ export default function AccountsView() {
     return (accountPosts || []).filter(p => p.uid === user.uid || p.holdingBy === user.uid || p.boughtBy === user.uid);
   }, [accountPosts, user]);
 
-  // Handle global posting state for Layout
   useEffect(() => {
     setIsPostingAccount(isPostSheetOpen || !!editingPost);
   }, [isPostSheetOpen, editingPost, setIsPostingAccount]);
@@ -102,11 +101,10 @@ export default function AccountsView() {
 
   return (
     <div className="min-h-screen pb-24 page-transition bg-slate-50 dark:bg-transparent">
-      {/* Mobile Header (Hidden on Desktop Sidebar view) */}
       <header className="sticky top-0 z-50 bg-white dark:bg-slate-950/80 dark:backdrop-blur-md shadow-sm border-b border-gray-100 dark:border-white/5 h-16 flex items-center justify-between px-4 md:hidden">
         <h1 className="text-lg font-headline font-bold text-slate-900 dark:text-white tracking-tight">Marketplace</h1>
         <button onClick={() => setIsActivityModalOpen(true)} className="relative p-2 text-slate-400 bg-slate-50 dark:bg-slate-900 rounded-full">
-           <Activity size={20} />
+           <Activity className="w-5 h-5" />
            {myActivity.some(p => p.status === 'pending' || p.status === 'holding') && (
              <span className="absolute top-1 right-1 w-2 h-2 bg-amber-500 rounded-full border-2 border-white dark:border-slate-900" />
            )}
@@ -114,7 +112,6 @@ export default function AccountsView() {
       </header>
 
       <main className="px-4 md:px-8 py-6 md:py-12 space-y-6 md:space-y-16 max-w-[1600px] mx-auto">
-        {/* Desktop Title & Search Row */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6">
            <div className="hidden md:block">
               <h1 className="text-3xl lg:text-5xl font-headline font-bold text-slate-900 dark:text-white">Account Marketplace</h1>
@@ -126,7 +123,7 @@ export default function AccountsView() {
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-slate-400" />
                 <Input 
                   placeholder="Search accounts..." 
-                  className="pl-10 md:pl-12 h-12 md:h-14 lg:h-16 rounded-2xl md:rounded-[1.5rem] bg-white dark:bg-slate-900 border-none shadow-sm dark:shadow-none font-bold text-sm md:text-lg"
+                  className="pl-10 md:pl-12 h-12 md:h-14 lg:h-16 rounded-xl md:rounded-[1.5rem] bg-white dark:bg-slate-900 border-none shadow-sm dark:shadow-none font-bold text-sm md:text-lg"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -293,40 +290,40 @@ function AccountPostCard({ post, onClick, onEdit, onDelete, isOwner, isAdmin }: 
         isExpired && "opacity-60 grayscale-[0.5]"
       )}
     >
-      <div className="p-4 md:p-6 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/40 border-b dark:border-white/5">
+      <div className="p-3.5 md:p-6 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/40 border-b dark:border-white/5">
         <div className="flex items-center gap-2 md:gap-3 min-w-0">
-          <div className="w-9 h-9 md:w-11 md:h-11 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden relative border-2 border-white dark:border-white/10 shadow-sm shrink-0">
+          <div className="w-8 h-8 md:w-11 md:h-11 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden relative border-2 border-white dark:border-white/10 shadow-sm shrink-0">
             {post.authorAvatar ? (
               <Image src={post.authorAvatar} alt="" fill className="object-cover" />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-slate-300 dark:text-slate-600"><User size={18} /></div>
+              <div className="w-full h-full flex items-center justify-center text-slate-300 dark:text-slate-600"><User size={16} /></div>
             )}
           </div>
           <div className="min-w-0">
-            <div className="flex items-center gap-1.5 md:gap-2">
+            <div className="flex items-center gap-1 md:gap-2">
               <p className="font-bold text-xs md:text-sm text-slate-900 dark:text-white truncate max-w-[60px] md:max-w-[80px]">{post.authorName}</p>
               <Badge className={cn(
-                "rounded-full text-[7px] md:text-[8px] font-black px-1.5 md:px-2 py-0 border-none uppercase tracking-widest shrink-0",
+                "rounded-full text-[6px] md:text-[8px] font-black px-1.5 md:px-2 py-0 border-none uppercase tracking-widest shrink-0",
                 isGoogle ? "bg-blue-500 text-white" : "bg-[#1877F2] text-white"
               )}>
                 {post.platform}
               </Badge>
             </div>
-            <p className="text-[8px] md:text-[9px] text-muted-foreground font-black uppercase tracking-tighter">{post.createdAt ? format(new Date(post.createdAt), 'MMM d, h:mm a') : 'Now'}</p>
+            <p className="text-[7px] md:text-[9px] text-muted-foreground font-black uppercase tracking-tighter">{post.createdAt ? format(new Date(post.createdAt), 'MMM d, h:mm a') : 'Now'}</p>
           </div>
         </div>
         
         <div className="flex gap-1 shrink-0">
            <button 
              onClick={handleShare}
-             className="w-8 h-8 md:w-10 md:h-10 rounded-xl md:rounded-2xl flex items-center justify-center text-primary bg-primary/10 hover:bg-primary/20 transition-colors active:scale-90"
+             className="w-7 h-7 md:w-10 md:h-10 rounded-lg md:rounded-2xl flex items-center justify-center text-primary bg-primary/10 hover:bg-primary/20 transition-colors active:scale-90"
            >
-              <Share2 className="w-4 h-4 md:w-[18px] md:h-[18px]" />
+              <Share2 className="w-3.5 h-3.5 md:w-[18px] md:h-[18px]" />
            </button>
            {(isOwner || isAdmin) && (
              <>
-                <Button size="icon" variant="ghost" className="h-8 w-8 md:h-10 md:w-10 text-blue-500 rounded-xl md:rounded-2xl" onClick={onEdit}><Edit size={16}/></Button>
-                <Button size="icon" variant="ghost" className="h-8 w-8 md:h-10 md:w-10 text-red-500 rounded-xl md:rounded-2xl" onClick={onDelete}><Trash2 size={16}/></Button>
+                <Button size="icon" variant="ghost" className="h-7 w-7 md:h-10 md:w-10 text-blue-500 rounded-lg md:rounded-2xl" onClick={onEdit}><Edit className="w-3.5 h-3.5 md:w-4 md:h-4"/></Button>
+                <Button size="icon" variant="ghost" className="h-7 w-7 md:h-10 md:w-10 text-red-500 rounded-lg md:rounded-2xl" onClick={onDelete}><Trash2 className="w-3.5 h-3.5 md:w-4 md:h-4"/></Button>
              </>
            )}
         </div>
@@ -336,20 +333,20 @@ function AccountPostCard({ post, onClick, onEdit, onDelete, isOwner, isAdmin }: 
         {post.thumbnailUrl ? (
           <Image src={post.thumbnailUrl} alt="" fill className="object-contain group-hover:scale-105 transition-transform duration-1000" unoptimized />
         ) : (
-          <div className="w-full h-full flex items-center justify-center opacity-10"><Gamepad2 className="w-[60px] h-[60px] md:w-[80px] md:h-[80px]" /></div>
+          <div className="w-full h-full flex items-center justify-center opacity-10"><Gamepad2 className="w-12 h-12 md:w-20 md:h-20" /></div>
         )}
         
-        <div className="absolute top-3 right-3 md:top-4 md:right-4 flex flex-col gap-1 md:gap-2 items-end">
-           <Badge className="bg-primary/90 backdrop-blur-md text-white border-none rounded-xl md:rounded-2xl px-3 md:px-4 py-1 md:py-2 text-[8px] md:text-[10px] font-black uppercase tracking-widest shadow-xl">
+        <div className="absolute top-2.5 right-2.5 md:top-4 md:right-4 flex flex-col gap-1 md:gap-2 items-end">
+           <Badge className="bg-primary/90 backdrop-blur-md text-white border-none rounded-lg md:rounded-2xl px-2.5 md:px-4 py-1 md:py-2 text-[7px] md:text-[10px] font-black uppercase tracking-widest shadow-xl">
              Lv {post.level || 0}
            </Badge>
            {post.status === 'holding' && (
-             <Badge className="bg-blue-600 text-white border-none rounded-xl md:rounded-2xl px-3 md:px-4 py-1 md:py-2 text-[8px] md:text-[10px] font-black uppercase tracking-widest shadow-xl">
+             <Badge className="bg-blue-600 text-white border-none rounded-lg md:rounded-2xl px-2.5 md:px-4 py-1 md:py-2 text-[7px] md:text-[10px] font-black uppercase tracking-widest shadow-xl">
                HOLDING
              </Badge>
            )}
            {post.status === 'sold' && (
-             <Badge className="bg-red-600 text-white border-none rounded-xl md:rounded-2xl px-3 md:px-4 py-1 md:py-2 text-[8px] md:text-[10px] font-black uppercase tracking-widest shadow-xl">
+             <Badge className="bg-red-600 text-white border-none rounded-lg md:rounded-2xl px-2.5 md:px-4 py-1 md:py-2 text-[7px] md:text-[10px] font-black uppercase tracking-widest shadow-xl">
                SOLD
              </Badge>
            )}
@@ -357,38 +354,38 @@ function AccountPostCard({ post, onClick, onEdit, onDelete, isOwner, isAdmin }: 
 
         {isExpired && !post.sold && (
           <div className="absolute inset-0 bg-red-950/70 backdrop-blur-sm flex items-center justify-center z-10 px-4 md:px-8">
-             <div className="px-5 md:px-8 py-2 md:py-3 bg-red-600 text-white font-headline font-bold text-lg md:text-2xl rounded-2xl md:rounded-3xl transform -rotate-12 shadow-[0_15px_40px_rgba(239,68,68,0.5)] border-2 md:border-4 border-white/20">DHAMAADAY</div>
+             <div className="px-4 md:px-8 py-1.5 md:py-3 bg-red-600 text-white font-headline font-bold text-base md:text-2xl rounded-xl md:rounded-3xl transform -rotate-12 shadow-[0_15px_40px_rgba(239,68,68,0.5)] border-2 md:border-4 border-white/20">DHAMAADAY</div>
           </div>
         )}
       </div>
 
-      <div className="p-5 md:p-8 space-y-4 md:space-y-6 flex-1 flex flex-col">
+      <div className="p-4 md:p-8 space-y-4 md:space-y-6 flex-1 flex flex-col">
         <div className="flex justify-between items-center">
-           <div className="flex gap-1.5 md:gap-2 min-w-0">
-              <Badge variant="secondary" className="text-[8px] md:text-[10px] uppercase font-black tracking-widest rounded-lg md:rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-3 md:px-4 py-0.5 md:py-1 truncate">{post.gameType}</Badge>
+           <div className="flex gap-1 md:gap-2 min-w-0">
+              <Badge variant="secondary" className="text-[7px] md:text-[10px] uppercase font-black tracking-widest rounded-md md:rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2 md:px-4 py-0.5 md:py-1 truncate">{post.gameType}</Badge>
            </div>
            {(isOwner || isAdmin) && timeLeft && (
-             <Badge variant="outline" className={cn("text-[8px] md:text-[10px] font-black border-2 rounded-lg md:rounded-xl py-0.5 md:py-1 px-2 md:px-3 shrink-0", isExpired ? "text-red-500 border-red-500/20" : "text-primary border-primary/20 bg-primary/5")}>
+             <Badge variant="outline" className={cn("text-[7px] md:text-[10px] font-black border-2 rounded-md md:rounded-xl py-0.5 md:py-1 px-1.5 md:px-3 shrink-0", isExpired ? "text-red-500 border-red-500/20" : "text-primary border-primary/20 bg-primary/5")}>
                <Clock className="w-2.5 h-2.5 md:w-3 md:h-3 mr-1 md:mr-1.5" /> {timeLeft}
              </Badge>
            )}
         </div>
 
         <div className="flex gap-2 overflow-x-auto scrollbar-hide py-0.5">
-           <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 border-none rounded-xl px-3 md:px-4 py-1 md:py-2 text-[9px] md:text-[11px] font-black shadow-sm shrink-0">Evo: {post.evoWeapons || 0}</Badge>
-           <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 border-none rounded-xl px-3 md:px-4 py-1 md:py-2 text-[9px] md:text-[11px] font-black shadow-sm shrink-0">Emotes: {post.emotes || 0}</Badge>
+           <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 border-none rounded-lg px-2.5 md:px-4 py-1 md:py-2 text-[8px] md:text-[11px] font-black shadow-sm shrink-0">Evo: {post.evoWeapons || 0}</Badge>
+           <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 border-none rounded-lg px-2.5 md:px-4 py-1 md:py-2 text-[8px] md:text-[11px] font-black shadow-sm shrink-0">Emotes: {post.emotes || 0}</Badge>
            {post.gameType === 'freefire' && (
-             <Badge className="bg-indigo-100 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400 border-none rounded-xl px-3 md:px-4 py-1 md:py-2 text-[9px] md:text-[11px] font-black shadow-sm shrink-0">Items: {post.dharka || 0}</Badge>
+             <Badge className="bg-indigo-100 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400 border-none rounded-lg px-2.5 md:px-4 py-1 md:py-2 text-[8px] md:text-[11px] font-black shadow-sm shrink-0">Items: {post.dharka || 0}</Badge>
            )}
         </div>
 
-        <div className="flex items-center justify-between pt-4 md:pt-6 border-t border-slate-50 dark:border-white/5 mt-auto">
+        <div className="flex items-center justify-between pt-3 md:pt-6 border-t border-slate-50 dark:border-white/5 mt-auto">
            <div className="min-w-0">
-             <p className="text-[9px] md:text-[11px] font-black text-muted-foreground uppercase tracking-widest mb-0.5 md:mb-1 opacity-60">Price Value</p>
-             <p className="text-2xl md:text-4xl font-headline font-bold text-primary tracking-tighter">${post.price?.toFixed(2)}</p>
+             <p className="text-[8px] md:text-[11px] font-black text-muted-foreground uppercase tracking-widest mb-0.5 md:mb-1 opacity-60">Price Value</p>
+             <p className="text-xl md:text-4xl font-headline font-bold text-primary tracking-tighter">${post.price?.toFixed(2)}</p>
            </div>
-           <Button className="rounded-xl md:rounded-[1.5rem] h-10 md:h-14 px-4 md:px-8 font-black text-xs md:text-base shadow-xl shadow-primary/20 gap-1.5 md:gap-2 uppercase tracking-wide shrink-0">
-             Details <ArrowRight className="w-4 h-4 md:w-5 md:h-5" />
+           <Button className="rounded-lg md:rounded-[1.5rem] h-9 md:h-14 px-3 md:px-8 font-black text-[10px] md:text-base shadow-xl shadow-primary/20 gap-1 md:gap-2 uppercase tracking-wide shrink-0">
+             Details <ArrowRight className="w-3.5 h-3.5 md:w-5 md:h-5" />
            </Button>
         </div>
       </div>
@@ -515,19 +512,13 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
 
   return (
     <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if(!v) setHasTriggeredUssd(false); }}>
-      {/* Full-Page Modal Implementation */}
       <DialogContent className="max-w-none w-screen h-full md:h-[94vh] md:max-w-4xl md:rounded-[3.5rem] overflow-y-auto p-0 border-none shadow-none md:shadow-2xl bg-white dark:bg-slate-900 scrollbar-hide fixed inset-0 z-[100] left-0 top-0 translate-x-0 translate-y-0 data-[state=open]:translate-x-0 data-[state=open]:translate-y-0">
-        <div className="sticky top-0 z-[110] bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-6 md:px-10 pt-6 md:pt-10 pb-4 md:pb-6 flex items-center justify-between border-b md:border-none dark:border-white/5">
-           <div className="flex items-center gap-4">
-              <button 
-                onClick={() => onOpenChange(false)} 
-                className="p-2 md:hidden text-slate-900 dark:text-white"
-              >
-                 <ArrowLeft size={24} />
-              </button>
+        <div className="sticky top-0 z-[110] bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-5 md:px-10 pt-6 md:pt-10 pb-4 md:pb-6 flex items-center justify-between border-b md:border-none dark:border-white/5">
+           <div className="flex items-center gap-3 md:gap-4">
+              <button onClick={() => onOpenChange(false)} className="p-2 md:hidden text-slate-900 dark:text-white"><ArrowLeft className="w-6 h-6" /></button>
               <div>
                 <DialogTitle className="text-xl md:text-4xl font-headline font-bold text-slate-900 dark:text-white leading-none">{editingPost ? 'Update' : 'Sell'} Account</DialogTitle>
-                <p className="text-[9px] md:text-xs font-black text-muted-foreground uppercase tracking-[0.2em] md:tracking-[0.3em] mt-1 md:mt-2">Gamer Marketplace Listing</p>
+                <p className="text-[8px] md:text-xs font-black text-muted-foreground uppercase tracking-[0.2em] md:tracking-[0.3em] mt-1 md:mt-2">Gamer Marketplace Listing</p>
               </div>
            </div>
            <button onClick={() => onOpenChange(false)} className="hidden md:flex p-3 bg-slate-100 dark:bg-slate-800 rounded-2xl text-slate-400 hover:bg-slate-200 transition-colors">
@@ -535,13 +526,12 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
            </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="px-6 md:px-10 space-y-8 md:space-y-12 pb-24 md:pb-32 mt-6">
-          {/* Section: Basic Info */}
+        <form onSubmit={handleSubmit} className="px-5 md:px-10 space-y-8 md:space-y-12 pb-24 md:pb-32 mt-4 md:mt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
              <div className="space-y-4 md:space-y-6">
                 <div className="flex items-center gap-3">
-                   <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-500"><Gamepad2 className="w-[18px] h-[18px] md:w-5 md:h-5" /></div>
-                   <h3 className="font-headline font-bold text-lg md:text-xl dark:text-white">Game Details</h3>
+                   <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-500"><Gamepad2 className="w-4 h-4 md:w-5 md:h-5" /></div>
+                   <h3 className="font-headline font-bold text-base md:text-xl dark:text-white">Game Details</h3>
                 </div>
                 <div className="space-y-4">
                    <FormGroup label="Select Game">
@@ -561,8 +551,8 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
 
              <div className="space-y-4 md:space-y-6">
                 <div className="flex items-center gap-3">
-                   <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-blue-500"><Clock className="w-[18px] h-[18px] md:w-5 md:h-5" /></div>
-                   <h3 className="font-headline font-bold text-lg md:text-xl dark:text-white">Listing Duration</h3>
+                   <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-blue-500"><Clock className="w-4 h-4 md:w-5 md:h-5" /></div>
+                   <h3 className="font-headline font-bold text-base md:text-xl dark:text-white">Listing Duration</h3>
                 </div>
                 <FormGroup label="Muda (Term)">
                    <Select value={formData.term} onValueChange={(val) => setFormData({...formData, term: val})}>
@@ -576,11 +566,10 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
              </div>
           </div>
 
-          {/* Section: Assets */}
           <div className="space-y-6 md:space-y-8">
              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-purple-50 dark:bg-purple-500/10 flex items-center justify-center text-purple-500"><Star className="w-[18px] h-[18px] md:w-5 md:h-5" /></div>
-                <h3 className="font-headline font-bold text-lg md:text-xl dark:text-white">Account Assets</h3>
+                <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-purple-50 dark:bg-purple-500/10 flex items-center justify-center text-purple-500"><Star className="w-4 h-4 md:w-5 md:h-5" /></div>
+                <h3 className="font-headline font-bold text-base md:text-xl dark:text-white">Account Assets</h3>
              </div>
              
              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
@@ -605,46 +594,44 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
              </div>
           </div>
 
-          {/* Gallery */}
           <div className="space-y-4 md:space-y-6">
             <div className="flex items-center gap-3">
-               <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-cyan-50 dark:bg-cyan-500/10 flex items-center justify-center text-cyan-500"><ImageIcon className="w-[18px] h-[18px] md:w-5 md:h-5" /></div>
-               <h3 className="font-headline font-bold text-lg md:text-xl dark:text-white">Account Gallery</h3>
+               <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-cyan-50 dark:bg-cyan-500/10 flex items-center justify-center text-cyan-500"><ImageIcon className="w-4 h-4 md:w-5 md:h-5" /></div>
+               <h3 className="font-headline font-bold text-base md:text-xl dark:text-white">Account Gallery</h3>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
                {previews.map((url, idx) => (
                  <div key={idx} className="relative aspect-video rounded-xl md:rounded-[1.5rem] overflow-hidden group shadow-lg bg-slate-100 border border-slate-200 dark:border-white/5">
                     <Image src={url} alt="" fill className="object-cover" unoptimized />
-                    <button type="button" onClick={() => removeImage(idx)} className="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1.5 md:p-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-all shadow-xl active:scale-110"><X className="w-3.5 h-3.5 md:w-4 md:h-4" /></button>
+                    <button type="button" onClick={() => removeImage(idx)} className="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1.5 md:p-2 shadow-xl active:scale-110"><X className="w-3.5 h-3.5 md:w-4 md:h-4" /></button>
                  </div>
                ))}
-               <label className="aspect-video rounded-xl md:rounded-[1.5rem] border-2 border-dashed border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800/40 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all flex flex-col items-center justify-center gap-2 cursor-pointer text-slate-400 group h-full">
-                  <Plus className="w-6 h-6 md:w-8 md:h-8 group-hover:text-primary transition-colors" />
-                  <span className="text-[8px] md:text-[10px] font-black uppercase tracking-widest">Add Media</span>
+               <label className="aspect-video rounded-xl md:rounded-[1.5rem] border-2 border-dashed border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800/40 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all flex flex-col items-center justify-center gap-1.5 cursor-pointer text-slate-400 group h-full">
+                  <Plus className="w-5 h-5 md:w-8 md:h-8 group-hover:text-primary transition-colors" />
+                  <span className="text-[7px] md:text-[10px] font-black uppercase tracking-widest">Add Media</span>
                   <input type="file" accept="image/*" multiple onChange={handleFileChange} className="hidden" />
                </label>
             </div>
           </div>
 
-          {/* Pricing & Contact */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10 items-end">
              <div className="space-y-4 md:space-y-6">
                 <div className="flex items-center gap-3">
-                   <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-green-50 dark:bg-green-500/10 flex items-center justify-center text-green-500"><DollarSign className="w-[18px] h-[18px] md:w-5 md:h-5" /></div>
-                   <h3 className="font-headline font-bold text-lg md:text-xl dark:text-white">Pricing & Sale</h3>
+                   <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-green-50 dark:bg-green-500/10 flex items-center justify-center text-green-500"><DollarSign className="w-4 h-4 md:w-5 md:h-5" /></div>
+                   <h3 className="font-headline font-bold text-base md:text-xl dark:text-white">Pricing & Sale</h3>
                 </div>
                 <FormInput label="WhatsApp (Seller)" value={formData.phone} onChange={v => setFormData({...formData, phone: v})} placeholder="25261..." />
-                <div className="p-6 md:p-8 bg-slate-950 rounded-2xl md:rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden">
-                   <div className="absolute top-0 right-0 p-6 md:p-10 opacity-5"><DollarSign className="w-[60px] h-[60px] md:w-[100px] md:h-[100px]" /></div>
-                   <label className="text-[9px] md:text-[11px] font-black text-white/40 uppercase tracking-[0.2em] md:tracking-[0.3em] ml-1 md:ml-2 block mb-2 md:mb-4">Account Sale Price ($)</label>
+                <div className="p-5 md:p-8 bg-slate-950 rounded-2xl md:rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden">
+                   <div className="absolute top-0 right-0 p-6 md:p-10 opacity-5"><DollarSign className="w-12 h-12 md:w-24 md:h-24" /></div>
+                   <label className="text-[8px] md:text-[11px] font-black text-white/40 uppercase tracking-[0.2em] md:tracking-[0.3em] ml-1 md:ml-2 block mb-1.5 md:mb-4">Account Sale Price ($)</label>
                    <div className="relative z-10 flex items-center">
-                      <span className="text-2xl md:text-4xl font-headline font-bold text-primary mr-1 md:mr-2">$</span>
+                      <span className="text-xl md:text-4xl font-headline font-bold text-primary mr-1 md:mr-2">$</span>
                       <input 
                         type="number" 
                         required 
                         value={formData.price} 
                         onChange={e => setFormData({...formData, price: e.target.value})} 
-                        className="bg-transparent border-none text-4xl md:text-6xl lg:text-7xl font-headline font-bold text-white focus:outline-none w-full tracking-tighter" 
+                        className="bg-transparent border-none text-3xl md:text-6xl lg:text-7xl font-headline font-bold text-white focus:outline-none w-full tracking-tighter" 
                         placeholder="0.00"
                       />
                    </div>
@@ -652,29 +639,29 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
              </div>
 
              <div className="space-y-4 md:space-y-6">
-                <div className="p-6 md:p-8 bg-amber-50 dark:bg-amber-500/10 rounded-2xl md:rounded-[2.5rem] border border-amber-100 dark:border-amber-500/20 space-y-2 md:space-y-4">
+                <div className="p-5 md:p-8 bg-amber-50 dark:bg-amber-500/10 rounded-2xl md:rounded-[2.5rem] border border-amber-100 dark:border-amber-500/20 space-y-2 md:space-y-4">
                    <div className="flex items-center gap-2 text-amber-800 dark:text-amber-400">
-                      <Info className="w-4 h-4 md:w-6 md:h-6" />
-                      <p className="text-sm md:text-base font-black uppercase tracking-widest">Listing Fee Policy</p>
+                      <Info className="w-4 h-4 md:w-5 md:h-5" />
+                      <p className="text-xs md:text-base font-black uppercase tracking-widest">Listing Fee Policy</p>
                    </div>
-                   <p className="text-xs md:text-sm lg:text-base font-bold text-amber-700/80 dark:text-amber-500/80 leading-relaxed">
-                      Fee-ga posting-ka ee {formData.term === 'weekly' ? 'Isbuucle' : 'Bile'} waa <span className="font-black text-amber-800 dark:text-amber-300 text-lg md:text-2xl">${listingFee.toFixed(2)}</span>. This ensures your post is promoted to thousands of verified buyers.
+                   <p className="text-[10px] md:text-sm lg:text-base font-bold text-amber-700/80 dark:text-amber-500/80 leading-relaxed">
+                      Fee-ga posting-ka ee {formData.term === 'weekly' ? 'Isbuucle' : 'Bile'} waa <span className="font-black text-amber-800 dark:text-amber-300 text-sm md:text-2xl">${listingFee.toFixed(2)}</span>.
                    </p>
                 </div>
 
                 {!editingPost ? (
                    !hasTriggeredUssd ? (
-                      <Button type="button" onClick={handleUssdPay} disabled={!isFormValid} className="w-full h-16 md:h-20 rounded-2xl md:rounded-[2rem] text-lg md:text-2xl font-black shadow-2xl bg-primary hover:bg-primary/90 transition-all uppercase tracking-widest">
+                      <Button type="button" onClick={handleUssdPay} disabled={!isFormValid} className="w-full h-14 md:h-20 rounded-xl md:rounded-[2rem] text-sm md:text-2xl font-black shadow-2xl bg-primary hover:bg-primary/90 transition-all uppercase tracking-widest">
                          PAY ${listingFee.toFixed(2)} FEE
                       </Button>
                    ) : (
-                      <Button disabled={loading || !isFormValid} type="submit" className="w-full h-16 md:h-20 rounded-2xl md:rounded-[2rem] text-lg md:text-2xl font-black shadow-2xl bg-green-600 hover:bg-green-700 transition-all uppercase tracking-widest">
-                         {loading ? <Loader2 className="animate-spin w-6 h-6 md:w-8 md:h-8" /> : 'CONFIRM & POST'}
+                      <Button disabled={loading || !isFormValid} type="submit" className="w-full h-14 md:h-20 rounded-xl md:rounded-[2rem] text-sm md:text-2xl font-black shadow-2xl bg-green-600 hover:bg-green-700 transition-all uppercase tracking-widest">
+                         {loading ? <Loader2 className="animate-spin w-5 h-5 md:w-6 md:h-6" /> : 'CONFIRM & POST'}
                       </Button>
                    )
                 ) : (
-                   <Button disabled={loading || !isFormValid} type="submit" className="w-full h-16 md:h-20 rounded-2xl md:rounded-[2rem] text-lg md:text-2xl font-black shadow-2xl bg-primary hover:bg-primary/90 transition-all uppercase tracking-widest">
-                      {loading ? <Loader2 className="animate-spin w-6 h-6 md:w-8 md:h-8" /> : 'SAVE CHANGES'}
+                   <Button disabled={loading || !isFormValid} type="submit" className="w-full h-14 md:h-20 rounded-xl md:rounded-[2rem] text-sm md:text-2xl font-black shadow-2xl bg-primary hover:bg-primary/90 transition-all uppercase tracking-widest">
+                      {loading ? <Loader2 className="animate-spin w-5 h-5 md:w-6 md:h-6" /> : 'SAVE CHANGES'}
                    </Button>
                 )}
              </div>
@@ -687,8 +674,8 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
 
 function FormGroup({ label, children }: { label: string, children: React.ReactNode }) {
   return (
-    <div className="space-y-1.5 md:space-y-2">
-       <label className="text-[9px] md:text-[11px] font-black text-muted-foreground uppercase tracking-[0.1em] md:tracking-[0.2em] ml-1 md:ml-2">{label}</label>
+    <div className="space-y-1.5">
+       <label className="text-[8px] md:text-[11px] font-black text-muted-foreground uppercase tracking-[0.1em] md:tracking-[0.2em] ml-1 md:ml-2">{label}</label>
        {children}
     </div>
   );
@@ -696,9 +683,9 @@ function FormGroup({ label, children }: { label: string, children: React.ReactNo
 
 function FormInput({ label, value, onChange, placeholder, type = "text", className }: { label: string, value: string, onChange: (v: string) => void, placeholder: string, type?: string, className?: string }) {
   return (
-    <div className={cn("space-y-1.5 md:space-y-2", className)}>
-       <label className="text-[9px] md:text-[11px] font-black text-muted-foreground uppercase tracking-[0.1em] md:tracking-[0.2em] ml-1 md:ml-2">{label}</label>
-       <Input type={type} placeholder={placeholder} value={value} onChange={e => onChange(e.target.value)} className="h-12 md:h-14 lg:h-16 rounded-xl md:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-4 md:px-6 font-bold text-sm md:text-base focus-visible:ring-primary shadow-inner" />
+    <div className={cn("space-y-1.5", className)}>
+       <label className="text-[8px] md:text-[11px] font-black text-muted-foreground uppercase tracking-[0.1em] md:tracking-[0.2em] ml-1 md:ml-2">{label}</label>
+       <Input type={type} placeholder={placeholder} value={value} onChange={e => onChange(e.target.value)} className="h-11 md:h-14 lg:h-16 rounded-xl md:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-4 md:px-6 font-bold text-xs md:text-base focus-visible:ring-primary shadow-inner" />
     </div>
   );
 }
