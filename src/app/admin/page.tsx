@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -132,6 +131,43 @@ import {
 } from 'recharts';
 import { uploadToImgbb } from "@/lib/imgbb";
 import { format, formatDistanceToNow } from "date-fns";
+
+/**
+ * CountdownDisplay Helper Component
+ * Displays a live countdown timer for marketplace listings in the admin table.
+ */
+function CountdownDisplay({ expiresAt }: { expiresAt?: number }) {
+  const [timeLeft, setTimeLeft] = useState("");
+
+  useEffect(() => {
+    if (!expiresAt) return;
+    const update = () => {
+      const now = Date.now();
+      const diff = expiresAt - now;
+      if (diff <= 0) setTimeLeft("EXPIRED");
+      else {
+        const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        setTimeLeft(`${d}d ${h}h ${m}m`);
+      }
+    };
+    update();
+    const interval = setInterval(update, 60000);
+    return () => clearInterval(interval);
+  }, [expiresAt]);
+
+  if (!expiresAt) return <Badge variant="outline" className="text-[8px] opacity-40 font-black">NOT STARTED</Badge>;
+
+  return (
+    <div className="flex flex-col gap-0.5">
+      <span className={cn("text-[10px] font-bold uppercase tracking-tight", timeLeft === 'EXPIRED' ? "text-red-500" : "text-primary")}>
+        {timeLeft}
+      </span>
+      <span className="text-[8px] text-muted-foreground uppercase font-black opacity-60">Ends {format(new Date(expiresAt), 'MMM d')}</span>
+    </div>
+  );
+}
 
 export default function AdminPage() {
   const { 
@@ -696,13 +732,14 @@ export default function AdminPage() {
             <div className="space-y-6">
                <Card className="rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden border-none shadow-xl bg-white dark:bg-slate-900">
                 <div className="overflow-x-auto scrollbar-hide">
-                  <Table className="min-w-[700px]">
+                  <Table className="min-w-[800px]">
                     <TableHeader className="bg-slate-50/50 dark:bg-slate-800/40">
                       <TableRow className="border-none">
                         <TableHead className="px-4 sm:px-8">Seller</TableHead>
                         <TableHead>Game & Info</TableHead>
                         <TableHead>Buyer Claim (Sold)</TableHead>
                         <TableHead>Seller Verification</TableHead>
+                        <TableHead>Expiration</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead className="text-right px-4 sm:px-8">Actions</TableHead>
                       </TableRow>
@@ -740,6 +777,9 @@ export default function AdminPage() {
                                    {p.conflict ? 'DISAGREED' : 'CONFIRMED'}
                                  </Badge>
                                ) : <span className="text-[10px] text-slate-300">Pending</span>}
+                            </TableCell>
+                            <TableCell>
+                               <CountdownDisplay expiresAt={p.expiresAt} />
                             </TableCell>
                             <TableCell><Badge className={cn("rounded-full text-[8px] font-black uppercase border-none", getStatusBadge(p.status))}>{p.status}</Badge></TableCell>
                             <TableCell className="text-right px-4 sm:px-8">
@@ -933,7 +973,7 @@ export default function AdminPage() {
                         <div className="space-y-4 md:space-y-6 pt-4 md:pt-6 border-t dark:border-white/5">
                            <div className="flex items-center gap-3">
                               <RefreshCw className="text-amber-500" size={20} />
-                              <h4 className="font-bold text-lg uppercase">Lifecycle Control</h4>
+                              h4 className="font-bold text-lg uppercase">Lifecycle Control</h4>
                            </div>
                            
                            <div className="space-y-4">
