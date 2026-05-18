@@ -282,7 +282,8 @@ function PostAccountView({ editingPost, onCancel, onComplete }: { editingPost?: 
     executionEmotes: editingPost?.executionEmotes?.toString() || '0',
     arrivalEmotes: editingPost?.arrivalEmotes?.toString() || '0',
     dharka: editingPost?.dharka?.toString() || '0',
-    term: editingPost?.term || 'weekly'
+    term: editingPost?.term || 'weekly',
+    primeLevel: editingPost?.primeLevel?.toString() || '1'
   });
 
   const listingFee = useMemo(() => {
@@ -320,6 +321,7 @@ function PostAccountView({ editingPost, onCancel, onComplete }: { editingPost?: 
         executionEmotes: parseInt(formData.executionEmotes),
         arrivalEmotes: parseInt(formData.arrivalEmotes),
         dharka: parseInt(formData.dharka),
+        primeLevel: parseInt(formData.primeLevel),
         fee: listingFee
       };
 
@@ -460,6 +462,18 @@ function PostAccountView({ editingPost, onCancel, onComplete }: { editingPost?: 
                               </SelectContent>
                            </Select>
                         </FormGroup>
+                        <FormGroup label="Prime Level">
+                           <Select value={formData.primeLevel} onValueChange={v => setFormData({...formData, primeLevel: v})}>
+                              <SelectTrigger className="h-12 md:h-16 rounded-xl md:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-6 font-bold text-sm md:text-lg focus:ring-2 focus:ring-primary shadow-inner">
+                                 <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="rounded-2xl border-none shadow-2xl bg-white dark:bg-slate-900 z-[200]">
+                                 <SelectItem value="1" className="rounded-xl font-bold uppercase text-xs p-3">Level 1</SelectItem>
+                                 <SelectItem value="2" className="rounded-xl font-bold uppercase text-xs p-3">Level 2</SelectItem>
+                                 <SelectItem value="3" className="rounded-xl font-bold uppercase text-xs p-3">Level 3</SelectItem>
+                              </SelectContent>
+                           </Select>
+                        </FormGroup>
                      </Card>
 
                      <Card className="p-5 md:p-8 rounded-[1.5rem] md:rounded-[2.5rem] border-none shadow-lg bg-white dark:bg-slate-900 space-y-6 md:space-y-8">
@@ -579,7 +593,7 @@ function PostAccountView({ editingPost, onCancel, onComplete }: { editingPost?: 
              )}
 
              {step === 3 && (
-               <div className="py-10 md:py-24 flex flex-col items-center text-center space-y-8 md:space-y-16 animate-in zoom-in duration-1000">
+               <div className="py-10 md:py-24 flex flex-col items-center justify-center text-center space-y-8 md:space-y-16 animate-in zoom-in duration-1000">
                   <div className="relative">
                      <div className="absolute inset-0 bg-green-400 rounded-full blur-[100px] opacity-30 animate-pulse" />
                      <div className="relative w-28 h-28 md:w-56 md:h-56 bg-green-50 dark:bg-green-500/20 rounded-[2rem] md:rounded-[4rem] flex items-center justify-center text-green-600 dark:text-green-400 shadow-2xl border-4 md:border-8 border-white dark:border-slate-900 ring-8 md:ring-[16px] ring-green-500/5">
