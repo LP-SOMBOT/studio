@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -163,7 +162,7 @@ export default function HomeView() {
                   <p className="text-white/80 text-[10px] md:text-base lg:text-xl font-medium">iib sameey Si aad u gasho kaalmaha hore una heshid discount gaaraya ilaa %3, halkii iibin top up waxaad Ku heleesaa 1 points (pts). Hadiyado kalena coming soon I.a.</p>
                </div>
             </div>
-            <div className="mt-6 md:mt-0 w-10 h-10 md:w-16 md:h-16 lg:w-24 lg:h-24 bg-white/20 rounded-full flex items-center justify-center group-hover:bg-white/30 transition-colors">
+            <div className="mt-6 md:mt-0 self-end md:self-center w-10 h-10 md:w-16 md:h-16 lg:w-24 lg:h-24 bg-white/20 rounded-full flex items-center justify-center group-hover:bg-white/30 transition-colors">
                <ChevronRight className="w-5 h-5 md:w-8 md:h-8 lg:w-12 lg:h-12" />
             </div>
           </div>
