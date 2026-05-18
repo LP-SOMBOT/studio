@@ -47,7 +47,6 @@ export default function NotificationsView() {
            <h1 className="text-2xl sm:text-4xl lg:text-6xl font-headline font-bold flex items-center gap-3 sm:gap-5 text-slate-900 dark:text-white">
              <Bell className="text-primary w-8 h-8 sm:w-12 sm:h-12 lg:w-16 lg:h-16" /> Activity
            </h1>
-           <p className="text-[10px] sm:text-xs lg:text-lg text-muted-foreground font-medium uppercase tracking-[0.2em] sm:tracking-[0.4em] mt-1 sm:mt-3 ml-1 sm:ml-2">Personalized Notifications</p>
         </div>
         {notifications.length > 0 && (
           <Button 
