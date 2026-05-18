@@ -144,12 +144,16 @@ import { format, formatDistanceToNow } from "date-fns";
 
 /**
  * CountdownDisplay Helper Component
+ * Now responsive to account status.
  */
-function CountdownDisplay({ expiresAt }: { expiresAt?: number }) {
+function CountdownDisplay({ expiresAt, status }: { expiresAt?: number, status: string }) {
   const [timeLeft, setTimeLeft] = useState("");
 
   useEffect(() => {
-    if (!expiresAt) return;
+    // Clock only runs for approved or holding (dispute) listings.
+    // Pauses if moved back to pending/processing. Stops if sold.
+    if (!expiresAt || status === 'sold' || status === 'pending' || status === 'processing' || status === 'rejected') return;
+    
     const update = () => {
       const now = Date.now();
       const diff = expiresAt - now;
@@ -164,9 +168,23 @@ function CountdownDisplay({ expiresAt }: { expiresAt?: number }) {
     update();
     const interval = setInterval(update, 60000);
     return () => clearInterval(interval);
-  }, [expiresAt]);
+  }, [expiresAt, status]);
 
-  if (!expiresAt) return <Badge variant="outline" className="text-[10px] opacity-40 font-black">NOT STARTED</Badge>;
+  if (status === 'sold') {
+    return <Badge variant="outline" className="text-[10px] text-green-500 border-green-200 font-black uppercase tracking-widest">Sale Closed</Badge>;
+  }
+
+  if (status === 'pending' || status === 'processing') {
+    return <Badge variant="outline" className="text-[10px] opacity-40 font-black uppercase tracking-widest">Clock Paused</Badge>;
+  }
+
+  if (status === 'rejected') {
+     return <Badge variant="outline" className="text-[10px] text-red-500 border-red-200 font-black uppercase tracking-widest">Stopped</Badge>;
+  }
+
+  if (!expiresAt) {
+    return <Badge variant="outline" className="text-[10px] opacity-40 font-black uppercase tracking-widest">Not Started</Badge>;
+  }
 
   return (
     <div className="flex flex-col gap-0.5">
@@ -956,7 +974,7 @@ export default function AdminPage() {
                                  ) : <span className="text-[10px] text-slate-300 italic">None</span>}
                               </TableCell>
                               <TableCell>
-                                 <CountdownDisplay expiresAt={p.expiresAt} />
+                                 <CountdownDisplay expiresAt={p.expiresAt} status={p.status} />
                               </TableCell>
                               <TableCell><Badge className={cn("rounded-full text-[8px] font-black uppercase border-none", getStatusBadge(p.status))}>{p.status}</Badge></TableCell>
                               <TableCell className="text-right px-4 sm:px-8">
@@ -1157,11 +1175,11 @@ export default function AdminPage() {
                                            </div>
                                            {order && (
                                               <div className="pt-2 md:pt-3 border-t border-black/5 dark:border-white/5 space-y-1.5 md:space-y-2">
-                                                 <div className="flex justify-between gap-2"><span className="text-[8px] md:text-[9px] text-muted-foreground">Name</span><span className="text-[9px] md:text-[10px] font-bold truncate">{order.gameDetails?.name}</span></div>
-                                                 <div className="flex justify-between gap-2"><span className="text-[8px] md:text-[9px] text-muted-foreground">WhatsApp</span><span className="text-[9px] md:text-[10px] font-bold text-primary truncate">{order.gameDetails?.whatsappNumber}</span></div>
-                                                 <div className="flex justify-between mt-1 md:mt-2 pt-1.5 md:pt-2 border-t border-black/5">
-                                                    <span className="text-[8px] md:text-[9px] font-black uppercase">Report</span>
-                                                    <Badge className={cn("h-3.5 md:h-4 text-[6px] md:text-[7px] font-black uppercase", order.buyerOutcome === 'bought' ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700")}>{order.buyerOutcome === 'bought' ? 'SOLD' : (order.buyerOutcome?.toUpperCase() || 'NOT REPORTED')}</Badge>
+                                                 <div className="flex justify-between gap-2"><span className="text-xs text-muted-foreground">Name</span><span className="text-sm font-bold truncate">{order.gameDetails?.name}</span></div>
+                                                 <div className="flex justify-between gap-2"><span className="text-xs text-muted-foreground">WhatsApp</span><span className="text-sm font-bold text-primary truncate">{order.gameDetails?.whatsappNumber}</span></div>
+                                                 <div className="flex justify-between mt-2 pt-2 border-t border-black/5">
+                                                    <span className="text-xs font-black uppercase">Report</span>
+                                                    <Badge className={cn("h-4 text-[7px] font-black uppercase", order.buyerOutcome === 'bought' ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700")}>{order.buyerOutcome === 'bought' ? 'SOLD' : (order.buyerOutcome?.toUpperCase() || 'NOT REPORTED')}</Badge>
                                                  </div>
                                               </div>
                                            )}
@@ -1174,7 +1192,7 @@ export default function AdminPage() {
                         </div>
 
                         {/* Lifecycle Control */}
-                        <div className="space-y-4 md:space-y-6 pt-4 md:pt-6 border-t dark:border-white/5">
+                        <div className="space-y-6 pt-6 border-t dark:border-white/5">
                            <div className="flex items-center gap-3">
                               <RefreshCw className="text-amber-500" size={20} />
                               <h4 className="font-bold text-lg uppercase">Lifecycle Control</h4>
@@ -1182,7 +1200,7 @@ export default function AdminPage() {
                            
                            <div className="space-y-4">
                               {selectedAccount.conflict && (
-                                <div className="p-4 md:p-6 bg-amber-50 dark:bg-amber-500/10 rounded-[1.5rem] border-2 border-amber-200 dark:border-amber-500/20 space-y-4 animate-in zoom-in-95">
+                                <div className="p-6 bg-amber-50 dark:bg-amber-500/10 rounded-[1.5rem] border-2 border-amber-200 dark:border-amber-500/20 space-y-4 animate-in zoom-in-95">
                                    <div className="flex items-center gap-3 text-amber-700 dark:text-amber-400">
                                       <Gavel size={20} />
                                       <h5 className="font-black text-sm uppercase tracking-tight">Admin Intervention Required</h5>
@@ -1197,37 +1215,37 @@ export default function AdminPage() {
                                 </div>
                               )}
 
-                              <div className="space-y-1.5 md:space-y-2">
-                                 <Label className="text-[8px] md:text-[10px] font-black uppercase text-slate-400 ml-1 md:ml-2">Override Status</Label>
+                              <div className="space-y-2">
+                                 <Label className="text-[10px] font-black uppercase text-slate-400 ml-2">Override Status</Label>
                                  <Select value={pendingAccountStatus} onValueChange={setPendingAccountStatus}>
-                                    <SelectTrigger className="h-12 md:h-14 rounded-xl md:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-4 md:px-6 font-bold text-xs md:text-sm"><SelectValue /></SelectTrigger>
-                                    <SelectContent className="rounded-xl md:rounded-2xl">
-                                       {["pending", "processing", "approved", "rejected", "holding", "sold"].map(s => <SelectItem key={s} value={s} className="rounded-lg md:rounded-xl uppercase font-bold text-[10px] md:text-xs">{s}</SelectItem>)}
+                                    <SelectTrigger className="h-14 rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-6 font-bold text-sm"><SelectValue /></SelectTrigger>
+                                    <SelectContent className="rounded-2xl">
+                                       {["pending", "processing", "approved", "rejected", "holding", "sold"].map(s => <SelectItem key={s} value={s} className="rounded-xl uppercase font-bold text-xs">{s}</SelectItem>)}
                                     </SelectContent>
                                  </Select>
                               </div>
 
                               {pendingAccountStatus === 'sold' && (
-                                 <div className="space-y-1.5 md:space-y-2 animate-in slide-in-from-top-2">
-                                    <Label className="text-[8px] md:text-[10px] font-black text-primary ml-1 md:ml-2">Final Buyer (Auto-detected if possible)</Label>
+                                 <div className="space-y-2 animate-in slide-in-from-top-2">
+                                    <Label className="text-[10px] font-black text-primary ml-2">Final Buyer (Auto-detected if possible)</Label>
                                     <Select value={assignBuyerId} onValueChange={setAssignBuyerId}>
-                                       <SelectTrigger className="h-12 md:h-14 rounded-xl md:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-4 md:px-6 font-bold text-xs md:text-sm"><SelectValue placeholder="Select Final Buyer" /></SelectTrigger>
-                                       <SelectContent className="rounded-xl md:rounded-2xl">
-                                          {allUsers.map(u => <SelectItem key={u.uid} value={u.uid} className="text-[10px] md:text-xs">{u.name} ({u.email?.slice(0, 15) || '...'})</SelectItem>)}
+                                       <SelectTrigger className="h-14 rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-6 font-bold text-sm"><SelectValue placeholder="Select Final Buyer" /></SelectTrigger>
+                                       <SelectContent className="rounded-2xl">
+                                          {allUsers.map(u => <SelectItem key={u.uid} value={u.uid} className="text-xs">{u.name} ({u.email?.slice(0, 15) || '...'})</SelectItem>)}
                                        </SelectContent>
                                     </Select>
                                  </div>
                               )}
 
-                              <Button onClick={handleAccountStatusSave} disabled={isSavingStatus} className="w-full h-14 md:h-16 rounded-xl md:rounded-2xl font-black text-sm md:text-lg shadow-xl shadow-primary/20 bg-primary hover:bg-primary/90 uppercase tracking-widest">
+                              <Button onClick={handleAccountStatusSave} disabled={isSavingStatus} className="w-full h-16 rounded-2xl font-black text-lg shadow-xl shadow-primary/20 bg-primary hover:bg-primary/90 uppercase tracking-widest">
                                  {isSavingStatus ? <Loader2 className="animate-spin" /> : "Finalize Marketplace Decision"}
                               </Button>
                            </div>
                         </div>
                      </Card>
 
-                     <Button variant="ghost" className="w-full h-12 md:h-14 rounded-xl md:rounded-2xl font-bold text-red-500 hover:bg-red-50 text-xs md:text-sm" onClick={() => confirmDelete(selectedAccount.id, 'account')}>
-                        <Trash2 className="w-4 h-4 md:w-5 md:h-5 mr-2" /> Delete Permanent Listing
+                     <Button variant="ghost" className="w-full h-14 rounded-2xl font-bold text-red-500 hover:bg-red-50" onClick={() => confirmDelete(selectedAccount.id, 'account')}>
+                        <Trash2 className="w-5 h-5 mr-2" /> Delete Permanent Listing
                      </Button>
                   </div>
                </div>
