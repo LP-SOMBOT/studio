@@ -46,7 +46,7 @@ import {
 } from "@/components/ui/select";
 import Image from 'next/image';
 import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
+import { cn, formatWhatsAppNumber } from '@/lib/utils';
 import { useState, useMemo, useEffect } from 'react';
 import { toast } from '@/hooks/use-toast';
 
@@ -191,7 +191,7 @@ export default function MyAccountsView() {
                        <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="rounded-xl sm:rounded-2xl dark:bg-slate-900">
-                       <SelectItem value="weekly" className="rounded-lg sm:rounded-xl text-xs sm:text-sm">Weakly (Isbuucle) - ${storeSettings?.config?.shop?.listingFeeWeekly || 1.00}</SelectItem>
+                       <SelectItem value="weekly" className="rounded-lg sm:rounded-xl text-xs sm:text-sm">Weekly (Isbuucle) - ${storeSettings?.config?.shop?.listingFeeWeekly || 1.00}</SelectItem>
                        <SelectItem value="monthly" className="rounded-lg sm:rounded-xl text-xs sm:text-sm">Monthly (Bile) - ${storeSettings?.config?.shop?.listingFeeMonthly || 3.00}</SelectItem>
                     </SelectContent>
                  </Select>
