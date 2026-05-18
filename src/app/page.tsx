@@ -17,7 +17,7 @@ export default function AppShell() {
   const { activeTab, storeSettings, user } = useApp();
 
   const isOffline = storeSettings?.appStatus?.offline;
-  const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
+  const isAdmin = user?.role === 'admin' || user?.role === 'super_admin' || user?.role === 'staff';
 
   if (isOffline && !isAdmin) {
     return <OfflinePage />;

@@ -255,7 +255,7 @@ type AppContextType = {
   updateOrderStatus: (orderId: string, status: string, cancellationReason?: string) => Promise<void>;
   updateAccountPostStatus: (postId: string, status: string, boughtBy?: string) => Promise<void>;
   reportAccountOutcome: (postId: string, outcome: 'bought' | 'not_bought') => Promise<void>;
-  respondToSaleReport: (postId: string, confirmed: boolean) => Promise<void>;
+  respondToSaleReport: (postId: string, confirmed: boolean, buyerId?: string) => Promise<void>;
   enforceAccountAction: (postId: string, action: 'delete' | 'holding' | 'approved' | 'pending', message: string) => Promise<void>;
   markDeletionAsSeen: (postId: string) => Promise<void>;
   updateUserProfile: (updates: Partial<UserProfile>) => Promise<void>;
@@ -685,6 +685,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       status: 'pending', 
       sold: false,
       holdingBy: null,
+      boughtBy: null,
       buyerReported: false,
       buyerReportedAt: null,
       sellerReported: false,
@@ -720,43 +721,43 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const targetOrder = orders.find(o => o.gameDetails?.postId === postId && o.userId === user.uid);
     
     if (outcome === 'not_bought') {
-      await update(postRef, {
-        status: 'approved',
-        holdingBy: null,
-        buyerReported: false,
-        buyerReportedAt: null,
-        sellerReported: false,
-        sellerReportedAt: null,
-        conflict: false
-      });
+      // If he was the specific 'holding' user, release the hold
+      if (postData.holdingBy === user.uid) {
+        await update(postRef, {
+          status: 'approved',
+          holdingBy: null,
+          buyerReported: false,
+          buyerReportedAt: null,
+          sellerReported: false,
+          sellerReportedAt: null,
+          conflict: false
+        });
+      }
       if (targetOrder) {
         await update(ref(rtdb, `orders/${targetOrder.id}`), { buyerOutcome: outcome, status: 'cancelled' });
       }
-      toast({ title: "Hold Released", description: "Account is now available for others." });
+      toast({ title: "Deal Cancelled", description: "You've cancelled your report for this account." });
     } else {
-      if (postData.holdingBy && postData.holdingBy !== user.uid) {
-         toast({ title: "Daqiiqado ka hor!", description: "Account-kan waxaa horey u sheegtay qof kale. Fadlan mid kale fiiri.", variant: "destructive" });
-         return;
-      }
-
       const reportTime = Date.now();
-      // NOTE: Status does not change to 'holding' yet on buyer report.
+      // NOTE: We now allow multi-reporting. 
+      // We flag the post as having at least one report, but we don't lock holdingBy yet 
+      // unless it was previously set.
       await update(postRef, { 
         buyerReported: true, 
         buyerReportedAt: reportTime,
-        holdingBy: user.uid
+        status: 'holding' // Ensure it's hidden from new public users
       });
 
       if (targetOrder) {
-        await update(ref(rtdb, `orders/${targetOrder.id}`), { buyerOutcome: outcome });
+        await update(ref(rtdb, `orders/${targetOrder.id}`), { buyerOutcome: outcome, gameDetails: { ...targetOrder.gameDetails, buyerReportedAt: reportTime } });
       }
 
       toast({ title: "Report Sent!", description: "Seller has been notified to verify the sale." });
       
       if (postData.uid) {
          broadcastNotification(
-           "New Sale Report! 💰", 
-           `A buyer claimed they bought your ${postData.gameType} account. Please verify now!`, 
+           "New Purchase Claim! 💰", 
+           `A buyer reported they bought your ${postData.gameType} account. Please verify in My Accounts!`, 
            postData.uid
          );
       }
@@ -765,13 +766,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const respondToSaleReport = async (postId: string, confirmed: boolean) => {
+  const respondToSaleReport = async (postId: string, confirmed: boolean, buyerId?: string) => {
     if (!rtdb || !user) return;
     
     const postRef = ref(rtdb, `accountPosts/${postId}`);
     const postSnap = await get(postRef);
     const post = postSnap.val();
     if (!post) return;
+
+    // Use specific buyerId if provided (multi-holder scenario), otherwise use holdingBy
+    const targetBuyerId = buyerId || post.holdingBy;
+    if (!targetBuyerId) return;
 
     if (confirmed) {
       await update(postRef, {
@@ -780,16 +785,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         sellerReported: true,
         sellerReportedAt: Date.now(),
         completedAt: Date.now(),
-        boughtBy: post.holdingBy,
+        boughtBy: targetBuyerId,
+        holdingBy: targetBuyerId,
         conflict: false 
       });
       toast({ title: "Account Sold!", description: "Transaction finalized successfully." });
-      if (post.holdingBy) {
-        broadcastNotification("Purchase Confirmed! 🤑", "Seller has confirmed your purchase. The account is yours!", post.holdingBy);
-      }
+      broadcastNotification("Purchase Confirmed! 🤑", "Seller has confirmed your purchase. The account is yours!", targetBuyerId);
+      
+      // Notify other potential buyers that the account is gone
+      // (Optional: loop through all other orders for this postId and notify them)
     } else {
-      // CONFLICT: Buyer said 'bought', Seller said 'not bought'.
-      // Account now automatically goes to 'holding' status for admin decision.
+      // CONFLICT: Seller disagrees with this specific buyer
+      // If there's only one claimant, we set general conflict. 
+      // If multi, we might want to flag this specific order.
       await update(postRef, {
         status: 'holding', 
         sellerReported: true,
@@ -875,13 +883,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     await update(ref(rtdb, `orders/${oid}`), assignmentUpdate);
     
     if (status === 'successful') {
-      if (accountItem && accountItem.id) await update(ref(rtdb, `accountPosts/${accountItem.id}`), { status: 'sold', sold: true, boughtBy: userId });
+      if (accountItem && accountItem.id) await update(ref(rtdb, `accountPosts/${accountItem.id}`), { status: 'sold', sold: true, boughtBy: userId, holdingBy: userId });
       if (userId && oldStatus !== 'successful') {
         await update(ref(rtdb, `users/${userId}`), { points: increment(1) });
         broadcastNotification("Order Successful! ✅", "Dalabkaaga waa lagu guuleystay. Waxaad heshay 1 point!", userId);
       }
     } else if (status === 'cancelled') {
-      if (accountItem && accountItem.id) await update(ref(rtdb, `accountPosts/${accountItem.id}`), { status: 'approved', sold: false, holdingBy: null, buyerReported: false, conflict: false });
+      // If it was an account, only release if it was the ONLY active claim or handle carefully
       if (userId) {
         if (oldStatus === 'successful') {
           await update(ref(rtdb, `users/${userId}`), { points: increment(-1) });
@@ -906,6 +914,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (status === 'sold') {
       assignmentUpdate.sold = true;
       assignmentUpdate.boughtBy = boughtBy || postData.holdingBy || postData.boughtBy;
+      assignmentUpdate.holdingBy = boughtBy || postData.holdingBy || postData.boughtBy;
       assignmentUpdate.conflict = false; 
       assignmentUpdate.sellerReported = true; 
     }

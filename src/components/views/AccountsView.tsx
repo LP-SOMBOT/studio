@@ -49,7 +49,7 @@ import { uploadToImgbb } from '@/lib/imgbb';
 import { useRouter } from 'next/navigation';
 
 export default function AccountsView() {
-  const { accountPosts, user, setActiveTab, isInitialLoading, setIsPostingAccount } = useApp();
+  const { accountPosts, user, orders, setActiveTab, isInitialLoading, setIsPostingAccount } = useApp();
   const router = useRouter();
   const [isPosting, setIsPosting] = useState(false);
   const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
@@ -57,7 +57,6 @@ export default function AccountsView() {
   const [deletingPostId, setDeletingPostId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Sync isPostingAccount with app context to hide layout elements like BottomNav
   useEffect(() => {
     const active = isPosting || !!editingPost;
     setIsPostingAccount(active);
@@ -72,20 +71,19 @@ export default function AccountsView() {
     return (accountPosts || [])
       .filter(p => {
         const isOwner = userId && p.uid === userId;
-        const isBuyerOrHolder = userId && ((p.holdingBy && p.holdingBy === userId) || (p.boughtBy && p.boughtBy === userId));
+        // User is involved if they have an active order for this post
+        const isInvolvedInDeal = userId && (orders || []).some(o => o.gameDetails?.postId === p.id && o.userId === userId);
         
-        // 1. Privilege check: Admins, Owners, and involved Buyers/Holders see their relevant posts regardless of status
-        if (isAdmin || isOwner || isBuyerOrHolder) {
+        // Admins, Owners, and users who have started a deal can see the listing regardless of status
+        if (isAdmin || isOwner || isInvolvedInDeal) {
           return true;
         }
 
-        // 2. Visibility check for everyone else (the public):
-        // STRICT RULE: Only show if status is 'approved' AND not sold/hidden/expired
+        // Public visibility: Must be approved AND not sold
         if (p.status !== 'approved') return false;
         if (p.sold === true) return false;
         if (p.hiddenFromMarket === true) return false;
 
-        // Check expiration
         const isExpired = p.expiresAt ? p.expiresAt < now : false;
         if (isExpired) return false;
 
@@ -97,12 +95,12 @@ export default function AccountsView() {
         p.platform?.toLowerCase().includes(searchQuery.toLowerCase())
       )
       .sort((a, b) => b.createdAt - a.createdAt);
-  }, [accountPosts, searchQuery, user]);
+  }, [accountPosts, searchQuery, user, orders]);
 
   const myActivity = useMemo(() => {
     if (!user) return [];
-    return (accountPosts || []).filter(p => p.uid === user.uid || p.holdingBy === user.uid || p.boughtBy === user.uid);
-  }, [accountPosts, user]);
+    return (accountPosts || []).filter(p => p.uid === user.uid || (orders || []).some(o => o.gameDetails?.postId === p.id && o.userId === user.uid));
+  }, [accountPosts, user, orders]);
 
   if (isInitialLoading) {
     return (
@@ -118,7 +116,6 @@ export default function AccountsView() {
     );
   }
 
-  // If in posting mode, render the Posting View instead of the Marketplace list
   if (isPosting || editingPost) {
     return (
       <PostAccountView 
@@ -176,17 +173,21 @@ export default function AccountsView() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 md:gap-8 lg:gap-10">
-            {filteredPosts.map((post) => (
-              <AccountPostCard 
-                key={post.id} 
-                post={post} 
-                onClick={() => router.push(`/accounts/${post.id}`)}
-                onEdit={(e) => { e.stopPropagation(); setEditingPost(post); }}
-                onDelete={(e) => { e.stopPropagation(); setDeletingPostId(post.id); }}
-                isOwner={post.uid === user?.uid}
-                isAdmin={user?.isAdmin}
-              />
-            ))}
+            {filteredPosts.map((post) => {
+              const isBuyer = (orders || []).some(o => o.gameDetails?.postId === post.id && o.userId === user?.uid);
+              return (
+                <AccountPostCard 
+                  key={post.id} 
+                  post={post} 
+                  onClick={() => router.push(`/accounts/${post.id}`)}
+                  onEdit={(e) => { e.stopPropagation(); setEditingPost(post); }}
+                  onDelete={(e) => { e.stopPropagation(); setDeletingPostId(post.id); }}
+                  isOwner={post.uid === user?.uid}
+                  isBuyer={isBuyer}
+                  isAdmin={user?.isAdmin}
+                />
+              );
+            })}
           </div>
         )}
       </main>
@@ -200,7 +201,6 @@ export default function AccountsView() {
         </button>
       )}
 
-      {/* Activity Tracker */}
       <Dialog open={isActivityModalOpen} onOpenChange={setIsActivityModalOpen}>
          <DialogContent className="max-w-xl rounded-[2rem] md:rounded-[3rem] p-0 border-none shadow-2xl bg-white dark:bg-slate-900 mx-4">
             <DialogHeader className="p-6 md:p-10 pb-4 md:pb-6">
@@ -214,351 +214,40 @@ export default function AccountsView() {
                     <p className="text-sm md:text-lg font-bold">No recent activity</p>
                  </div>
                ) : (
-                 myActivity.map(p => (
-                   <Card key={p.id} className="p-4 md:p-5 rounded-2xl md:rounded-[1.5rem] border-none bg-slate-50 dark:bg-slate-800 flex items-center justify-between group hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors cursor-pointer" onClick={() => { setIsActivityModalOpen(false); router.push(`/accounts/${p.id}`); }}>
-                      <div className="flex items-center gap-3 md:gap-4">
-                         <div className="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl overflow-hidden bg-slate-200 dark:bg-slate-700 relative shadow-sm shrink-0">
-                            {p.thumbnailUrl && <Image src={p.thumbnailUrl} alt="" fill className="object-cover" />}
-                         </div>
-                         <div className="min-w-0">
-                            <p className="text-sm md:text-base font-bold text-slate-900 dark:text-white uppercase tracking-tight truncate max-w-[120px] md:max-w-none">{p.gameType} - Lv {p.level}</p>
-                            <div className="flex items-center gap-2 mt-0.5">
-                               <p className="text-[8px] md:text-[10px] font-black text-muted-foreground uppercase tracking-widest">{p.platform}</p>
-                               {p.uid === user?.uid ? <Badge className="h-4 text-[7px] md:text-[8px] bg-indigo-500 text-white border-none py-0 font-black">SELLER</Badge> : <Badge className="h-4 text-[7px] md:text-[8px] bg-green-500 text-white border-none py-0 font-black">BUYING</Badge>}
+                 myActivity.map(p => {
+                    const isSeller = p.uid === user?.uid;
+                    return (
+                      <Card key={p.id} className="p-4 md:p-5 rounded-2xl md:rounded-[1.5rem] border-none bg-slate-50 dark:bg-slate-800 flex items-center justify-between group hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors cursor-pointer" onClick={() => { setIsActivityModalOpen(false); router.push(`/accounts/${p.id}`); }}>
+                         <div className="flex items-center gap-3 md:gap-4">
+                            <div className="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl overflow-hidden bg-slate-200 dark:bg-slate-700 relative shadow-sm shrink-0">
+                               {p.thumbnailUrl && <Image src={p.thumbnailUrl} alt="" fill className="object-cover" />}
+                            </div>
+                            <div className="min-w-0">
+                               <p className="text-sm md:text-base font-bold text-slate-900 dark:text-white uppercase tracking-tight truncate max-w-[120px] md:max-w-none">{p.gameType} - Lv {p.level}</p>
+                               <div className="flex items-center gap-2 mt-0.5">
+                                  <p className="text-[8px] md:text-[10px] font-black text-muted-foreground uppercase tracking-widest">{p.platform}</p>
+                                  {isSeller ? <Badge className="h-4 text-[7px] md:text-[8px] bg-indigo-500 text-white border-none py-0 font-black">SELLER</Badge> : <Badge className="h-4 text-[7px] md:text-[8px] bg-green-500 text-white border-none py-0 font-black">BUYING</Badge>}
+                               </div>
                             </div>
                          </div>
-                      </div>
-                      <Badge className={cn(
-                        "rounded-full px-2 md:px-4 py-0.5 md:py-1 text-[8px] md:text-[10px] font-black uppercase tracking-widest border-none shadow-sm shrink-0",
-                        p.status === 'approved' ? "bg-green-100 text-green-700" : (p.status === 'pending' || p.status === 'holding') ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"
-                      )}>
-                        {p.status}
-                      </Badge>
-                   </Card>
-                 ))
+                         <Badge className={cn(
+                           "rounded-full px-2 md:px-4 py-0.5 md:py-1 text-[8px] md:text-[10px] font-black uppercase tracking-widest border-none shadow-sm shrink-0",
+                           p.status === 'approved' ? "bg-green-100 text-green-700" : (p.status === 'pending' || p.status === 'holding') ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"
+                         )}>
+                           {p.status}
+                         </Badge>
+                      </Card>
+                    );
+                 })
                )}
             </div>
          </DialogContent>
       </Dialog>
-
-      <Dialog open={!!deletingPostId} onOpenChange={(open) => !open && setDeletingPostId(null)}>
-        <DialogContent className="max-w-sm rounded-[2rem] bg-white dark:bg-slate-900 p-6 md:p-8 mx-4">
-           <DialogHeader className="text-center">
-             <div className="w-12 h-12 md:w-16 md:h-16 bg-red-50 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500">
-               <Trash2 className="w-6 h-6 md:w-8 md:h-8" />
-             </div>
-             <DialogTitle className="text-xl md:text-2xl font-bold">Delete Post?</DialogTitle>
-             <DialogDescription className="font-bold text-slate-500 pt-2 text-xs md:text-sm">
-               Ma hubtaa inaad tirtirto post-kan? Tallaabadan dib loogama noqon karo.
-             </DialogDescription>
-           </DialogHeader>
-           <DialogFooter className="gap-2 md:gap-3 pt-6 md:pt-8 flex-col sm:flex-col">
-             <Button variant="ghost" onClick={() => setDeletingPostId(null)} className="rounded-xl md:rounded-2xl h-12 md:h-14 font-bold order-2 sm:order-1">Maya, Dib u noqo</Button>
-             <Button variant="destructive" onClick={() => { if(deletingPostId) { /* delete logic */ } setDeletingPostId(null); }} className="rounded-xl md:rounded-2xl h-12 md:h-14 font-bold shadow-xl shadow-red-500/20 order-1 sm:order-2">Haa, Tirtir</Button>
-           </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
 
-// Full-screen Posting View Component
-function PostAccountView({ editingPost, onCancel, onComplete }: { editingPost?: any, onCancel: () => void, onComplete: () => void }) {
-  const { postAccount, updateAccountPost, storeSettings, user } = useApp();
-  const [loading, setLoading] = useState(false);
-  const [hasTriggeredUssd, setHasTriggeredUssd] = useState(false);
-  const [imageFiles, setImageFiles] = useState<File[]>([]);
-  const [previews, setPreviews] = useState<string[]>([]);
-  
-  const [formData, setFormData] = useState<any>({
-    gameType: "freefire",
-    platform: "Google",
-    level: "",
-    accountId: "",
-    accountName: "",
-    age: "1-2 Years",
-    primeLevel: "1",
-    items: [] as string[],
-    evoWeapons: "",
-    totalWeapons: "",
-    dharka: "",
-    emotes: "",
-    executionEmotes: "",
-    arrivalEmotes: "",
-    price: "",
-    phone: "",
-    thumbnailUrl: "",
-    term: "weekly",
-    imageUrls: [] as string[]
-  });
-
-  useEffect(() => {
-    if (editingPost) {
-      setFormData({
-        ...editingPost,
-        level: editingPost.level?.toString() || "",
-        primeLevel: editingPost.primeLevel?.toString() || "1",
-        evoWeapons: editingPost.evoWeapons?.toString() || "",
-        totalWeapons: editingPost.totalWeapons?.toString() || "",
-        dharka: editingPost.dharka?.toString() || "",
-        emotes: editingPost.emotes?.toString() || "",
-        executionEmotes: editingPost.executionEmotes?.toString() || "",
-        arrivalEmotes: editingPost.arrivalEmotes?.toString() || "",
-        price: editingPost.price?.toString() || "",
-        items: editingPost.items || [],
-        term: editingPost.term || "weekly",
-        imageUrls: editingPost.imageUrls || []
-      });
-      setPreviews(editingPost.imageUrls || [editingPost.thumbnailUrl]);
-    } else {
-      setFormData({ 
-        gameType: "freefire", platform: "Google", level: "", accountId: "", accountName: "",
-        age: "1-2 Years", primeLevel: "1", items: [], evoWeapons: "", totalWeapons: "",
-        dharka: "", emotes: "", executionEmotes: "", arrivalEmotes: "",
-        price: "", phone: user?.phoneNumber || "", thumbnailUrl: "", term: "weekly", imageUrls: [] 
-      });
-      setPreviews([]); setImageFiles([]);
-    }
-  }, [editingPost, user]);
-
-  const listingFee = formData.term === 'monthly' 
-    ? (storeSettings?.config?.shop?.listingFeeMonthly || 3.00)
-    : (storeSettings?.config?.shop?.listingFeeWeekly || 1.00);
-
-  const isFormValid = !!(formData.level && formData.price && formData.phone && (imageFiles.length > 0 || formData.thumbnailUrl || (formData.imageUrls && formData.imageUrls.length > 0)));
-
-  const handleUssdPay = () => {
-    const paymentNum = storeSettings.paymentNumber || "613982172";
-    const formattedFee = listingFee.toString().replace('.', '*');
-    const ussdCode = `*712*${paymentNum}*${formattedFee}#`;
-    toast({ title: "Opening Dialer", description: "Fadlan bixi listing fee-ga si account-ka loo soo geliyo." });
-    window.location.href = `tel:${ussdCode.replace(/#/g, '%23')}`;
-    setHasTriggeredUssd(true);
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    if (files.length > 0) {
-      setImageFiles(prev => [...prev, ...files]);
-      setPreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]);
-    }
-  };
-
-  const removeImage = (index: number) => {
-    const isExisting = index < (formData.imageUrls?.length || 0);
-    if (isExisting) {
-       setFormData((prev: any) => ({ ...prev, imageUrls: prev.imageUrls.filter((_: any, i: number) => i !== index) }));
-    } else {
-       const fileIdx = index - (formData.imageUrls?.length || 0);
-       setImageFiles(prev => prev.filter((_, i) => i !== fileIdx));
-    }
-    setPreviews(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      let finalUrls = [...(formData.imageUrls || [])];
-      if (imageFiles.length > 0) {
-        const uploadPromises = imageFiles.map(f => uploadToImgbb(f));
-        finalUrls = [...finalUrls, ...await Promise.all(uploadPromises)];
-      }
-      const cleanedData = {
-        ...formData,
-        level: parseInt(formData.level), primeLevel: parseInt(formData.primeLevel),
-        evoWeapons: parseInt(formData.evoWeapons) || 0, totalWeapons: parseInt(formData.totalWeapons) || 0,
-        dharka: parseInt(formData.dharka) || 0, emotes: parseInt(formData.emotes) || 0,
-        executionEmotes: parseInt(formData.executionEmotes) || 0, arrivalEmotes: parseInt(formData.arrivalEmotes) || 0,
-        price: parseFloat(formData.price), thumbnailUrl: finalUrls[0] || "", imageUrls: finalUrls
-      };
-      if (editingPost) await updateAccountPost(editingPost.id, cleanedData);
-      else await postAccount({ ...cleanedData, totalCharge: cleanedData.price, listingFeePaid: listingFee });
-      setHasTriggeredUssd(false); onComplete();
-    } catch (e: any) {
-      toast({ title: "Failed", description: e.message, variant: "destructive" });
-    } finally { setLoading(false); }
-  };
-
-  return (
-    <div className="min-h-screen w-full bg-white dark:bg-slate-950 flex flex-col page-transition">
-      <header className="sticky top-0 z-[40] bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-4 md:px-10 pt-5 md:pt-10 pb-4 md:pb-6 flex items-center justify-between border-b dark:border-white/5 shrink-0">
-         <div className="flex items-center gap-2 md:gap-4 min-w-0">
-            <button onClick={onCancel} className="p-2 text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full shrink-0 transition-colors"><ArrowLeft size={24} /></button>
-            <div className="min-w-0">
-              <h1 className="text-lg md:text-4xl font-headline font-bold text-slate-900 dark:text-white leading-tight truncate">{editingPost ? 'Update' : 'Sell'} Account</h1>
-              <p className="text-[8px] md:text-xs font-black text-muted-foreground uppercase tracking-[0.2em] mt-0.5 md:mt-2 truncate">Gamer Marketplace Listing</p>
-            </div>
-         </div>
-         <button onClick={onCancel} className="hidden md:flex p-3 bg-slate-100 dark:bg-slate-800 rounded-2xl text-slate-400 hover:bg-slate-200 transition-colors">
-            <X size={24} />
-         </button>
-      </header>
-
-      <div className="flex-1 overflow-y-auto scrollbar-hide">
-        <form onSubmit={handleSubmit} className="px-4 md:px-10 space-y-8 md:space-y-12 pb-24 md:pb-32 mt-4 md:mt-10 max-w-4xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12">
-             <div className="space-y-4 md:space-y-8">
-                <div className="flex items-center gap-3">
-                   <div className="w-8 h-8 md:w-12 md:h-12 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-500 shadow-sm"><Gamepad2 size={20} /></div>
-                   <h3 className="font-headline font-bold text-base md:text-2xl dark:text-white uppercase tracking-tight">Game Details</h3>
-                </div>
-                <div className="space-y-6">
-                   <FormGroup label="Select Game">
-                      <Select value={formData.gameType} onValueChange={(val) => setFormData({...formData, gameType: val})}>
-                        <SelectTrigger className="h-12 md:h-16 rounded-xl md:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-4 md:px-6 font-bold text-xs md:text-lg">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="rounded-xl md:rounded-2xl">
-                          <SelectItem value="freefire" className="text-xs md:text-sm">Free Fire</SelectItem>
-                          <SelectItem value="bloodstrike" className="text-xs md:text-sm">Blood Strike</SelectItem>
-                        </SelectContent>
-                      </Select>
-                   </FormGroup>
-                   <FormGroup label="Platform">
-                      <Select value={formData.platform} onValueChange={(val) => setFormData({...formData, platform: val})}>
-                        <SelectTrigger className="h-12 md:h-16 rounded-xl md:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-4 md:px-6 font-bold text-xs md:text-lg">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="rounded-xl md:rounded-2xl">
-                          <SelectItem value="Google" className="text-xs md:text-sm">Google</SelectItem>
-                          <SelectItem value="Facebook" className="text-xs md:text-sm">Facebook</SelectItem>
-                        </SelectContent>
-                      </Select>
-                   </FormGroup>
-                </div>
-             </div>
-
-             <div className="space-y-4 md:space-y-8">
-                <div className="flex items-center gap-3">
-                   <div className="w-8 h-8 md:w-12 md:h-12 rounded-xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-blue-500 shadow-sm"><Clock size={20} /></div>
-                   <h3 className="font-headline font-bold text-base md:text-2xl dark:text-white uppercase tracking-tight">Listing Duration</h3>
-                </div>
-                <FormGroup label="Muda (Term)">
-                   <Select value={formData.term} onValueChange={(val) => setFormData({...formData, term: val})}>
-                      <SelectTrigger className="h-12 md:h-16 rounded-xl md:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-4 md:px-6 font-bold text-xs md:text-lg">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-xl md:rounded-2xl">
-                         <SelectItem value="weekly" className="text-[10px] md:text-sm">Weakly (Isbuucle) - ${storeSettings?.config?.shop?.listingFeeWeekly || 1.00}</SelectItem>
-                         <SelectItem value="monthly" className="text-[10px] md:text-sm">Monthly (Bile) - ${storeSettings?.config?.shop?.listingFeeMonthly || 3.00}</SelectItem>
-                      </SelectContent>
-                   </Select>
-                </FormGroup>
-             </div>
-          </div>
-
-          <div className="space-y-6 md:space-y-10">
-             <div className="flex items-center gap-3">
-                <div className="w-8 h-8 md:w-12 md:h-12 rounded-xl bg-purple-50 dark:bg-purple-500/10 flex items-center justify-center text-purple-500 shadow-sm"><Star size={20} /></div>
-                <h3 className="font-headline font-bold text-base md:text-2xl dark:text-white uppercase tracking-tight">Account Assets</h3>
-             </div>
-             
-             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
-                <FormInput label="Level" type="number" value={formData.level} onChange={v => setFormData({...formData, level: v})} placeholder="e.g. 80" />
-                {formData.gameType === 'freefire' ? (
-                   <FormGroup label="Prime Level">
-                      <Select value={formData.primeLevel} onValueChange={v => setFormData({...formData, primeLevel: v})}>
-                         <SelectTrigger className="h-12 md:h-16 rounded-xl md:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-4 md:px-6 font-bold text-xs md:text-lg">
-                           <SelectValue />
-                         </SelectTrigger>
-                         <SelectContent className="rounded-xl md:rounded-2xl">
-                           {[1,2,3,4,5,6,7,8].map(l => <SelectItem key={l} value={l.toString()} className="text-xs md:text-sm">Level {l}</SelectItem>)}
-                         </SelectContent>
-                      </Select>
-                   </FormGroup>
-                ) : (
-                   <FormInput label="Account ID" value={formData.accountId} onChange={v => setFormData({...formData, accountId: v})} placeholder="ID-ga" />
-                )}
-                <FormInput label="Evo weapons" type="number" value={formData.evoWeapons} onChange={v => setFormData({...formData, evoWeapons: v})} placeholder="Count" />
-                <FormInput label="All Weapons" type="number" value={formData.totalWeapons} onChange={v => setFormData({...formData, totalWeapons: v})} placeholder="Count" />
-                <FormInput label="Emote" type="number" value={formData.emotes} onChange={v => setFormData({...formData, emotes: v})} placeholder="Count" />
-                <FormInput label="Arrival" type="number" value={formData.arrivalEmotes} onChange={v => setFormData({...formData, arrivalEmotes: v})} placeholder="Count" />
-                {formData.gameType === 'freefire' && (
-                   <FormInput label="Dharka" type="number" value={formData.dharka} onChange={v => setFormData({...formData, dharka: v})} placeholder="Count" />
-                )}
-             </div>
-          </div>
-
-          <div className="space-y-4 md:space-y-8">
-            <div className="flex items-center gap-3">
-               <div className="w-8 h-8 md:w-12 md:h-12 rounded-xl bg-cyan-50 dark:bg-cyan-500/10 flex items-center justify-center text-cyan-500 shadow-sm"><ImageIcon size={20} /></div>
-               <h3 className="font-headline font-bold text-base md:text-2xl dark:text-white uppercase tracking-tight">Account Gallery</h3>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-6">
-               {previews.map((url, idx) => (
-                 <div key={idx} className="relative aspect-video rounded-xl md:rounded-[1.5rem] overflow-hidden group shadow-lg bg-slate-100 border border-slate-200 dark:border-white/5">
-                    <Image src={url} alt="" fill className="object-cover" unoptimized />
-                    <button type="button" onClick={() => removeImage(idx)} className="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1.5 md:p-2 shadow-xl active:scale-110"><X size={14} /></button>
-                 </div>
-               ))}
-               <label className="aspect-video rounded-xl md:rounded-[1.5rem] border-2 border-dashed border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800/40 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all flex flex-col items-center justify-center gap-1.5 cursor-pointer text-slate-400 group">
-                  <Plus className="size-6 md:size-10 group-hover:text-primary transition-colors" />
-                  <span className="text-[7px] md:text-[11px] font-black uppercase tracking-widest">Add Media</span>
-                  <input type="file" accept="image/*" multiple onChange={handleFileChange} className="hidden" />
-               </label>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-end">
-             <div className="space-y-6 md:space-y-10">
-                <div className="flex items-center gap-3">
-                   <div className="w-8 h-8 md:w-12 md:h-12 rounded-xl bg-green-50 dark:bg-green-500/10 flex items-center justify-center text-green-500 shadow-sm"><DollarSign size={20} /></div>
-                   <h3 className="font-headline font-bold text-base md:text-2xl dark:text-white uppercase tracking-tight">Pricing & Sale</h3>
-                </div>
-                <FormInput label="WhatsApp (Seller)" value={formData.phone} onChange={v => setFormData({...formData, phone: v})} placeholder="25261..." />
-                <div className="p-6 md:p-12 bg-slate-900 dark:bg-slate-800 rounded-3xl md:rounded-[3.5rem] text-white shadow-2xl relative overflow-hidden ring-4 ring-white/5">
-                   <div className="absolute top-0 right-0 p-6 md:p-12 opacity-5"><DollarSign size={80} className="md:size-32" /></div>
-                   <label className="text-[9px] md:text-xs font-black text-white/40 uppercase tracking-[0.3em] ml-1 md:ml-3 block mb-2 md:mb-6">Account Sale Price ($)</label>
-                   <div className="relative z-10 flex items-center">
-                      <span className="text-2xl md:text-6xl font-headline font-bold text-primary mr-1 md:mr-3">$</span>
-                      <input 
-                        type="number" 
-                        required 
-                        value={formData.price} 
-                        onChange={e => setFormData({...formData, price: e.target.value})} 
-                        className="bg-transparent border-none text-3xl md:text-7xl lg:text-8xl font-headline font-bold text-white focus:outline-none w-full tracking-tighter" 
-                        placeholder="0.00"
-                      />
-                   </div>
-                </div>
-             </div>
-
-             <div className="space-y-6 md:space-y-10">
-                <div className="p-6 md:p-10 bg-amber-50 dark:bg-amber-500/5 rounded-3xl md:rounded-[3rem] border border-amber-100 dark:border-amber-500/20 space-y-3 md:space-y-6">
-                   <div className="flex items-center gap-2 text-amber-800 dark:text-amber-400">
-                      <Info size={18} className="md:size-6" />
-                      <p className="text-[10px] md:text-lg font-black uppercase tracking-widest">Listing Fee Policy</p>
-                   </div>
-                   <p className="text-[9px] md:text-base lg:text-xl font-bold text-amber-700/80 dark:text-amber-500/80 leading-relaxed">
-                      Fee-ga posting-ka ee {formData.term === 'weekly' ? 'Isbuucle' : 'Bile'} waa <span className="font-black text-amber-800 dark:text-amber-300 text-sm md:text-3xl">${listingFee.toFixed(2)}</span>.
-                   </p>
-                </div>
-
-                {!editingPost ? (
-                   !hasTriggeredUssd ? (
-                      <Button type="button" onClick={handleUssdPay} disabled={!isFormValid} className="w-full h-14 md:h-24 rounded-2xl md:rounded-[2.5rem] text-sm md:text-3xl font-black shadow-2xl bg-primary hover:bg-primary/90 transition-all uppercase tracking-widest active:scale-95">
-                         PAY ${listingFee.toFixed(2)} FEE
-                      </Button>
-                   ) : (
-                      <Button disabled={loading || !isFormValid} type="submit" className="w-full h-14 md:h-24 rounded-2xl md:rounded-[2.5rem] text-sm md:text-3xl font-black shadow-2xl bg-green-600 hover:bg-green-700 transition-all uppercase tracking-widest active:scale-95">
-                         {loading ? <Loader2 className="animate-spin w-6 h-6 md:w-10 md:h-10" /> : 'CONFIRM & POST'}
-                      </Button>
-                   )
-                ) : (
-                   <Button disabled={loading || !isFormValid} type="submit" className="w-full h-14 md:h-24 rounded-2xl md:rounded-[2.5rem] text-sm md:text-3xl font-black shadow-2xl bg-primary hover:bg-primary/90 transition-all uppercase tracking-widest active:scale-95">
-                      {loading ? <Loader2 className="animate-spin w-6 h-6 md:w-10 md:h-10" /> : 'SAVE CHANGES'}
-                   </Button>
-                )}
-             </div>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-}
-
-function AccountPostCard({ post, onClick, onEdit, onDelete, isOwner, isAdmin }: { post: any, onClick: () => void, onEdit: (e:any)=>void, onDelete: (e:any)=>void, isOwner: boolean, isAdmin?: boolean }) {
+function AccountPostCard({ post, onClick, onEdit, onDelete, isOwner, isBuyer, isAdmin }: { post: any, onClick: () => void, onEdit: (e:any)=>void, onDelete: (e:any)=>void, isOwner: boolean, isBuyer: boolean, isAdmin?: boolean }) {
   const isGoogle = post.platform === 'Google';
   const isExpired = post.expiresAt ? post.expiresAt < Date.now() : false;
   
@@ -591,14 +280,6 @@ function AccountPostCard({ post, onClick, onEdit, onDelete, isOwner, isAdmin }: 
         setTimeLeft(`${d}d ${h}h ${m}m`);
       }
     }, 60000);
-    const diff = post.expiresAt - Date.now();
-    if (diff <= 0) setTimeLeft("DHAMAADAY");
-    else {
-      const d = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      setTimeLeft(`${d}d ${h}h ${m}m`);
-    }
     return () => clearInterval(interval);
   }, [post.expiresAt, isOwner, isAdmin]);
   
@@ -607,7 +288,8 @@ function AccountPostCard({ post, onClick, onEdit, onDelete, isOwner, isAdmin }: 
       onClick={onClick}
       className={cn(
         "rounded-[2rem] md:rounded-[3rem] border-none shadow-lg md:shadow-xl bg-white dark:bg-slate-900 overflow-hidden transition-all hover:-translate-y-1 md:hover:-translate-y-2 hover:shadow-2xl active:scale-[0.98] group cursor-pointer h-full flex flex-col relative",
-        isExpired && "opacity-60 grayscale-[0.5]"
+        isExpired && "opacity-60 grayscale-[0.5]",
+        isBuyer && "ring-2 ring-green-500/50"
       )}
     >
       <div className="p-3.5 md:p-6 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/40 border-b dark:border-white/5">
@@ -634,6 +316,7 @@ function AccountPostCard({ post, onClick, onEdit, onDelete, isOwner, isAdmin }: 
         </div>
         
         <div className="flex gap-1 shrink-0">
+           {isBuyer && <Badge className="bg-green-500 text-white text-[6px] uppercase font-black px-1.5 py-0.5 h-6 flex items-center shadow-md">MY DEAL</Badge>}
            <button 
              onClick={handleShare}
              className="w-7 h-7 md:w-10 md:h-10 rounded-lg md:rounded-2xl flex items-center justify-center text-primary bg-primary/10 hover:bg-primary/20 transition-colors active:scale-90"
@@ -694,9 +377,6 @@ function AccountPostCard({ post, onClick, onEdit, onDelete, isOwner, isAdmin }: 
         <div className="flex gap-2 overflow-x-auto scrollbar-hide py-0.5">
            <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 border-none rounded-lg px-2.5 md:px-4 py-1 md:py-2 text-[8px] md:text-[11px] font-black shadow-sm shrink-0">Evo: {post.evoWeapons || 0}</Badge>
            <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 border-none rounded-lg px-2.5 md:px-4 py-1 md:py-2 text-[8px] md:text-[11px] font-black shadow-sm shrink-0">Emotes: {post.emotes || 0}</Badge>
-           {post.gameType === 'freefire' && (
-             <Badge className="bg-indigo-100 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400 border-none rounded-lg px-2.5 md:px-4 py-1 md:py-2 text-[8px] md:text-[11px] font-black shadow-sm shrink-0">Dharka: {post.dharka || 0}</Badge>
-           )}
         </div>
 
         <div className="flex items-center justify-between pt-3 md:pt-6 border-t border-slate-50 dark:border-white/5 mt-auto">
