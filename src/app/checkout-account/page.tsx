@@ -92,9 +92,9 @@ export default function CheckoutAccountPage() {
       // Updated WhatsApp message to match user request
       let msg = "";
       if (post.gameType === 'bloodstrike') {
-        msg = `Asc, waxaan rabaa inaan iibsado account-kaaga Blood Strike Soo dhigte website ka OskarShop. Level: ${post.level}, Qiimaha: $${post.price}, Diyaar miyaa matahay?`;
+        msg = `Asc, waxaan rabaa inaan iibsado account-kaaga Blood Strike Soo dhigte website ka OskarShop. Level: ${post.level}, Qiimaha: $${post.price}, Diyaar miyaa tahay?`;
       } else {
-        msg = `Asc, waxaan rabaa inaan iibsado account-kaaga Free Fire Soo dhigte website ka OskarShop. Level: ${post.level}, Qiimaha: $${post.price}, Diyaar miyaa matahay?`;
+        msg = `Asc, waxaan rabaa inaan iibsado account-kaaga Free Fire Soo dhigte website ka OskarShop. Level: ${post.level}, Qiimaha: $${post.price}, Diyaar miyaa tahay?`;
       }
 
       const encoded = encodeURIComponent(msg);
