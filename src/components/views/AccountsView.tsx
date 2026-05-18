@@ -202,6 +202,20 @@ export default function AccountsView() {
         </button>
       )}
 
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={!!deletingPostId} onOpenChange={(v) => !v && setDeletingPostId(null)}>
+        <DialogContent className="max-w-sm w-[90vw] rounded-[1.5rem] sm:rounded-[2rem]">
+          <DialogHeader>
+            <DialogTitle className="text-lg sm:text-xl">Ma hubtaa?</DialogTitle>
+            <DialogDescription className="text-xs sm:text-sm">Post-kan waa la tirtiri doonaa, dibna looma heli karo.</DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 mt-4 flex-col sm:flex-row">
+             <Button variant="ghost" onClick={() => setDeletingPostId(null)} className="rounded-xl flex-1 h-10 sm:h-12 order-2 sm:order-1">Maya</Button>
+             <Button variant="destructive" onClick={async () => { if(deletingPostId) { await useApp().deleteAccountPost(deletingPostId); setDeletingPostId(null); } }} className="rounded-xl flex-1 h-10 sm:h-12 order-1 sm:order-2">Haa, Tirtir</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={isActivityModalOpen} onOpenChange={setIsActivityModalOpen}>
          <DialogContent className="max-w-xl rounded-[2rem] md:rounded-[3rem] p-0 border-none shadow-2xl bg-white dark:bg-slate-900 mx-4">
             <DialogHeader className="p-6 md:p-10 pb-4 md:pb-6">
@@ -249,7 +263,7 @@ export default function AccountsView() {
 }
 
 function PostAccountView({ editingPost, onCancel, onComplete }: { editingPost?: any, onCancel: () => void, onComplete: () => void }) {
-  const { postAccount, updateAccountPost, storeSettings } = useApp();
+  const { postAccount, updateAccountPost, storeSettings, user: enhancedUser } = useApp() as any;
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasTriggeredUssd, setHasTriggeredUssd] = useState(false);
@@ -257,16 +271,16 @@ function PostAccountView({ editingPost, onCancel, onComplete }: { editingPost?: 
   const [formData, setFormData] = useState({
     gameType: editingPost?.gameType || 'freefire',
     platform: editingPost?.platform || 'Google',
-    level: editingPost?.level || '',
-    price: editingPost?.price || '',
+    level: editingPost?.level?.toString() || '',
+    price: editingPost?.price?.toString() || '',
     phone: editingPost?.phone || '',
     thumbnailUrl: editingPost?.thumbnailUrl || '',
-    evoWeapons: editingPost?.evoWeapons || '0',
-    totalWeapons: editingPost?.totalWeapons || '0',
-    emotes: editingPost?.emotes || '0',
-    executionEmotes: editingPost?.executionEmotes || '0',
-    arrivalEmotes: editingPost?.arrivalEmotes || '0',
-    dharka: editingPost?.dharka || '0',
+    evoWeapons: editingPost?.evoWeapons?.toString() || '0',
+    totalWeapons: editingPost?.totalWeapons?.toString() || '0',
+    emotes: editingPost?.emotes?.toString() || '0',
+    executionEmotes: editingPost?.executionEmotes?.toString() || '0',
+    arrivalEmotes: editingPost?.arrivalEmotes?.toString() || '0',
+    dharka: editingPost?.dharka?.toString() || '0',
     term: editingPost?.term || 'weekly'
   });
 
@@ -650,7 +664,7 @@ function AccountPostCard({ post, onClick, onEdit, onDelete, isOwner, isBuyer, is
         <div className="flex items-center justify-between pt-3 md:pt-6 border-t border-slate-50 dark:border-white/5 mt-auto">
            <div className="min-w-0">
              <p className="text-[8px] md:text-[11px] font-black text-muted-foreground uppercase tracking-widest mb-0.5 md:mb-1 opacity-60">Price Value</p>
-             <p className="text-xl md:text-4xl font-headline font-bold text-primary tracking-tighter">${post.price?.toFixed(2)}</p>
+             <p className="text-xl md:text-4xl font-headline font-bold text-primary tracking-tighter">${parseFloat(post.price?.toString() || '0').toFixed(2)}</p>
            </div>
            <Button className="rounded-lg md:rounded-[1.5rem] h-9 md:h-14 px-3 md:px-8 font-black text-[10px] md:text-base shadow-xl shadow-primary/20 gap-1 md:gap-2 uppercase tracking-wide shrink-0">
              Details <ArrowRight className="w-3.5 h-3.5 md:w-5 md:h-5" />
