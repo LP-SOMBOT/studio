@@ -746,7 +746,7 @@ export default function AdminPage() {
           <div className="flex items-center gap-2 sm:gap-4">
             <Popover>
               <PopoverTrigger asChild>
-                <button className="relative p-2.5 bg-slate-50 dark:bg-slate-800 rounded-full text-slate-500 hover:text-primary transition-colors focus:outline-none">
+                <button className="relative p-2.5 bg-slate-50 dark:bg-target-800 rounded-full text-slate-500 hover:text-primary transition-colors focus:outline-none">
                   <Bell size={20} />
                   {unreadAdminNotifs > 0 && <span className="absolute top-0 right-0 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white dark:border-slate-800">{unreadAdminNotifs > 9 ? '9+' : unreadAdminNotifs}</span>}
                 </button>
@@ -1076,6 +1076,9 @@ export default function AdminPage() {
                                        <p className="text-[8px] md:text-[10px] text-muted-foreground truncate">{selectedAccount.phone}</p>
                                     </div>
                                  </div>
+                                 {selectedAccount.sellerReportedAt && (
+                                   <p className="text-[7px] text-muted-foreground uppercase mt-2 text-right">Confirmed: {getSmartTimestamp(selectedAccount.sellerReportedAt)}</p>
+                                 )}
                               </div>
 
                               <div className="space-y-3">
@@ -1622,6 +1625,9 @@ export default function AdminPage() {
 
       <Dialog open={isUserManageOpen} onOpenChange={setIsUserManageOpen}>
         <DialogContent className="max-w-md w-[95vw] rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl bg-white dark:bg-slate-900 animate-in zoom-in duration-300">
+           <DialogHeader className="sr-only">
+             <DialogTitle>User Management: {selectedUser?.name}</DialogTitle>
+           </DialogHeader>
            <div className="h-32 bg-primary relative shrink-0">
               <div className="absolute -bottom-10 left-8 w-24 h-24 rounded-full border-4 border-white dark:border-slate-900 bg-slate-100 overflow-hidden shadow-xl">
                  {selectedUser?.photoURL ? <Image src={selectedUser.photoURL} alt="" fill className="object-cover" /> : <User size={40} className="m-auto mt-6 text-slate-300" />}
@@ -1719,8 +1725,8 @@ export default function AdminPage() {
                     <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'payment')} />
                  </div>
               </div>
-              <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Provider Name</Label><Input value={paymentMethodForm.name} onChange={e => setPaymentMethodForm({ ...paymentMethodForm, name: e.target.value })} className="h-12 rounded-xl dark:bg-slate-800 border-none" placeholder="EVC Plus, Premier, etc." required /></div>
-              <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400 ml-1">USSD Template (Use $ for price)</Label><Input value={paymentMethodForm.ussdTemplate} onChange={e => setPaymentMethodForm({ ...paymentMethodForm, ussdTemplate: e.target.value })} className="h-12 rounded-xl dark:bg-slate-800 border-none font-mono" placeholder="*712*613982172*$#" required /></div>
+              <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Provider Name</Label><Input value={paymentMethodForm.name} onChange={setPaymentMethodForm({ ...paymentMethodForm, name: e.target.value })} className="h-12 rounded-xl dark:bg-slate-800 border-none" placeholder="EVC Plus, Premier, etc." required /></div>
+              <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400 ml-1">USSD Template (Use $ for price)</Label><Input value={paymentMethodForm.ussdTemplate} onChange={setPaymentMethodForm({ ...paymentMethodForm, ussdTemplate: e.target.value })} className="h-12 rounded-xl dark:bg-slate-800 border-none font-mono" placeholder="*712*613982172*$#" required /></div>
               <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
                  <span className="text-xs font-bold">Active Method</span>
                  <Switch checked={paymentMethodForm.active} onCheckedChange={v => setPaymentMethodForm({ ...paymentMethodForm, active: v })} />
