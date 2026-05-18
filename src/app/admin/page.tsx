@@ -166,7 +166,7 @@ function CountdownDisplay({ expiresAt }: { expiresAt?: number }) {
     return () => clearInterval(interval);
   }, [expiresAt]);
 
-  if (!expiresAt) return <Badge variant="outline" className="text-[8px] opacity-40 font-black">NOT STARTED</Badge>;
+  if (!expiresAt) return <Badge variant="outline" className="text-[10px] opacity-40 font-black">NOT STARTED</Badge>;
 
   return (
     <div className="flex flex-col gap-0.5">
@@ -695,6 +695,9 @@ export default function AdminPage() {
       {/* Mobile Sidebar */}
       <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
         <SheetContent side="left" className="p-0 w-72 bg-white dark:bg-slate-900 border-none">
+          <SheetHeader className="sr-only">
+            <SheetTitle>Admin Navigation Menu</SheetTitle>
+          </SheetHeader>
           <SidebarContent isMobile={true} />
         </SheetContent>
       </Sheet>
@@ -2138,7 +2141,7 @@ export default function AdminPage() {
           <form onSubmit={handleSavePaymentMethod} className="p-6 space-y-6">
             <div className="space-y-2">
               <Label className="text-xs font-bold uppercase text-slate-400">Method Name</Label>
-              <Input value={paymentMethodForm.name} onChange={e => setPaymentMethodForm({...paymentMethodForm, name: e.target.value})} required placeholder="e.g. EVC Plus" className="rounded-xl h-12" />
+              <Input value={paymentMethodForm.name} onChange={e => setPointAdjustment(e.target.value)} required placeholder="e.g. EVC Plus" className="rounded-xl h-12" />
             </div>
             <div className="space-y-2">
               <Label className="text-xs font-bold uppercase text-slate-400">Icon / Logo</Label>
