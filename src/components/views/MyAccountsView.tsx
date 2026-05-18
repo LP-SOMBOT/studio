@@ -187,7 +187,7 @@ export default function MyAccountsView() {
               <div className="space-y-1.5 sm:space-y-2">
                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1">Dooro Muda Cusub</label>
                  <Select value={renewTerm} onValueChange={(val: any) => setRenewTerm(val)}>
-                    <SelectTrigger className="h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-4 sm:px-6 font-bold shadow-inner">
+                    <SelectTrigger className="h-12 md:h-14 rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-4 sm:px-6 font-bold shadow-inner">
                        <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="rounded-xl sm:rounded-2xl dark:bg-slate-900">

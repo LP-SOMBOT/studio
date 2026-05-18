@@ -1142,6 +1142,17 @@ export default function AdminPage() {
                               </Button>
                            </div>
                         </div>
+
+                        {urgentAccounts.some(p => p.id === selectedAccount.id) && (
+                           <div className="space-y-6 pt-6 border-t dark:border-white/5">
+                              <div className="flex items-center gap-3">
+                                 <ShieldAlert className="text-red-500" size={20} />
+                                 <h4 className="font-bold text-lg uppercase text-red-500">Auto-Enforcement</h4>
+                              </div>
+                              <p className="text-[10px] font-bold text-muted-foreground uppercase leading-relaxed">Seller has exceeded 24 hours. Immediate penalty action is recommended.</p>
+                              <Button variant="destructive" onClick={() => setIsEnforceDialogOpen(true)} className="w-full h-16 rounded-2xl font-black shadow-xl shadow-red-500/20 uppercase tracking-widest">Apply Penalty Action</Button>
+                           </div>
+                        )}
                      </Card>
                   </div>
                </div>
