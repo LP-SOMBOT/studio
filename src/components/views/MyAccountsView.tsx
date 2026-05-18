@@ -290,7 +290,7 @@ function AccountManagedCard({ post, buyer, buyerOrder, onDelete, onRespond, onRe
     }
   }, [post.sellerSeenDeletionAt, post.id, deleteAccountPost]);
 
-  const showVerification = post.status === 'holding' && post.buyerReported && !post.sellerReported;
+  const showVerification = post.buyerReported && !post.sellerReported;
 
   return (
     <Card className={cn(
@@ -374,7 +374,7 @@ function AccountManagedCard({ post, buyer, buyerOrder, onDelete, onRespond, onRe
                   </div>
                )}
 
-               {post.status === 'holding' && buyer && (
+               {(post.status === 'holding' || post.buyerReported) && buyer && (
                  <div className="p-3 sm:p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl sm:rounded-2xl border border-slate-100 dark:border-white/5 space-y-3">
                     <p className="text-[8px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Active Holder (Potential Buyer)</p>
                     <div className="flex items-center gap-3">

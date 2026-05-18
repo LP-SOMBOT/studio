@@ -60,7 +60,7 @@ export default function AccountDetailPage() {
   const hasBought = associatedOrder?.buyerOutcome === 'bought';
   
   const showSold = post?.status === 'sold';
-  const showSuccess = post?.status === 'holding' && hasBought && isBuyer;
+  const showSuccess = (post?.status === 'holding' || post?.buyerReported) && hasBought && isBuyer;
   const showHolding = post?.status === 'holding' && !isBuyer;
 
   const buyButtonText = useMemo(() => {
@@ -190,7 +190,7 @@ export default function AccountDetailPage() {
 
              {/* Dynamic Action Area */}
              <div className="pt-2 md:pt-6 space-y-4">
-                {isBuyer && post.status === 'holding' && (
+                {isBuyer && (post.status === 'holding' || post.buyerReported) && (
                   <div className="p-4 md:p-6 bg-primary/5 rounded-2xl md:rounded-[2rem] border border-primary/20 space-y-4 md:space-y-6 animate-in slide-in-from-bottom-2">
                     {hasBought ? (
                       <div className="flex flex-col items-center text-center gap-3 py-2">

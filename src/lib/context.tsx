@@ -737,10 +737,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
 
       const reportTime = Date.now();
+      // NOTE: Status does not change to 'holding' yet on buyer report.
       await update(postRef, { 
         buyerReported: true, 
         buyerReportedAt: reportTime,
-        status: 'holding',
         holdingBy: user.uid
       });
 
@@ -784,7 +784,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         broadcastNotification("Purchase Confirmed! 🤑", "Seller has confirmed your purchase. The account is yours!", post.holdingBy);
       }
     } else {
+      // CONFLICT: Buyer said 'bought', Seller said 'not bought'.
+      // Account now automatically goes to 'holding' status for admin decision.
       await update(postRef, {
+        status: 'holding', 
         sellerReported: true,
         conflict: true
       });
