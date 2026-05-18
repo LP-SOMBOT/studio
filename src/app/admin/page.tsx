@@ -114,7 +114,7 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion";
+} from "@/accordion";
 import {
   Sheet,
   SheetContent,
@@ -696,8 +696,8 @@ export default function AdminPage() {
   const SidebarContent = ({ isMobile = false }) => (
     <div className="flex flex-col h-full">
       {isMobile && (
-        <SheetHeader className="sr-only">
-          <SheetTitle>Admin Navigation Menu</SheetTitle>
+        <SheetHeader className="p-4 border-b dark:border-white/5">
+          <SheetTitle className="font-headline font-bold text-lg text-slate-900 dark:text-white">Oskar Navigation</SheetTitle>
         </SheetHeader>
       )}
       {!isMobile && (
@@ -1939,7 +1939,7 @@ export default function AdminPage() {
                            )}
 
                            <Button onClick={handleStatusSave} disabled={isSavingStatus} className="w-full h-20 rounded-3xl font-black text-xl shadow-2xl shadow-primary/20 bg-primary hover:bg-primary/90 uppercase tracking-[0.2em] active:scale-95 transition-all">
-                              {isSavingStatus ? <Loader2 className="animate-spin w-8 h-8" /> : "Finalize Order"}
+                              {isSavingStatus ? <Loader2 className="animate-spin w-8 h-8" /> : "Save"}
                            </Button>
                         </div>
                      </div>
