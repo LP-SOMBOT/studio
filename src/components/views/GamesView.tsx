@@ -70,22 +70,22 @@ export default function GamesView() {
 
   return (
     <div className="pb-24 page-transition">
-      <main className="container mx-auto px-4 py-6 md:py-8 max-w-[1600px]">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-8 mb-8 md:mb-14">
-          <div className="flex items-center gap-4 lg:gap-8">
+      <main className="container mx-auto px-4 py-4 md:py-8 max-w-[1600px]">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-8 mb-6 md:mb-14">
+          <div className="flex items-center gap-3 md:gap-4 lg:gap-8">
             {selectedGameId && (
               <button 
                 onClick={handleGoBack}
-                className="w-10 h-10 lg:w-16 lg:h-16 rounded-xl lg:rounded-2xl bg-white dark:bg-slate-900 border border-gray-100 dark:border-white/10 text-slate-900 dark:text-white flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all shrink-0"
+                className="w-10 h-10 md:w-12 md:h-12 lg:w-16 lg:h-16 rounded-xl lg:rounded-2xl bg-white dark:bg-slate-900 border border-gray-100 dark:border-white/10 text-slate-900 dark:text-white flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all shrink-0"
               >
-                <ChevronLeft className="w-6 h-6 lg:w-8 lg:h-8" strokeWidth={3} />
+                <ChevronLeft className="w-5 h-5 md:w-6 md:h-6 lg:w-8 lg:h-8" strokeWidth={3} />
               </button>
             )}
-            <div>
-              <h1 className="text-xl sm:text-2xl lg:text-5xl font-headline font-bold text-slate-900 dark:text-white leading-tight">
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-5xl font-headline font-bold text-slate-900 dark:text-white leading-tight truncate">
                 {selectedGame ? selectedGame.title : "Game Store"}
               </h1>
-              <p className="text-muted-foreground font-medium uppercase tracking-widest text-[9px] lg:text-sm">
+              <p className="text-muted-foreground font-medium uppercase tracking-widest text-[8px] md:text-xs lg:text-sm">
                 {selectedGame ? `Browsing packages` : "Select a game"}
               </p>
             </div>
@@ -98,22 +98,22 @@ export default function GamesView() {
                  placeholder="Search packages..." 
                  value={searchQuery}
                  onChange={e => setSearchQuery(e.target.value)}
-                 className="h-12 lg:h-16 pl-10 md:pl-12 rounded-2xl bg-white dark:bg-slate-900 border-none shadow-sm dark:shadow-none font-bold"
+                 className="h-11 md:h-12 lg:h-16 pl-10 md:pl-12 rounded-xl md:rounded-2xl bg-white dark:bg-slate-900 border-none shadow-sm dark:shadow-none font-bold text-sm md:text-base"
                />
             </div>
           )}
         </div>
 
         {!selectedGameId ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 lg:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 md:gap-4 lg:gap-6">
             {filteredGames.length > 0 ? (
               filteredGames.map((game) => (
                 <Card 
                   key={game.id} 
                   onClick={() => handleSelectGame(game.id)}
-                  className="group relative overflow-hidden bg-white dark:bg-slate-900 border border-gray-100 dark:border-white/5 hover:shadow-2xl hover:shadow-primary/10 transition-all duration-500 rounded-[1.5rem] lg:rounded-[2.5rem] p-1 lg:p-1.5 pr-0 flex items-center h-20 lg:h-32 cursor-pointer"
+                  className="group relative overflow-hidden bg-white dark:bg-slate-900 border border-gray-100 dark:border-white/5 hover:shadow-2xl hover:shadow-primary/10 transition-all duration-500 rounded-xl lg:rounded-[2.5rem] p-1 lg:p-1.5 pr-0 flex items-center h-20 lg:h-32 cursor-pointer"
                 >
-                  <div className="w-16 h-16 lg:w-28 lg:h-28 rounded-xl lg:rounded-3xl overflow-hidden relative shrink-0 m-0.5 bg-slate-50 dark:bg-slate-800">
+                  <div className="w-16 h-16 lg:w-28 lg:h-28 rounded-lg lg:rounded-3xl overflow-hidden relative shrink-0 m-0.5 bg-slate-50 dark:bg-slate-800">
                     {game.icon ? (
                       <Image src={game.icon} alt={game.title} fill className="object-cover group-hover:scale-110 transition-transform duration-500" unoptimized />
                     ) : (
@@ -123,12 +123,12 @@ export default function GamesView() {
                     )}
                   </div>
                   <div className="flex-1 px-3 lg:px-6 min-w-0">
-                    <h3 className="font-headline font-bold text-base lg:text-2xl text-slate-900 dark:text-white truncate uppercase tracking-tight group-hover:text-primary transition-colors">
+                    <h3 className="font-headline font-bold text-sm md:text-lg lg:text-2xl text-slate-900 dark:text-white truncate uppercase tracking-tight group-hover:text-primary transition-colors">
                       {game.title}
                     </h3>
                     <p className="text-[8px] lg:text-[9px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-widest mt-0.5">Global</p>
                   </div>
-                  <button className="h-full px-4 lg:px-12 bg-primary text-white font-bold text-sm lg:text-2xl flex items-center justify-center group-hover:bg-primary/90 transition-colors uppercase tracking-widest">
+                  <button className="h-full px-4 md:px-8 lg:px-12 bg-primary text-white font-bold text-xs md:text-lg lg:text-2xl flex items-center justify-center group-hover:bg-primary/90 transition-colors uppercase tracking-widest">
                     iibso
                   </button>
                 </Card>
@@ -138,7 +138,7 @@ export default function GamesView() {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 lg:gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 md:gap-6 lg:gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {filteredProducts.length > 0 ? (
               filteredProducts.map((p) => (
                 <GameCard 

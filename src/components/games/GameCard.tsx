@@ -1,4 +1,3 @@
-
 "use client";
 
 import Image from "next/image";
@@ -36,10 +35,10 @@ export default function GameCard({ id, title, description, thumbnail, price, dis
   };
 
   return (
-    <Card className="group overflow-hidden bg-white dark:bg-slate-900 border-gray-100 dark:border-white/5 hover:shadow-xl hover:shadow-primary/10 transition-all duration-500 rounded-[2rem] flex flex-col h-full relative">
+    <Card className="group overflow-hidden bg-white dark:bg-slate-900 border-gray-100 dark:border-white/5 hover:shadow-xl hover:shadow-primary/10 transition-all duration-500 rounded-[1.5rem] md:rounded-[2rem] flex flex-col h-full relative">
       {hasValidDiscount && (
-        <div className="absolute top-4 right-4 z-10 animate-in fade-in zoom-in duration-500">
-           <Badge className="bg-red-500 text-white font-black px-3 py-1 rounded-full shadow-lg border-2 border-white dark:border-slate-800 uppercase text-[10px] tracking-widest">
+        <div className="absolute top-2 right-2 md:top-4 md:right-4 z-10 animate-in fade-in zoom-in duration-500">
+           <Badge className="bg-red-500 text-white font-black px-2 py-0.5 md:px-3 md:py-1 rounded-full shadow-lg border-2 border-white dark:border-slate-800 uppercase text-[8px] md:text-[10px] tracking-widest">
              {savingsPercent}% OFF
            </Badge>
         </div>
@@ -61,27 +60,27 @@ export default function GameCard({ id, title, description, thumbnail, price, dis
           </div>
         )}
       </div>
-      <CardContent className="p-5 flex flex-col flex-grow">
-        <h3 className="font-headline font-bold text-lg mb-1 line-clamp-1 text-slate-900 dark:text-white">{title}</h3>
-        <p className="text-xs text-muted-foreground mb-4 line-clamp-2 leading-relaxed flex-grow">{description}</p>
+      <CardContent className="p-3 md:p-5 flex flex-col flex-grow">
+        <h3 className="font-headline font-bold text-sm md:text-lg mb-1 line-clamp-1 text-slate-900 dark:text-white uppercase tracking-tight">{title}</h3>
+        <p className="text-[10px] md:text-xs text-muted-foreground mb-3 md:mb-4 line-clamp-2 leading-relaxed flex-grow">{description}</p>
         
         <div className="flex flex-col mt-auto">
           {hasValidDiscount ? (
-            <div className="space-y-0.5">
-               <span className="text-xs text-muted-foreground line-through font-medium opacity-60">${numPrice.toFixed(2)}</span>
-               <div className="flex items-center gap-2">
-                  <span className="text-3xl font-headline font-bold text-primary tracking-tighter">${numDiscounted.toFixed(2)}</span>
-                  <Tag size={14} className="text-primary animate-pulse" />
+            <div className="space-y-0">
+               <span className="text-[10px] md:text-xs text-muted-foreground line-through font-medium opacity-60">${numPrice.toFixed(2)}</span>
+               <div className="flex items-center gap-1.5">
+                  <span className="text-xl md:text-3xl font-headline font-bold text-primary tracking-tighter">${numDiscounted.toFixed(2)}</span>
+                  <Tag size={12} className="text-primary animate-pulse md:w-3.5 md:h-3.5" />
                </div>
             </div>
           ) : (
-            <span className="text-3xl font-headline font-bold text-primary tracking-tighter">${numPrice.toFixed(2)}</span>
+            <span className="text-xl md:text-3xl font-headline font-bold text-primary tracking-tighter">${numPrice.toFixed(2)}</span>
           )}
         </div>
       </CardContent>
-      <CardFooter className="p-5 pt-0">
-        <Button onClick={handleBuyNow} className="w-full rounded-2xl h-12 gap-2 font-bold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all active:scale-95">
-          <ShoppingCart className="w-5 h-5" /> {user ? "Buy Now" : "Login to Buy"}
+      <CardFooter className="p-3 md:p-5 pt-0">
+        <Button onClick={handleBuyNow} className="w-full rounded-xl md:rounded-2xl h-10 md:h-12 gap-1.5 md:gap-2 font-bold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all active:scale-95 text-[10px] md:text-sm">
+          <ShoppingCart className="w-3.5 h-3.5 md:w-5 md:h-5" /> {user ? "Buy Now" : "Login to Buy"}
         </Button>
       </CardFooter>
     </Card>
