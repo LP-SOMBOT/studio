@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -162,17 +163,17 @@ export default function ProfileView() {
       </div>
 
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-         <DialogContent className="rounded-[2.5rem] md:rounded-[4rem] p-0 border-none shadow-2xl max-w-2xl bg-white dark:bg-slate-900 max-h-[90vh] overflow-y-auto scrollbar-hide m-4">
-            <div className="h-2 md:h-3 bg-primary w-full" />
-            <DialogHeader className="p-8 md:p-12 pb-0">
-               <DialogTitle className="text-2xl md:text-4xl font-headline font-bold text-slate-900 dark:text-white">Profile Details</DialogTitle>
+         <DialogContent className="rounded-[2.5rem] md:rounded-[4rem] p-0 border-none shadow-2xl max-w-2xl bg-white dark:bg-slate-900 max-h-[95vh] overflow-y-auto scrollbar-hide w-[95vw] sm:w-full mx-auto my-auto">
+            <div className="h-2 md:h-3 bg-primary w-full shrink-0" />
+            <DialogHeader className="p-6 md:p-12 pb-0">
+               <DialogTitle className="text-xl md:text-4xl font-headline font-bold text-slate-900 dark:text-white">Profile Details</DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleUpdate} className="p-8 md:p-12 space-y-6 md:space-y-10">
-               <div className="flex justify-center mb-4 md:mb-8">
-                  <div className="relative w-32 h-32 md:w-44 md:h-44 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800 group border-[4px] md:border-[6px] border-slate-50 dark:border-slate-800 shadow-2xl ring-4 md:ring-8 ring-primary/5">
-                     {editData.photoURL ? <Image src={editData.photoURL} alt="" fill className="object-cover" unoptimized /> : <div className="w-full h-full flex flex-col items-center justify-center text-slate-300"><User size={50} /></div>}
+            <form onSubmit={handleUpdate} className="p-5 md:p-12 space-y-5 md:space-y-10">
+               <div className="flex justify-center mb-2 md:mb-8">
+                  <div className="relative w-28 h-28 sm:w-32 md:w-44 md:h-44 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800 group border-[4px] md:border-[6px] border-slate-50 dark:border-slate-800 shadow-xl ring-2 md:ring-8 ring-primary/5">
+                     {editData.photoURL ? <Image src={editData.photoURL} alt="" fill className="object-cover" unoptimized /> : <div className="w-full h-full flex flex-col items-center justify-center text-slate-300"><User size={40} /></div>}
                      <input type="file" accept="image/*" onChange={e => e.target.files?.[0] && handlePhotoUpload(e.target.files[0])} className="absolute inset-0 opacity-0 cursor-pointer z-10" />
-                     <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"><Camera className="w-6 h-6 md:w-8 md:h-8" /> <span className="text-[10px] font-black mt-2 uppercase tracking-widest">Update</span></div>
+                     <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"><Camera className="w-5 h-5 md:w-8 md:h-8" /> <span className="text-[8px] md:text-[10px] font-black mt-1.5 md:mt-2 uppercase tracking-widest">Update</span></div>
                      {isSaving && <div className="absolute inset-0 bg-white/60 dark:bg-black/60 flex items-center justify-center text-primary z-20"><Loader2 className="animate-spin w-6 h-6 md:w-8 md:h-8" /></div>}
                   </div>
                </div>
@@ -181,7 +182,7 @@ export default function ProfileView() {
                   <ProfileInput label="In-Game Alias" value={editData.gameName} onChange={val => setEditData({...editData, gameName: val})} />
                   <ProfileInput label="Game UID / Player ID" value={editData.gameUid} type="tel" inputMode="numeric" onChange={val => setEditData({...editData, gameUid: val.replace(/\D/g, '')})} />
                </div>
-               <Button type="submit" disabled={isSaving} className="w-full h-14 md:h-20 rounded-2xl md:rounded-[2.5rem] font-black text-sm md:text-xl shadow-2xl shadow-primary/20 active:scale-95 transition-transform uppercase tracking-widest">
+               <Button type="submit" disabled={isSaving} className="w-full h-12 md:h-20 rounded-xl md:rounded-[2.5rem] font-black text-xs md:text-xl shadow-2xl shadow-primary/20 active:scale-95 transition-transform uppercase tracking-widest">
                  {isSaving ? <Loader2 className="animate-spin w-5 h-5 md:w-8 md:h-8" /> : "Apply Profile Updates"}
                </Button>
             </form>
@@ -225,8 +226,14 @@ function ProfileOption({ icon: Icon, label, onClick, variant }: { icon: any, lab
 function ProfileInput({ label, value, onChange, type = "text", inputMode }: { label: string, value: string, onChange: (val: string) => void, type?: string, inputMode?: any }) {
   return (
     <div className="space-y-1.5 md:space-y-2">
-      <Label className="text-[10px] md:text-xs font-black uppercase tracking-[0.2em] md:tracking-[0.3em] text-muted-foreground ml-4 md:ml-6">{label}</Label>
-      <Input type={type} inputMode={inputMode} value={value} onChange={e => onChange(e.target.value)} className="h-12 md:h-16 lg:h-20 rounded-xl md:rounded-[1.5rem] lg:rounded-[2rem] bg-slate-50 dark:bg-slate-800 border-none px-4 md:px-8 font-bold text-sm md:text-lg lg:text-2xl focus-visible:ring-primary shadow-inner" />
+      <Label className="text-[10px] md:text-xs font-black uppercase tracking-[0.1em] md:tracking-[0.3em] text-muted-foreground ml-3 md:ml-6">{label}</Label>
+      <Input 
+        type={type} 
+        inputMode={inputMode} 
+        value={value} 
+        onChange={e => onChange(e.target.value)} 
+        className="h-10 md:h-16 lg:h-20 rounded-lg md:rounded-[1.5rem] lg:rounded-[2rem] bg-slate-50 dark:bg-slate-800 border-none px-4 md:px-8 font-bold text-xs md:text-lg lg:text-2xl focus-visible:ring-primary shadow-inner" 
+      />
     </div>
   );
 }
