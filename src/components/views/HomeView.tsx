@@ -139,7 +139,7 @@ export default function HomeView() {
               </div>
               <div>
                 <h2 className="text-lg md:text-3xl lg:text-5xl font-headline font-bold text-slate-900 dark:text-white uppercase tracking-tight">Active Events 🔥</h2>
-                <p className="text-[9px] md:text-sm lg:text-lg text-muted-foreground font-medium uppercase tracking-[0.2em] mt-0.5">Don't miss out!</p>
+                <p className="text-[9px] md:text-sm lg:text-lg text-muted-foreground font-medium uppercase tracking-[0.2em] mt-0.5">Ka faa'ideeyso intuusan dhamaan!</p>
               </div>
             </div>
 
@@ -261,7 +261,6 @@ function GameCollectionCard({ game, onClick }: { game: any, onClick: () => void 
         <h3 className="font-headline font-bold text-sm md:text-xl lg:text-2xl text-slate-900 dark:text-white truncate uppercase tracking-tight group-hover:text-primary transition-colors">
           {game.title}
         </h3>
-        <p className="text-[7px] md:text-[10px] lg:text-[12px] text-muted-foreground font-black uppercase tracking-widest mt-0.5">Top-Up</p>
       </div>
 
       <button className="h-full px-4 md:px-8 lg:px-12 bg-primary text-white font-bold text-xs md:text-xl lg:text-2xl flex items-center justify-center transition-all group-hover:bg-primary/90 active:scale-95 uppercase tracking-widest">
