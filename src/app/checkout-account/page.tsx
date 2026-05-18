@@ -67,7 +67,7 @@ export default function CheckoutAccountPage() {
     setGlobalLoading(true);
 
     try {
-      // 1. Create temporary holding order
+      // 1. Create temporary holding order record (DO NOT LOCK ACCOUNT YET)
       const purchaseItem = {
         id: post.id,
         title: `Account: ${post.authorName}`,
@@ -105,11 +105,11 @@ Ma ii diyaar yahay? Waxaan ahay ${name}.`;
 
       const encoded = encodeURIComponent(msg);
       
-      // 3. Complete and redirect
+      // 3. Complete step and open WhatsApp
       setStep(3);
       window.open(`https://wa.me/${post.phone}?text=${encoded}`, '_blank');
       
-      toast({ title: "Redirecting to Seller!", description: "Account is now holding for you." });
+      toast({ title: "Opening WhatsApp!", description: "Lala xariir seller-ka hadda." });
     } catch (e: any) {
        toast({ title: "Failed", description: e.message, variant: "destructive" });
     } finally {
@@ -179,7 +179,7 @@ Ma ii diyaar yahay? Waxaan ahay ${name}.`;
                     <div className="p-5 bg-blue-50 dark:bg-blue-500/5 rounded-2xl border border-blue-100 dark:border-blue-500/20 flex gap-3">
                        <AlertCircle className="text-blue-500 shrink-0" size={20} />
                        <p className="text-[11px] font-medium text-blue-800 dark:text-blue-300 leading-relaxed">
-                          Markaad taabato badhanka hoose, waxaa laguu weecin doonaa WhatsApp-ka seller-ka si aad ula dhamaystirto iibsiga. Account-ka waxaa laguu xajin doonaa si ku meel gaar ah.
+                          Markaad taabato badhanka hoose, waxaa laguu weecin doonaa WhatsApp-ka seller-ka si aad ula dhamaystirto iibsiga. Account-ka waxaa laguu xajin doonaa kaliya markaad soo sheegto inaad iibsatay.
                        </p>
                     </div>
                  </div>
@@ -200,14 +200,14 @@ Ma ii diyaar yahay? Waxaan ahay ${name}.`;
                <div className="relative mx-auto w-32 h-32">
                   <div className="absolute inset-0 bg-primary/20 rounded-full animate-ping" />
                   <div className="relative w-full h-full bg-primary text-white rounded-full flex items-center justify-center shadow-2xl">
-                     <History size={60} />
+                     <MessageCircle size={60} />
                   </div>
                </div>
 
                <div className="space-y-3">
-                  <h2 className="text-4xl font-headline font-bold">Waa laguu xajiyay!</h2>
+                  <h2 className="text-4xl font-headline font-bold">Kala hadal WhatsApp!</h2>
                   <p className="text-muted-foreground font-medium max-w-sm mx-auto">
-                    Fadlan kala hadal seller-ka WhatsApp-ka. Markaad soo laabato, fadlan noo sheeg go'aankaaga ugu dambeeya.
+                    Fadlan kala hadal seller-ka WhatsApp-ka. Markaad soo laabato, fadlan noo sheeg hadaad iibsatay si account-ka laguu xajiyo.
                   </p>
                </div>
 
@@ -234,12 +234,12 @@ Ma ii diyaar yahay? Waxaan ahay ${name}.`;
                <div className="flex flex-col gap-3 pt-6">
                   <Button 
                     onClick={() => {
-                      setActiveTab('accounts');
-                      router.push(`/#accounts`);
+                      setActiveTab('orders');
+                      router.push(`/#orders`);
                     }} 
                     className="h-16 rounded-2xl font-bold text-lg"
                   >
-                    Eeg Account-yadayda
+                    Eeg Dalabkayga
                   </Button>
                   <Button variant="ghost" onClick={() => router.push('/')} className="h-12 rounded-2xl font-bold">Ku laabo Home-ka</Button>
                </div>

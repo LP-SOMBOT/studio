@@ -104,6 +104,7 @@ type AccountPost = {
   holdingBy?: string;
   boughtBy?: string;
   buyerReported?: boolean;
+  buyerReportedAt?: number;
   sellerReported?: boolean;
   conflict?: boolean;
   createdAt: number;
@@ -638,16 +639,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const orderId = `iibinta${sequenceId}`;
     const newOrder: Order = { id: orderId, userId: user.uid, items: [directItem], total: directItem.price, status: 'pending', createdAt: Date.now(), paymentMethod, gameDetails };
     
-    // Handle account holding status
-    if (directItem.gameId === 'accounts' && gameDetails.postId) {
-      await update(ref(rtdb, `accountPosts/${gameDetails.postId}`), {
-        status: 'holding',
-        holdingBy: user.uid,
-        buyerReported: false,
-        sellerReported: false,
-        conflict: false
-      });
-    }
+    // UPDATE: "la xariir" no longer changes status to holding automatically.
+    // This will be handled during the reportAccountOutcome phase.
 
     await set(ref(rtdb, `orders/${orderId}`), newOrder);
     await broadcastAdminNotification("New Order Received! 🛍️", `Order #${orderId.toUpperCase()} for ${directItem.title} is pending verification.`);
@@ -710,14 +703,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const reportAccountOutcome = async (postId: string, outcome: 'bought' | 'not_bought') => {
     if (!rtdb || !user) return;
     
+    const postRef = ref(rtdb, `accountPosts/${postId}`);
+    const postSnap = await get(postRef);
+    const postData = postSnap.val();
+    if (!postData) return;
+
     const targetOrder = orders.find(o => o.gameDetails?.postId === postId && o.userId === user.uid);
     
     if (outcome === 'not_bought') {
-      // Release the hold
-      await update(ref(rtdb, `accountPosts/${postId}`), {
+      // Release the hold (if it was holding)
+      await update(postRef, {
         status: 'approved',
         holdingBy: null,
         buyerReported: false,
+        buyerReportedAt: null,
         sellerReported: false,
         conflict: false
       });
@@ -726,12 +725,35 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
       toast({ title: "Hold Released", description: "Account is now available for others." });
     } else {
-      // Mark as reported bought
-      await update(ref(rtdb, `accountPosts/${postId}`), { buyerReported: true });
+      // If someone else already reported bought while this user was negotiating:
+      if (postData.holdingBy && postData.holdingBy !== user.uid) {
+         toast({ title: "Daqiiqado ka hor!", description: "Account-kan waxaa horey u sheegtay qof kale. Fadlan mid kale fiiri.", variant: "destructive" });
+         return;
+      }
+
+      // Mark as reported bought and LOCK the account to this buyer
+      await update(postRef, { 
+        buyerReported: true, 
+        buyerReportedAt: Date.now(),
+        status: 'holding',
+        holdingBy: user.uid
+      });
+
       if (targetOrder) {
         await update(ref(rtdb, `orders/${targetOrder.id}`), { buyerOutcome: outcome });
       }
+
       toast({ title: "Report Sent!", description: "Seller has been notified to verify the sale." });
+      
+      // Notify Seller
+      if (postData.uid) {
+         broadcastNotification(
+           "New Sale Report! 💰", 
+           `A buyer claimed they bought your ${postData.gameType} account. Please verify now!`, 
+           postData.uid
+         );
+      }
+
       await broadcastAdminNotification("Buyer Report!", `Buyer reported purchase for account #${postId.toUpperCase()}.`);
     }
   };
@@ -847,6 +869,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       assignmentUpdate.sold = false;
       assignmentUpdate.conflict = false;
       assignmentUpdate.buyerReported = false;
+      assignmentUpdate.buyerReportedAt = null;
       assignmentUpdate.sellerReported = false;
 
       if (oldStatus !== 'approved' || !postData.expiresAt) {

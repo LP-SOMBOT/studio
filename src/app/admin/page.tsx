@@ -273,6 +273,19 @@ export default function AdminPage() {
     return accountPosts.find(p => p.id === selectedAccountId);
   }, [selectedAccountId, accountPosts]);
 
+  // TIMER LOGIC for Admin Intervention
+  const reportDelay = useMemo(() => {
+    if (!selectedAccount?.buyerReportedAt || selectedAccount.sellerReported) return null;
+    const diff = Date.now() - selectedAccount.buyerReportedAt;
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(minutes / 60);
+    return { 
+      hours, 
+      minutes: minutes % 60, 
+      isLate: diff > 3600000 // 1 Hour
+    };
+  }, [selectedAccount]);
+
   const handleOpenAccountPage = (id: string) => {
     const acc = accountPosts.find(p => p.id === id);
     if (!acc) return;
@@ -780,6 +793,44 @@ export default function AdminPage() {
                               <StatItem icon={ShieldCheck} label="Status" value={selectedAccount.status.toUpperCase()} color="text-primary" />
                            </div>
 
+                           {/* ADMIN ESCALATION AREA */}
+                           {reportDelay && (
+                             <div className={cn(
+                               "p-6 rounded-[2rem] border animate-in slide-in-from-top-2",
+                               reportDelay.isLate 
+                                ? "bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-900/40" 
+                                : "bg-blue-50 border-blue-200 dark:bg-blue-950/20 dark:border-blue-900/40"
+                             )}>
+                               <div className="flex items-center justify-between mb-4">
+                                  <div className="flex items-center gap-3">
+                                     <Clock className={cn("w-5 h-5 animate-pulse", reportDelay.isLate ? "text-red-500" : "text-blue-500")} />
+                                     <h5 className="font-bold text-sm uppercase tracking-tight">Time Since Buyer Report</h5>
+                                  </div>
+                                  <Badge variant="outline" className={cn("font-mono font-bold", reportDelay.isLate ? "text-red-600 border-red-200" : "text-blue-600 border-blue-200")}>
+                                     {reportDelay.hours}h {reportDelay.minutes}m
+                                  </Badge>
+                               </div>
+
+                               <p className="text-xs font-medium leading-relaxed opacity-80 mb-6">
+                                  {reportDelay.isLate 
+                                    ? "Seller has exceeded the 1-hour confirmation window. Please contact them directly to verify the sale." 
+                                    : "The seller still has time to confirm the buyer's claim. Admin monitoring is active."}
+                               </p>
+
+                               {reportDelay.isLate && (
+                                 <Button 
+                                   onClick={() => {
+                                      const text = encodeURIComponent(`Asc, Oskar Shop Admin-ka waaye. Account-kaaga #${selectedAccount.id.toUpperCase()} ee marketplace-ka waxaa sheegtay buyer, laakiin wali maadan xaqiijinin in kabadan hal saac. Fadlan nala soo xariir.`);
+                                      window.open(`https://wa.me/${selectedAccount.phone}?text=${text}`, '_blank');
+                                   }}
+                                   className="w-full h-14 rounded-2xl bg-green-600 hover:bg-green-700 font-bold gap-2 text-white shadow-xl shadow-green-600/20"
+                                 >
+                                    <MessageCircle className="w-5 h-5" /> Contact Seller on WhatsApp
+                                 </Button>
+                               )}
+                             </div>
+                           )}
+
                            <div className="space-y-4 pt-4 border-t dark:border-white/5">
                               <h5 className="text-[8px] md:text-[10px] font-black uppercase text-slate-400 tracking-widest">Premium Assets Breakdown</h5>
                               <div className="flex flex-wrap gap-2 md:gap-3">
@@ -858,7 +909,7 @@ export default function AdminPage() {
                                               </div>
                                               <div className="min-w-0">
                                                  <p className="text-xs md:text-sm font-bold truncate">{buyer?.name || 'System User'}</p>
-                                                 <p className="text-[8px] md:text-[10px] text-muted-foreground truncate">{buyer?.email}</p>
+                                                 <p className="text-[8px] md:text-[10px] text-muted-foreground truncate">{buyer?.email || 'No email'}</p>
                                               </div>
                                            </div>
                                            {order && (
@@ -1544,7 +1595,7 @@ export default function AdminPage() {
               {(selectedOrder?.status === 'successful' || selectedOrder?.status === 'cancelled') && (
                 <div className={cn(
                   "p-4 rounded-xl border flex flex-col gap-1",
-                  selectedOrder.status === 'successful' ? "bg-green-50 border-green-100 dark:bg-green-500/10 dark:border-green-500/20" : "bg-red-50 border-red-100 dark:bg-red-500/10 dark:border-red-500/20"
+                  selectedOrder.status === 'successful' ? "bg-green-50 border-green-100 dark:bg-green-500/10 dark:border-green-500/20" : "bg-red-50 border-red-100 dark:border-red-500/10 dark:border-red-500/20"
                 )}>
                   <span className={cn("text-[10px] font-bold uppercase", selectedOrder.status === 'successful' ? 'Completed At' : 'Cancelled At')}>
                     {selectedOrder.status === 'successful' ? 'Completed At' : 'Cancelled At'}
