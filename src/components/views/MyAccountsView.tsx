@@ -23,7 +23,8 @@ import {
   AlertTriangle,
   Send,
   Eye,
-  X
+  X,
+  ShieldAlert
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -51,7 +52,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { toast } from '@/hooks/use-toast';
 
 export default function MyAccountsView() {
-  const { accountPosts, user, allUsers, allOrders, setActiveTab, deleteAccountPost, respondToSaleReport, renewAccountPost, markDeletionAsSeen, storeSettings, isInitialLoading, broadcastAdminNotification } = useApp();
+  const { accountPosts, user, setActiveTab, deleteAccountPost, respondToSaleReport, renewAccountPost, markDeletionAsSeen, storeSettings, isInitialLoading, broadcastAdminNotification } = useApp();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [renewingPost, setRenewingPost] = useState<any>(null);
   const [renewTerm, setRenewTerm] = useState<'weekly' | 'monthly'>('weekly');
@@ -64,10 +65,13 @@ export default function MyAccountsView() {
       .sort((a, b) => b.createdAt - a.createdAt);
   }, [accountPosts, user]);
 
-  // Logic: Post is "Late" if a buyer reported purchase over 1 hour ago and seller hasn't responded
+  // Logic: Persistent high-impact warning logic (1-hour delay)
   const latePosts = useMemo(() => {
     const now = Date.now();
-    return myPosts.filter(p => p.buyerReported && !p.sellerReported && p.buyerReportedAt && (now - p.buyerReportedAt) > 3600000);
+    return myPosts.filter(p => {
+      const hasUnansweredClaim = Object.values(p.claimants || {}).some(c => (now - c.timestamp) > 3600000);
+      return hasUnansweredClaim && !p.sold && (p.status === 'approved' || p.status === 'holding');
+    });
   }, [myPosts]);
 
   const handleDelete = async () => {
@@ -96,19 +100,6 @@ export default function MyAccountsView() {
     setHasTriggeredRenewUssd(false);
   };
 
-  // Automated 24h Warning for Admin
-  useEffect(() => {
-    if (latePosts.length > 0) {
-      const now = Date.now();
-      latePosts.forEach(p => {
-        const diff = now - p.buyerReportedAt!;
-        if (diff > 86400000 && diff < 86500000) { 
-           broadcastAdminNotification("Seller Penalty Check Required!", `Seller of #${p.id.toUpperCase()} has not responded for 24 hours.`, true);
-        }
-      });
-    }
-  }, [latePosts, broadcastAdminNotification]);
-
   if (isInitialLoading) {
     return (
       <div className="pb-24 px-4 sm:px-6 py-6 sm:py-10 space-y-6 max-w-4xl mx-auto">
@@ -128,21 +119,21 @@ export default function MyAccountsView() {
           <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
         </button>
         <div>
-          <h1 className="text-2xl sm:text-3xl font-headline font-bold text-slate-900 dark:text-white">Account-yadayda</h1>
-          <p className="text-xs sm:text-sm text-muted-foreground font-medium">Maamul account-yada aad iibinayso</p>
+          <h1 className="text-2xl sm:text-3xl font-headline font-bold text-slate-900 dark:text-white uppercase tracking-tight">Account Management</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground font-medium">Verify your sales and manage listings</p>
         </div>
       </header>
 
-      {/* Persistent High-Impact Warning (Appears after 1 hour delay) */}
+      {/* Persistent Single Warning Alert (Global for all late posts) */}
       {latePosts.length > 0 && (
         <Card className="mb-8 p-6 md:p-8 rounded-[2rem] border-2 border-red-500 bg-red-50 dark:bg-red-950/20 shadow-xl shadow-red-500/10 animate-in slide-in-from-top-4 duration-700">
            <div className="flex items-start gap-5">
               <div className="w-14 h-14 rounded-2xl bg-red-600 text-white flex items-center justify-center shadow-lg shrink-0 animate-pulse">
                  <AlertTriangle size={32} />
               </div>
-              <div className="space-y-4">
+              <div className="space-y-2 flex-1">
                  <h3 className="text-lg md:text-xl font-headline font-bold text-red-700 dark:text-red-400 uppercase tracking-tight">Kaja Waab Account-yadaada</h3>
-                 <p className="text-[11px] md:text-xs font-bold leading-relaxed text-red-800 dark:text-red-500/80">
+                 <p className="text-[11px] md:text-xs font-bold leading-relaxed text-red-800 dark:text-red-500/80 uppercase tracking-wide">
                    kaja Waab account kaaga qof ayaa dhahay Waan iibsaday, admin ka ayaa WhatsApp ka kaala Soo hadlan fadlan kajawaab, 24 saac Kadib account kaaga listing waa Laga saarayaa hadii Adan ka jawabin.
                  </p>
               </div>
@@ -162,20 +153,16 @@ export default function MyAccountsView() {
         </div>
       ) : (
         <div className="space-y-6 sm:space-y-10">
-          {myPosts.map((post) => {
-            const claimants = (allOrders || []).filter(o => o.gameDetails?.postId === post.id && o.buyerOutcome === 'bought');
-            return (
-              <AccountManagedCard 
-                key={post.id} 
-                post={post} 
-                claimants={claimants}
-                onDelete={() => setDeletingId(post.id)}
-                onRespond={(buyerId, confirmed) => respondToSaleReport(post.id, confirmed, buyerId)}
-                onRenew={() => setRenewingPost(post)}
-                onSeen={() => markDeletionAsSeen(post.id)}
-              />
-            );
-          })}
+          {myPosts.map((post) => (
+            <AccountManagedCard 
+              key={post.id} 
+              post={post} 
+              onDelete={() => setDeletingId(post.id)}
+              onRespond={(buyerId, confirmed) => respondToSaleReport(post.id, confirmed, buyerId)}
+              onRenew={() => setRenewingPost(post)}
+              onSeen={() => markDeletionAsSeen(post.id)}
+            />
+          ))}
         </div>
       )}
 
@@ -226,12 +213,15 @@ export default function MyAccountsView() {
   );
 }
 
-function AccountManagedCard({ post, claimants, onDelete, onRespond, onRenew, onSeen }: { post: any, claimants: any[], onDelete: () => void, onRespond: (buyerId: string, conf: boolean) => void, onRenew: () => void, onSeen: () => void }) {
+function AccountManagedCard({ post, onDelete, onRespond, onRenew, onSeen }: { post: any, onDelete: () => void, onRespond: (buyerId: string, conf: boolean) => void, onRenew: () => void, onSeen: () => void }) {
   const isExpired = post.expiresAt ? post.expiresAt < Date.now() : false;
   const isRejected = post.status === 'rejected';
   const [timeLeft, setTimeLeft] = useState("");
   const [autoDeleteTime, setAutoDeleteTime] = useState("");
-  const { deleteAccountPost, allUsers } = useApp();
+  const { deleteAccountPost } = useApp();
+
+  const claimants = useMemo(() => Object.values(post.claimants || {}), [post.claimants]);
+  const showVerification = claimants.length > 0 && !post.sold;
 
   useEffect(() => {
     if (!post.expiresAt) return;
@@ -251,7 +241,6 @@ function AccountManagedCard({ post, claimants, onDelete, onRespond, onRenew, onS
     return () => clearInterval(interval);
   }, [post.expiresAt]);
 
-  // Logic: 30 minute countdown after seller acknowledges rejection
   useEffect(() => {
     if (post.sellerSeenDeletionAt) {
       const interval = setInterval(() => {
@@ -270,8 +259,6 @@ function AccountManagedCard({ post, claimants, onDelete, onRespond, onRenew, onS
     }
   }, [post.sellerSeenDeletionAt, post.id, deleteAccountPost]);
 
-  const showVerification = claimants.length > 0 && !post.sold;
-
   return (
     <Card className={cn(
       "rounded-[1.5rem] sm:rounded-[2.5rem] border-none shadow-xl bg-white dark:bg-slate-900 overflow-hidden group transition-all relative",
@@ -281,7 +268,7 @@ function AccountManagedCard({ post, claimants, onDelete, onRespond, onRenew, onS
     )}>
        <div className="p-5 sm:p-8 space-y-5 sm:space-y-6">
           <div className="flex flex-col md:flex-row gap-5 sm:gap-6">
-            <div className="w-full md:w-40 aspect-video md:aspect-square relative rounded-2xl sm:rounded-3xl overflow-hidden bg-slate-100 shrink-0 shadow-inner">
+            <div className="w-full md:w-44 aspect-video md:aspect-square relative rounded-2xl sm:rounded-3xl overflow-hidden bg-slate-100 shrink-0 shadow-inner">
                {post.thumbnailUrl ? (
                  <Image src={post.thumbnailUrl} alt="" fill className="object-cover" unoptimized />
                ) : <Gamepad2 className="m-auto absolute inset-0 text-slate-300 w-10 h-10 sm:w-12 sm:h-12" />}
@@ -321,23 +308,23 @@ function AccountManagedCard({ post, claimants, onDelete, onRespond, onRenew, onS
 
                {/* Admin Feedback Block */}
                {(post.adminMessage || isRejected) && (
-                  <div className="p-4 bg-slate-900 text-white rounded-2xl sm:rounded-[2rem] border-4 border-red-500/30 space-y-4">
-                     <div className="flex items-center gap-3">
-                        <ShieldAlert className="text-red-500" size={24} />
-                        <h4 className="font-black text-sm uppercase tracking-[0.2em] text-red-400">Admin Notification</h4>
+                  <div className="p-4 bg-slate-900 text-white rounded-2xl border-4 border-red-500/30 space-y-3">
+                     <div className="flex items-center gap-2">
+                        <ShieldAlert className="text-red-500 w-4 h-4" />
+                        <h4 className="font-black text-[10px] uppercase tracking-widest text-red-400">Admin Notification</h4>
                      </div>
                      <p className="text-xs md:text-sm font-bold leading-relaxed italic text-slate-300">
                         "{post.adminMessage || "Listing Penalty Enforcement Applied."}"
                      </p>
                      {isRejected && !post.sellerSeenDeletionAt && (
-                       <Button onClick={onSeen} className="w-full h-10 rounded-xl bg-white text-black hover:bg-slate-200 font-bold text-xs gap-2">
+                       <Button onClick={onSeen} className="w-full h-9 rounded-xl bg-white text-black hover:bg-slate-200 font-bold text-xs gap-2">
                           <Eye size={16} /> I've Read the Reason
                        </Button>
                      )}
                      {post.sellerSeenDeletionAt && (
-                        <div className="flex items-center justify-between text-[10px] font-black uppercase text-red-400 border-t border-white/10 pt-3">
-                           <span>AUTO-DELETING RECORD IN:</span>
-                           <span className="bg-red-600 text-white px-3 py-1 rounded-full">{autoDeleteTime}</span>
+                        <div className="flex items-center justify-between text-[10px] font-black uppercase text-red-400 border-t border-white/10 pt-2">
+                           <span>AUTO-DELETING IN:</span>
+                           <span className="bg-red-600 text-white px-2 py-0.5 rounded-full">{autoDeleteTime}</span>
                         </div>
                      )}
                   </div>
@@ -349,34 +336,34 @@ function AccountManagedCard({ post, claimants, onDelete, onRespond, onRenew, onS
             <div className="space-y-4 pt-4 border-t dark:border-white/5">
                <div className="flex items-center gap-3 text-primary mb-4">
                   <AlertCircle size={20} />
-                  <h4 className="font-bold text-base sm:text-lg">Kala Dooro Buyer-ka</h4>
+                  <h4 className="font-bold text-base sm:text-lg uppercase tracking-tight">Kala Dooro Buyer-ka (Claims)</h4>
                </div>
-               <div className="grid grid-cols-1 gap-4">
-                  {claimants.map(claim => {
-                     const profile = allUsers.find(u => u.uid === claim.userId);
-                     return (
-                       <Card key={claim.id} className="p-4 sm:p-6 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border dark:border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
-                          <div className="flex items-center gap-4 min-w-0">
-                             <div className="w-12 h-12 rounded-full overflow-hidden relative border-2 border-white shrink-0">
-                                {profile?.photoURL ? <Image src={profile.photoURL} alt="" fill className="object-cover" /> : <div className="w-full h-full bg-slate-200 flex items-center justify-center text-slate-400"><User size={20} /></div>}
-                             </div>
-                             <div className="min-w-0">
-                                <p className="text-sm sm:text-base font-bold truncate">{profile?.name || claim.gameDetails?.name}</p>
-                                <p className="text-[10px] sm:text-xs text-primary font-bold">{claim.gameDetails?.whatsappNumber}</p>
-                                <p className="text-[8px] uppercase font-black text-muted-foreground mt-1">Claimed: {claim.gameDetails?.buyerReportedAt ? format(new Date(claim.gameDetails.buyerReportedAt), 'MMM d, HH:mm') : 'Recently'}</p>
+               <div className="grid grid-cols-1 gap-3">
+                  {claimants.map((claim: any) => (
+                    <Card key={claim.uid} className="p-4 sm:p-6 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border dark:border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
+                       <div className="flex items-center gap-4 min-w-0 w-full sm:w-auto">
+                          <div className="w-12 h-12 rounded-full overflow-hidden relative border-2 border-white shrink-0 shadow-sm">
+                             {claim.photo ? <Image src={claim.photo} alt="" fill className="object-cover" /> : <div className="w-full h-full bg-slate-200 flex items-center justify-center text-slate-400"><User size={20} /></div>}
+                          </div>
+                          <div className="min-w-0">
+                             <p className="text-sm sm:text-base font-bold truncate">{claim.name}</p>
+                             <div className="flex items-center gap-2">
+                                <p className="text-[10px] sm:text-xs text-primary font-bold">{claim.whatsapp}</p>
+                                <span className="w-1 h-1 rounded-full bg-slate-300" />
+                                <p className="text-[8px] uppercase font-black text-muted-foreground">{format(new Date(claim.timestamp), 'MMM d, HH:mm')}</p>
                              </div>
                           </div>
-                          <div className="flex gap-2 w-full sm:w-auto">
-                             <Button onClick={() => onRespond(claim.userId, true)} className="flex-1 sm:flex-none h-11 px-6 bg-green-600 hover:bg-green-700 font-bold rounded-xl text-xs gap-2">
-                                <Check size={16} /> Confirm Sale
-                             </Button>
-                             <Button onClick={() => onRespond(claim.userId, false)} variant="outline" className="flex-1 sm:flex-none h-11 px-6 text-red-500 border-red-100 font-bold rounded-xl text-xs gap-2">
-                                <XCircle size={16} /> Reject
-                             </Button>
-                          </div>
-                       </Card>
-                     );
-                  })}
+                       </div>
+                       <div className="flex gap-2 w-full sm:w-auto">
+                          <Button onClick={() => onRespond(claim.uid, true)} className="flex-1 sm:flex-none h-11 px-6 bg-green-600 hover:bg-green-700 font-bold rounded-xl text-xs gap-2">
+                             <Check size={16} /> Confirm Sale
+                          </Button>
+                          <Button onClick={() => onRespond(claim.uid, false)} variant="outline" className="flex-1 sm:flex-none h-11 px-6 text-red-500 border-red-100 font-bold rounded-xl text-xs gap-2">
+                             <XCircle size={16} /> Reject
+                          </Button>
+                       </div>
+                    </Card>
+                  ))}
                </div>
             </div>
           )}
@@ -384,7 +371,7 @@ function AccountManagedCard({ post, claimants, onDelete, onRespond, onRenew, onS
           <div className="pt-4 border-t dark:border-white/5 flex flex-wrap gap-2 sm:gap-3">
              {!post.sold && isExpired && !isRejected && (
                <Button onClick={onRenew} size="sm" className="h-9 sm:h-10 rounded-lg sm:rounded-xl bg-primary hover:bg-primary/90 font-bold text-[10px] sm:text-xs gap-1.5 sm:gap-2 shadow-lg shadow-primary/20 px-3 sm:px-4">
-                  <RefreshCw className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Renew Term
+                  <RefreshCw className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Renew Listing
                </Button>
              )}
              <Button variant="ghost" size="sm" className="h-9 sm:h-10 rounded-lg sm:rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 font-bold text-[10px] sm:text-xs gap-1.5 sm:gap-2 px-3 sm:px-4" onClick={onDelete}>

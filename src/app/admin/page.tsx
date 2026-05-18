@@ -358,13 +358,19 @@ export default function AdminPage() {
 
   const lateAccounts = useMemo(() => {
     const now = Date.now();
-    return accountPosts.filter(p => p.buyerReported && !p.sellerReported && p.buyerReportedAt && (now - p.buyerReportedAt) > 3600000);
+    return accountPosts.filter(p => {
+       const hasUnansweredClaim = Object.values(p.claimants || {}).some(c => (now - c.timestamp) > 3600000);
+       return hasUnansweredClaim && !p.sold && (p.status === 'approved' || p.status === 'holding');
+    });
   }, [accountPosts]);
 
   const urgentAccounts = useMemo(() => {
     const now = Date.now();
-    return lateAccounts.filter(p => p.buyerReportedAt && (now - p.buyerReportedAt) > 86400000); 
-  }, [lateAccounts]);
+    return accountPosts.filter(p => {
+       const hasUnansweredClaim = Object.values(p.claimants || {}).some(c => (now - c.timestamp) > 86400000);
+       return hasUnansweredClaim && !p.sold && (p.status === 'approved' || p.status === 'holding');
+    });
+  }, [accountPosts]);
 
   const sortedAndFilteredAccounts = useMemo(() => {
     return [...accountPosts]
@@ -383,8 +389,8 @@ export default function AdminPage() {
     if (!acc) return;
     setSelectedAccountId(id);
     setPendingAccountStatus(acc.status);
-    const associatedOrder = allOrders.find(o => o.gameDetails?.postId === acc.id && o.buyerOutcome === 'bought');
-    setAssignBuyerId(acc.boughtBy || acc.holdingBy || associatedOrder?.userId || "");
+    const claimants = Object.values(acc.claimants || {});
+    setAssignBuyerId(acc.boughtBy || acc.holdingBy || (claimants.length > 0 ? claimants[0].uid : ""));
   };
 
   const handleOpenGameDialog = (game?: any) => {
@@ -726,6 +732,8 @@ export default function AdminPage() {
     </div>
   );
 
+  const chartData = [ { day: 'MON', value: 400 }, { day: 'TUE', value: 300 }, { day: 'WED', value: 500 }, { day: 'THU', value: 450 }, { day: 'FRI', value: 700 }, { day: 'SAT', value: 650 }, { day: 'SUN', value: 800 } ];
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex overflow-hidden">
       <aside className={cn("hidden md:flex h-screen bg-white dark:bg-slate-900 border-r border-slate-100 dark:border-white/5 flex-col transition-all duration-300 z-40", isSidebarExpanded ? "w-64" : "w-20")}><SidebarContent /></aside>
@@ -922,7 +930,7 @@ export default function AdminPage() {
                       <TableRow className="border-none">
                         <TableHead className="px-4 sm:px-8">Seller</TableHead>
                         <TableHead>Game & Info</TableHead>
-                        <TableHead>Active Deals</TableHead>
+                        <TableHead>Active Claims</TableHead>
                         <TableHead>Admin Handling</TableHead>
                         <TableHead>Wait Time</TableHead>
                         <TableHead>Expiration</TableHead>
@@ -937,15 +945,15 @@ export default function AdminPage() {
                         </TableRow>
                       ) : (
                         sortedAndFilteredAccounts.map(p => {
-                          const associatedDeals = allOrders.filter(o => o.gameDetails?.postId === p.id && o.buyerOutcome === 'bought');
-                          const delayMs = (p.buyerReported && !p.sellerReported && p.buyerReportedAt) ? Date.now() - p.buyerReportedAt : 0;
-                          const isLate = delayMs > 3600000;
-                          const isUrgent = delayMs > 86400000;
+                          const claimants = Object.values(p.claimants || {});
+                          const longestWaitMs = claimants.length > 0 ? Date.now() - Math.min(...claimants.map(c => c.timestamp)) : 0;
+                          const isLate = longestWaitMs > 3600000;
+                          const isUrgent = longestWaitMs > 86400000;
                           
                           return (
                             <TableRow key={p.id} className={cn("border-slate-50 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-slate-800/30", isUrgent && "bg-red-50/30")}>
                               <TableCell className="px-4 sm:px-8 relative">
-                                {(p.status === 'pending' || p.conflict || p.buyerReported) && <div className={cn("absolute left-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full animate-pulse", isUrgent ? "bg-red-600 scale-150" : "bg-amber-500")} />}
+                                {(p.status === 'pending' || p.conflict || claimants.length > 0) && <div className={cn("absolute left-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full animate-pulse", isUrgent ? "bg-red-600 scale-150" : "bg-amber-500")} />}
                                 <div className="flex items-center gap-3">
                                   <div className="w-8 h-8 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800 relative shrink-0">
                                     {p.authorAvatar && <Image src={p.authorAvatar} alt="" fill className="object-cover" />}
@@ -961,8 +969,8 @@ export default function AdminPage() {
                               </TableCell>
                               <TableCell>
                                 <div className="flex items-center gap-1.5">
-                                   <Badge className={cn("rounded-full text-[8px] font-black uppercase", associatedDeals.length > 0 ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-500")}>
-                                     {associatedDeals.length} CLAIMS
+                                   <Badge className={cn("rounded-full text-[8px] font-black uppercase", claimants.length > 0 ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-500")}>
+                                     {claimants.length} CLAIMS
                                    </Badge>
                                 </div>
                               </TableCell>
@@ -977,10 +985,10 @@ export default function AdminPage() {
                                 ) : <span className="text-[10px] text-slate-300 italic">Unassigned</span>}
                               </TableCell>
                               <TableCell>
-                                 {p.buyerReported && !p.sellerReported ? (
+                                 {claimants.length > 0 ? (
                                    <div className="flex flex-col">
                                       <span className={cn("text-[10px] font-black", isUrgent ? "text-red-600" : isLate ? "text-amber-600" : "text-slate-400")}>
-                                         {Math.floor(delayMs / 3600000)}h {Math.floor((delayMs % 3600000) / 60000)}m
+                                         {Math.floor(longestWaitMs / 3600000)}h {Math.floor((longestWaitMs % 3600000) / 60000)}m
                                       </span>
                                    </div>
                                  ) : <span className="text-[10px] text-slate-300 italic">None</span>}
@@ -1083,22 +1091,21 @@ export default function AdminPage() {
                               <div className="space-y-3">
                                  <p className="text-[8px] md:text-[9px] font-black uppercase text-slate-400 tracking-widest px-2">Active Purchase Claims</p>
                                  {(() => {
-                                    const claimants = allOrders.filter(o => o.gameDetails?.postId === selectedAccount.id && o.buyerOutcome === 'bought');
+                                    const claimants = Object.values(selectedAccount.claimants || {});
                                     if (claimants.length === 0) return <p className="text-[10px] text-center italic opacity-40 py-4">No reports yet</p>;
-                                    return claimants.map(claim => {
-                                       const profile = allUsers.find(u => u.uid === claim.userId);
+                                    return claimants.map((claim: any) => {
                                        return (
-                                         <div key={claim.id} className="p-3 bg-blue-50 dark:bg-blue-950/20 rounded-xl border border-blue-100 dark:border-blue-900/20">
+                                         <div key={claim.uid} className="p-3 bg-blue-50 dark:bg-blue-950/20 rounded-xl border border-blue-100 dark:border-blue-900/20">
                                             <div className="flex items-center gap-3">
                                                <div className="w-8 h-8 rounded-full overflow-hidden relative bg-slate-200">
-                                                  {profile?.photoURL && <Image src={profile.photoURL} alt="" fill className="object-cover" />}
+                                                  {claim.photo && <Image src={claim.photo} alt="" fill className="object-cover" />}
                                                </div>
                                                <div className="min-w-0 flex-1">
-                                                  <p className="text-xs font-bold truncate">{profile?.name || claim.gameDetails?.name}</p>
-                                                  <p className="text-[8px] text-primary font-bold">{claim.gameDetails?.whatsappNumber}</p>
-                                                  <p className="text-[7px] text-muted-foreground uppercase mt-1">Claimed: {getSmartTimestamp(claim.gameDetails?.buyerReportedAt)}</p>
+                                                  <p className="text-xs font-bold truncate">{claim.name}</p>
+                                                  <p className="text-[8px] text-primary font-bold">{claim.whatsapp}</p>
+                                                  <p className="text-[7px] text-muted-foreground uppercase mt-1">Claimed: {getSmartTimestamp(claim.timestamp)}</p>
                                                </div>
-                                               <Button size="sm" variant="outline" className="h-7 px-3 bg-white/50 text-[8px] font-black uppercase" onClick={() => respondToSaleReport(selectedAccount.id, true, claim.userId)}>Force Sold</Button>
+                                               <Button size="sm" variant="outline" className="h-7 px-3 bg-white/50 text-[8px] font-black uppercase" onClick={() => respondToSaleReport(selectedAccount.id, true, claim.uid)}>Force Sold</Button>
                                             </div>
                                          </div>
                                        );
@@ -1807,8 +1814,6 @@ export default function AdminPage() {
     </div>
   );
 }
-
-const chartData = [ { day: 'MON', value: 400 }, { day: 'TUE', value: 300 }, { day: 'WED', value: 500 }, { day: 'THU', value: 450 }, { day: 'FRI', value: 700 }, { day: 'SAT', value: 650 }, { day: 'SUN', value: 800 } ];
 
 function SideNavItem({ active, expanded, onClick, icon: Icon, label, className, badge }: { active: boolean, expanded: boolean, onClick: () => void, icon: any, label: string, className?: string, badge?: number }) {
   return (

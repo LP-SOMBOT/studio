@@ -118,6 +118,13 @@ type AccountPost = {
   adminMessage?: string;
   hiddenFromMarket?: boolean;
   sellerSeenDeletionAt?: number;
+  claimants?: Record<string, {
+    uid: string;
+    name: string;
+    whatsapp: string;
+    photo?: string;
+    timestamp: number;
+  }>;
   processedBy?: {
     uid: string;
     name: string;
@@ -693,7 +700,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       conflict: false,
       adminMessage: null,
       hiddenFromMarket: false,
-      sellerSeenDeletionAt: null
+      sellerSeenDeletionAt: null,
+      claimants: null
     });
     toast({ title: "Renewal Initiated!", description: "Waiting for admin to verify renewal payment." });
   };
@@ -711,7 +719,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const reportAccountOutcome = async (postId: string, outcome: 'bought' | 'not_bought') => {
-    if (!rtdb || !user) return;
+    if (!rtdb || !user || !enhancedUser) return;
     
     const postRef = ref(rtdb, `accountPosts/${postId}`);
     const postSnap = await get(postRef);
@@ -722,14 +730,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     
     if (outcome === 'not_bought') {
       const updates: any = {};
-      if (postData.holdingBy === user.uid) {
-        updates[`accountPosts/${postId}/status`] = 'approved';
-        updates[`accountPosts/${postId}/holdingBy`] = null;
-        updates[`accountPosts/${postId}/conflict`] = false;
-        updates[`accountPosts/${postId}/buyerReported`] = false;
-        updates[`accountPosts/${postId}/buyerReportedAt`] = null;
-        updates[`accountPosts/${postId}/sellerReported`] = false;
-        updates[`accountPosts/${postId}/sellerReportedAt`] = null;
+      if (postData.claimants?.[user.uid]) {
+        updates[`accountPosts/${postId}/claimants/${user.uid}`] = null;
+        // If this was the last claimant causing conflict, we don't automatically reset status, 
+        // let the seller or admin handle it.
       }
       if (targetOrder) {
         updates[`orders/${targetOrder.id}/buyerOutcome`] = outcome;
@@ -741,7 +745,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       toast({ title: "Deal Cancelled", description: "You've cancelled your report for this account." });
     } else {
       const reportTime = Date.now();
-      // Logic: Status stays approved so others can still see it.
+      
+      // REAL-TIME FIX: Write buyer info directly to the account post
+      const claimantInfo = {
+        uid: user.uid,
+        name: enhancedUser.name || "Buyer",
+        whatsapp: targetOrder?.gameDetails?.whatsappNumber || enhancedUser.phoneNumber || "N/A",
+        photo: enhancedUser.photoURL || "",
+        timestamp: reportTime
+      };
+
+      await update(ref(rtdb, `accountPosts/${postId}/claimants/${user.uid}`), claimantInfo);
       await update(postRef, { 
         buyerReported: true, 
         buyerReportedAt: reportTime
@@ -773,7 +787,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const post = postSnap.val();
     if (!post) return;
 
-    const targetBuyerId = buyerId || post.holdingBy;
+    const targetBuyerId = buyerId;
     if (!targetBuyerId) return;
 
     if (confirmed) {
@@ -785,18 +799,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         completedAt: Date.now(),
         boughtBy: targetBuyerId,
         holdingBy: targetBuyerId,
-        conflict: false 
+        conflict: false,
+        claimants: null // Finalized
       });
       toast({ title: "Account Sold!", description: "Transaction finalized successfully." });
       broadcastNotification("Purchase Confirmed! 🤑", "Seller has confirmed your purchase. The account is yours!", targetBuyerId);
     } else {
-      // Conflict triggers "holding" status and flags admin
-      await update(postRef, {
-        status: 'holding', 
-        sellerReported: true,
-        sellerReportedAt: Date.now(),
-        conflict: true
-      });
+      // Conflict: Seller rejects this specific buyer's claim
+      const updates: any = {};
+      updates[`accountPosts/${postId}/status`] = 'holding';
+      updates[`accountPosts/${postId}/conflict`] = true;
+      updates[`accountPosts/${postId}/sellerReported`] = true;
+      updates[`accountPosts/${postId}/sellerReportedAt`] = Date.now();
+      // Remove this specific claimant
+      updates[`accountPosts/${postId}/claimants/${targetBuyerId}`] = null;
+      
+      await update(ref(rtdb), updates);
       toast({ title: "Reported Disagreement", description: "Admin will review this transaction." });
       await broadcastAdminNotification("Conflict Detected! ⚠️", `Seller disagreed with buyer report for account #${postId.toUpperCase()}.`);
     }
@@ -814,7 +832,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       sellerReported: true, 
       conflict: false,
       buyerReported: false,
-      buyerReportedAt: null
+      buyerReportedAt: null,
+      claimants: null // Reset claims when admin enforces
     };
 
     if (action === 'delete') {
@@ -909,6 +928,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       assignmentUpdate.holdingBy = boughtBy || postData.holdingBy || postData.boughtBy;
       assignmentUpdate.conflict = false; 
       assignmentUpdate.sellerReported = true; 
+      assignmentUpdate.claimants = null;
     }
 
     if (status === 'approved') {
@@ -921,6 +941,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       assignmentUpdate.sellerReported = false;
       assignmentUpdate.adminMessage = null;
       assignmentUpdate.hiddenFromMarket = false;
+      assignmentUpdate.claimants = null;
 
       if (oldStatus !== 'approved' || !postData.expiresAt) {
         const term = postData.term || 'weekly';
