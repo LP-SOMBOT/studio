@@ -89,10 +89,11 @@ type AccountPost = {
   primeLevel?: number;
   items?: string[];
   evoWeapons?: number;
-  internalWeapons?: number;
+  totalWeapons?: number;
   emotes?: number;
   executionEmotes?: number;
   arrivalEmotes?: number;
+  dharka?: number;
   price: number;
   fee: number;
   totalCharge: number;
@@ -693,16 +694,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     router.push(`/checkout-account?id=${post.id}`);
   };
 
-  const reportAccountOutcome = async (pid: string, outcome: 'bought' | 'not_bought') => {
+  const reportAccountOutcome = async (postId: string, outcome: 'bought' | 'not_bought') => {
     if (!rtdb || !user) return;
     
     // Use the local synchronized orders state to find the correct order
     // This avoids the "Index not defined" error for gameDetails/postId
-    const targetOrder = orders.find(o => o.gameDetails?.postId === pid && o.userId === user.uid);
+    const targetOrder = orders.find(o => o.gameDetails?.postId === postId && o.userId === user.uid);
     
     if (targetOrder) {
       await update(ref(rtdb, `orders/${targetOrder.id}`), { buyerOutcome: outcome });
-      await broadcastAdminNotification("Buyer Report!", `Buyer reported "${outcome}" for account #${pid.toUpperCase()}.`);
+      await broadcastAdminNotification("Buyer Report!", `Buyer reported "${outcome}" for account #${postId.toUpperCase()}.`);
     }
 
     toast({ title: "Report Sent!", description: "Admin will verify and update status." });

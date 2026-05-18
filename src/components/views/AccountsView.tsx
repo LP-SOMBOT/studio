@@ -34,7 +34,8 @@ import {
   Sword,
   Target,
   Zap,
-  Bomb
+  Bomb,
+  ShoppingBag
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -373,11 +374,11 @@ function AccountPostCard({ post, onClick, onEdit, onDelete, isOwner, isAdmin }: 
                <Badge className="bg-blue-100 text-blue-700 border-none rounded-full px-3 py-1 text-[10px] font-bold">Emotes: {post.emotes || 0}</Badge>
              </>
            ) : (
-             (post.items || []).slice(0, 3).map((item: string, i: number) => (
-               <Badge key={i} className="bg-amber-100 text-amber-700 border-none rounded-full px-3 py-1 text-[10px] font-bold whitespace-nowrap">
-                  {item}
-               </Badge>
-             ))
+             <>
+               <Badge className="bg-amber-100 text-amber-700 border-none rounded-full px-3 py-1 text-[10px] font-bold">Evo: {post.evoWeapons || 0}</Badge>
+               <Badge className="bg-blue-100 text-blue-700 border-none rounded-full px-3 py-1 text-[10px] font-bold">Emotes: {post.emotes || 0}</Badge>
+               <Badge className="bg-indigo-100 text-indigo-700 border-none rounded-full px-3 py-1 text-[10px] font-bold">Dharka: {post.dharka || 0}</Badge>
+             </>
            )}
         </div>
 
@@ -410,7 +411,8 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
     primeLevel: "1",
     items: [] as string[],
     evoWeapons: "",
-    internalWeapons: "",
+    totalWeapons: "",
+    dharka: "",
     emotes: "",
     executionEmotes: "",
     arrivalEmotes: "",
@@ -431,7 +433,8 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
         level: editingPost.level?.toString() || "",
         primeLevel: editingPost.primeLevel?.toString() || "1",
         evoWeapons: editingPost.evoWeapons?.toString() || "",
-        internalWeapons: editingPost.internalWeapons?.toString() || "",
+        totalWeapons: editingPost.totalWeapons?.toString() || "",
+        dharka: editingPost.dharka?.toString() || "",
         emotes: editingPost.emotes?.toString() || "",
         executionEmotes: editingPost.executionEmotes?.toString() || "",
         arrivalEmotes: editingPost.arrivalEmotes?.toString() || "",
@@ -452,7 +455,8 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
         primeLevel: "1", 
         items: [], 
         evoWeapons: "",
-        internalWeapons: "",
+        totalWeapons: "",
+        dharka: "",
         emotes: "",
         executionEmotes: "",
         arrivalEmotes: "",
@@ -473,13 +477,6 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
 
   const numPrice = parseFloat(formData.price) || 0;
   const isFormValid = !!(formData.level && formData.price && formData.phone && (imageFiles.length > 0 || formData.thumbnailUrl));
-
-  const toggleItem = (item: string) => {
-    setFormData((prev: any) => ({
-      ...prev,
-      items: prev.items.includes(item) ? prev.items.filter((i: string) => i !== item) : [...prev.items, item]
-    }));
-  };
 
   const handleUssdPay = () => {
     const paymentNum = storeSettings.paymentNumber || "613982172";
@@ -531,7 +528,8 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
         level: parseInt(formData.level),
         primeLevel: parseInt(formData.primeLevel),
         evoWeapons: parseInt(formData.evoWeapons) || 0,
-        internalWeapons: parseInt(formData.internalWeapons) || 0,
+        totalWeapons: parseInt(formData.totalWeapons) || 0,
+        dharka: parseInt(formData.dharka) || 0,
         emotes: parseInt(formData.emotes) || 0,
         executionEmotes: parseInt(formData.executionEmotes) || 0,
         arrivalEmotes: parseInt(formData.arrivalEmotes) || 0,
@@ -667,21 +665,12 @@ function PostAccountModal({ open, onOpenChange, onComplete, editingPost }: { ope
             </div>
             
             {formData.gameType === 'freefire' ? (
-              <div className="p-5 bg-slate-50 dark:bg-slate-800/40 rounded-[2rem] border border-slate-100 dark:border-white/5">
-                 <div className="flex flex-wrap gap-2">
-                    {["Evo AK", "Evo MP40", "M1014 Dragon", "Sakura Bundle", "Hip Hop Bundle", "Crimson Bundle", "Angel Wings", "Elite Pass S1", "Magic Cube"].map(item => (
-                      <Badge 
-                        key={item}
-                        onClick={() => toggleItem(item)}
-                        className={cn(
-                          "cursor-pointer px-4 py-2 rounded-xl text-[10px] font-bold transition-all border-none shadow-sm",
-                          formData.items.includes(item) ? "bg-primary text-white scale-110 shadow-primary/20" : "bg-white dark:bg-slate-800 text-slate-500 hover:bg-slate-100"
-                        )}
-                      >
-                        {item}
-                      </Badge>
-                    ))}
-                 </div>
+              <div className="grid grid-cols-2 gap-4">
+                 <BSInput icon={Sword} label="Evo" value={formData.evoWeapons} onChange={v => setFormData({...formData, evoWeapons: v})} />
+                 <BSInput icon={Target} label="All Weapons" value={formData.totalWeapons} onChange={v => setFormData({...formData, totalWeapons: v})} />
+                 <BSInput icon={Zap} label="Emote" value={formData.emotes} onChange={v => setFormData({...formData, emotes: v})} />
+                 <BSInput icon={Star} label="Arrival Emote" value={formData.arrivalEmotes} onChange={v => setFormData({...formData, arrivalEmotes: v})} />
+                 <BSInput icon={ShoppingBag} label="Dharka" value={formData.dharka} onChange={v => setFormData({...formData, dharka: v})} className="col-span-2" />
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-4">

@@ -25,7 +25,8 @@ import {
   Info,
   History,
   Check,
-  PartyPopper
+  PartyPopper,
+  ShoppingBag
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -171,9 +172,13 @@ export default function AccountDetailPage() {
                         <AssetBadge icon={Star} label="Arrival" value={post.arrivalEmotes} />
                      </>
                    ) : (
-                     post.items?.map((item: string, i: number) => (
-                       <Badge key={i} className="bg-white dark:bg-slate-900 text-slate-600 border px-4 py-2 text-xs font-bold rounded-xl shadow-sm">{item}</Badge>
-                     ))
+                     <>
+                        <AssetBadge icon={Sword} label="Evo" value={post.evoWeapons} />
+                        <AssetBadge icon={Target} label="All Weapons" value={post.totalWeapons} />
+                        <AssetBadge icon={Zap} label="Emote" value={post.emotes} />
+                        <AssetBadge icon={Star} label="Arrival" value={post.arrivalEmotes} />
+                        <AssetBadge icon={ShoppingBag} label="Dharka" value={post.dharka} />
+                     </>
                    )}
                 </div>
              </div>
