@@ -42,15 +42,8 @@ export default function RankingView() {
 
   return (
     <div className="pb-32 px-4 py-6 md:py-10 max-w-[1600px] mx-auto page-transition overflow-x-hidden">
-      <header className="text-center mb-10 md:mb-24">
-        <h1 className="text-2xl md:text-4xl lg:text-7xl font-headline font-bold tracking-tight text-slate-900 dark:text-white">
-          Global Leaderboard
-        </h1>
-        <p className="text-muted-foreground font-medium uppercase tracking-[0.2em] md:tracking-[0.4em] text-[10px] md:text-lg mt-2 md:mt-3">The Hall of Fame</p>
-      </header>
-
       {/* Podium - Responsive Scaling */}
-      <div className="flex justify-center items-end gap-2 md:gap-12 mb-16 md:mb-32 h-64 md:h-[450px] relative max-w-4xl mx-auto px-2">
+      <div className="flex justify-center items-end gap-2 md:gap-12 mb-16 md:mb-32 h-64 md:h-[450px] relative max-w-4xl mx-auto px-2 pt-10">
         {/* Silver #2 */}
         {top3[1] && (
           <div className="flex flex-col items-center flex-1 animate-in slide-in-from-bottom-8 duration-700 delay-100 min-w-0">
