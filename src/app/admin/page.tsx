@@ -1201,7 +1201,7 @@ export default function AdminPage() {
                                                        <Badge className={cn("h-4 text-[7px] font-black uppercase", order.buyerOutcome === 'bought' ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700")}>{order.buyerOutcome === 'bought' ? 'SOLD' : (order.buyerOutcome?.toUpperCase() || 'NOT REPORTED')}</Badge>
                                                     </div>
                                                     <span className="text-[8px] font-bold text-muted-foreground text-right uppercase">
-                                                       Started: {getSmartTimestamp(selectedOrder.gameDetails?.buyerReportedAt)}
+                                                       Started: {getSmartTimestamp(order.gameDetails?.buyerReportedAt)}
                                                     </span>
                                                  </div>
                                               </div>
