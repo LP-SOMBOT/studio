@@ -32,7 +32,8 @@ import {
   Zap,
   Bomb,
   ShoppingBag,
-  User
+  User,
+  CreditCard
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -41,7 +42,7 @@ import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import Image from 'next/image';
 import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
+import { cn, formatWhatsAppNumber } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
@@ -71,15 +72,15 @@ export default function AccountsView() {
     return (accountPosts || [])
       .filter(p => {
         const isOwner = userId && p.uid === userId;
-        // User is involved if they have an active order for this post
+        // User is involved if they have an active order for this post (Claimant)
         const isInvolvedInDeal = userId && (orders || []).some(o => o.gameDetails?.postId === p.id && o.userId === userId);
         
-        // Admins, Owners, and users who have started a deal can see the listing regardless of status
+        // Admins, Owners, and active Claimants can see the listing regardless of status
         if (isAdmin || isOwner || isInvolvedInDeal) {
           return true;
         }
 
-        // Public visibility: Must be approved AND not sold
+        // Public visibility: Must be APPROVED AND NOT SOLD AND NOT HIDDEN
         if (p.status !== 'approved') return false;
         if (p.sold === true) return false;
         if (p.hiddenFromMarket === true) return false;
@@ -94,7 +95,7 @@ export default function AccountsView() {
         p.gameType?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.platform?.toLowerCase().includes(searchQuery.toLowerCase())
       )
-      .sort((a, b) => b.createdAt - a.createdAt);
+      .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
   }, [accountPosts, searchQuery, user, orders]);
 
   const myActivity = useMemo(() => {
@@ -133,7 +134,7 @@ export default function AccountsView() {
         <button onClick={() => setIsActivityModalOpen(true)} className="relative p-2 text-slate-400 bg-slate-50 dark:bg-slate-900 rounded-full">
            <Activity className="w-5 h-5" />
            {myActivity.some(p => p.status === 'pending' || p.status === 'holding') && (
-             <span className="absolute top-1 right-1 w-2 h-2 bg-amber-50 rounded-full border-2 border-white dark:border-slate-900" />
+             <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-amber-500 rounded-full border-2 border-white dark:border-slate-900" />
            )}
         </button>
       </header>
@@ -247,6 +248,272 @@ export default function AccountsView() {
   );
 }
 
+function PostAccountView({ editingPost, onCancel, onComplete }: { editingPost?: any, onCancel: () => void, onComplete: () => void }) {
+  const { postAccount, updateAccountPost, storeSettings } = useApp();
+  const [step, setStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasTriggeredUssd, setHasTriggeredUssd] = useState(false);
+
+  const [formData, setFormData] = useState({
+    gameType: editingPost?.gameType || 'freefire',
+    platform: editingPost?.platform || 'Google',
+    level: editingPost?.level || '',
+    price: editingPost?.price || '',
+    phone: editingPost?.phone || '',
+    thumbnailUrl: editingPost?.thumbnailUrl || '',
+    evoWeapons: editingPost?.evoWeapons || '0',
+    totalWeapons: editingPost?.totalWeapons || '0',
+    emotes: editingPost?.emotes || '0',
+    executionEmotes: editingPost?.executionEmotes || '0',
+    arrivalEmotes: editingPost?.arrivalEmotes || '0',
+    dharka: editingPost?.dharka || '0',
+    term: editingPost?.term || 'weekly'
+  });
+
+  const listingFee = useMemo(() => {
+    if (formData.term === 'monthly') return storeSettings?.config?.shop?.listingFeeMonthly || 3.00;
+    return storeSettings?.config?.shop?.listingFeeWeekly || 1.00;
+  }, [formData.term, storeSettings]);
+
+  const handleNext = () => {
+    if (!formData.level || !formData.price || !formData.phone || !formData.thumbnailUrl) {
+      toast({ title: "Fadlan buuxi meelaha banaan", variant: "destructive" });
+      return;
+    }
+    setStep(2);
+  };
+
+  const handleTriggerUssd = () => {
+    const paymentNum = storeSettings.paymentNumber || "613982172";
+    const formattedFee = listingFee.toString().replace('.', '*');
+    const ussdCode = `*712*${paymentNum}*${formattedFee}#`;
+    window.location.href = `tel:${ussdCode.replace(/#/g, '%23')}`;
+    setHasTriggeredUssd(true);
+  };
+
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    try {
+      const payload = {
+        ...formData,
+        level: parseInt(formData.level),
+        price: parseFloat(formData.price),
+        evoWeapons: parseInt(formData.evoWeapons),
+        totalWeapons: parseInt(formData.totalWeapons),
+        emotes: parseInt(formData.emotes),
+        executionEmotes: parseInt(formData.executionEmotes),
+        arrivalEmotes: parseInt(formData.arrivalEmotes),
+        dharka: parseInt(formData.dharka),
+        fee: listingFee
+      };
+
+      if (editingPost) {
+        await updateAccountPost(editingPost.id, payload);
+      } else {
+        await postAccount(payload);
+      }
+      setStep(3);
+    } catch (e) {
+      toast({ title: "Failed to post", variant: "destructive" });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleImageUpload = async (file: File) => {
+    setIsSubmitting(true);
+    try {
+      const url = await uploadToImgbb(file);
+      setFormData(prev => ({ ...prev, thumbnailUrl: url }));
+      toast({ title: "Sawirka waa la galiyay!" });
+    } catch (e) {
+      toast({ title: "Upload failed", variant: "destructive" });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] bg-white dark:bg-slate-950 flex flex-col overflow-hidden animate-in slide-in-from-right-4 duration-500">
+       <header className="h-16 md:h-20 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b dark:border-white/5 flex items-center justify-between px-4 sm:px-10 shrink-0">
+          <div className="flex items-center gap-3">
+             <Button variant="ghost" size="icon" onClick={onCancel} className="rounded-full h-10 w-10">
+                <ArrowLeft className="w-6 h-6" />
+             </Button>
+             <h2 className="font-headline font-bold text-lg md:text-2xl uppercase tracking-tight">
+               {editingPost ? 'Edit Listing' : 'Post Account'}
+             </h2>
+          </div>
+          <div className="flex items-center gap-2">
+             {[1, 2, 3].map(s => (
+               <div key={s} className={cn("w-2 h-2 rounded-full transition-all duration-300", step === s ? "bg-primary w-6" : "bg-slate-200 dark:bg-slate-800")} />
+             ))}
+          </div>
+       </header>
+
+       <div className="flex-1 overflow-y-auto p-4 sm:p-10 space-y-8 scrollbar-hide">
+          <div className="max-w-2xl mx-auto w-full">
+             {step === 1 && (
+               <div className="space-y-6 sm:space-y-10 animate-in fade-in slide-in-from-bottom-4">
+                  <div className="flex justify-center">
+                     <div className="relative w-full aspect-video rounded-[1.5rem] md:rounded-[2.5rem] bg-slate-50 dark:bg-slate-900 border-4 border-dashed border-slate-200 dark:border-white/5 flex items-center justify-center group overflow-hidden shadow-inner">
+                        {formData.thumbnailUrl ? (
+                          <Image src={formData.thumbnailUrl} alt="" fill className="object-contain" unoptimized />
+                        ) : (
+                          <div className="flex flex-col items-center gap-3 opacity-30">
+                             <ImageIcon size={48} className="md:size-16" />
+                             <p className="text-[10px] md:text-sm font-black uppercase tracking-widest">Sawirka Account-ka</p>
+                          </div>
+                        )}
+                        <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer z-10" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0])} />
+                        {isSubmitting && <div className="absolute inset-0 bg-white/60 dark:bg-black/60 flex items-center justify-center z-20"><Loader2 className="animate-spin text-primary" /></div>}
+                     </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
+                     <FormGroup label="Game Type">
+                        <Select value={formData.gameType} onValueChange={v => setFormData({...formData, gameType: v})}>
+                           <SelectTrigger className="h-12 md:h-16 rounded-xl md:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-6 font-bold text-sm md:text-lg">
+                              <SelectValue />
+                           </SelectTrigger>
+                           <SelectContent className="rounded-xl">
+                              <SelectItem value="freefire">Free Fire</SelectItem>
+                              <SelectItem value="bloodstrike">Blood Strike</SelectItem>
+                           </SelectContent>
+                        </Select>
+                     </FormGroup>
+                     <FormGroup label="Login Platform">
+                        <Select value={formData.platform} onValueChange={v => setFormData({...formData, platform: v})}>
+                           <SelectTrigger className="h-12 md:h-16 rounded-xl md:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-6 font-bold text-sm md:text-lg">
+                              <SelectValue />
+                           </SelectTrigger>
+                           <SelectContent className="rounded-xl">
+                              <SelectItem value="Google">Google</SelectItem>
+                              <SelectItem value="Facebook">Facebook</SelectItem>
+                           </SelectContent>
+                        </Select>
+                     </FormGroup>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
+                     <FormInput label="Account Level" value={formData.level} type="number" onChange={v => setFormData({...formData, level: v})} placeholder="e.g. 65" />
+                     <FormInput label="Price Value ($)" value={formData.price} type="number" onChange={v => setFormData({...formData, price: v})} placeholder="e.g. 50" />
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 md:gap-6">
+                     <FormInput label="Evo Guns" value={formData.evoWeapons} type="number" onChange={v => setFormData({...formData, evoWeapons: v})} placeholder="0" />
+                     <FormInput label="Total Guns" value={formData.totalWeapons} type="number" onChange={v => setFormData({...formData, totalWeapons: v})} placeholder="0" />
+                     <FormInput label="Emotes" value={formData.emotes} type="number" onChange={v => setFormData({...formData, emotes: v})} placeholder="0" />
+                     <FormInput label="Arrivals" value={formData.arrivalEmotes} type="number" onChange={v => setFormData({...formData, arrivalEmotes: v})} placeholder="0" />
+                     <FormInput label="Execution" value={formData.executionEmotes} type="number" onChange={v => setFormData({...formData, executionEmotes: v})} placeholder="0" />
+                     <FormInput label="Dharka" value={formData.dharka} type="number" onChange={v => setFormData({...formData, dharka: v})} placeholder="0" />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
+                     <FormGroup label="Listing Term (Fee)">
+                        <Select value={formData.term} onValueChange={v => setFormData({...formData, term: v})}>
+                           <SelectTrigger className="h-12 md:h-16 rounded-xl md:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-6 font-bold text-sm md:text-lg">
+                              <SelectValue />
+                           </SelectTrigger>
+                           <SelectContent className="rounded-xl">
+                              <SelectItem value="weekly">Weekly - ${storeSettings?.config?.shop?.listingFeeWeekly || 1.00}</SelectItem>
+                              <SelectItem value="monthly">Monthly - ${storeSettings?.config?.shop?.listingFeeMonthly || 3.00}</SelectItem>
+                           </SelectContent>
+                        </Select>
+                     </FormGroup>
+                     <FormInput label="WhatsApp Number" value={formData.phone} type="tel" onChange={v => setFormData({...formData, phone: v})} placeholder="e.g. 613982172" />
+                  </div>
+
+                  <Button onClick={handleNext} className="w-full h-16 md:h-20 rounded-xl md:rounded-[2.5rem] font-black text-sm md:text-xl shadow-2xl shadow-primary/20 bg-primary hover:bg-primary/90 uppercase tracking-widest active:scale-95 transition-all">
+                     Next Step <ChevronRight size={24} className="ml-2" />
+                  </Button>
+               </div>
+             )}
+
+             {step === 2 && (
+               <div className="space-y-6 sm:space-y-10 animate-in fade-in slide-in-from-right-4 text-center">
+                  <div className="mx-auto w-20 h-20 md:w-32 md:h-32 bg-amber-50 dark:bg-amber-500/10 rounded-full flex items-center justify-center mb-6">
+                     <CreditCard className="text-amber-500 w-10 h-10 md:w-16 md:h-16" />
+                  </div>
+                  
+                  <div className="space-y-2 md:space-y-4">
+                     <h3 className="text-2xl md:text-4xl font-headline font-bold uppercase tracking-tight">Listing Payment</h3>
+                     <p className="text-sm md:text-lg text-muted-foreground font-medium max-w-sm mx-auto leading-relaxed">
+                        Fadlan bixi qarashka soo gelinta account-ka oo ah <span className="text-primary font-bold">${listingFee.toFixed(2)}</span>
+                     </p>
+                  </div>
+
+                  <Card className="p-6 md:p-10 rounded-[2rem] md:rounded-[3.5rem] border-none shadow-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-white/5 space-y-6 md:space-y-8">
+                     <div className="flex justify-between items-center text-[10px] md:text-base font-black uppercase tracking-widest text-muted-foreground border-b dark:border-white/5 pb-4">
+                        <span>Description</span>
+                        <span>Amount</span>
+                     </div>
+                     <div className="flex justify-between items-center">
+                        <div className="text-left">
+                           <p className="font-bold text-sm md:text-2xl uppercase">{formData.gameType} Account</p>
+                           <p className="text-[8px] md:text-xs text-muted-foreground font-medium">{formData.term} Listing Fee</p>
+                        </div>
+                        <p className="font-headline font-bold text-2xl md:text-4xl text-primary">${listingFee.toFixed(2)}</p>
+                     </div>
+
+                     {!hasTriggeredUssd ? (
+                       <Button onClick={handleTriggerUssd} className="w-full h-14 md:h-20 rounded-xl md:rounded-[2rem] bg-slate-900 text-white hover:bg-black font-black text-sm md:text-xl gap-3 shadow-xl active:scale-95 transition-all">
+                          <Smartphone size={24} /> KU BIXI EVC / PREMIER
+                       </Button>
+                     ) : (
+                       <div className="space-y-4 animate-in zoom-in">
+                          <div className="p-4 bg-green-50 dark:bg-green-500/10 rounded-2xl border border-green-200 dark:border-green-500/20 text-green-700 dark:text-green-400 font-bold text-xs md:text-base flex items-center gap-3">
+                             <CheckCircle2 size={24} /> Dialed Successfully!
+                          </div>
+                          <Button onClick={handleSubmit} disabled={isSubmitting} className="w-full h-14 md:h-20 rounded-xl md:rounded-[2rem] bg-primary text-white font-black text-sm md:text-xl gap-3 shadow-xl active:scale-95 transition-all">
+                             {isSubmitting ? <Loader2 className="animate-spin" /> : "I'VE PAID (SUBMIT LISTING)"}
+                          </Button>
+                       </div>
+                     )}
+                     
+                     <p className="text-[8px] md:text-xs text-muted-foreground italic">
+                        * Admin-ka ayaa hubin doona payment-kaaga ka hor inta aan post-ga la fasaxin.
+                     </p>
+                  </Card>
+
+                  <Button variant="ghost" onClick={() => setStep(1)} className="text-muted-foreground font-bold hover:text-foreground">
+                     Back to Details
+                  </Button>
+               </div>
+             )}
+
+             {step === 3 && (
+               <div className="py-10 md:py-20 flex flex-col items-center text-center space-y-6 sm:space-y-10 animate-in zoom-in duration-700">
+                  <div className="relative">
+                     <div className="absolute inset-0 bg-green-400 rounded-full blur-3xl opacity-20 animate-pulse" />
+                     <div className="relative w-24 h-24 md:w-40 md:h-40 bg-green-50 dark:bg-green-500/20 rounded-full flex items-center justify-center text-green-600 dark:text-green-400 shadow-2xl border-4 md:border-8 border-white dark:border-slate-900">
+                        <CheckCircle2 size={48} className="md:size-24" />
+                     </div>
+                  </div>
+                  
+                  <div className="space-y-2 md:space-y-4">
+                     <h2 className="text-2xl md:text-5xl font-headline font-bold tracking-tight">Post Successfully!</h2>
+                     <p className="text-sm md:text-xl text-muted-foreground font-medium max-w-sm mx-auto leading-relaxed">
+                        Waad ku mahadsantahay! Post-kaaga hadda waa "Pending". Admin-ka ayaa hadda hubinaya payment-kaaga. Waxaa lagu soo ogaysiin doonaa marka la fasaxo.
+                     </p>
+                  </div>
+
+                  <div className="flex flex-col gap-3 w-full max-w-xs mx-auto">
+                     <Button onClick={onComplete} className="h-12 md:h-16 rounded-xl md:rounded-2xl font-bold text-sm md:text-lg shadow-lg">
+                        Eeg Marketplace-ka
+                     </Button>
+                     <Button variant="ghost" onClick={onComplete} className="h-12 rounded-xl text-muted-foreground font-bold">
+                        Back to Home
+                     </Button>
+                  </div>
+               </div>
+             )}
+          </div>
+       </div>
+    </div>
+  );
+}
+
 function AccountPostCard({ post, onClick, onEdit, onDelete, isOwner, isBuyer, isAdmin }: { post: any, onClick: () => void, onEdit: (e:any)=>void, onDelete: (e:any)=>void, isOwner: boolean, isBuyer: boolean, isAdmin?: boolean }) {
   const isGoogle = post.platform === 'Google';
   const isExpired = post.expiresAt ? post.expiresAt < Date.now() : false;
@@ -267,19 +534,20 @@ function AccountPostCard({ post, onClick, onEdit, onDelete, isOwner, isBuyer, is
 
   useEffect(() => {
     if (!post.expiresAt || (!isOwner && !isAdmin)) return;
-    const interval = setInterval(() => {
+    const updateTime = () => {
       const now = Date.now();
       const diff = post.expiresAt - now;
       if (diff <= 0) {
         setTimeLeft("DHAMAADAY");
-        clearInterval(interval);
       } else {
         const d = Math.floor(diff / (1000 * 60 * 60 * 24));
         const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
         setTimeLeft(`${d}d ${h}h ${m}m`);
       }
-    }, 60000);
+    };
+    updateTime();
+    const interval = setInterval(updateTime, 60000);
     return () => clearInterval(interval);
   }, [post.expiresAt, isOwner, isAdmin]);
   
@@ -289,7 +557,7 @@ function AccountPostCard({ post, onClick, onEdit, onDelete, isOwner, isBuyer, is
       className={cn(
         "rounded-[2rem] md:rounded-[3rem] border-none shadow-lg md:shadow-xl bg-white dark:bg-slate-900 overflow-hidden transition-all hover:-translate-y-1 md:hover:-translate-y-2 hover:shadow-2xl active:scale-[0.98] group cursor-pointer h-full flex flex-col relative",
         isExpired && "opacity-60 grayscale-[0.5]",
-        isBuyer && "ring-2 ring-green-500/50"
+        isBuyer && "ring-2 ring-green-500/50 shadow-[0_0_20px_rgba(34,197,94,0.2)]"
       )}
     >
       <div className="p-3.5 md:p-6 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/40 border-b dark:border-white/5">
