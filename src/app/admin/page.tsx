@@ -683,13 +683,13 @@ export default function AdminPage() {
             <div className="space-y-6">
                <Card className="rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden border-none shadow-xl bg-white dark:bg-slate-900">
                 <div className="overflow-x-auto scrollbar-hide">
-                  <Table className="min-w-[600px]">
+                  <Table className="min-w-[700px]">
                     <TableHeader className="bg-slate-50/50 dark:bg-slate-800/40">
                       <TableRow className="border-none">
                         <TableHead className="px-4 sm:px-8">Seller</TableHead>
                         <TableHead>Game & Info</TableHead>
-                        <TableHead>Buyer Outcome</TableHead>
-                        <TableHead>Conflict</TableHead>
+                        <TableHead>Buyer Claim (Sold)</TableHead>
+                        <TableHead>Seller Verification</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead className="text-right px-4 sm:px-8">Actions</TableHead>
                       </TableRow>
@@ -700,7 +700,7 @@ export default function AdminPage() {
                         return (
                           <TableRow key={p.id} className="border-slate-50 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-slate-800/30">
                             <TableCell className="px-4 sm:px-8 relative">
-                              {p.status === 'pending' && <div className="absolute left-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />}
+                              {(p.status === 'pending' || p.conflict) && <div className="absolute left-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />}
                               <div className="flex items-center gap-3">
                                 <div className="w-8 h-8 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800 relative shrink-0">
                                   {p.authorAvatar && <Image src={p.authorAvatar} alt="" fill className="object-cover" />}
@@ -716,17 +716,19 @@ export default function AdminPage() {
                             </TableCell>
                             <TableCell>
                               {associatedOrder?.buyerOutcome ? (
-                                <Badge className={cn("rounded-full text-[8px]", associatedOrder.buyerOutcome === 'bought' ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700")}>
-                                  {associatedOrder.buyerOutcome.toUpperCase()}
+                                <Badge className={cn("rounded-full text-[8px] font-black uppercase", associatedOrder.buyerOutcome === 'bought' ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700")}>
+                                  {associatedOrder.buyerOutcome === 'bought' ? 'SOLD' : 'NOT SOLD'}
                                 </Badge>
-                              ) : <span className="text-[10px] text-slate-300">No report</span>}
+                              ) : <span className="text-[10px] text-slate-300">No claim</span>}
                             </TableCell>
                             <TableCell>
-                               {p.conflict ? (
-                                 <Badge variant="destructive" className="rounded-full text-[8px] animate-pulse">DISPUTE</Badge>
-                               ) : <span className="text-[10px] text-slate-300">None</span>}
+                               {p.sellerReported ? (
+                                 <Badge className={cn("rounded-full text-[8px] font-black uppercase", p.conflict ? "bg-red-100 text-red-700 animate-pulse" : "bg-green-100 text-green-700")}>
+                                   {p.conflict ? 'DISAGREED' : 'CONFIRMED'}
+                                 </Badge>
+                               ) : <span className="text-[10px] text-slate-300">Pending</span>}
                             </TableCell>
-                            <TableCell><Badge className={cn("rounded-full text-[8px] font-bold uppercase border-none", getStatusBadge(p.status))}>{p.status}</Badge></TableCell>
+                            <TableCell><Badge className={cn("rounded-full text-[8px] font-black uppercase border-none", getStatusBadge(p.status))}>{p.status}</Badge></TableCell>
                             <TableCell className="text-right px-4 sm:px-8">
                               <div className="flex justify-end gap-1 sm:gap-2">
                                 <Button size="sm" onClick={() => handleOpenAccountPage(p.id)} className="rounded-full h-8 px-2 sm:px-4 font-bold text-[9px] sm:text-[10px] gap-1 sm:gap-2 shrink-0"><Eye size={12} /> <span className="hidden xs:inline">Manage</span></Button>
@@ -831,8 +833,8 @@ export default function AdminPage() {
                                  {selectedAccount.sellerReported && (
                                     <div className="flex justify-between mt-2 pt-2 border-t border-black/5 dark:border-white/5">
                                        <span className="text-[8px] md:text-[9px] font-black uppercase">Report</span>
-                                       <Badge className={cn("h-3.5 md:h-4 text-[6px] md:text-[7px]", selectedAccount.conflict ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700")}>
-                                          {selectedAccount.conflict ? 'DISAGREED' : 'CONFIRMED SALE'}
+                                       <Badge className={cn("h-3.5 md:h-4 text-[6px] md:text-[7px] font-black uppercase", selectedAccount.conflict ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700")}>
+                                          {selectedAccount.conflict ? 'DISAGREED' : 'CONFIRMED SOLD'}
                                        </Badge>
                                     </div>
                                  )}
@@ -865,7 +867,7 @@ export default function AdminPage() {
                                                  <div className="flex justify-between gap-2"><span className="text-[8px] md:text-[9px] text-muted-foreground">WhatsApp</span><span className="text-[9px] md:text-[10px] font-bold text-primary truncate">{order.gameDetails?.whatsappNumber}</span></div>
                                                  <div className="flex justify-between mt-1 md:mt-2 pt-1.5 md:pt-2 border-t border-black/5">
                                                     <span className="text-[8px] md:text-[9px] font-black uppercase">Report</span>
-                                                    <Badge className={cn("h-3.5 md:h-4 text-[6px] md:text-[7px]", order.buyerOutcome === 'bought' ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700")}>{order.buyerOutcome?.toUpperCase() || 'NOT REPORTED'}</Badge>
+                                                    <Badge className={cn("h-3.5 md:h-4 text-[6px] md:text-[7px] font-black uppercase", order.buyerOutcome === 'bought' ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700")}>{order.buyerOutcome === 'bought' ? 'SOLD' : (order.buyerOutcome?.toUpperCase() || 'NOT REPORTED')}</Badge>
                                                  </div>
                                               </div>
                                            )}
@@ -917,7 +919,7 @@ export default function AdminPage() {
                               )}
 
                               <Button onClick={handleAccountStatusSave} disabled={isSavingStatus} className="w-full h-14 md:h-16 rounded-xl md:rounded-2xl font-black text-sm md:text-lg shadow-xl shadow-primary/20 bg-primary hover:bg-primary/90 uppercase tracking-widest">
-                                 {isSavingStatus ? <Loader2 className="animate-spin" /> : "Save Updates"}
+                                 {isSavingStatus ? <Loader2 className="animate-spin" /> : "Save Marketplace Updates"}
                               </Button>
                            </div>
                         </div>
