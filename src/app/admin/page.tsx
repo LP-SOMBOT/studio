@@ -1713,7 +1713,7 @@ export default function AdminPage() {
               </div>
             </div>
 
-            <div className="space-y-2"><Label className="text-xs font-bold uppercase text-slate-400">Description</Label><Textarea value={productForm.description} onChange={e => setProductForm({...description: e.target.value})} className="rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold min-h-[80px]" /></div>
+            <div className="space-y-2"><Label className="text-xs font-bold uppercase text-slate-400">Description</Label><Textarea value={productForm.description} onChange={e => setProductForm({...productForm, description: e.target.value})} className="rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold min-h-[80px]" /></div>
             <div className="space-y-2">
               <Label className="text-xs font-bold uppercase text-slate-400">Item Image</Label>
               <div className="flex items-center gap-4">
