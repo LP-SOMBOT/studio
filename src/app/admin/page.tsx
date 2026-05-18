@@ -269,8 +269,12 @@ export default function AdminPage() {
   const [pointAdjustment, setPointAdjustment] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [isSavingStatus, setIsSavingStatus] = useState(false);
+  
   const [searchQuery, setSearchQuery] = useState("");
   const [orderStatusFilter, setOrderStatusFilter] = useState<string>("all");
+
+  const [accountSearchQuery, setAccountSearchQuery] = useState("");
+  const [accountStatusFilter, setAccountStatusFilter] = useState<string>("all");
 
   const [helpLinksForm, setHelpLinksForm] = useState({
     tutorialUrl: "",
@@ -325,6 +329,18 @@ export default function AdminPage() {
     const now = Date.now();
     return lateAccounts.filter(p => p.buyerReportedAt && (now - p.buyerReportedAt) > 86400000); // 24 Hours
   }, [lateAccounts]);
+
+  const sortedAndFilteredAccounts = useMemo(() => {
+    return [...accountPosts]
+      .filter(p => {
+        const matchesSearch = p.authorName?.toLowerCase().includes(accountSearchQuery.toLowerCase()) || 
+                             p.gameType?.toLowerCase().includes(accountSearchQuery.toLowerCase()) ||
+                             p.id.toLowerCase().includes(accountSearchQuery.toLowerCase());
+        const matchesStatus = accountStatusFilter === "all" || p.status === accountStatusFilter;
+        return matchesSearch && matchesStatus;
+      })
+      .sort((a, b) => b.createdAt - a.createdAt);
+  }, [accountPosts, accountSearchQuery, accountStatusFilter]);
 
   const reportDelay = useMemo(() => {
     if (!selectedAccount?.buyerReportedAt || selectedAccount.sellerReported) return null;
@@ -672,7 +688,7 @@ export default function AdminPage() {
       <div className="flex-1 flex flex-col overflow-hidden w-full">
         <header className="h-20 bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border-b dark:border-white/5 flex items-center justify-between px-4 sm:px-6 md:px-10 shrink-0">
           <div className="flex items-center gap-4">
-            <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}><SheetTrigger asChild><button className="md:hidden p-2 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl"><Menu size={24} /></button></SheetTrigger><SheetContent side="left" className="p-0 border-none bg-white dark:bg-slate-900 w-72"><SheetHeader className="p-6 border-b dark:border-white/5"><SheetTitle className="font-headline font-bold text-left text-slate-900 dark:text-white">Oskar Control</SheetTitle></SheetHeader><SidebarContent isMobile /></SheetContent></Sheet>
+            <button className="md:hidden p-2 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl" onClick={() => setIsMobileMenuOpen(true)}><Menu size={24} /></button>
             <h2 className="text-base sm:text-xl font-headline font-bold uppercase tracking-tight text-slate-900 dark:text-white truncate">{activeView.replace('-', ' ')}</h2>
           </div>
           <div className="flex items-center gap-2 sm:gap-4">
@@ -785,6 +801,32 @@ export default function AdminPage() {
                  </Card>
                )}
 
+               <div className="flex flex-col gap-4">
+                  <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+                    <div className="relative w-full max-w-md">
+                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <Input 
+                        placeholder="Search Seller or ID..." 
+                        value={accountSearchQuery} 
+                        onChange={e => setAccountSearchQuery(e.target.value)} 
+                        className="pl-12 h-12 rounded-xl dark:bg-slate-900 dark:border-white/5 font-bold" 
+                      />
+                    </div>
+                    <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide w-full sm:w-auto">
+                      {["all", "pending", "holding", "approved", "sold"].map(s => (
+                        <Button 
+                          key={s} 
+                          variant={accountStatusFilter === s ? "default" : "outline"} 
+                          onClick={() => setAccountStatusFilter(s)} 
+                          className="rounded-full h-10 px-6 uppercase font-black text-[10px] shrink-0 dark:border-white/5"
+                        >
+                          {s}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+               </div>
+
                <Card className="rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden border-none shadow-xl bg-white dark:bg-slate-900">
                 <div className="overflow-x-auto scrollbar-hide">
                   <Table className="min-w-[1000px]">
@@ -800,59 +842,65 @@ export default function AdminPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {accountPosts.map(p => {
-                        const associatedOrder = allOrders.find(o => o.gameDetails?.postId === p.id);
-                        const delayMs = (p.buyerReported && !p.sellerReported && p.buyerReportedAt) ? Date.now() - p.buyerReportedAt : 0;
-                        const isLate = delayMs > 3600000;
-                        const isUrgent = delayMs > 86400000;
-                        
-                        return (
-                          <TableRow key={p.id} className={cn("border-slate-50 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-slate-800/30", isUrgent && "bg-red-50/30")}>
-                            <TableCell className="px-4 sm:px-8 relative">
-                              {(p.status === 'pending' || p.conflict || (p.buyerReported && !p.sellerReported)) && <div className={cn("absolute left-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full animate-pulse", isUrgent ? "bg-red-600 scale-150" : "bg-amber-500")} />}
-                              <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800 relative shrink-0">
-                                  {p.authorAvatar && <Image src={p.authorAvatar} alt="" fill className="object-cover" />}
+                      {sortedAndFilteredAccounts.length === 0 ? (
+                        <TableRow>
+                           <TableCell colSpan={7} className="h-40 text-center text-slate-400 italic">No listings match filters.</TableCell>
+                        </TableRow>
+                      ) : (
+                        sortedAndFilteredAccounts.map(p => {
+                          const associatedOrder = allOrders.find(o => o.gameDetails?.postId === p.id);
+                          const delayMs = (p.buyerReported && !p.sellerReported && p.buyerReportedAt) ? Date.now() - p.buyerReportedAt : 0;
+                          const isLate = delayMs > 3600000;
+                          const isUrgent = delayMs > 86400000;
+                          
+                          return (
+                            <TableRow key={p.id} className={cn("border-slate-50 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-slate-800/30", isUrgent && "bg-red-50/30")}>
+                              <TableCell className="px-4 sm:px-8 relative">
+                                {(p.status === 'pending' || p.conflict || (p.buyerReported && !p.sellerReported)) && <div className={cn("absolute left-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full animate-pulse", isUrgent ? "bg-red-600 scale-150" : "bg-amber-500")} />}
+                                <div className="flex items-center gap-3">
+                                  <div className="w-8 h-8 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800 relative shrink-0">
+                                    {p.authorAvatar && <Image src={p.authorAvatar} alt="" fill className="object-cover" />}
+                                  </div>
+                                  <span className="font-bold text-xs text-slate-900 dark:text-white truncate max-w-[100px]">{p.authorName}</span>
                                 </div>
-                                <span className="font-bold text-xs text-slate-900 dark:text-white truncate max-w-[100px]">{p.authorName}</span>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex flex-col">
-                                <span className="text-xs font-bold text-slate-900 dark:text-white uppercase">{p.gameType} - Lv {p.level}</span>
-                                <span className="text-[9px] uppercase font-bold text-slate-400 dark:text-slate-500">${p.price}</span>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              {associatedOrder?.buyerOutcome ? (
-                                <Badge className={cn("rounded-full text-[8px] font-black uppercase", associatedOrder.buyerOutcome === 'bought' ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700")}>
-                                  {associatedOrder.buyerOutcome === 'bought' ? 'CLAIMED SOLD' : 'NOT SOLD'}
-                                </Badge>
-                              ) : <span className="text-[10px] text-slate-300">No claim</span>}
-                            </TableCell>
-                            <TableCell>
-                               {p.buyerReported && !p.sellerReported ? (
-                                 <div className="flex flex-col">
-                                    <span className={cn("text-[10px] font-black", isUrgent ? "text-red-600" : isLate ? "text-amber-600" : "text-slate-400")}>
-                                       {Math.floor(delayMs / 3600000)}h {Math.floor((delayMs % 3600000) / 60000)}m
-                                    </span>
-                                    {isUrgent && <span className="text-[7px] font-black text-red-500 uppercase">24H EXCEEDED</span>}
-                                 </div>
-                               ) : <span className="text-[10px] text-slate-300 italic">None</span>}
-                            </TableCell>
-                            <TableCell>
-                               <CountdownDisplay expiresAt={p.expiresAt} />
-                            </TableCell>
-                            <TableCell><Badge className={cn("rounded-full text-[8px] font-black uppercase border-none", getStatusBadge(p.status))}>{p.status}</Badge></TableCell>
-                            <TableCell className="text-right px-4 sm:px-8">
-                              <div className="flex justify-end gap-1 sm:gap-2">
-                                <Button size="sm" onClick={() => handleOpenAccountPage(p.id)} className="rounded-full h-8 px-2 sm:px-4 font-bold text-[9px] sm:text-[10px] gap-1 sm:gap-2 shrink-0"><Eye size={12} /> <span className="hidden xs:inline">Manage</span></Button>
-                                <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500 shrink-0" onClick={() => confirmDelete(p.id, 'account')}><Trash2 size={16} /></Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex flex-col">
+                                  <span className="text-xs font-bold text-slate-900 dark:text-white uppercase">{p.gameType} - Lv {p.level}</span>
+                                  <span className="text-[9px] uppercase font-bold text-slate-400 dark:text-slate-500">${p.price}</span>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                {associatedOrder?.buyerOutcome ? (
+                                  <Badge className={cn("rounded-full text-[8px] font-black uppercase", associatedOrder.buyerOutcome === 'bought' ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700")}>
+                                    {associatedOrder.buyerOutcome === 'bought' ? 'CLAIMED SOLD' : 'NOT SOLD'}
+                                  </Badge>
+                                ) : <span className="text-[10px] text-slate-300">No claim</span>}
+                              </TableCell>
+                              <TableCell>
+                                 {p.buyerReported && !p.sellerReported ? (
+                                   <div className="flex flex-col">
+                                      <span className={cn("text-[10px] font-black", isUrgent ? "text-red-600" : isLate ? "text-amber-600" : "text-slate-400")}>
+                                         {Math.floor(delayMs / 3600000)}h {Math.floor((delayMs % 3600000) / 60000)}m
+                                      </span>
+                                      {isUrgent && <span className="text-[7px] font-black text-red-500 uppercase">24H EXCEEDED</span>}
+                                   </div>
+                                 ) : <span className="text-[10px] text-slate-300 italic">None</span>}
+                              </TableCell>
+                              <TableCell>
+                                 <CountdownDisplay expiresAt={p.expiresAt} />
+                              </TableCell>
+                              <TableCell><Badge className={cn("rounded-full text-[8px] font-black uppercase border-none", getStatusBadge(p.status))}>{p.status}</Badge></TableCell>
+                              <TableCell className="text-right px-4 sm:px-8">
+                                <div className="flex justify-end gap-1 sm:gap-2">
+                                  <Button size="sm" onClick={() => handleOpenAccountPage(p.id)} className="rounded-full h-8 px-2 sm:px-4 font-bold text-[9px] sm:text-[10px] gap-1 sm:gap-2 shrink-0"><Eye size={12} /> <span className="hidden xs:inline">Manage</span></Button>
+                                  <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500 shrink-0" onClick={() => confirmDelete(p.id, 'account')}><Trash2 size={16} /></Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          )
+                        })
+                      )}
                     </TableBody>
                   </Table>
                 </div>
