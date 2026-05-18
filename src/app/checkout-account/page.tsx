@@ -16,7 +16,8 @@ import {
   Copy,
   MessageCircle,
   History,
-  Check
+  Check,
+  XCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -37,6 +38,7 @@ export default function CheckoutAccountPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [name, setName] = useState("");
   const [whatsappNumber, setWhatsappNumber] = useState("");
+  const [outcome, setOutcome] = useState<'bought' | 'not_bought' | null>(null);
 
   const post = useMemo(() => {
     return (accountPosts || []).find(p => p.id === id);
@@ -108,6 +110,7 @@ Ma ii diyaar yahay? Waxaan ahay ${name}.`;
       const encoded = encodeURIComponent(msg);
       const formattedPhone = formatWhatsAppNumber(post.phone);
       setStep(3);
+      setOutcome(null);
       window.open(`https://wa.me/${formattedPhone}?text=${encoded}`, '_blank');
       toast({ title: "Opening WhatsApp!", description: "Lala xariir seller-ka hadda." });
     } catch (e: any) {
@@ -118,11 +121,14 @@ Ma ii diyaar yahay? Waxaan ahay ${name}.`;
     }
   };
 
-  const handleOutcome = async (outcome: 'bought' | 'not_bought') => {
+  const handleOutcome = async (newOutcome: 'bought' | 'not_bought') => {
     if (!post) return;
-    await reportAccountOutcome(post.id, outcome);
-    if (outcome === 'bought') {
+    await reportAccountOutcome(post.id, newOutcome);
+    setOutcome(newOutcome);
+    if (newOutcome === 'bought') {
       toast({ title: "Waa lagu guuleystay!" });
+    } else {
+      toast({ title: "Waa la kansalay", description: "Mahadsanid!" });
     }
   };
 
@@ -211,11 +217,26 @@ Ma ii diyaar yahay? Waxaan ahay ${name}.`;
                   </p>
                </div>
 
-               {hasBought ? (
+               {outcome === 'bought' || hasBought ? (
                  <div className="p-8 bg-green-50 dark:bg-green-500/10 rounded-[2.5rem] border border-green-100 dark:border-green-500/20 animate-in fade-in slide-in-from-top-4">
                     <CheckCircle2 className="w-12 h-12 text-green-600 mx-auto mb-3" />
                     <h3 className="font-bold text-xl text-green-900 dark:text-green-400">Waa lagu guuleystay!</h3>
                     <p className="text-sm text-green-700 dark:text-green-500/70 mt-1">Mahadsanid, dalabkaaga waxaa hadda hubinaya admin-ka.</p>
+                 </div>
+               ) : outcome === 'not_bought' ? (
+                 <div className="p-8 bg-slate-50 dark:bg-slate-800/50 rounded-[2.5rem] border border-slate-200 dark:border-white/5 animate-in fade-in slide-in-from-top-4 text-center">
+                    <XCircle className="w-12 h-12 text-slate-400 mx-auto mb-3" />
+                    <h3 className="font-bold text-xl text-slate-900 dark:text-white">Mahadsanid!</h3>
+                    <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
+                      Hadii aad hadhow u baahato account-kan waad u soo laaban kartaa si aad u iibsato. 
+                    </p>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => { setStep(1); setOutcome(null); }} 
+                      className="mt-6 w-full h-14 rounded-2xl font-bold bg-white dark:bg-slate-900 border-primary/20 text-primary hover:bg-primary/5"
+                    >
+                       Mar kale isku day (Restart)
+                    </Button>
                  </div>
                ) : (
                  <div className="bg-white dark:bg-slate-900 p-8 rounded-[3rem] shadow-xl space-y-6 border border-slate-100 dark:border-white/5">
