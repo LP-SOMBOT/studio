@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -26,6 +25,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Image from "next/image";
 import { toast } from "@/hooks/use-toast";
+import { formatWhatsAppNumber } from "@/lib/utils";
 
 export default function CheckoutAccountPage() {
   const router = useRouter();
@@ -106,8 +106,9 @@ Ma ii diyaar yahay? Waxaan ahay ${name}.`;
       }
 
       const encoded = encodeURIComponent(msg);
+      const formattedPhone = formatWhatsAppNumber(post.phone);
       setStep(3);
-      window.open(`https://wa.me/${post.phone}?text=${encoded}`, '_blank');
+      window.open(`https://wa.me/${formattedPhone}?text=${encoded}`, '_blank');
       toast({ title: "Opening WhatsApp!", description: "Lala xariir seller-ka hadda." });
     } catch (e: any) {
        toast({ title: "Failed", description: e.message, variant: "destructive" });

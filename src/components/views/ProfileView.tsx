@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -33,7 +32,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { uploadToImgbb } from "@/lib/imgbb";
-import { cn } from "@/lib/utils";
+import { cn, formatWhatsAppNumber } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 
 export default function ProfileView() {
@@ -151,7 +150,7 @@ export default function ProfileView() {
             </ProfileGroup>
             <ProfileGroup title="Support Center">
                 <ProfileOption icon={HelpCircle} label="App Tutorial" onClick={() => { if (helpLinks.tutorialUrl) window.open(helpLinks.tutorialUrl, '_blank'); else toast({ title: "Coming Soon" }); }} />
-                <ProfileOption icon={MessageCircle} label="WhatsApp Support" onClick={() => { const num = helpLinks.whatsappNumber || "252613982172"; window.open(`https://wa.me/${num}`, '_blank'); }} />
+                <ProfileOption icon={MessageCircle} label="WhatsApp Support" onClick={() => { const num = formatWhatsAppNumber(helpLinks.whatsappNumber || "252613982172"); window.open(`https://wa.me/${num}`, '_blank'); }} />
                 <ProfileOption icon={Video} label="Oskar TikTok" onClick={() => { const url = helpLinks.tiktokUrl || "https://tiktok.com/@Oskarshop"; window.open(url, '_blank'); }} />
             </ProfileGroup>
             <ProfileGroup title="Global Settings">
@@ -174,7 +173,7 @@ export default function ProfileView() {
                      {editData.photoURL ? <Image src={editData.photoURL} alt="" fill className="object-cover" unoptimized /> : <div className="w-full h-full flex flex-col items-center justify-center text-slate-300"><User size={40} /></div>}
                      <input type="file" accept="image/*" onChange={e => e.target.files?.[0] && handlePhotoUpload(e.target.files[0])} className="absolute inset-0 opacity-0 cursor-pointer z-10" />
                      <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"><Camera className="w-5 h-5 md:w-8 md:h-8" /> <span className="text-[8px] md:text-[10px] font-black mt-1.5 md:mt-2 uppercase tracking-widest">Update</span></div>
-                     {isSaving && <div className="absolute inset-0 bg-white/60 dark:bg-black/60 flex items-center justify-center text-primary z-20"><Loader2 className="animate-spin w-6 h-6 md:w-8 md:h-8" /></div>}
+                     {isSaving && <div className="absolute inset-0 bg-white/60 dark:bg-black/60 flex items-center justify-center text-primary z-20"><Loader2 className="animate-spin w-8 h-8 md:w-12 md:h-12" /></div>}
                   </div>
                </div>
                <div className="space-y-4 md:space-y-6">

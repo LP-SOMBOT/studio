@@ -127,7 +127,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { toast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
+import { cn, formatWhatsAppNumber } from "@/lib/utils";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { 
@@ -1084,7 +1084,8 @@ export default function AdminPage() {
                                     <Button 
                                       onClick={() => {
                                          const text = encodeURIComponent(`Asc, Oskar Shop Admin-ka waaye. Account-kaaga #${selectedAccount.id.toUpperCase()} ee marketplace-ka waxaa sheegtay buyer, laakiin wali maadan xaqiijinin. Fadlan nala soo xariir.`);
-                                         window.open(`https://wa.me/${selectedAccount.phone}?text=${text}`, '_blank');
+                                         const formattedPhone = formatWhatsAppNumber(selectedAccount.phone);
+                                         window.open(`https://wa.me/${formattedPhone}?text=${text}`, '_blank');
                                       }}
                                       className="w-full h-14 rounded-2xl bg-green-600 hover:bg-green-700 font-bold gap-2 text-white shadow-xl shadow-green-600/20"
                                     >
@@ -1200,7 +1201,7 @@ export default function AdminPage() {
                                                        <Badge className={cn("h-4 text-[7px] font-black uppercase", order.buyerOutcome === 'bought' ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700")}>{order.buyerOutcome === 'bought' ? 'SOLD' : (order.buyerOutcome?.toUpperCase() || 'NOT REPORTED')}</Badge>
                                                     </div>
                                                     <span className="text-[8px] font-bold text-muted-foreground text-right uppercase">
-                                                       Started: {getSmartTimestamp(selectedAccount.buyerReportedAt)}
+                                                       Started: {getSmartTimestamp(selectedOrder.gameDetails?.buyerReportedAt)}
                                                     </span>
                                                  </div>
                                               </div>
@@ -1840,7 +1841,7 @@ export default function AdminPage() {
                                        <Button size="icon" variant="ghost" onClick={() => copyToClipboard(selectedOrder.gameDetails?.whatsappNumber)} className="hover:bg-indigo-500/10 text-indigo-500 rounded-xl">
                                           <Copy size={20} />
                                        </Button>
-                                       <Button size="icon" variant="ghost" onClick={() => window.open(`https://wa.me/${selectedOrder.gameDetails?.whatsappNumber}`, '_blank')} className="hover:bg-green-500/10 text-green-500 rounded-xl">
+                                       <Button size="icon" variant="ghost" onClick={() => window.open(`https://wa.me/${formatWhatsAppNumber(selectedOrder.gameDetails?.whatsappNumber)}`, '_blank')} className="hover:bg-green-500/10 text-green-500 rounded-xl">
                                           <MessageCircle size={20} />
                                        </Button>
                                     </div>

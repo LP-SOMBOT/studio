@@ -1,10 +1,10 @@
-
 'use client';
 
 import { useApp } from '@/lib/context';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ShieldAlert, MessageCircle } from 'lucide-react';
+import { formatWhatsAppNumber } from '@/lib/utils';
 
 export default function BannedModal() {
   const { isBannedModalOpen, setIsBannedModalOpen, bannedInfo } = useApp();
@@ -13,7 +13,7 @@ export default function BannedModal() {
 
   const handleContact = () => {
     // Somali WhatsApp DM
-    const phone = "252614929987";
+    const phone = formatWhatsAppNumber("252614929987");
     const text = `My account is banned. 
 
 Details:

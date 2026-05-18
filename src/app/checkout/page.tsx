@@ -28,7 +28,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
+import { cn, formatWhatsAppNumber } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
 
@@ -107,7 +107,7 @@ function CheckoutContent() {
       return;
     }
     
-    const adminWa = item?.whatsappNumber || "252613982172";
+    const adminWa = formatWhatsAppNumber(item?.whatsappNumber || "252613982172");
     const message = `Asc, Oskar Shop.
 Waxaan rabaa Booyah Pass: *${item?.title}*
 Qiimaha: *$${total.toFixed(2)}*
@@ -344,8 +344,8 @@ Fadlan ila soo xiriir.`;
               </div>
 
               <Button 
-                type={isBooyahPass ? "button" : "submit"} 
-                onClick={isBooyahPass ? handleBooyahRedirect : undefined}
+                type="button" 
+                onClick={isBooyahPass ? handleBooyahRedirect : handleDetailsSubmit}
                 className="w-full h-13 md:h-16 rounded-xl md:rounded-2xl text-sm md:text-xl font-bold gap-2 shadow-xl shadow-primary/20 active:scale-95 transition-all"
               >
                 {isBooyahPass ? "iibso" : "Continue to Payment"} {isBooyahPass ? <MessageCircle className="w-4 h-4 md:w-6 md:h-6" /> : <ChevronRight className="w-4 h-4 md:w-6 md:h-6" />}
