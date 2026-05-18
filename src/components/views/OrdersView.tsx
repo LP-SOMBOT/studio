@@ -26,7 +26,6 @@ export default function OrdersView() {
   if (isInitialLoading) {
     return (
       <div className="min-h-screen px-4 py-10 max-w-[1600px] mx-auto space-y-10">
-        <Skeleton className="h-10 md:h-14 w-48 md:w-64 rounded-2xl mb-10" />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {[1, 2, 3, 4, 5, 6].map(i => <Skeleton key={i} className="h-64 w-full rounded-[2rem] md:rounded-[3rem]" />)}
         </div>
@@ -36,11 +35,6 @@ export default function OrdersView() {
 
   return (
     <div className="min-h-screen pb-32 px-4 py-10 max-w-[1600px] mx-auto page-transition">
-      <header className="mb-10 md:mb-14 text-center lg:text-left px-2">
-        <h1 className="text-3xl sm:text-4xl lg:text-6xl font-headline font-bold text-slate-900 dark:text-white">My Orders</h1>
-        <p className="text-muted-foreground font-medium uppercase tracking-[0.2em] md:tracking-[0.4em] text-[10px] md:text-lg mt-2 md:mt-3">Transaction History</p>
-      </header>
-
       {orders.length === 0 ? (
         <div className="py-20 md:py-40 text-center space-y-6 md:space-y-8 opacity-30 flex flex-col items-center">
            <div className="w-20 h-20 md:w-32 md:h-32 bg-slate-100 dark:bg-slate-900 rounded-full flex items-center justify-center shadow-inner">
