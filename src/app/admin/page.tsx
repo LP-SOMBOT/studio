@@ -898,11 +898,11 @@ export default function AdminPage() {
 
                               {pendingAccountStatus === 'sold' && (
                                  <div className="space-y-1.5 md:space-y-2 animate-in slide-in-from-top-2">
-                                    <Label className="text-[8px] md:text-[10px] font-black uppercase text-primary ml-1 md:ml-2">Final Buyer</Label>
+                                    <Label className="text-[8px] md:text-[10px] font-black text-primary ml-1 md:ml-2">Final Buyer</Label>
                                     <Select value={assignBuyerId} onValueChange={setAssignBuyerId}>
                                        <SelectTrigger className="h-12 md:h-14 rounded-xl md:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-4 md:px-6 font-bold text-xs md:text-sm"><SelectValue placeholder="Select Final Buyer" /></SelectTrigger>
                                        <SelectContent className="rounded-xl md:rounded-2xl">
-                                          {allUsers.map(u => <SelectItem key={u.uid} value={u.uid} className="text-[10px] md:text-xs">{u.name} ({u.email.slice(0, 15)}...)</SelectItem>)}
+                                          {allUsers.map(u => <SelectItem key={u.uid} value={u.uid} className="text-[10px] md:text-xs">{u.name} ({u.email?.slice(0, 15) || '...'})</SelectItem>)}
                                        </SelectContent>
                                     </Select>
                                  </div>
@@ -1674,7 +1674,7 @@ export default function AdminPage() {
           <div className="bg-primary p-6 sm:p-8 text-white"><DialogTitle className="text-xl sm:text-2xl font-headline font-bold">{editingProduct ? 'Edit Item' : 'Add New Item'}</DialogTitle></div>
           <form onSubmit={handleSaveProduct} className="p-6 sm:p-8 space-y-6 max-h-[70vh] overflow-y-auto scrollbar-hide">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2"><Label className="text-xs font-bold uppercase text-slate-400">Price ($)</Label><Input value={productForm.title} onChange={e => setProductForm({...productForm, title: e.target.value})} required className="rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold h-12" /></div>
+              <div className="space-y-2"><Label className="text-xs font-bold uppercase text-slate-400">Item Title</Label><Input value={productForm.title} onChange={e => setProductForm({...productForm, title: e.target.value})} required className="rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold h-12" /></div>
               <div className="space-y-2">
                 <Label className="text-xs font-bold uppercase text-slate-400">Item Type</Label>
                 <Select value={productForm.category} onValueChange={v => setProductForm({...productForm, category: v as any})}>
@@ -1715,7 +1715,7 @@ export default function AdminPage() {
               </div>
             </div>
 
-            <div className="space-y-2"><Label className="text-xs font-bold uppercase text-slate-400">Description</Label><Textarea value={productForm.description} onChange={e => setProductForm({...productForm, description: e.target.value})} className="rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold min-h-[80px]" /></div>
+            <div className="space-y-2"><Label className="text-xs font-bold uppercase text-slate-400">Description</Label><Textarea value={productForm.description} onChange={e => setProductForm(prev => ({...prev, description: e.target.value}))} className="rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold min-h-[80px]" /></div>
             <div className="space-y-2">
               <Label className="text-xs font-bold uppercase text-slate-400">Item Image</Label>
               <div className="flex items-center gap-4">
