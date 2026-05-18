@@ -66,18 +66,33 @@ export default function AccountsView() {
 
   const filteredPosts = useMemo(() => {
     const now = Date.now();
+    const isAdmin = user?.isAdmin;
+    const userId = user?.uid;
+
     return (accountPosts || [])
       .filter(p => {
-        // PERMANENTLY HIDE DELETED/penalty accounts from market
-        if (p.hiddenFromMarket || p.status === 'rejected') return false;
+        const isOwner = p.uid === userId;
+        const isBuyerOrHolder = (p.holdingBy && p.holdingBy === userId) || (p.boughtBy && p.boughtBy === userId);
+        
+        // 1. Privilege check: Admins, Owners, and involved Buyers/Holders see their relevant posts regardless of status
+        if (isAdmin || isOwner || isBuyerOrHolder) {
+          return true;
+        }
 
+        // 2. Visibility check for everyone else (the public):
+        // Hide if status is any of these restricted categories
+        const restrictedStatuses = ['pending', 'holding', 'sold', 'processing', 'rejected', 'cancelled'];
+        if (restrictedStatuses.includes(p.status)) return false;
+
+        // Hide if expired
         const isExpired = p.expiresAt ? p.expiresAt < now : false;
-        const isOwner = p.uid === user?.uid;
-        const isAdmin = user?.isAdmin;
-        if (isExpired && !isOwner && !isAdmin) return false;
-        if (p.status === 'holding') return isOwner || p.holdingBy === user?.uid || isAdmin;
-        if (p.status === 'sold') return isOwner || p.boughtBy === user?.uid || isAdmin;
-        return p.status === 'approved' || isOwner || isAdmin;
+        if (isExpired) return false;
+
+        // Hide if explicitly hidden from market by admin
+        if (p.hiddenFromMarket) return false;
+
+        // Only show 'approved' posts to the general public
+        return p.status === 'approved';
       })
       .filter(p => 
         p.authorName?.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -683,7 +698,7 @@ function AccountPostCard({ post, onClick, onEdit, onDelete, isOwner, isAdmin }: 
            <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 border-none rounded-lg px-2.5 md:px-4 py-1 md:py-2 text-[8px] md:text-[11px] font-black shadow-sm shrink-0">Evo: {post.evoWeapons || 0}</Badge>
            <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 border-none rounded-lg px-2.5 md:px-4 py-1 md:py-2 text-[8px] md:text-[11px] font-black shadow-sm shrink-0">Emotes: {post.emotes || 0}</Badge>
            {post.gameType === 'freefire' && (
-             <Badge className="bg-indigo-100 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400 border-none rounded-lg px-2.5 md:px-4 py-1 md:py-2 text-[8px] md:text-[11px] font-black shadow-sm shrink-0">Items: {post.dharka || 0}</Badge>
+             <Badge className="bg-indigo-100 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400 border-none rounded-lg px-2.5 md:px-4 py-1 md:py-2 text-[8px] md:text-[11px] font-black shadow-sm shrink-0">Dharka: {post.dharka || 0}</Badge>
            )}
         </div>
 
