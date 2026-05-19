@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useApp } from "@/lib/context";
 import { 
@@ -37,8 +37,8 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 
-export default function AccountDetailPage() {
-  const { id } = useParams();
+export default function AccountDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = React.use(params);
   const router = useRouter();
   const { accountPosts, user, orders, buyAccountPost, reportAccountOutcome } = useApp();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);

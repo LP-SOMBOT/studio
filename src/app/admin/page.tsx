@@ -611,6 +611,22 @@ export default function AdminPage() {
     }
   };
 
+  const handleForceSold = async (buyerId: string, buyerName: string) => {
+    if (!selectedAccount) return;
+    setPendingAccountStatus('sold');
+    setAssignBuyerId(buyerId);
+    setIsSavingStatus(true);
+    try {
+      await updateAccountPostStatus(selectedAccount.id, 'sold', buyerId);
+      toast({ title: `Successfully sold to ${buyerName}` });
+      setSelectedAccountId(null);
+    } catch (e) {
+      toast({ title: "Failed to perform force sold", variant: "destructive" });
+    } finally {
+      setIsSavingStatus(false);
+    }
+  };
+
   const handleEnforceAccountPenalty = async () => {
     if (!selectedAccount || !enforceMessage) return;
     setIsSavingStatus(true);
@@ -719,15 +735,15 @@ export default function AdminPage() {
         </div>
       )}
       <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto scrollbar-hide">
-        <SideNavItem active={false} expanded={isSidebarExpanded || isMobile} onClick={() => router.push('/')} icon={Home} label="Back to Store" className="text-primary hover:bg-primary/5 mb-4" />
+        <SideNavItem icon={Home} label="Back to Store" active={false} expanded={isSidebarExpanded || isMobile} onClick={() => router.push('/')} className="text-primary hover:bg-primary/5 mb-4" />
         <div className="h-px bg-slate-50 dark:bg-white/5 my-4 mx-2" />
-        <SideNavItem active={activeView === 'dashboard'} expanded={isSidebarExpanded || isMobile} onClick={() => { setActiveView('dashboard'); setIsMobileMenuOpen(false); setSelectedAccountId(null); setSelectedOrderId(null); }} icon={LayoutDashboard} label="Dashboard" />
-        <SideNavItem active={activeView === 'orders'} expanded={isSidebarExpanded || isMobile} onClick={() => { setActiveView('orders'); setIsMobileMenuOpen(false); setSelectedAccountId(null); }} icon={ShoppingBag} label="Orders" badge={allOrders.filter(o => o.status === 'pending').length} />
-        <SideNavItem active={activeView === 'account-posts'} expanded={isSidebarExpanded || isMobile} onClick={() => { setActiveView('account-posts'); setIsMobileMenuOpen(false); setSelectedOrderId(null); }} icon={Gamepad2} label="Marketplace" badge={accountPosts.filter(p => p.status === 'pending' || p.conflict || p.buyerReported).length} />
-        <SideNavItem active={activeView === 'inventory'} expanded={isSidebarExpanded || isMobile} onClick={() => { setActiveView('inventory'); setIsMobileMenuOpen(false); setSelectedAccountId(null); setSelectedOrderId(null); }} icon={Package} label="Inventory" />
-        <SideNavItem active={activeView === 'events'} expanded={isSidebarExpanded || isMobile} onClick={() => { setActiveView('events'); setIsMobileMenuOpen(false); setSelectedAccountId(null); setSelectedOrderId(null); }} icon={Calendar} label="Live Events" />
-        <SideNavItem active={activeView === 'users'} expanded={isSidebarExpanded || isMobile} onClick={() => { setActiveView('users'); setIsMobileMenuOpen(false); setSelectedAccountId(null); setSelectedOrderId(null); }} icon={Users} label="Users" />
-        <SideNavItem active={activeView === 'settings'} expanded={isSidebarExpanded || isMobile} onClick={() => { setActiveView('settings'); setIsMobileMenuOpen(false); setSelectedAccountId(null); setSelectedOrderId(null); }} icon={SettingsIcon} label="Settings" />
+        <SideNavItem icon={LayoutDashboard} label="Dashboard" active={activeView === 'dashboard'} expanded={isSidebarExpanded || isMobile} onClick={() => { setActiveView('dashboard'); setIsMobileMenuOpen(false); setSelectedAccountId(null); setSelectedOrderId(null); }} />
+        <SideNavItem icon={ShoppingBag} label="Orders" active={activeView === 'orders'} expanded={isSidebarExpanded || isMobile} onClick={() => { setActiveView('orders'); setIsMobileMenuOpen(false); setSelectedAccountId(null); }} badge={allOrders.filter(o => o.status === 'pending').length} />
+        <SideNavItem icon={Gamepad2} label="Marketplace" active={activeView === 'account-posts'} expanded={isSidebarExpanded || isMobile} onClick={() => { setActiveView('account-posts'); setIsMobileMenuOpen(false); setSelectedOrderId(null); }} badge={accountPosts.filter(p => p.status === 'pending' || p.conflict || p.buyerReported).length} />
+        <SideNavItem icon={Package} label="Inventory" active={activeView === 'inventory'} expanded={isSidebarExpanded || isMobile} onClick={() => { setActiveView('inventory'); setIsMobileMenuOpen(false); setSelectedAccountId(null); setSelectedOrderId(null); }} />
+        <SideNavItem icon={Calendar} label="Live Events" active={activeView === 'events'} expanded={isSidebarExpanded || isMobile} onClick={() => { setActiveView('events'); setIsMobileMenuOpen(false); setSelectedAccountId(null); setSelectedOrderId(null); }} />
+        <SideNavItem icon={Users} label="Users" active={activeView === 'users'} expanded={isSidebarExpanded || isMobile} onClick={() => { setActiveView('users'); setIsMobileMenuOpen(false); setSelectedAccountId(null); setSelectedOrderId(null); }} />
+        <SideNavItem icon={SettingsIcon} label="Settings" active={activeView === 'settings'} expanded={isSidebarExpanded || isMobile} onClick={() => { setActiveView('settings'); setIsMobileMenuOpen(false); setSelectedAccountId(null); setSelectedOrderId(null); }} />
       </nav>
       <div className="p-4 border-t dark:border-white/5 shrink-0">
         <button onClick={logout} className="w-full h-12 flex items-center gap-4 text-red-500 rounded-xl hover:bg-red-50 dark:hover:bg-red-950/20 px-4"><LogOut size={20} /><span className={cn("font-bold text-sm", (!isSidebarExpanded && !isMobile) && "hidden")}>Logout</span></button>
@@ -1026,7 +1042,7 @@ export default function AdminPage() {
                   <h3 className="font-headline font-bold text-xl md:text-2xl dark:text-white uppercase tracking-tight truncate">Detail: #{selectedAccount.id.toUpperCase()}</h3>
                </div>
 
-               {/* Sale Success Status Card (New) */}
+               {/* Sale Success Status Card */}
                {selectedAccount.status === 'sold' && (
                  <Card className="rounded-[2.5rem] border-none shadow-2xl bg-green-500 text-white overflow-hidden animate-in zoom-in duration-500">
                     <div className="p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-8">
@@ -1180,7 +1196,7 @@ export default function AdminPage() {
                                           
                                           {selectedAccount.status !== 'sold' && (
                                             <Button 
-                                              onClick={() => respondToSaleReport(selectedAccount.id, true, claim.uid)}
+                                              onClick={() => handleForceSold(claim.uid, claim.name)}
                                               className="w-full mt-4 h-10 rounded-2xl bg-white dark:bg-slate-900 hover:bg-green-600 hover:text-white border-2 border-green-500 text-green-600 font-black text-[10px] uppercase tracking-widest gap-2 shadow-sm"
                                             >
                                                <Check size={14} /> Force Sold to this Buyer
@@ -1325,7 +1341,7 @@ export default function AdminPage() {
               <div className="flex justify-between items-center"><h3 className="font-headline font-bold text-lg sm:text-xl text-slate-900 dark:text-white">Live Events</h3><Button onClick={() => handleOpenEventDialog()} className="h-10 rounded-xl gap-2 font-bold px-3 sm:px-4 text-xs sm:text-sm"><Plus size={18} /> New Event</Button></div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                 {events.map(ev => (
-                  <Card key={ev.id} className="rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden border-none shadow-lg bg-white dark:bg-slate-900">
+                  <Card key={ev.id} className="rounded-[1.5rem] sm:rounded-[2.5rem] overflow-hidden border-none shadow-lg bg-white dark:bg-slate-900">
                     <div className="aspect-[21/9] relative">
                       <Image src={ev.thumbnailUrl} alt="" fill className="object-cover" unoptimized />
                       {!ev.active && <div className="absolute inset-0 bg-black/60 flex items-center justify-center font-bold text-white text-xs uppercase tracking-widest">Inactive</div>}
@@ -1752,7 +1768,7 @@ export default function AdminPage() {
                                          </Button>
                                          {selectedAccount.status !== 'sold' && (
                                            <Button 
-                                             onClick={() => respondToSaleReport(selectedAccount.id, true, claim.uid)}
+                                             onClick={() => handleForceSold(claim.uid, claim.name)}
                                              className="h-12 md:h-16 px-8 rounded-2xl gap-2 font-black uppercase tracking-widest bg-green-600 hover:bg-green-700 text-white shadow-xl shadow-green-500/20"
                                            >
                                               <Check size={18}/> Force Sold

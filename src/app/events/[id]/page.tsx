@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useMemo, useEffect, useState } from "react";
+import React, { useMemo, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useApp } from "@/lib/context";
 import { ArrowLeft, Clock, Calendar, ShieldCheck, Sparkles } from "lucide-react";
@@ -11,8 +12,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
 import { format } from "date-fns";
 
-export default function EventDetailPage() {
-  const { id } = useParams();
+export default function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = React.use(params);
   const router = useRouter();
   const { events, setActiveTab } = useApp();
   const [timeLeft, setTimeLeft] = useState<string>("");
