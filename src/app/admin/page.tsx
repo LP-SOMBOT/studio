@@ -1748,62 +1748,62 @@ export default function AdminPage() {
       </div>
 
       <Dialog open={isUserManageOpen} onOpenChange={setIsUserManageOpen}>
-        <DialogContent className="max-w-md w-[95vw] rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl bg-white dark:bg-slate-900 animate-in zoom-in duration-300">
+        <DialogContent className="max-w-md w-[95%] rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl bg-white dark:bg-slate-900 animate-in zoom-in duration-300">
            <DialogHeader className="sr-only">
              <DialogTitle>User Management: {selectedUser?.name}</DialogTitle>
            </DialogHeader>
            
-           <div className="h-32 bg-gradient-to-r from-primary to-blue-600 relative shrink-0">
-              <div className="absolute -bottom-12 left-8 group">
-                 <div className="w-24 h-24 rounded-3xl border-4 border-white dark:border-slate-900 bg-slate-100 overflow-hidden shadow-2xl relative">
-                    {selectedUser?.photoURL ? <Image src={selectedUser.photoURL} alt="" fill className="object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-300"><User size={40} /></div>}
+           <div className="h-24 sm:h-32 bg-gradient-to-r from-primary to-blue-600 relative shrink-0">
+              <div className="absolute -bottom-8 sm:-bottom-12 left-6 sm:left-8 group">
+                 <div className="w-16 h-16 sm:w-24 sm:h-24 rounded-2xl sm:rounded-3xl border-[3px] sm:border-4 border-white dark:border-slate-900 bg-slate-100 overflow-hidden shadow-2xl relative">
+                    {selectedUser?.photoURL ? <Image src={selectedUser.photoURL} alt="" fill className="object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-300"><User size={32} /></div>}
                     {selectedUser?.banned && (
                       <div className="absolute inset-0 bg-red-500/40 flex items-center justify-center">
-                         <Ban className="text-white w-8 h-8" />
+                         <Ban className="text-white w-6 h-6 sm:w-8 sm:h-8" />
                       </div>
                     )}
                  </div>
                  {selectedUser?.isAdmin && (
-                   <div className="absolute -top-2 -right-2 bg-amber-400 text-white p-1.5 rounded-xl shadow-lg border-2 border-white dark:border-slate-900">
-                      <ShieldCheck size={14} />
+                   <div className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 bg-amber-400 text-white p-1 sm:p-1.5 rounded-lg sm:rounded-xl shadow-lg border-[2px] sm:border-2 border-white dark:border-slate-900">
+                      <ShieldCheck className="w-3 h-3 sm:w-[14px] sm:h-[14px]" />
                    </div>
                  )}
               </div>
            </div>
 
-           <div className="p-8 pt-16 space-y-8">
+           <div className="p-5 sm:p-8 pt-10 sm:pt-16 space-y-6 sm:space-y-8">
               <div className="flex justify-between items-start">
-                 <div>
-                    <h3 className="text-2xl font-headline font-bold text-slate-900 dark:text-white tracking-tight">{selectedUser?.name}</h3>
-                    <p className="text-xs font-medium text-muted-foreground">{selectedUser?.email}</p>
-                    <div className="flex items-center gap-2 mt-2">
-                       <Smartphone size={10} className="text-slate-400" />
-                       <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{selectedUser?.phoneNumber || 'No phone'}</span>
+                 <div className="min-w-0 pr-2">
+                    <h3 className="text-lg sm:text-2xl font-headline font-bold text-slate-900 dark:text-white tracking-tight truncate">{selectedUser?.name}</h3>
+                    <p className="text-[10px] sm:text-xs font-medium text-muted-foreground truncate">{selectedUser?.email}</p>
+                    <div className="flex items-center gap-2 mt-1 sm:mt-2">
+                       <Smartphone className="w-2.5 h-2.5 sm:w-[10px] sm:h-[10px] text-slate-400" />
+                       <span className="text-[8px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-widest">{selectedUser?.phoneNumber || 'No phone'}</span>
                     </div>
                  </div>
-                 <Badge variant={selectedUser?.banned ? "destructive" : "outline"} className="rounded-lg uppercase text-[8px] font-black tracking-widest px-3 py-1">
-                    {selectedUser?.banned ? 'Banned' : 'Active Account'}
+                 <Badge variant={selectedUser?.banned ? "destructive" : "outline"} className="rounded-lg uppercase text-[6px] sm:text-[8px] font-black tracking-widest px-2 py-0.5 sm:px-3 sm:py-1 shrink-0">
+                    {selectedUser?.banned ? 'Banned' : 'Active'}
                  </Badge>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                 <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border dark:border-white/5 shadow-inner">
-                    <p className="text-[9px] font-black uppercase text-slate-400 mb-1 tracking-widest">Points Balance</p>
-                    <div className="flex items-center gap-2">
-                       <div className="p-1 bg-amber-400/10 text-amber-500 rounded-lg"><Star size={14} fill="currentColor" /></div>
-                       <p className="text-2xl font-headline font-bold text-slate-900 dark:text-white">{selectedUser?.points || 0}</p>
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                 <div className="p-3 sm:p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl sm:rounded-2xl border dark:border-white/5 shadow-inner">
+                    <p className="text-[7px] sm:text-[9px] font-black uppercase text-slate-400 mb-0.5 sm:mb-1 tracking-widest">Balance</p>
+                    <div className="flex items-center gap-1.5 sm:gap-2">
+                       <div className="p-1 bg-amber-400/10 text-amber-500 rounded-md sm:rounded-lg"><Star className="w-3 h-3 sm:w-[14px] sm:h-[14px]" fill="currentColor" /></div>
+                       <p className="text-lg sm:text-2xl font-headline font-bold text-slate-900 dark:text-white">{selectedUser?.points || 0}</p>
                     </div>
                  </div>
-                 <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border dark:border-white/5 shadow-inner">
-                    <p className="text-[9px] font-black uppercase text-slate-400 mb-1 tracking-widest">Permissions</p>
-                    <Badge className="bg-primary/10 text-primary border-none text-[10px] font-black uppercase">{selectedUser?.role}</Badge>
+                 <div className="p-3 sm:p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl sm:rounded-2xl border dark:border-white/5 shadow-inner">
+                    <p className="text-[7px] sm:text-[9px] font-black uppercase text-slate-400 mb-0.5 sm:mb-1 tracking-widest">Role</p>
+                    <Badge className="bg-primary/10 text-primary border-none text-[8px] sm:text-[10px] font-black uppercase">{selectedUser?.role}</Badge>
                  </div>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-2 sm:space-y-4">
                  <div className="flex items-center gap-2 ml-1">
-                    <LayoutDashboard size={14} className="text-primary" />
-                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em]">Role Management</Label>
+                    <LayoutDashboard className="w-3 h-3 sm:w-[14px] sm:h-[14px] text-primary" />
+                    <Label className="text-[8px] sm:text-[10px] font-black uppercase text-slate-400 tracking-[0.2em]">Role Management</Label>
                  </div>
                  <Select 
                    value={selectedUser?.role} 
@@ -1812,7 +1812,7 @@ export default function AdminPage() {
                      setSelectedUser({ ...selectedUser, role: val });
                    }}
                  >
-                    <SelectTrigger className="h-14 rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-6 font-bold text-sm shadow-inner focus:ring-primary">
+                    <SelectTrigger className="h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-4 sm:px-6 font-bold text-xs sm:text-sm shadow-inner focus:ring-primary">
                        <SelectValue placeholder="Select Role" />
                     </SelectTrigger>
                     <SelectContent className="rounded-2xl border-none shadow-2xl z-[200]">
@@ -1823,38 +1823,38 @@ export default function AdminPage() {
                  </Select>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-2 sm:space-y-4">
                  <div className="flex items-center gap-2 ml-1">
-                    <DollarSign size={14} className="text-amber-500" />
-                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em]">Wallet Adjustments</Label>
+                    <DollarSign className="w-3 h-3 sm:w-[14px] sm:h-[14px] text-amber-500" />
+                    <Label className="text-[8px] sm:text-[10px] font-black uppercase text-slate-400 tracking-[0.2em]">Wallet Adjustments</Label>
                  </div>
-                 <div className="flex gap-3">
+                 <div className="flex gap-2 sm:gap-3">
                     <Input 
                       type="number" 
-                      placeholder="Amount" 
+                      placeholder="Amt" 
                       value={pointAdjustment} 
                       onChange={e => setPointAdjustment(e.target.value)} 
-                      className="h-14 rounded-2xl dark:bg-slate-800 border-none shadow-inner font-bold px-6" 
+                      className="h-12 sm:h-14 rounded-xl sm:rounded-2xl dark:bg-slate-800 border-none shadow-inner font-bold px-4 sm:px-6 text-xs sm:text-sm" 
                     />
-                    <Button onClick={() => handleAdjustPoints('credit')} className="h-14 w-14 rounded-2xl bg-green-500 hover:bg-green-600 shadow-lg shadow-green-500/20 shrink-0">
-                       <ArrowUpCircle size={24}/>
+                    <Button onClick={() => handleAdjustPoints('credit')} className="h-12 sm:h-14 w-12 sm:w-14 rounded-xl sm:rounded-2xl bg-green-500 hover:bg-green-600 shadow-lg shadow-green-500/20 shrink-0">
+                       <ArrowUpCircle className="w-5 h-5 sm:w-6 sm:h-6" />
                     </Button>
-                    <Button onClick={() => handleAdjustPoints('debit')} className="h-14 w-14 rounded-2xl bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/20 shrink-0">
-                       <ArrowDownCircle size={24}/>
+                    <Button onClick={() => handleAdjustPoints('debit')} className="h-12 sm:h-14 w-12 sm:w-14 rounded-xl sm:rounded-2xl bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/20 shrink-0">
+                       <ArrowDownCircle className="w-5 h-5 sm:w-6 sm:h-6" />
                     </Button>
                  </div>
               </div>
 
-              <div className="pt-4 flex flex-col gap-3">
+              <div className="pt-2 sm:pt-4 flex flex-col gap-2 sm:gap-3">
                  <Button 
                    variant={selectedUser?.banned ? "default" : "destructive"} 
                    onClick={handleBanUser} 
-                   className="w-full h-16 rounded-[1.5rem] font-black gap-3 uppercase tracking-widest text-sm shadow-xl active:scale-95 transition-all"
+                   className="w-full h-14 sm:h-16 rounded-[1.25rem] sm:rounded-[1.5rem] font-black gap-2 sm:gap-3 uppercase tracking-widest text-xs sm:text-sm shadow-xl active:scale-95 transition-all"
                  >
-                    {selectedUser?.banned ? <><ShieldCheck size={20} /> Unban Identity</> : <><Ban size={20} /> Terminate Access</>}
+                    {selectedUser?.banned ? <><ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5" /> Unban</> : <><Ban className="w-4 h-4 sm:w-5 sm:h-5" /> Terminate</>}
                  </Button>
-                 <p className="text-[9px] font-bold text-center text-slate-300 uppercase tracking-widest">
-                    Last sync: {selectedUser?.createdAt ? format(new Date(selectedUser.createdAt), 'MMM d, yyyy') : 'Recently'}
+                 <p className="text-[8px] font-bold text-center text-slate-300 uppercase tracking-widest">
+                    Joined: {selectedUser?.createdAt ? format(new Date(selectedUser.createdAt), 'MMM d, yyyy') : 'Recently'}
                  </p>
               </div>
            </div>
@@ -1862,37 +1862,37 @@ export default function AdminPage() {
       </Dialog>
 
       <Dialog open={isGameDialogOpen} onOpenChange={setIsGameDialogOpen}>
-        <DialogContent className="max-w-md w-[95vw] rounded-[3rem] p-8 border-none shadow-2xl bg-white dark:bg-slate-900">
-           <DialogHeader><DialogTitle className="text-2xl font-headline font-bold">{editingGame ? 'Edit Game' : 'Add New Game'}</DialogTitle></DialogHeader>
-           <form onSubmit={handleSaveGame} className="space-y-6 mt-4">
+        <DialogContent className="max-w-md w-[95%] rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-8 border-none shadow-2xl bg-white dark:bg-slate-900">
+           <DialogHeader><DialogTitle className="text-xl sm:text-2xl font-headline font-bold">{editingGame ? 'Edit Game' : 'Add New Game'}</DialogTitle></DialogHeader>
+           <form onSubmit={handleSaveGame} className="space-y-5 sm:space-y-6 mt-4 sm:mt-6">
               <div className="flex justify-center mb-4">
-                 <div className="relative w-24 h-24 rounded-2xl bg-slate-50 dark:bg-slate-800 border-2 border-dashed border-slate-200 dark:border-white/5 flex items-center justify-center group overflow-hidden">
+                 <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-slate-50 dark:bg-slate-800 border-2 border-dashed border-slate-200 dark:border-white/5 flex items-center justify-center group overflow-hidden">
                     {gameForm.icon ? <Image src={gameForm.icon} alt="" fill className="object-cover" /> : <ImageIcon className="text-slate-300" />}
                     <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'game')} />
                  </div>
               </div>
-              <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Title</Label><Input value={gameForm.title} onChange={e => setGameForm({ ...gameForm, title: e.target.value })} className="h-12 rounded-xl dark:bg-slate-800 border-none px-4" placeholder="Free Fire, PUBG, etc." required /></div>
-              <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Category</Label><Select value={gameForm.category} onValueChange={v => setGameForm({ ...gameForm, category: v as any })}><SelectTrigger className="h-12 rounded-xl dark:bg-slate-800 border-none"><SelectValue /></SelectTrigger><SelectContent className="rounded-xl"><SelectItem value="top-up">Top-Up Packages</SelectItem><SelectItem value="accounts">Account Marketplace</SelectItem></SelectContent></Select></div>
-              <Button type="submit" disabled={isUploading} className="w-full h-14 rounded-2xl font-bold shadow-lg uppercase tracking-widest">{isUploading ? <Loader2 className="animate-spin" /> : "Save Game Collection"}</Button>
+              <div className="space-y-1.5 sm:space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Title</Label><Input value={gameForm.title} onChange={e => setGameForm({ ...gameForm, title: e.target.value })} className="h-11 sm:h-12 rounded-xl dark:bg-slate-800 border-none px-4" placeholder="Free Fire, PUBG, etc." required /></div>
+              <div className="space-y-1.5 sm:space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Category</Label><Select value={gameForm.category} onValueChange={v => setGameForm({ ...gameForm, category: v as any })}><SelectTrigger className="h-11 sm:h-12 rounded-xl dark:bg-slate-800 border-none"><SelectValue /></SelectTrigger><SelectContent className="rounded-xl"><SelectItem value="top-up">Top-Up Packages</SelectItem><SelectItem value="accounts">Account Marketplace</SelectItem></SelectContent></Select></div>
+              <Button type="submit" disabled={isUploading} className="w-full h-12 sm:h-14 rounded-xl sm:rounded-2xl font-bold shadow-lg uppercase tracking-widest">{isUploading ? <Loader2 className="animate-spin" /> : "Save Game Collection"}</Button>
            </form>
         </DialogContent>
       </Dialog>
 
       <Dialog open={isProductDialogOpen} onOpenChange={setIsProductDialogOpen}>
-        <DialogContent className="max-w-xl w-[95vw] rounded-[3rem] p-0 border-none shadow-2xl bg-white dark:bg-slate-900 max-h-[90vh] overflow-y-auto scrollbar-hide">
+        <DialogContent className="max-w-xl w-[95%] rounded-[2rem] sm:rounded-[3rem] p-0 border-none shadow-2xl bg-white dark:bg-slate-900 max-h-[90vh] overflow-y-auto scrollbar-hide">
            <div className="h-2 bg-primary w-full shrink-0" />
-           <DialogHeader className="p-8 pb-0">
-             <DialogTitle className="text-2xl md:text-3xl font-headline font-bold text-slate-900 dark:text-white uppercase tracking-tight">{editingProduct ? 'Edit Inventory' : 'New Package'}</DialogTitle>
+           <DialogHeader className="p-6 sm:p-8 pb-0">
+             <DialogTitle className="text-xl md:text-3xl font-headline font-bold text-slate-900 dark:text-white uppercase tracking-tight">{editingProduct ? 'Edit Inventory' : 'New Package'}</DialogTitle>
            </DialogHeader>
 
-           <form onSubmit={handleSaveProduct} className="p-8 space-y-8">
+           <form onSubmit={handleSaveProduct} className="p-6 sm:p-8 space-y-6 sm:space-y-8">
               <div className="flex flex-col items-center gap-4">
-                 <div className="relative w-full aspect-video rounded-[2rem] bg-slate-50 dark:bg-slate-800 border-2 border-dashed border-slate-200 dark:border-white/10 flex flex-col items-center justify-center group overflow-hidden shadow-inner transition-all hover:border-primary/40">
+                 <div className="relative w-full aspect-video rounded-2xl md:rounded-[2rem] bg-slate-50 dark:bg-slate-800 border-2 border-dashed border-slate-200 dark:border-white/10 flex flex-col items-center justify-center group overflow-hidden shadow-inner transition-all hover:border-primary/40">
                     {productForm.thumbnail ? (
                       <Image src={productForm.thumbnail} alt="" fill className="object-cover" unoptimized />
                     ) : (
                       <>
-                        <ImageIcon className="text-slate-300 w-12 h-12 mb-2" />
+                        <ImageIcon className="text-slate-300 w-10 h-10 md:w-12 md:h-12 mb-2" />
                         <span className="text-[10px] font-black uppercase text-slate-400">Add Package Media</span>
                       </>
                     )}
@@ -1901,15 +1901,15 @@ export default function AdminPage() {
                  </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                 <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-slate-400 ml-1 tracking-widest">Item Title</Label>
-                    <Input value={productForm.title} onChange={e => setProductForm({ ...productForm, title: e.target.value })} className="h-14 rounded-2xl bg-slate-50 dark:bg-slate-800 border-none font-bold px-6 shadow-inner" placeholder="100 Diamonds" required />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                 <div className="space-y-1.5 sm:space-y-2">
+                    <Label className="text-[10px] sm:text-xs font-black uppercase text-slate-400 ml-1 tracking-widest">Item Title</Label>
+                    <Input value={productForm.title} onChange={e => setProductForm({ ...productForm, title: e.target.value })} className="h-12 md:h-14 rounded-xl md:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none font-bold px-4 sm:px-6 shadow-inner" placeholder="100 Diamonds" required />
                  </div>
-                 <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-slate-400 ml-1 tracking-widest">Parent Game</Label>
+                 <div className="space-y-1.5 sm:space-y-2">
+                    <Label className="text-[10px] sm:text-xs font-black uppercase text-slate-400 ml-1 tracking-widest">Parent Game</Label>
                     <Select value={productForm.gameId} onValueChange={v => setProductForm({ ...productForm, gameId: v })}>
-                       <SelectTrigger className="h-14 rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-6 font-bold shadow-inner">
+                       <SelectTrigger className="h-12 md:h-14 rounded-xl md:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-4 sm:px-6 font-bold shadow-inner">
                           <SelectValue placeholder="Select Game" />
                        </SelectTrigger>
                        <SelectContent className="rounded-2xl border-none shadow-2xl z-[200]">
@@ -1919,135 +1919,137 @@ export default function AdminPage() {
                  </div>
               </div>
 
-              <div className="p-6 md:p-8 bg-slate-50 dark:bg-slate-800/50 rounded-[2rem] border dark:border-white/5 space-y-6">
-                 <div className="flex items-center gap-3 text-primary mb-2">
-                    <DollarSign size={18} />
-                    <h4 className="font-bold text-sm uppercase tracking-tight">Financial Config</h4>
+              <div className="p-5 sm:p-8 bg-slate-50 dark:bg-slate-800/50 rounded-2xl md:rounded-[2rem] border dark:border-white/5 space-y-4 sm:space-y-6">
+                 <div className="flex items-center gap-3 text-primary mb-1 sm:mb-2">
+                    <DollarSign size={16} className="md:size-[18px]" />
+                    <h4 className="font-bold text-xs sm:text-sm uppercase tracking-tight">Financial Config</h4>
                  </div>
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                       <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Real Price ($)</Label>
-                       <Input type="number" step="0.01" value={productForm.price} onChange={e => setProductForm({ ...productForm, price: e.target.value })} className="h-14 rounded-2xl bg-white dark:bg-slate-900 border-none font-bold px-6 shadow-inner" placeholder="2.99" required />
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                    <div className="space-y-1.5 sm:space-y-2">
+                       <Label className="text-[10px] sm:text-xs font-black uppercase text-slate-400 ml-1">Real Price ($)</Label>
+                       <Input type="number" step="0.01" value={productForm.price} onChange={e => setProductForm({ ...productForm, price: e.target.value })} className="h-12 md:h-14 rounded-xl bg-white dark:bg-slate-900 border-none font-bold px-4 sm:px-6 shadow-inner" placeholder="2.99" required />
                     </div>
-                    <div className="space-y-2">
-                       <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Promo Price ($) - Optional</Label>
-                       <Input type="number" step="0.01" value={productForm.discountedPrice} onChange={e => setProductForm({ ...productForm, discountedPrice: e.target.value })} className="h-14 rounded-2xl bg-white dark:bg-slate-900 border-none font-bold px-6 shadow-inner" placeholder="1.99" />
+                    <div className="space-y-1.5 sm:space-y-2">
+                       <Label className="text-[10px] sm:text-xs font-black uppercase text-slate-400 ml-1">Promo Price ($) - Optional</Label>
+                       <Input type="number" step="0.01" value={productForm.discountedPrice} onChange={e => setProductForm({ ...productForm, discountedPrice: e.target.value })} className="h-12 md:h-14 rounded-xl bg-white dark:bg-slate-900 border-none font-bold px-4 sm:px-6 shadow-inner" placeholder="1.99" />
                     </div>
                  </div>
               </div>
 
-              <div className="space-y-2">
-                 <Label className="text-[10px] font-black uppercase text-slate-400 ml-1 tracking-widest">Special Category</Label>
-                 <Select value={productForm.category} onValueChange={v => setProductForm({ ...productForm, category: v as any })}>
-                    <SelectTrigger className="h-14 rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-6 font-bold shadow-inner">
-                       <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-2xl border-none shadow-2xl z-[200]">
-                       <SelectItem value="top-up" className="p-3 font-bold uppercase text-xs">Normal Top-Up</SelectItem>
-                       <SelectItem value="booyah-pass" className="p-3 font-bold uppercase text-xs">Booyah Pass (Direct WA)</SelectItem>
-                    </SelectContent>
-                 </Select>
+              <div className="space-y-4">
+                 <div className="space-y-1.5 sm:space-y-2">
+                    <Label className="text-[10px] sm:text-xs font-black uppercase text-slate-400 ml-1 tracking-widest">Special Category</Label>
+                    <Select value={productForm.category} onValueChange={v => setProductForm({ ...productForm, category: v as any })}>
+                       <SelectTrigger className="h-12 md:h-14 rounded-xl md:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-4 sm:px-6 font-bold shadow-inner">
+                          <SelectValue />
+                       </SelectTrigger>
+                       <SelectContent className="rounded-2xl border-none shadow-2xl z-[200]">
+                          <SelectItem value="top-up" className="p-3 font-bold uppercase text-xs">Normal Top-Up</SelectItem>
+                          <SelectItem value="booyah-pass" className="p-3 font-bold uppercase text-xs">Booyah Pass (Direct WA)</SelectItem>
+                       </SelectContent>
+                    </Select>
+                 </div>
+
+                 {productForm.category === 'booyah-pass' && (
+                   <div className="space-y-1.5 sm:space-y-2 animate-in slide-in-from-top-4 duration-500">
+                      <Label className="text-[10px] sm:text-xs font-black uppercase text-primary ml-1 tracking-widest flex items-center gap-2">
+                         <Smartphone size={12} /> Admin WhatsApp (Direct Orders)
+                      </Label>
+                      <Input value={productForm.whatsappNumber} onChange={e => setProductForm({ ...productForm, whatsappNumber: e.target.value })} className="h-12 md:h-14 rounded-xl md:rounded-2xl bg-primary/5 dark:bg-primary/10 border-2 border-primary/20 font-bold px-4 sm:px-6 shadow-inner" placeholder="252613982172" />
+                      <p className="text-[8px] sm:text-[9px] font-bold text-muted-foreground italic ml-2">* Used for redirecting users directly to your DM for Booyah Pass purchases.</p>
+                   </div>
+                 )}
               </div>
 
-              {productForm.category === 'booyah-pass' && (
-                <div className="space-y-2 animate-in slide-in-from-top-4 duration-500">
-                   <Label className="text-[10px] font-black uppercase text-primary ml-1 tracking-widest flex items-center gap-2">
-                      <Smartphone size={12} /> Admin WhatsApp (Direct Orders)
-                   </Label>
-                   <Input value={productForm.whatsappNumber} onChange={e => setProductForm({ ...productForm, whatsappNumber: e.target.value })} className="h-14 rounded-2xl bg-primary/5 dark:bg-primary/10 border-2 border-primary/20 font-bold px-6 shadow-inner" placeholder="252613982172" />
-                   <p className="text-[9px] font-bold text-muted-foreground italic ml-2">* Used for redirecting users directly to your DM for Booyah Pass purchases.</p>
-                </div>
-              )}
-
-              <div className="space-y-2">
-                 <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Short Description</Label>
-                 <Textarea value={productForm.description} onChange={e => setProductForm({ ...productForm, description: e.target.value })} className="rounded-2xl border-none bg-slate-50 dark:bg-slate-800 font-medium p-6 shadow-inner min-h-[100px]" placeholder="Get 100 FF diamonds fast" />
+              <div className="space-y-1.5 sm:space-y-2">
+                 <Label className="text-[10px] sm:text-xs font-black uppercase text-slate-400 ml-1">Short Description</Label>
+                 <Textarea value={productForm.description} onChange={e => setProductForm({ ...productForm, description: e.target.value })} className="rounded-xl md:rounded-2xl border-none bg-slate-50 dark:bg-slate-800 font-medium p-4 sm:p-6 shadow-inner min-h-[100px]" placeholder="Get 100 FF diamonds fast" />
               </div>
 
-              <Button type="submit" disabled={isUploading} className="w-full h-16 md:h-20 rounded-2xl md:rounded-[2.5rem] font-black text-sm md:text-xl shadow-2xl shadow-primary/30 uppercase tracking-widest active:scale-95 transition-all">
-                {isUploading ? <Loader2 className="animate-spin w-8 h-8" /> : "Save Inventory Package"}
+              <Button type="submit" disabled={isUploading} className="w-full h-14 md:h-18 rounded-xl md:rounded-[2.5rem] font-black text-xs sm:text-lg md:text-xl shadow-2xl shadow-primary/30 uppercase tracking-widest active:scale-95 transition-all">
+                {isUploading ? <Loader2 className="animate-spin w-6 h-6" /> : "Save Inventory Package"}
               </Button>
            </form>
         </DialogContent>
       </Dialog>
 
       <Dialog open={isEventDialogOpen} onOpenChange={setIsEventDialogOpen}>
-        <DialogContent className="max-w-md w-[95vw] rounded-[3rem] p-8 border-none shadow-2xl bg-white dark:bg-slate-900">
-           <DialogHeader><DialogTitle className="text-2xl font-headline font-bold">{editingEvent ? 'Edit Event' : 'New Event'}</DialogTitle></DialogHeader>
-           <form onSubmit={handleSaveEvent} className="space-y-6 mt-4">
+        <DialogContent className="max-w-md w-[95%] rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-8 border-none shadow-2xl bg-white dark:bg-slate-900">
+           <DialogHeader><DialogTitle className="text-xl sm:text-2xl font-headline font-bold">{editingEvent ? 'Edit Event' : 'New Event'}</DialogTitle></DialogHeader>
+           <form onSubmit={handleSaveEvent} className="space-y-5 sm:space-y-6 mt-4 sm:mt-6">
               <div className="flex justify-center mb-4">
                  <div className="relative w-full aspect-video rounded-2xl bg-slate-50 dark:bg-slate-800 border-2 border-dashed border-slate-200 dark:border-white/5 flex items-center justify-center group overflow-hidden">
                     {eventForm.thumbnailUrl ? <Image src={eventForm.thumbnailUrl} alt="" fill className="object-cover" unoptimized /> : <ImageIcon className="text-slate-300" />}
                     <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'event')} />
                  </div>
               </div>
-              <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Title</Label><Input value={eventForm.title} onChange={e => setEventForm({ ...eventForm, title: e.target.value })} className="h-12 rounded-xl dark:bg-slate-800 border-none px-4" placeholder="Flash Sale Sunday!" required /></div>
-              <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Short Tagline</Label><Input value={eventForm.shortDescription} onChange={e => setEventForm({ ...eventForm, shortDescription: e.target.value })} className="h-12 rounded-xl dark:bg-slate-800 border-none" placeholder="30% off for 24 hours" required /></div>
-              <div className="grid grid-cols-2 gap-4">
-                 <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Duration Value</Label><Input type="number" value={eventForm.duration} onChange={e => setEventForm({ ...eventForm, duration: e.target.value })} className="h-12 rounded-xl dark:bg-slate-800 border-none" placeholder="24" /></div>
-                 <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Unit</Label><Select value={eventForm.durationUnit} onValueChange={v => setEventForm({ ...eventForm, durationUnit: v })}> <SelectTrigger className="h-12 rounded-xl dark:bg-slate-800 border-none"><SelectValue /></SelectTrigger> <SelectContent className="rounded-xl"><SelectItem value="days">Days</SelectItem><SelectItem value="hours">Hours</SelectItem><SelectItem value="minutes">Minutes</SelectItem></SelectContent> </Select></div>
+              <div className="space-y-1.5 sm:space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Title</Label><Input value={eventForm.title} onChange={e => setEventForm({ ...eventForm, title: e.target.value })} className="h-11 sm:h-12 rounded-xl dark:bg-slate-800 border-none px-4" placeholder="Flash Sale Sunday!" required /></div>
+              <div className="space-y-1.5 sm:space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Short Tagline</Label><Input value={eventForm.shortDescription} onChange={e => setEventForm({ ...eventForm, shortDescription: e.target.value })} className="h-11 sm:h-12 rounded-xl dark:bg-slate-800 border-none" placeholder="30% off for 24 hours" required /></div>
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                 <div className="space-y-1.5 sm:space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Duration</Label><Input type="number" value={eventForm.duration} onChange={e => setEventForm({ ...eventForm, duration: e.target.value })} className="h-11 sm:h-12 rounded-xl dark:bg-slate-800 border-none" placeholder="24" /></div>
+                 <div className="space-y-1.5 sm:space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Unit</Label><Select value={eventForm.durationUnit} onValueChange={v => setEventForm({ ...eventForm, durationUnit: v })}> <SelectTrigger className="h-11 sm:h-12 rounded-xl dark:bg-slate-800 border-none"><SelectValue /></SelectTrigger> <SelectContent className="rounded-xl"><SelectItem value="days">Days</SelectItem><SelectItem value="hours">Hours</SelectItem><SelectItem value="minutes">Minutes</SelectItem></SelectContent> </Select></div>
               </div>
-              <Button type="submit" disabled={isUploading} className="w-full h-14 rounded-2xl font-bold shadow-lg uppercase tracking-widest">{isUploading ? <Loader2 className="animate-spin" /> : "Save Live Event"}</Button>
+              <Button type="submit" disabled={isUploading} className="w-full h-12 sm:h-14 rounded-xl sm:rounded-2xl font-bold shadow-lg uppercase tracking-widest">{isUploading ? <Loader2 className="animate-spin" /> : "Save Live Event"}</Button>
            </form>
         </DialogContent>
       </Dialog>
 
       <Dialog open={isPaymentMethodDialogOpen} onOpenChange={setIsPaymentMethodDialogOpen}>
-        <DialogContent className="max-w-md w-[95vw] rounded-[3rem] p-8 border-none shadow-2xl bg-white dark:bg-slate-900">
-           <DialogHeader><DialogTitle className="text-2xl font-headline font-bold">{editingPaymentMethod ? 'Edit Method' : 'Add Payment Method'}</DialogTitle></DialogHeader>
-           <form onSubmit={handleSavePaymentMethod} className="space-y-6 mt-4">
+        <DialogContent className="max-w-md w-[95%] rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-8 border-none shadow-2xl bg-white dark:bg-slate-900">
+           <DialogHeader><DialogTitle className="text-xl sm:text-2xl font-headline font-bold">{editingPaymentMethod ? 'Edit Method' : 'Add Payment Method'}</DialogTitle></DialogHeader>
+           <form onSubmit={handleSavePaymentMethod} className="space-y-5 sm:space-y-6 mt-4 sm:mt-6">
               <div className="flex justify-center mb-4">
-                 <div className="relative w-20 h-20 rounded-2xl bg-slate-50 dark:bg-slate-800 border-2 border-dashed border-slate-200 dark:border-white/5 flex items-center justify-center group overflow-hidden">
+                 <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-slate-50 dark:bg-slate-800 border-2 border-dashed border-slate-200 dark:border-white/5 flex items-center justify-center group overflow-hidden">
                     {paymentMethodForm.icon ? <Image src={paymentMethodForm.icon} alt="" fill className="object-cover" /> : <Smartphone className="text-slate-300" />}
                     <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'payment')} />
                  </div>
               </div>
-              <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Provider Name</Label><Input value={paymentMethodForm.name} onChange={e => setPaymentMethodForm({ ...paymentMethodForm, name: e.target.value })} className="h-12 rounded-xl dark:bg-slate-800 border-none" placeholder="EVC Plus, Premier, etc." required /></div>
-              <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400 ml-1">USSD Template (Use $ for price)</Label><Input value={paymentMethodForm.ussdTemplate} onChange={e => setPaymentMethodForm({ ...paymentMethodForm, ussdTemplate: e.target.value })} className="h-12 rounded-xl dark:bg-slate-800 border-none font-mono" placeholder="*712*613982172*$#" required /></div>
-              <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
+              <div className="space-y-1.5 sm:space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Provider Name</Label><Input value={paymentMethodForm.name} onChange={e => setPaymentMethodForm({ ...paymentMethodForm, name: e.target.value })} className="h-11 sm:h-12 rounded-xl dark:bg-slate-800 border-none" placeholder="EVC Plus, Premier, etc." required /></div>
+              <div className="space-y-1.5 sm:space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400 ml-1">USSD Template ($ for price)</Label><Input value={paymentMethodForm.ussdTemplate} onChange={e => setPaymentMethodForm({ ...paymentMethodForm, ussdTemplate: e.target.value })} className="h-11 sm:h-12 rounded-xl dark:bg-slate-800 border-none font-mono" placeholder="*712*613982172*$#" required /></div>
+              <div className="flex items-center justify-between p-3 sm:p-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
                  <span className="text-xs font-bold">Active Method</span>
                  <Switch checked={paymentMethodForm.active} onCheckedChange={v => setPaymentMethodForm({ ...paymentMethodForm, active: v })} />
               </div>
-              <Button type="submit" disabled={isUploading} className="w-full h-14 rounded-2xl font-bold shadow-lg uppercase tracking-widest">{isUploading ? <Loader2 className="animate-spin" /> : "Save Payment Method"}</Button>
+              <Button type="submit" disabled={isUploading} className="w-full h-12 sm:h-14 rounded-xl sm:rounded-2xl font-bold shadow-lg uppercase tracking-widest">{isUploading ? <Loader2 className="animate-spin" /> : "Save Payment Method"}</Button>
            </form>
         </DialogContent>
       </Dialog>
 
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="max-w-sm w-[90vw] rounded-[2rem] p-8 border-none shadow-2xl bg-white dark:bg-slate-900">
+        <DialogContent className="max-w-sm w-[90%] rounded-[1.5rem] sm:rounded-[2rem] p-6 sm:p-10 border-none shadow-2xl bg-white dark:bg-slate-900">
            <div className="flex flex-col items-center text-center space-y-4">
-              <div className="w-16 h-16 bg-red-50 dark:bg-red-950/20 rounded-full flex items-center justify-center text-red-500 mb-2"><AlertCircle size={32} /></div>
-              <DialogTitle className="text-xl font-headline font-bold">Confirm Deletion</DialogTitle>
-              <DialogDescription>This action is permanent. Are you sure you want to delete this {deleteTarget?.type} record?</DialogDescription>
-              <div className="flex gap-3 w-full pt-4">
-                 <Button variant="ghost" onClick={() => setIsDeleteDialogOpen(false)} className="flex-1 rounded-xl h-12 font-bold">Cancel</Button>
-                 <Button variant="destructive" onClick={executeDelete} className="flex-1 rounded-xl h-12 font-bold uppercase tracking-widest shadow-lg shadow-red-500/20">Delete Now</Button>
+              <div className="w-14 h-14 sm:w-16 sm:h-16 bg-red-50 dark:bg-red-950/20 rounded-full flex items-center justify-center text-red-500 mb-2"><AlertCircle size={32} /></div>
+              <DialogTitle className="text-lg sm:text-xl font-headline font-bold">Confirm Deletion</DialogTitle>
+              <DialogDescription className="text-xs sm:text-sm">This action is permanent. Are you sure you want to delete this {deleteTarget?.type} record?</DialogDescription>
+              <div className="flex gap-2 sm:gap-3 w-full pt-4">
+                 <Button variant="ghost" onClick={() => setIsDeleteDialogOpen(false)} className="flex-1 rounded-xl h-11 sm:h-12 font-bold text-xs sm:text-sm">Cancel</Button>
+                 <Button variant="destructive" onClick={executeDelete} className="flex-1 rounded-xl h-11 sm:h-12 font-black uppercase tracking-widest text-[10px] sm:text-xs shadow-lg shadow-red-500/20">Delete Now</Button>
               </div>
            </div>
         </DialogContent>
       </Dialog>
 
       <Dialog open={isEnforceDialogOpen} onOpenChange={setIsEnforceDialogOpen}>
-        <DialogContent className="max-w-md w-[95vw] rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl bg-white dark:bg-slate-900 animate-in zoom-in duration-300">
-           <div className="bg-red-600 p-8 text-white">
+        <DialogContent className="max-w-md w-[95%] rounded-[2rem] sm:rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl bg-white dark:bg-slate-900 animate-in zoom-in duration-300">
+           <div className="bg-red-600 p-6 sm:p-8 text-white">
               <div className="flex justify-between items-start">
                  <div>
-                    <DialogTitle className="text-2xl font-headline font-bold">Penalty Enforcement</DialogTitle>
-                    <p className="text-white/60 text-xs font-bold uppercase tracking-widest mt-1">Listing: #{selectedAccount?.id.toUpperCase()}</p>
+                    <DialogTitle className="text-xl sm:text-2xl font-headline font-bold">Penalty Enforcement</DialogTitle>
+                    <p className="text-white/60 text-[10px] sm:text-xs font-bold uppercase tracking-widest mt-1">Listing: #{selectedAccount?.id.toUpperCase()}</p>
                  </div>
               </div>
            </div>
            
-           <div className="p-8 space-y-6">
-              <div className="space-y-4">
+           <div className="p-6 sm:p-8 space-y-5 sm:space-y-6">
+              <div className="space-y-3 sm:space-y-4">
                  <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Enforcement Action</Label>
-                 <div className="grid grid-cols-2 gap-3">
+                 <div className="grid grid-cols-2 gap-2 sm:gap-3">
                     {['delete', 'holding', 'approved', 'pending'].map((act) => (
                        <Button 
                         key={act}
                         variant={enforceAction === act ? 'default' : 'outline'}
                         onClick={() => setEnforceAction(act as any)}
-                        className={cn( "h-12 rounded-xl font-bold uppercase text-[10px] transition-all", enforceAction === act && act === 'delete' ? 'bg-red-600 hover:bg-red-700 shadow-lg' : '' )}
+                        className={cn( "h-11 sm:h-12 rounded-xl font-bold uppercase text-[9px] sm:text-[10px] transition-all", enforceAction === act && act === 'delete' ? 'bg-red-600 hover:bg-red-700 shadow-lg' : '' )}
                        >
                           {act}
                        </Button>
@@ -2055,18 +2057,18 @@ export default function AdminPage() {
                  </div>
               </div>
 
-              <div className="space-y-4">
-                 <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Seller Message (Displayed to them)</Label>
+              <div className="space-y-3 sm:space-y-4">
+                 <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Seller Message</Label>
                  <Textarea 
                    value={enforceMessage}
                    onChange={e => setEnforceMessage(e.target.value)}
-                   className="rounded-2xl dark:bg-slate-800 border-none p-4 min-h-[120px] shadow-inner font-medium italic"
-                   placeholder="e.g. Your listing was removed due to invalid proof. Listing fee is non-refundable."
+                   className="rounded-xl sm:rounded-2xl dark:bg-slate-800 border-none p-4 min-h-[100px] sm:min-h-[120px] shadow-inner font-medium italic text-xs sm:text-sm"
+                   placeholder="e.g. Your listing was removed due to invalid proof."
                  />
               </div>
 
-              <Button onClick={handleEnforceAccountPenalty} disabled={isSavingStatus || !enforceMessage} className="w-full h-16 rounded-2xl bg-slate-900 hover:bg-black text-white font-black text-lg gap-2 shadow-2xl active:scale-95 transition-all uppercase tracking-widest">
-                {isSavingStatus ? <Loader2 className="animate-spin" /> : <><span className="mr-2">Apply Penalty</span> <Send size={20} /></>}
+              <Button onClick={handleEnforceAccountPenalty} disabled={isSavingStatus || !enforceMessage} className="w-full h-14 sm:h-16 rounded-xl sm:rounded-2xl bg-slate-900 hover:bg-black text-white font-black text-sm sm:text-lg gap-2 shadow-2xl active:scale-95 transition-all uppercase tracking-widest">
+                {isSavingStatus ? <Loader2 className="animate-spin" /> : <><span className="mr-1">Apply Penalty</span> <Send size={18} /></>}
               </Button>
            </div>
         </DialogContent>
