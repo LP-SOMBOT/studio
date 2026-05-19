@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useMemo, useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useApp } from "@/lib/context";
 import { ArrowLeft, Clock, Calendar, ShieldCheck, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,8 +12,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
 import { format } from "date-fns";
 
-export default function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = React.use(params);
+export default function EventDetailPage(props: { params: Promise<{ id: string }> }) {
+  const params = React.use(props.params);
+  const id = params.id;
   const router = useRouter();
   const { events, setActiveTab } = useApp();
   const [timeLeft, setTimeLeft] = useState<string>("");
