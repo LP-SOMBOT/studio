@@ -1338,7 +1338,7 @@ export default function AdminPage() {
                              <Button size="icon" className="bg-white/80 dark:bg-black/40 text-red-500 rounded-xl" onClick={() => confirmDelete(ev.id, 'event')}><Trash2 size={16}/></Button>
                           </div>
                           <div className="absolute bottom-4 left-4">
-                             <Badge className={cn("rounded-full uppercase text-[8px] font-black px-3 py-1", ev.active ? "bg-green-500 text-white" : "bg-slate-500 text-white")}>
+                             <Badge className={cn("rounded-full uppercase text-[8px] font-black px-3 py-1", ev.active ? "bg-green-50 text-white" : "bg-slate-500 text-white")}>
                                 {ev.active ? "Live" : "Ended"}
                              </Badge>
                           </div>
@@ -1879,27 +1879,94 @@ export default function AdminPage() {
       </Dialog>
 
       <Dialog open={isProductDialogOpen} onOpenChange={setIsProductDialogOpen}>
-        <DialogContent className="max-w-xl w-[95vw] rounded-[3rem] p-8 border-none shadow-2xl bg-white dark:bg-slate-900 max-h-[90vh] overflow-y-auto scrollbar-hide">
-           <DialogHeader><DialogTitle className="text-2xl font-headline font-bold">{editingProduct ? 'Edit Item' : 'New Package'}</DialogTitle></DialogHeader>
-           <form onSubmit={handleSaveProduct} className="space-y-6 mt-4">
-              <div className="flex justify-center gap-6 mb-4">
-                 <div className="relative w-32 h-32 rounded-[2rem] bg-slate-50 dark:bg-slate-800 border-2 border-dashed border-slate-200 dark:border-white/5 flex items-center justify-center group overflow-hidden shrink-0">
-                    {productForm.thumbnail ? <Image src={productForm.thumbnail} alt="" fill className="object-cover" unoptimized /> : <ImageIcon className="text-slate-300" />}
-                    <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'product')} />
+        <DialogContent className="max-w-xl w-[95vw] rounded-[3rem] p-0 border-none shadow-2xl bg-white dark:bg-slate-900 max-h-[90vh] overflow-y-auto scrollbar-hide">
+           <div className="h-2 bg-primary w-full shrink-0" />
+           <DialogHeader className="p-8 pb-0">
+             <DialogTitle className="text-2xl md:text-3xl font-headline font-bold text-slate-900 dark:text-white uppercase tracking-tight">{editingProduct ? 'Edit Inventory' : 'New Package'}</DialogTitle>
+           </DialogHeader>
+
+           <form onSubmit={handleSaveProduct} className="p-8 space-y-8">
+              <div className="flex flex-col items-center gap-4">
+                 <div className="relative w-full aspect-video rounded-[2rem] bg-slate-50 dark:bg-slate-800 border-2 border-dashed border-slate-200 dark:border-white/10 flex flex-col items-center justify-center group overflow-hidden shadow-inner transition-all hover:border-primary/40">
+                    {productForm.thumbnail ? (
+                      <Image src={productForm.thumbnail} alt="" fill className="object-cover" unoptimized />
+                    ) : (
+                      <>
+                        <ImageIcon className="text-slate-300 w-12 h-12 mb-2" />
+                        <span className="text-[10px] font-black uppercase text-slate-400">Add Package Media</span>
+                      </>
+                    )}
+                    <input type="file" className="absolute inset-0 opacity-0 cursor-pointer z-10" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'product')} />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-black uppercase">Change Image</div>
                  </div>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                 <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Item Title</Label><Input value={productForm.title} onChange={e => setProductForm({ ...productForm, title: e.target.value })} className="h-12 rounded-xl dark:bg-slate-800 border-none" placeholder="100 Diamonds" required /></div>
-                 <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Parent Game</Label><Select value={productForm.gameId} onValueChange={v => setProductForm({ ...productForm, gameId: v })}><SelectTrigger className="h-12 rounded-xl dark:bg-slate-800 border-none"><SelectValue placeholder="Select Game" /></SelectTrigger><SelectContent className="rounded-xl">{games.filter(g => g.category === 'top-up').map(g => <SelectItem key={g.id} value={g.id}>{g.title}</SelectItem>)}</SelectContent></Select></div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                 <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-slate-400 ml-1 tracking-widest">Item Title</Label>
+                    <Input value={productForm.title} onChange={e => setProductForm({ ...productForm, title: e.target.value })} className="h-14 rounded-2xl bg-slate-50 dark:bg-slate-800 border-none font-bold px-6 shadow-inner" placeholder="100 Diamonds" required />
+                 </div>
+                 <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-slate-400 ml-1 tracking-widest">Parent Game</Label>
+                    <Select value={productForm.gameId} onValueChange={v => setProductForm({ ...productForm, gameId: v })}>
+                       <SelectTrigger className="h-14 rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-6 font-bold shadow-inner">
+                          <SelectValue placeholder="Select Game" />
+                       </SelectTrigger>
+                       <SelectContent className="rounded-2xl border-none shadow-2xl z-[200]">
+                          {games.filter(g => g.category === 'top-up').map(g => <SelectItem key={g.id} value={g.id} className="p-3 font-bold uppercase text-xs">{g.title}</SelectItem>)}
+                       </SelectContent>
+                    </Select>
+                 </div>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                 <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Base Price ($)</Label><Input type="number" step="0.01" value={productForm.price} onChange={e => setProductForm({ ...productForm, price: e.target.value })} className="h-12 rounded-xl dark:bg-slate-800 border-none" placeholder="2.99" required /></div>
-                 <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Promo Price ($) - Opt</Label><Input type="number" step="0.01" value={productForm.discountedPrice} onChange={e => setProductForm({ ...productForm, discountedPrice: e.target.value })} className="h-12 rounded-xl dark:bg-slate-800 border-none" placeholder="1.99" /></div>
+
+              <div className="p-6 md:p-8 bg-slate-50 dark:bg-slate-800/50 rounded-[2rem] border dark:border-white/5 space-y-6">
+                 <div className="flex items-center gap-3 text-primary mb-2">
+                    <DollarSign size={18} />
+                    <h4 className="font-bold text-sm uppercase tracking-tight">Financial Config</h4>
+                 </div>
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                       <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Real Price ($)</Label>
+                       <Input type="number" step="0.01" value={productForm.price} onChange={e => setProductForm({ ...productForm, price: e.target.value })} className="h-14 rounded-2xl bg-white dark:bg-slate-900 border-none font-bold px-6 shadow-inner" placeholder="2.99" required />
+                    </div>
+                    <div className="space-y-2">
+                       <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Promo Price ($) - Optional</Label>
+                       <Input type="number" step="0.01" value={productForm.discountedPrice} onChange={e => setProductForm({ ...productForm, discountedPrice: e.target.value })} className="h-14 rounded-2xl bg-white dark:bg-slate-900 border-none font-bold px-6 shadow-inner" placeholder="1.99" />
+                    </div>
+                 </div>
               </div>
-              <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Short Description</Label><Textarea value={productForm.description} onChange={e => setProductForm({ ...productForm, description: e.target.value })} className="rounded-xl dark:bg-slate-800 border-none" placeholder="Get 100 FF diamonds fast" /></div>
-              <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Admin WhatsApp (For Booyah Pass)</Label><Input value={productForm.whatsappNumber} onChange={e => setProductForm({ ...productForm, whatsappNumber: e.target.value })} className="h-12 rounded-xl dark:bg-slate-800 border-none" placeholder="252613982172" /></div>
-              <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Special Category</Label><Select value={productForm.category} onValueChange={v => setProductForm({ ...productForm, category: v as any })}><SelectTrigger className="h-12 rounded-xl dark:bg-slate-800 border-none"><SelectValue /></SelectTrigger><SelectContent className="rounded-xl"><SelectItem value="top-up">Normal Top-Up</SelectItem><SelectItem value="booyah-pass">Booyah Pass (Direct WA)</SelectItem></SelectContent></Select></div>
-              <Button type="submit" disabled={isUploading} className="w-full h-14 rounded-2xl font-bold shadow-lg uppercase tracking-widest">{isUploading ? <Loader2 className="animate-spin" /> : "Save Inventory Package"}</Button>
+
+              <div className="space-y-2">
+                 <Label className="text-[10px] font-black uppercase text-slate-400 ml-1 tracking-widest">Special Category</Label>
+                 <Select value={productForm.category} onValueChange={v => setProductForm({ ...productForm, category: v as any })}>
+                    <SelectTrigger className="h-14 rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-6 font-bold shadow-inner">
+                       <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-2xl border-none shadow-2xl z-[200]">
+                       <SelectItem value="top-up" className="p-3 font-bold uppercase text-xs">Normal Top-Up</SelectItem>
+                       <SelectItem value="booyah-pass" className="p-3 font-bold uppercase text-xs">Booyah Pass (Direct WA)</SelectItem>
+                    </SelectContent>
+                 </Select>
+              </div>
+
+              {productForm.category === 'booyah-pass' && (
+                <div className="space-y-2 animate-in slide-in-from-top-4 duration-500">
+                   <Label className="text-[10px] font-black uppercase text-primary ml-1 tracking-widest flex items-center gap-2">
+                      <Smartphone size={12} /> Admin WhatsApp (Direct Orders)
+                   </Label>
+                   <Input value={productForm.whatsappNumber} onChange={e => setProductForm({ ...productForm, whatsappNumber: e.target.value })} className="h-14 rounded-2xl bg-primary/5 dark:bg-primary/10 border-2 border-primary/20 font-bold px-6 shadow-inner" placeholder="252613982172" />
+                   <p className="text-[9px] font-bold text-muted-foreground italic ml-2">* Used for redirecting users directly to your DM for Booyah Pass purchases.</p>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                 <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Short Description</Label>
+                 <Textarea value={productForm.description} onChange={e => setProductForm({ ...productForm, description: e.target.value })} className="rounded-2xl border-none bg-slate-50 dark:bg-slate-800 font-medium p-6 shadow-inner min-h-[100px]" placeholder="Get 100 FF diamonds fast" />
+              </div>
+
+              <Button type="submit" disabled={isUploading} className="w-full h-16 md:h-20 rounded-2xl md:rounded-[2.5rem] font-black text-sm md:text-xl shadow-2xl shadow-primary/30 uppercase tracking-widest active:scale-95 transition-all">
+                {isUploading ? <Loader2 className="animate-spin w-8 h-8" /> : "Save Inventory Package"}
+              </Button>
            </form>
         </DialogContent>
       </Dialog>
@@ -1914,7 +1981,7 @@ export default function AdminPage() {
                     <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'event')} />
                  </div>
               </div>
-              <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Event Title</Label><Input value={eventForm.title} onChange={e => setEventForm({ ...eventForm, title: e.target.value })} className="h-12 rounded-xl dark:bg-slate-800 border-none" placeholder="Flash Sale Sunday!" required /></div>
+              <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Title</Label><Input value={eventForm.title} onChange={e => setEventForm({ ...eventForm, title: e.target.value })} className="h-12 rounded-xl dark:bg-slate-800 border-none px-4" placeholder="Flash Sale Sunday!" required /></div>
               <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Short Tagline</Label><Input value={eventForm.shortDescription} onChange={e => setEventForm({ ...eventForm, shortDescription: e.target.value })} className="h-12 rounded-xl dark:bg-slate-800 border-none" placeholder="30% off for 24 hours" required /></div>
               <div className="grid grid-cols-2 gap-4">
                  <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Duration Value</Label><Input type="number" value={eventForm.duration} onChange={e => setEventForm({ ...eventForm, duration: e.target.value })} className="h-12 rounded-xl dark:bg-slate-800 border-none" placeholder="24" /></div>
