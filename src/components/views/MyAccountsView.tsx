@@ -3,13 +3,11 @@
 
 import { useApp } from '@/lib/context';
 import { 
-  ShieldCheck, 
   Trash2, 
   CheckCircle2, 
   Clock, 
   ChevronLeft, 
   Gamepad2, 
-  ExternalLink,
   Smartphone,
   Calendar,
   DollarSign,
@@ -20,11 +18,12 @@ import {
   User,
   MessageCircle,
   Check,
-  AlertTriangle,
-  Send,
+  ShieldAlert,
   Eye,
-  X,
-  ShieldAlert
+  Star,
+  ShoppingBag,
+  TrendingUp,
+  History
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -46,13 +45,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Image from 'next/image';
-import { format } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 import { cn, formatWhatsAppNumber } from '@/lib/utils';
 import { useState, useMemo, useEffect } from 'react';
 import { toast } from '@/hooks/use-toast';
 
 export default function MyAccountsView() {
-  const { accountPosts, user, setActiveTab, deleteAccountPost, respondToSaleReport, renewAccountPost, markDeletionAsSeen, storeSettings, isInitialLoading, broadcastAdminNotification } = useApp();
+  const { accountPosts, user, setActiveTab, deleteAccountPost, respondToSaleReport, renewAccountPost, markDeletionAsSeen, storeSettings, isInitialLoading } = useApp();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [renewingPost, setRenewingPost] = useState<any>(null);
   const [renewTerm, setRenewTerm] = useState<'weekly' | 'monthly'>('weekly');
@@ -65,11 +64,21 @@ export default function MyAccountsView() {
       .sort((a, b) => b.createdAt - a.createdAt);
   }, [accountPosts, user]);
 
-  // Logic: Persistent high-impact warning logic (1-hour delay)
+  const stats = useMemo(() => {
+    return {
+      active: myPosts.filter(p => p.status === 'approved' && !p.sold).length,
+      pendingClaims: myPosts.reduce((acc, p) => {
+        const claims = Object.values(p.claimants || {}).filter((c: any) => c.status === 'pending').length;
+        return acc + (p.sold ? 0 : claims);
+      }, 0),
+      sold: myPosts.filter(p => p.sold).length
+    };
+  }, [myPosts]);
+
   const latePosts = useMemo(() => {
     const now = Date.now();
     return myPosts.filter(p => {
-      const hasUnansweredClaim = Object.values(p.claimants || {}).some(c => (now - c.timestamp) > 3600000);
+      const hasUnansweredClaim = Object.values(p.claimants || {}).some((c: any) => (now - c.timestamp) > 3600000 && c.status === 'pending');
       return hasUnansweredClaim && !p.sold && (p.status === 'approved' || p.status === 'holding');
     });
   }, [myPosts]);
@@ -110,31 +119,39 @@ export default function MyAccountsView() {
   }
 
   return (
-    <div className="pb-32 px-4 sm:px-6 py-6 sm:py-10 max-w-4xl mx-auto page-transition">
-      <header className="flex items-center gap-3 sm:gap-4 mb-8 sm:mb-10">
-        <button 
-          onClick={() => setActiveTab('profile')}
-          className="p-2.5 sm:p-3 bg-white dark:bg-slate-900 rounded-xl sm:rounded-2xl shadow-sm text-slate-400 hover:text-primary transition-colors"
-        >
-          <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
-        </button>
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-headline font-bold text-slate-900 dark:text-white uppercase tracking-tight">Account Management</h1>
-          <p className="text-xs sm:text-sm text-muted-foreground font-medium">Verify your sales and manage listings</p>
+    <div className="pb-32 px-4 sm:px-6 py-6 sm:py-10 max-w-5xl mx-auto page-transition overflow-x-hidden">
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10 sm:mb-16">
+        <div className="flex items-center gap-4">
+           <button 
+             onClick={() => setActiveTab('profile')}
+             className="p-3 bg-white dark:bg-slate-900 rounded-2xl shadow-sm text-slate-400 hover:text-primary transition-colors border dark:border-white/5"
+           >
+             <ChevronLeft className="w-6 h-6" />
+           </button>
+           <div>
+             <h1 className="text-2xl sm:text-4xl font-headline font-bold text-slate-900 dark:text-white uppercase tracking-tight">Management</h1>
+             <p className="text-xs sm:text-sm text-muted-foreground font-medium uppercase tracking-widest opacity-60">Verified Listings Dashboard</p>
+           </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-3 sm:gap-6">
+           <StatBox icon={ShoppingBag} label="Active" value={stats.active} color="text-primary" />
+           <StatBox icon={TrendingUp} label="Claims" value={stats.pendingClaims} color="text-amber-500" />
+           <StatBox icon={CheckCircle2} label="Sold" value={stats.sold} color="text-green-500" />
         </div>
       </header>
 
-      {/* Persistent Single Warning Alert (Global for all late posts) */}
       {latePosts.length > 0 && (
-        <Card className="mb-8 p-6 md:p-8 rounded-[2rem] border-2 border-red-500 bg-red-50 dark:bg-red-950/20 shadow-xl shadow-red-500/10 animate-in slide-in-from-top-4 duration-700">
-           <div className="flex items-start gap-5">
-              <div className="w-14 h-14 rounded-2xl bg-red-600 text-white flex items-center justify-center shadow-lg shrink-0 animate-pulse">
-                 <AlertTriangle size={32} />
+        <Card className="mb-10 p-6 md:p-10 rounded-[2.5rem] border-2 border-red-500 bg-red-50 dark:bg-red-950/20 shadow-2xl shadow-red-500/10 animate-in slide-in-from-top-4 duration-700 relative overflow-hidden">
+           <div className="absolute top-0 right-0 p-8 opacity-5"><ShieldAlert size={120} /></div>
+           <div className="flex items-start gap-6 relative z-10">
+              <div className="w-16 h-16 rounded-2xl bg-red-600 text-white flex items-center justify-center shadow-lg shrink-0 animate-pulse">
+                 <AlertTriangle size={36} />
               </div>
-              <div className="space-y-2 flex-1">
-                 <h3 className="text-lg md:text-xl font-headline font-bold text-red-700 dark:text-red-400 uppercase tracking-tight">Kaja Waab Account-yadaada</h3>
-                 <p className="text-[11px] md:text-xs font-bold leading-relaxed text-red-800 dark:text-red-500/80 uppercase tracking-wide">
-                   kaja Waab account kaaga qof ayaa dhahay Waan iibsaday, admin ka ayaa WhatsApp ka kaala Soo hadlan fadlan kajawaab, 24 saac Kadib account kaaga listing waa Laga saarayaa hadii Adan ka jawabin.
+              <div className="space-y-3 flex-1">
+                 <h3 className="text-xl md:text-2xl font-headline font-bold text-red-700 dark:text-red-400 uppercase tracking-tight">Kaja Waab Account-yadaada</h3>
+                 <p className="text-xs md:text-sm font-bold leading-relaxed text-red-800 dark:text-red-500/80 uppercase tracking-wide max-w-2xl">
+                   Account-kaaga qof ayaa dhahay "Waan iibsaday", admin-ka ayaa WhatsApp ka kaala soo hadli doona. Fadlan si deg-deg ah ugu jawaab verification-ka. 24 saac gudahood haddii aadan uga jawaabin, account-ka waa laga saari doonaa listing-ka.
                  </p>
               </div>
            </div>
@@ -142,17 +159,20 @@ export default function MyAccountsView() {
       )}
 
       {myPosts.length === 0 ? (
-        <div className="py-20 sm:py-24 text-center space-y-4 sm:space-y-6 opacity-30 flex flex-col items-center">
-          <div className="w-20 h-20 sm:w-24 sm:h-24 bg-slate-100 dark:bg-slate-900 rounded-full flex items-center justify-center text-slate-300 dark:text-slate-700">
-            <Gamepad2 className="w-10 h-10 sm:w-12 sm:h-12" />
+        <div className="py-24 sm:py-40 text-center space-y-6 sm:space-y-8 opacity-30 flex flex-col items-center">
+          <div className="w-24 h-24 sm:w-32 sm:h-32 bg-slate-100 dark:bg-slate-900 rounded-[2rem] flex items-center justify-center text-slate-300 dark:text-slate-700 shadow-inner">
+            <Gamepad2 className="w-12 h-12 sm:w-16 sm:h-16" />
           </div>
-          <p className="text-base sm:text-lg font-bold">Wali wax account ah maadan soo dhigin</p>
-          <Button onClick={() => setActiveTab('accounts')} className="rounded-full px-6 sm:px-8 h-10 sm:h-12 gap-2 font-bold shadow-lg shadow-primary/20">
-             Bilow Iibinta <ArrowRight size={16} />
+          <div className="space-y-2">
+             <p className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white uppercase tracking-tight">No Listings Found</p>
+             <p className="text-sm sm:text-lg">Wali wax account ah maadan soo dhigin Marketplace-ka.</p>
+          </div>
+          <Button onClick={() => setActiveTab('accounts')} className="rounded-2xl px-10 h-14 gap-2 font-black uppercase tracking-widest shadow-xl shadow-primary/20">
+             Start Selling <ArrowRight size={20} />
           </Button>
         </div>
       ) : (
-        <div className="space-y-6 sm:space-y-10">
+        <div className="space-y-8 sm:space-y-12">
           {myPosts.map((post) => (
             <AccountManagedCard 
               key={post.id} 
@@ -167,32 +187,32 @@ export default function MyAccountsView() {
       )}
 
       <Dialog open={!!renewingPost} onOpenChange={(v) => { if(!v) { setRenewingPost(null); setHasTriggeredRenewUssd(false); } }}>
-        <DialogContent className="max-w-md w-[95vw] rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-8 border-none shadow-2xl bg-white dark:bg-slate-900">
-           <DialogHeader className="mb-4 sm:mb-6">
-             <DialogTitle className="text-xl sm:text-2xl font-headline font-bold text-slate-900 dark:text-white">Renew Listing</DialogTitle>
+        <DialogContent className="max-w-md w-[95vw] rounded-[2.5rem] p-8 border-none shadow-2xl bg-white dark:bg-slate-900">
+           <DialogHeader className="mb-8">
+             <DialogTitle className="text-2xl font-headline font-bold text-slate-900 dark:text-white uppercase tracking-tight">Renew Listing</DialogTitle>
              <DialogDescription className="text-xs sm:text-sm font-bold text-slate-500">Muda cusub u door account-kaaga si uu marketplace-ka ugu soo laabto.</DialogDescription>
            </DialogHeader>
            
-           <div className="space-y-5 sm:space-y-6">
-              <div className="space-y-1.5 sm:space-y-2">
-                 <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1">Dooro Muda Cusub</label>
+           <div className="space-y-8">
+              <div className="space-y-2">
+                 <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Dooro Muda Cusub</label>
                  <Select value={renewTerm} onValueChange={(val: any) => setRenewTerm(val)}>
-                    <SelectTrigger className="h-12 md:h-14 rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-4 sm:px-6 font-bold shadow-inner">
+                    <SelectTrigger className="h-16 rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-6 font-bold shadow-inner">
                        <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="rounded-xl sm:rounded-2xl dark:bg-slate-900">
-                       <SelectItem value="weekly" className="rounded-lg sm:rounded-xl text-xs sm:text-sm">Weekly (Isbuucle) - ${storeSettings?.config?.shop?.listingFeeWeekly || 1.00}</SelectItem>
-                       <SelectItem value="monthly" className="rounded-lg sm:rounded-xl text-xs sm:text-sm">Monthly (Bile) - ${storeSettings?.config?.shop?.listingFeeMonthly || 3.00}</SelectItem>
+                    <SelectContent className="rounded-2xl dark:bg-slate-900 border-none shadow-2xl z-[200]">
+                       <SelectItem value="weekly" className="rounded-xl p-4 font-bold text-xs">Weekly (Isbuucle) - ${storeSettings?.config?.shop?.listingFeeWeekly || 1.00}</SelectItem>
+                       <SelectItem value="monthly" className="rounded-xl p-4 font-bold text-xs">Monthly (Bile) - ${storeSettings?.config?.shop?.listingFeeMonthly || 3.00}</SelectItem>
                     </SelectContent>
                  </Select>
               </div>
 
               {!hasTriggeredRenewUssd ? (
-                <Button onClick={handleRenewUssd} className="w-full h-14 sm:h-16 rounded-xl sm:rounded-2xl text-base sm:text-lg font-bold shadow-xl shadow-primary/20 bg-primary hover:bg-primary/90">
+                <Button onClick={handleRenewUssd} className="w-full h-20 rounded-3xl text-lg font-black uppercase tracking-widest shadow-2xl shadow-primary/30 bg-primary hover:bg-primary/90">
                    PAY FOR RENEWAL
                 </Button>
               ) : (
-                <Button onClick={handleRenewFinal} className="w-full h-14 sm:h-16 rounded-xl sm:rounded-2xl text-base sm:text-lg font-bold shadow-xl shadow-green-500/20 bg-green-600 hover:bg-green-700">
+                <Button onClick={handleRenewFinal} className="w-full h-20 rounded-3xl text-lg font-black uppercase tracking-widest shadow-2xl shadow-green-500/30 bg-green-600 hover:bg-green-700">
                    CONFIRM & REACTIVATE
                 </Button>
               )}
@@ -201,11 +221,13 @@ export default function MyAccountsView() {
       </Dialog>
 
       <Dialog open={!!deletingId} onOpenChange={(v) => !v && setDeletingId(null)}>
-        <DialogContent className="max-w-sm w-[90vw] rounded-[1.5rem] sm:rounded-[2rem]">
-          <DialogHeader><DialogTitle className="text-lg sm:text-xl">Ma hubtaa?</DialogTitle><DialogDescription className="text-xs sm:text-sm">Post-kan waa la tirtiri doonaa, dibna looma heli karo.</DialogDescription></DialogHeader>
-          <DialogFooter className="gap-2 mt-4 flex-col sm:flex-row">
-             <Button variant="ghost" onClick={() => setDeletingId(null)} className="rounded-xl flex-1 h-10 sm:h-12 order-2 sm:order-1">Maya</Button>
-             <Button variant="destructive" onClick={handleDelete} className="rounded-xl flex-1 h-10 sm:h-12 order-1 sm:order-2">Haa, Tirtir</Button>
+        <DialogContent className="max-w-sm w-[90vw] rounded-[2rem] p-10 border-none shadow-2xl bg-white dark:bg-slate-900 text-center">
+          <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center text-red-500 mx-auto mb-6"><Trash2 size={40}/></div>
+          <DialogTitle className="text-2xl font-headline font-bold mb-2">Ma hubtaa?</DialogTitle>
+          <DialogDescription className="text-sm font-bold text-slate-500 mb-8 uppercase tracking-widest">Post-kan dibna looma heli karo.</DialogDescription>
+          <DialogFooter className="gap-3 flex-col sm:flex-row">
+             <Button variant="ghost" onClick={() => setDeletingId(null)} className="rounded-xl flex-1 h-14 font-bold order-2 sm:order-1">Maya</Button>
+             <Button variant="destructive" onClick={handleDelete} className="rounded-xl flex-1 h-14 font-black uppercase tracking-widest order-1 sm:order-2 shadow-lg shadow-red-500/20">Haa, Tirtir</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -218,10 +240,17 @@ function AccountManagedCard({ post, onDelete, onRespond, onRenew, onSeen }: { po
   const isRejected = post.status === 'rejected';
   const [timeLeft, setTimeLeft] = useState("");
   const [autoDeleteTime, setAutoDeleteTime] = useState("");
-  const { deleteAccountPost } = useApp();
+  const { deleteAccountPost, allUsers } = useApp();
 
   const claimants = useMemo(() => Object.values(post.claimants || {}), [post.claimants]);
   const showVerification = claimants.length > 0 && !post.sold;
+  
+  const finalBuyer = useMemo(() => {
+    if (!post.sold || !post.boughtBy) return null;
+    const buyerProfile = allUsers.find(u => u.uid === post.boughtBy);
+    const claimantRecord = post.claimants?.[post.boughtBy];
+    return { ...buyerProfile, ...claimantRecord };
+  }, [post.sold, post.boughtBy, allUsers, post.claimants]);
 
   useEffect(() => {
     if (!post.expiresAt) return;
@@ -233,7 +262,7 @@ function AccountManagedCard({ post, onDelete, onRespond, onRenew, onSeen }: { po
         const d = Math.floor(diff / (1000 * 60 * 60 * 24));
         const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        setTimeLeft(`${d}d ${h}h ${m}m remaining`);
+        setTimeLeft(`${d}d ${h}h ${m}m`);
       }
     };
     updateCountdown();
@@ -259,72 +288,120 @@ function AccountManagedCard({ post, onDelete, onRespond, onRenew, onSeen }: { po
     }
   }, [post.sellerSeenDeletionAt, post.id, deleteAccountPost]);
 
+  const statusColors = {
+    approved: "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400",
+    pending: "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400",
+    holding: "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400",
+    rejected: "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400",
+    sold: "bg-slate-900 text-white dark:bg-white dark:text-slate-950"
+  };
+
   return (
     <Card className={cn(
-      "rounded-[1.5rem] sm:rounded-[2.5rem] border-none shadow-xl bg-white dark:bg-slate-900 overflow-hidden group transition-all relative",
-      isExpired && !post.sold && "border-l-4 border-l-red-500",
-      showVerification && "ring-2 ring-primary",
-      isRejected && "opacity-90 grayscale-[0.2] ring-2 ring-red-500"
+      "rounded-[2.5rem] border-none shadow-xl bg-white dark:bg-slate-900 overflow-hidden group transition-all relative",
+      isExpired && !post.sold && "ring-2 ring-red-500/20",
+      showVerification && "ring-2 ring-primary shadow-2xl shadow-primary/10",
+      post.sold && "ring-2 ring-green-500/30 grayscale-[0.2]"
     )}>
-       <div className="p-5 sm:p-8 space-y-5 sm:space-y-6">
-          <div className="flex flex-col md:flex-row gap-5 sm:gap-6">
-            <div className="w-full md:w-44 aspect-video md:aspect-square relative rounded-2xl sm:rounded-3xl overflow-hidden bg-slate-100 shrink-0 shadow-inner">
+       <div className="p-6 sm:p-10 space-y-10">
+          <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
+            <div className="w-full lg:w-64 aspect-video lg:aspect-square relative rounded-3xl overflow-hidden bg-slate-100 dark:bg-slate-800 shrink-0 shadow-inner group-hover:shadow-2xl transition-all">
                {post.thumbnailUrl ? (
-                 <Image src={post.thumbnailUrl} alt="" fill className="object-cover" unoptimized />
-               ) : <Gamepad2 className="m-auto absolute inset-0 text-slate-300 w-10 h-10 sm:w-12 sm:h-12" />}
+                 <Image src={post.thumbnailUrl} alt="" fill className="object-cover transition-transform duration-1000 group-hover:scale-110" unoptimized />
+               ) : <Gamepad2 className="m-auto absolute inset-0 text-slate-300 w-12 h-12" />}
                
-               {post.status === 'sold' && (
-                 <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-10">
-                    <Badge className="bg-red-600 text-white border-none font-bold uppercase tracking-widest text-[9px] sm:text-[10px] px-3 py-1 shadow-lg">SOLD</Badge>
+               {post.sold && (
+                 <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-10">
+                    <Badge className="bg-green-500 text-white border-none font-black uppercase tracking-[0.2em] text-[10px] px-4 py-1.5 shadow-2xl">SOLD</Badge>
                  </div>
                )}
                {(isExpired || isRejected) && !post.sold && (
-                 <div className="absolute inset-0 bg-red-900/60 backdrop-blur-sm flex items-center justify-center z-10">
-                    <Badge className="bg-red-600 text-white border-none font-bold uppercase tracking-widest text-[9px] sm:text-[10px] px-3 py-1 shadow-lg">{isRejected ? 'REJECTED' : 'EXPIRED'}</Badge>
+                 <div className="absolute inset-0 bg-red-900/70 backdrop-blur-sm flex items-center justify-center z-10">
+                    <Badge className="bg-red-600 text-white border-none font-black uppercase tracking-[0.2em] text-[10px] px-4 py-1.5 shadow-2xl">{isRejected ? 'REJECTED' : 'EXPIRED'}</Badge>
                  </div>
                )}
             </div>
 
-            <div className="flex-1 space-y-4">
-               <div className="flex justify-between items-start">
+            <div className="flex-1 space-y-8">
+               <div className="flex justify-between items-start gap-4">
                   <div className="min-w-0 pr-2">
-                     <h3 className="font-bold text-lg sm:text-xl text-slate-900 dark:text-white uppercase truncate">{post.gameType} Account</h3>
-                     <p className="text-[10px] sm:text-xs text-muted-foreground font-medium truncate opacity-60">Ref: #{post.id.toUpperCase()}</p>
+                     <div className="flex items-center gap-3 mb-1">
+                        <h3 className="font-headline font-bold text-xl sm:text-3xl text-slate-900 dark:text-white uppercase truncate">{post.gameType} Account</h3>
+                        <Badge className="bg-primary/10 text-primary border-none text-[8px] font-black uppercase">{post.platform}</Badge>
+                     </div>
+                     <p className="text-[10px] sm:text-xs font-black text-muted-foreground uppercase tracking-widest opacity-40">Reference: #{post.id.toUpperCase()}</p>
                   </div>
                   <Badge className={cn(
-                    "rounded-full px-2 sm:px-4 py-0.5 sm:py-1 font-bold text-[8px] sm:text-[10px] border-none uppercase tracking-wider shadow-sm",
-                    post.status === 'approved' ? "bg-green-100 text-green-700" : (post.status === 'pending' || post.status === 'holding') ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"
+                    "rounded-full px-5 py-2 font-black text-[10px] border-none uppercase tracking-[0.2em] shadow-sm shrink-0 transition-colors",
+                    statusColors[post.status as keyof typeof statusColors] || statusColors.pending
                   )}>
                      {post.status}
                   </Badge>
                </div>
 
-               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+               <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 pt-6 border-t dark:border-white/5">
                   <StatusInfo icon={Calendar} label="Posted" value={post.createdAt ? format(new Date(post.createdAt), 'MMM d') : '...'} />
-                  <StatusInfo icon={Gamepad2} label="Level" value={post.level || '0'} />
-                  <StatusInfo icon={Smartphone} label="Platform" value={post.platform || 'N/A'} />
-                  <StatusInfo icon={DollarSign} label="Price" value={`$${post.price || 0}`} />
+                  <StatusInfo icon={Star} label="Level" value={post.level || '0'} />
+                  <StatusInfo icon={Clock} label="Expires" value={timeLeft || 'N/A'} color={isExpired ? "text-red-500" : "text-amber-500"} />
+                  <StatusInfo icon={DollarSign} label="Value" value={`$${post.price || 0}`} color="text-primary" />
                </div>
+
+               {/* SOLD SUCCESS BLOCK */}
+               {post.sold && finalBuyer && (
+                 <div className="p-6 md:p-8 bg-green-50 dark:bg-green-500/10 rounded-3xl border-2 border-green-500/20 space-y-6 animate-in zoom-in duration-700">
+                    <div className="flex items-center justify-between">
+                       <div className="flex items-center gap-3 text-green-600">
+                          <CheckCircle2 size={24} />
+                          <h4 className="font-headline font-bold text-lg uppercase tracking-tight">Finalized Sale</h4>
+                       </div>
+                       <Badge variant="outline" className="border-green-500/30 text-green-600 font-bold text-[10px] uppercase">Verified</Badge>
+                    </div>
+                    
+                    <div className="flex items-center gap-4 bg-white/50 dark:bg-black/20 p-4 rounded-2xl">
+                       <div className="w-12 h-12 rounded-full overflow-hidden relative border-2 border-green-500/50 shrink-0">
+                          {finalBuyer.photo ? <Image src={finalBuyer.photo} alt="" fill className="object-cover" /> : <User className="m-auto mt-2 opacity-20" />}
+                       </div>
+                       <div className="min-w-0 flex-1">
+                          <p className="text-[10px] font-black text-green-600/60 uppercase tracking-widest leading-none mb-1">Final Buyer</p>
+                          <p className="text-lg font-bold text-slate-900 dark:text-white truncate">{finalBuyer.name || "Client"}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                             <Smartphone size={12} className="text-green-500" />
+                             <span className="text-xs font-black text-green-700 dark:text-green-400">{finalBuyer.whatsapp || "N/A"}</span>
+                          </div>
+                       </div>
+                       <div className="text-right shrink-0">
+                          <p className="text-[10px] font-black text-muted-foreground uppercase opacity-40 mb-1">Sold at</p>
+                          <p className="text-xs font-bold text-slate-900 dark:text-white">{post.completedAt ? format(new Date(post.completedAt), 'MMM d, HH:mm') : '...'}</p>
+                       </div>
+                    </div>
+                 </div>
+               )}
 
                {/* Admin Feedback Block */}
                {(post.adminMessage || isRejected) && (
-                  <div className="p-4 bg-slate-900 text-white rounded-2xl border-4 border-red-500/30 space-y-3">
-                     <div className="flex items-center gap-2">
-                        <ShieldAlert className="text-red-500 w-4 h-4" />
-                        <h4 className="font-black text-[10px] uppercase tracking-widest text-red-400">Admin Notification</h4>
+                  <div className="p-6 bg-slate-900 text-white rounded-3xl border-4 border-red-500/30 space-y-5 shadow-2xl">
+                     <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                           <ShieldAlert className="text-red-500 w-6 h-6" />
+                           <h4 className="font-black text-[10px] sm:text-xs uppercase tracking-widest text-red-400">Admin Response</h4>
+                        </div>
+                        <span className="text-[9px] font-black opacity-40 uppercase tracking-widest">Urgent Notice</span>
                      </div>
-                     <p className="text-xs md:text-sm font-bold leading-relaxed italic text-slate-300">
-                        "{post.adminMessage || "Listing Penalty Enforcement Applied."}"
+                     <p className="text-xs md:text-lg font-medium leading-relaxed italic text-slate-300 border-l-2 border-red-500/50 pl-4 py-1">
+                        "{post.adminMessage || "Listing was flagged by security. Penalty enforcement applied."}"
                      </p>
-                     {isRejected && !post.sellerSeenDeletionAt && (
-                       <Button onClick={onSeen} className="w-full h-9 rounded-xl bg-white text-black hover:bg-slate-200 font-bold text-xs gap-2">
-                          <Eye size={16} /> I've Read the Reason
+                     
+                     {!post.sellerSeenDeletionAt ? (
+                       <Button onClick={onSeen} className="w-full h-12 md:h-16 rounded-2xl bg-white text-black hover:bg-slate-200 font-black uppercase tracking-widest text-xs md:text-sm gap-3 active:scale-[0.98] transition-all">
+                          <Eye size={20} /> I have read the decision
                        </Button>
-                     )}
-                     {post.sellerSeenDeletionAt && (
-                        <div className="flex items-center justify-between text-[10px] font-black uppercase text-red-400 border-t border-white/10 pt-2">
-                           <span>AUTO-DELETING IN:</span>
-                           <span className="bg-red-600 text-white px-2 py-0.5 rounded-full">{autoDeleteTime}</span>
+                     ) : (
+                        <div className="flex items-center justify-between p-4 bg-red-950/30 rounded-2xl text-[11px] font-black uppercase text-red-400 border border-red-900/30">
+                           <div className="flex items-center gap-2">
+                              <History size={16} className="animate-spin-slow" />
+                              <span>Auto-Deleting record in:</span>
+                           </div>
+                           <span className="bg-red-600 text-white px-4 py-1 rounded-full shadow-lg">{autoDeleteTime}</span>
                         </div>
                      )}
                   </div>
@@ -333,49 +410,83 @@ function AccountManagedCard({ post, onDelete, onRespond, onRenew, onSeen }: { po
           </div>
 
           {showVerification && (
-            <div className="space-y-4 pt-4 border-t dark:border-white/5">
-               <div className="flex items-center gap-3 text-primary mb-4">
-                  <AlertCircle size={20} />
-                  <h4 className="font-bold text-base sm:text-lg uppercase tracking-tight">Kala Dooro Buyer-ka (Claims)</h4>
+            <div className="space-y-6 pt-10 border-t dark:border-white/5 animate-in slide-in-from-bottom-4">
+               <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-4 text-primary">
+                     <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center"><AlertCircle size={24} /></div>
+                     <div>
+                        <h4 className="font-headline font-bold text-lg md:text-2xl uppercase tracking-tight">Purchase Claims</h4>
+                        <p className="text-[10px] md:text-xs text-muted-foreground font-black uppercase tracking-widest opacity-60">Xaqiiji qofka kaa iibsaday account-ka</p>
+                     </div>
+                  </div>
+                  <Badge className="bg-primary text-white border-none rounded-full h-8 px-4 font-black uppercase text-[10px]">{claimants.length} Requests</Badge>
                </div>
-               <div className="grid grid-cols-1 gap-3">
-                  {claimants.map((claim: any) => (
-                    <Card key={claim.uid} className="p-4 sm:p-6 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border dark:border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
-                       <div className="flex items-center gap-4 min-w-0 w-full sm:w-auto">
-                          <div className="w-12 h-12 rounded-full overflow-hidden relative border-2 border-white shrink-0 shadow-sm">
-                             {claim.photo ? <Image src={claim.photo} alt="" fill className="object-cover" /> : <div className="w-full h-full bg-slate-200 flex items-center justify-center text-slate-400"><User size={20} /></div>}
-                          </div>
-                          <div className="min-w-0">
-                             <p className="text-sm sm:text-base font-bold truncate">{claim.name}</p>
-                             <div className="flex items-center gap-2">
-                                <p className="text-[10px] sm:text-xs text-primary font-bold">{claim.whatsapp}</p>
-                                <span className="w-1 h-1 rounded-full bg-slate-300" />
-                                <p className="text-[8px] uppercase font-black text-muted-foreground">{format(new Date(claim.timestamp), 'MMM d, HH:mm')}</p>
-                             </div>
-                          </div>
-                       </div>
-                       <div className="flex gap-2 w-full sm:w-auto">
-                          <Button onClick={() => onRespond(claim.uid, true)} className="flex-1 sm:flex-none h-11 px-6 bg-green-600 hover:bg-green-700 font-bold rounded-xl text-xs gap-2">
-                             <Check size={16} /> Confirm Sale
-                          </Button>
-                          <Button onClick={() => onRespond(claim.uid, false)} variant="outline" className="flex-1 sm:flex-none h-11 px-6 text-red-500 border-red-100 font-bold rounded-xl text-xs gap-2">
-                             <XCircle size={16} /> Reject
-                          </Button>
-                       </div>
-                    </Card>
-                  ))}
+               
+               <div className="grid grid-cols-1 gap-4">
+                  {claimants.map((claim: any) => {
+                    const isDecisionMade = claim.status !== 'pending';
+                    return (
+                      <Card key={claim.uid} className={cn(
+                        "p-5 sm:p-8 rounded-3xl border transition-all flex flex-col sm:flex-row items-center justify-between gap-6",
+                        claim.status === 'accepted' ? "bg-green-50 dark:bg-green-500/5 border-green-500/20" : 
+                        claim.status === 'rejected' ? "bg-red-50 dark:bg-red-500/5 border-red-500/10 opacity-70 grayscale-[0.3]" : 
+                        "bg-slate-50 dark:bg-slate-800/40 border-slate-100 dark:border-white/5"
+                      )}>
+                         <div className="flex items-center gap-5 min-w-0 w-full sm:w-auto">
+                            <div className={cn(
+                              "w-16 h-16 rounded-3xl overflow-hidden relative border-4 shrink-0 shadow-lg",
+                              claim.status === 'accepted' ? "border-green-500" : claim.status === 'rejected' ? "border-red-500" : "border-white dark:border-slate-800"
+                            )}>
+                               {claim.photo ? <Image src={claim.photo} alt="" fill className="object-cover" /> : <div className="w-full h-full bg-slate-200 flex items-center justify-center text-slate-400"><User size={24} /></div>}
+                            </div>
+                            <div className="min-w-0 space-y-1">
+                               <div className="flex items-center gap-2">
+                                  <p className="text-lg md:text-2xl font-bold truncate">{claim.name}</p>
+                                  {isDecisionMade && (
+                                    <Badge className={cn("text-[8px] h-5 uppercase font-black", claim.status === 'accepted' ? "bg-green-500" : "bg-red-500")}>
+                                      {claim.status}
+                                    </Badge>
+                                  )}
+                               </div>
+                               <div className="flex items-center gap-3">
+                                  <div className="flex items-center gap-2 text-primary font-black text-xs md:text-sm">
+                                     <MessageCircle size={14} className="text-green-500" /> {claim.whatsapp}
+                                  </div>
+                                  <span className="w-1 h-1 rounded-full bg-slate-300" />
+                                  <p className="text-[10px] uppercase font-black text-muted-foreground opacity-40">{formatDistanceToNow(new Date(claim.timestamp), { addSuffix: true })}</p>
+                               </div>
+                            </div>
+                         </div>
+                         
+                         {!isDecisionMade ? (
+                           <div className="flex gap-3 w-full sm:w-auto shrink-0">
+                              <Button onClick={() => onRespond(claim.uid, true)} className="flex-1 sm:flex-none h-14 md:h-16 px-8 bg-green-600 hover:bg-green-700 font-black uppercase tracking-widest text-xs rounded-2xl gap-2 shadow-xl shadow-green-600/20 active:scale-[0.98]">
+                                 <Check size={20} /> SOLD
+                              </Button>
+                              <Button onClick={() => onRespond(claim.uid, false)} variant="outline" className="flex-1 sm:flex-none h-14 md:h-16 px-6 text-red-500 border-red-100 dark:border-red-900/20 font-black uppercase tracking-widest text-xs rounded-2xl gap-2 hover:bg-red-50 dark:hover:bg-red-950/20">
+                                 <XCircle size={20} /> REJECT
+                              </Button>
+                           </div>
+                         ) : (
+                           <div className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground p-3 border rounded-xl border-dashed">
+                              Final Decision Recorded
+                           </div>
+                         )}
+                      </Card>
+                    );
+                  })}
                </div>
             </div>
           )}
 
-          <div className="pt-4 border-t dark:border-white/5 flex flex-wrap gap-2 sm:gap-3">
+          <div className="pt-8 border-t dark:border-white/5 flex flex-wrap gap-3">
              {!post.sold && isExpired && !isRejected && (
-               <Button onClick={onRenew} size="sm" className="h-9 sm:h-10 rounded-lg sm:rounded-xl bg-primary hover:bg-primary/90 font-bold text-[10px] sm:text-xs gap-1.5 sm:gap-2 shadow-lg shadow-primary/20 px-3 sm:px-4">
-                  <RefreshCw className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Renew Listing
+               <Button onClick={onRenew} className="h-12 md:h-14 rounded-2xl bg-primary hover:bg-primary/90 font-black text-xs uppercase tracking-widest gap-2 shadow-xl shadow-primary/20 px-8">
+                  <RefreshCw className="w-4 h-4" /> Renew Listing
                </Button>
              )}
-             <Button variant="ghost" size="sm" className="h-9 sm:h-10 rounded-lg sm:rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 font-bold text-[10px] sm:text-xs gap-1.5 sm:gap-2 px-3 sm:px-4" onClick={onDelete}>
-                <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Delete Record
+             <Button variant="ghost" className="h-12 md:h-14 rounded-2xl text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 font-black text-xs uppercase tracking-widest gap-2 px-6" onClick={onDelete}>
+                <Trash2 className="w-4 h-4" /> Delete record
              </Button>
           </div>
        </div>
@@ -383,13 +494,26 @@ function AccountManagedCard({ post, onDelete, onRespond, onRenew, onSeen }: { po
   );
 }
 
-function StatusInfo({ icon: Icon, label, value }: { icon: any, label: string, value: any }) {
+function StatBox({ icon: Icon, label, value, color }: { icon: any, label: string, value: number, color: string }) {
   return (
-    <div className="space-y-0.5 sm:space-y-1 min-w-0">
-      <p className="text-[8px] sm:text-[9px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1 sm:gap-1.5 opacity-60">
-        <Icon size={10} /> {label}
-      </p>
-      <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">{value}</p>
+    <div className="bg-white dark:bg-slate-900 p-2.5 sm:p-5 rounded-2xl sm:rounded-[2rem] border dark:border-white/5 shadow-sm text-center space-y-0.5 sm:space-y-1 min-w-0">
+       <div className={cn("mx-auto w-7 h-7 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center mb-1 sm:mb-2 bg-slate-50 dark:bg-slate-800", color)}>
+          <Icon size={16} className="sm:w-5 sm:h-5" />
+       </div>
+       <p className="text-base sm:text-2xl font-headline font-bold text-slate-900 dark:text-white leading-none">{value}</p>
+       <p className="text-[7px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60 truncate">{label}</p>
     </div>
   );
 }
+
+function StatusInfo({ icon: Icon, label, value, color }: { icon: any, label: string, value: any, color?: string }) {
+  return (
+    <div className="space-y-1 min-w-0">
+      <p className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em] flex items-center gap-2 opacity-50">
+        <Icon size={10} /> {label}
+      </p>
+      <p className={cn("text-xs sm:text-base font-bold truncate", color || "text-slate-900 dark:text-white")}>{value}</p>
+    </div>
+  );
+}
+
