@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -144,7 +145,7 @@ export default function ProfileView() {
          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 lg:gap-14">
             <ProfileGroup title="Store & Marketplace">
                 <ProfileOption icon={ShoppingBag} label="Order History" onClick={() => setActiveTab('orders')} />
-                <ProfileOption icon={AccountIcon} label="Managed Accounts" onClick={() => setActiveTab('my-accounts')} />
+                <ProfileOption icon={AccountIcon} label="My accounts" onClick={() => setActiveTab('my-accounts')} />
                 <ProfileOption icon={Gamepad2} label="Sell My Account" onClick={() => setActiveTab('accounts')} />
                 <ProfileOption icon={Trophy} label="Global Leaderboard" onClick={() => setActiveTab('ranking')} />
             </ProfileGroup>
