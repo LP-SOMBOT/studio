@@ -20,13 +20,8 @@ import {
   Image as ImageIcon,
   Loader2,
   Lock,
-  Delete,
-  MonitorOff,
-  ChevronRight,
   Menu,
-  X,
-  PlusCircle,
-  DollarSign,
+  ChevronRight,
   Gamepad2,
   Search,
   Box,
@@ -37,42 +32,23 @@ import {
   Eye,
   CreditCard,
   Hash,
-  ExternalLink,
-  MoreVertical,
-  Calendar,
   Smartphone,
-  UserCog,
-  ArrowUpCircle,
-  ArrowDownCircle,
-  Shield,
-  Star,
-  Ban,
-  LayoutGrid,
-  ChevronDown,
-  Layers,
-  Sparkles,
-  Info,
-  Phone,
   MessageCircle,
-  SmartphoneIcon,
   Home,
   ShieldAlert,
   Video,
-  Globe,
   Bell,
   ChevronLeft,
-  CalendarDays,
+  SmartphoneIcon,
   CreditCardIcon,
   Trophy,
   Megaphone,
-  CreditCard as PaymentIcon,
   UserCircle,
   Tag,
   Sword,
   Target,
   Zap,
   Bomb,
-  Gavel,
   History,
   AlertTriangle,
   Send,
@@ -80,7 +56,10 @@ import {
   Check,
   PartyPopper,
   HandCoins,
-  ShieldQuestion
+  ShieldQuestion,
+  Layers,
+  Sparkles,
+  Info
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -113,18 +92,11 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { 
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from "@/components/ui/sheet";
 import {
   Popover,
@@ -159,7 +131,7 @@ function CountdownDisplay({ expiresAt, status }: { expiresAt?: number, status: s
       if (diff <= 0) setTimeLeft("EXPIRED");
       else {
         const d = Math.floor(diff / (1000 * 60 * 60 * 24));
-        const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60));
+        const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
         setTimeLeft(`${d}d ${h}h ${m}m`);
       }
@@ -212,7 +184,6 @@ export default function AdminPage() {
     markAdminNotificationsAsRead,
     updateOrderStatus,
     updateAccountPostStatus,
-    respondToSaleReport,
     enforceAccountAction,
     deleteUser: deleteUserFn,
     manageUser,
@@ -274,14 +245,13 @@ export default function AdminPage() {
   const [deleteTarget, setDeleteTarget] = useState<{ id: string, type: 'user' | 'game' | 'product' | 'event' | 'banner' | 'account' | 'order' | 'payment' } | null>(null);
 
   const [gameForm, setGameForm] = useState({ title: "", icon: "", category: "top-up" });
-  const [productForm, setProductForm] = useState({ title: "", gameId: "", category: "top-up", description: "", price: "", discountedPrice: "", thumbnail: "", whatsappNumber: "" });
+  const [productForm, setProductForm] = useState({ title: "", gameId: "", category: "top-up" as any, description: "", price: "", discountedPrice: "", thumbnail: "", whatsappNumber: "" });
   const [eventForm, setEventForm] = useState({ 
     title: "", 
     shortDescription: "", 
     content: "", 
-    description: "", 
     thumbnailUrl: "", 
-    type: "freefire_event", 
+    type: "freefire_event" as any, 
     active: true,
     duration: "",
     durationUnit: "days"
@@ -298,6 +268,8 @@ export default function AdminPage() {
 
   const [accountSearchQuery, setAccountSearchQuery] = useState("");
   const [accountStatusFilter, setAccountStatusFilter] = useState<string>("all");
+
+  const [userSearchQuery, setUserSearchQuery] = useState("");
 
   const [helpLinksForm, setHelpLinksForm] = useState({
     tutorialUrl: "",
@@ -354,19 +326,6 @@ export default function AdminPage() {
     return accountPosts.find(p => p.id === selectedAccountId);
   }, [selectedAccountId, accountPosts]);
 
-  const selectedOrder = useMemo(() => {
-    if (!selectedOrderId) return null;
-    return allOrders.find(o => o.id === selectedOrderId);
-  }, [selectedOrderId, allOrders]);
-
-  const lateAccounts = useMemo(() => {
-    const now = Date.now();
-    return accountPosts.filter(p => {
-       const hasUnansweredClaim = Object.values(p.claimants || {}).some(c => (now - c.timestamp) > 3600000);
-       return hasUnansweredClaim && !p.sold && (p.status === 'approved' || p.status === 'holding');
-    });
-  }, [accountPosts]);
-
   const urgentAccounts = useMemo(() => {
     const now = Date.now();
     return accountPosts.filter(p => {
@@ -386,6 +345,14 @@ export default function AdminPage() {
       })
       .sort((a, b) => b.createdAt - a.createdAt);
   }, [accountPosts, accountSearchQuery, accountStatusFilter]);
+
+  const filteredUsers = useMemo(() => {
+    return allUsers.filter(u => 
+      u.name?.toLowerCase().includes(userSearchQuery.toLowerCase()) || 
+      u.email?.toLowerCase().includes(userSearchQuery.toLowerCase()) ||
+      u.uid.toLowerCase().includes(userSearchQuery.toLowerCase())
+    ).sort((a, b) => (b.points || 0) - (a.points || 0));
+  }, [allUsers, userSearchQuery]);
 
   const handleOpenAccountPage = (id: string) => {
     const acc = accountPosts.find(p => p.id === id);
@@ -435,7 +402,7 @@ export default function AdminPage() {
       });
     } else {
       setEditingEvent(null);
-      setEventForm({ title: "", shortDescription: "", content: "", description: "", thumbnailUrl: "", type: "freefire_event", active: true, duration: "", durationUnit: "days" });
+      setEventForm({ title: "", shortDescription: "", content: "", thumbnailUrl: "", type: "freefire_event", active: true, duration: "", durationUnit: "days" });
     }
     setIsEventDialogOpen(true);
   };
@@ -499,7 +466,8 @@ export default function AdminPage() {
       await saveProduct({ 
         ...productForm, 
         price: parseFloat(productForm.price),
-        discountedPrice: productForm.discountedPrice ? parseFloat(productForm.discountedPrice) : undefined
+        discountedPrice: productForm.discountedPrice ? parseFloat(productForm.discountedPrice) : undefined,
+        id: editingProduct?.id
       });
       toast({ title: "Item Saved" });
       setIsProductDialogOpen(false);
@@ -742,7 +710,7 @@ export default function AdminPage() {
         <SideNavItem icon={ShoppingBag} label="Orders" active={activeView === 'orders'} expanded={isSidebarExpanded || isMobile} onClick={() => { setActiveView('orders'); setIsMobileMenuOpen(false); setSelectedAccountId(null); }} badge={allOrders.filter(o => o.status === 'pending').length} />
         <SideNavItem icon={Gamepad2} label="Marketplace" active={activeView === 'account-posts'} expanded={isSidebarExpanded || isMobile} onClick={() => { setActiveView('account-posts'); setIsMobileMenuOpen(false); setSelectedOrderId(null); }} badge={accountPosts.filter(p => p.status === 'pending' || p.conflict || p.buyerReported).length} />
         <SideNavItem icon={Package} label="Inventory" active={activeView === 'inventory'} expanded={isSidebarExpanded || isMobile} onClick={() => { setActiveView('inventory'); setIsMobileMenuOpen(false); setSelectedAccountId(null); setSelectedOrderId(null); }} />
-        <SideNavItem icon={Calendar} label="Live Events" active={activeView === 'events'} expanded={isSidebarExpanded || isMobile} onClick={() => { setActiveView('events'); setIsMobileMenuOpen(false); setSelectedAccountId(null); setSelectedOrderId(null); }} />
+        <SideNavItem icon={Megaphone} label="Live Events" active={activeView === 'events'} expanded={isSidebarExpanded || isMobile} onClick={() => { setActiveView('events'); setIsMobileMenuOpen(false); setSelectedAccountId(null); setSelectedOrderId(null); }} />
         <SideNavItem icon={Users} label="Users" active={activeView === 'users'} expanded={isSidebarExpanded || isMobile} onClick={() => { setActiveView('users'); setIsMobileMenuOpen(false); setSelectedAccountId(null); setSelectedOrderId(null); }} />
         <SideNavItem icon={SettingsIcon} label="Settings" active={activeView === 'settings'} expanded={isSidebarExpanded || isMobile} onClick={() => { setActiveView('settings'); setIsMobileMenuOpen(false); setSelectedAccountId(null); setSelectedOrderId(null); }} />
       </nav>
@@ -967,7 +935,6 @@ export default function AdminPage() {
                         sortedAndFilteredAccounts.map(p => {
                           const claimants = Object.values(p.claimants || {});
                           const longestWaitMs = claimants.length > 0 ? Date.now() - Math.min(...claimants.map(c => c.timestamp)) : 0;
-                          const isLate = longestWaitMs > 3600000;
                           const isUrgent = longestWaitMs > 86400000;
                           
                           return (
@@ -1007,7 +974,7 @@ export default function AdminPage() {
                               <TableCell>
                                  {claimants.length > 0 ? (
                                    <div className="flex flex-col">
-                                      <span className={cn("text-[10px] font-black", isUrgent ? "text-red-600" : isLate ? "text-amber-600" : "text-slate-400")}>
+                                      <span className={cn("text-[10px] font-black", isUrgent ? "text-red-600" : "text-slate-400")}>
                                          {Math.floor(longestWaitMs / 3600000)}h {Math.floor((longestWaitMs % 3600000) / 60000)}m
                                       </span>
                                    </div>
@@ -1055,7 +1022,6 @@ export default function AdminPage() {
                <div className="flex-1 overflow-y-auto p-4 sm:p-10 space-y-8 scrollbar-hide pb-32">
                   <div className="max-w-6xl mx-auto space-y-8">
                      
-                     {/* SOLD SUCCESS CARD */}
                      {selectedAccount.status === 'sold' && (
                        <Card className="rounded-[2.5rem] border-none shadow-2xl bg-green-500 text-white overflow-hidden animate-in zoom-in duration-500">
                            <div className="p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-8">
@@ -1097,7 +1063,6 @@ export default function AdminPage() {
 
                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                        <div className="lg:col-span-2 space-y-8">
-                         {/* Product Details Card */}
                          <Card className="rounded-[2.5rem] border-none shadow-xl bg-white dark:bg-slate-900 overflow-hidden">
                            <div className="aspect-video relative bg-slate-950 flex items-center justify-center">
                               <Image src={selectedAccount.thumbnailUrl} alt="" fill className="object-contain" unoptimized />
@@ -1117,32 +1082,19 @@ export default function AdminPage() {
                              </div>
 
                              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 pt-4 border-t dark:border-white/5">
-                                <StatItem icon={Star} label="Level" value={selectedAccount.level} />
-                                <StatItem icon={Hash} label="ID" value={selectedAccount.id.toUpperCase().slice(0, 8)} />
-                                <StatItem icon={Clock} label="Wait" value={getSmartTimestamp(selectedAccount.createdAt)} />
-                                <StatItem icon={Tag} label="Term" value={selectedAccount.term} />
+                                <DetailItem icon={Star} label="Level" value={selectedAccount.level} />
+                                <DetailItem icon={Hash} label="ID" value={selectedAccount.id.toUpperCase().slice(0, 8)} />
+                                <DetailItem icon={Clock} label="Wait" value={getSmartTimestamp(selectedAccount.createdAt)} />
+                                <DetailItem icon={Tag} label="Term" value={selectedAccount.term} />
                              </div>
-
-                             <div className="space-y-4 pt-4 border-t dark:border-white/5">
-                                 <h5 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Premium Assets Breakdown</h5>
-                                 <div className="flex flex-wrap gap-3">
-                                    <AssetBadge icon={Sword} label="Evo" value={selectedAccount.evoWeapons} />
-                                    <AssetBadge icon={Target} label="Weapons" value={selectedAccount.totalWeapons} />
-                                    <AssetBadge icon={Zap} label="Emotes" value={selectedAccount.emotes} />
-                                    <AssetBadge icon={Bomb} label="Execution" value={selectedAccount.executionEmotes} />
-                                    <AssetBadge icon={Star} label="Arrival" value={selectedAccount.arrivalEmotes} />
-                                    {selectedAccount.gameType === 'freefire' && <AssetBadge icon={ShoppingBag} label="Dharka" value={selectedAccount.dharka} />}
-                                 </div>
-                              </div>
                            </div>
                          </Card>
 
-                         {/* STAKEHOLDERS & CLAIMS UI */}
                          <Card className="rounded-[2.5rem] border-none shadow-xl bg-white dark:bg-slate-900 p-8 md:p-12 space-y-10">
                             <div className="flex items-center justify-between">
                                <div className="flex items-center gap-3">
                                   <div className="p-2 bg-blue-50 dark:bg-blue-500/10 rounded-xl text-blue-500"><HandCoins size={24}/></div>
-                                  <h4 className="font-headline font-bold text-xl md:text-2xl uppercase">Stakeholder Lifecycle</h4>
+                                  <h4 className="font-headline font-bold text-xl md:text-2xl uppercase">Stakeholder Hub</h4>
                                </div>
                                <Badge className="bg-primary text-white border-none rounded-full h-8 px-4 font-black">
                                   {Object.keys(selectedAccount.claimants || {}).length} LIVE REQUESTS
@@ -1150,7 +1102,6 @@ export default function AdminPage() {
                             </div>
 
                             <div className="grid grid-cols-1 gap-8">
-                               {/* SELLER IDENTITY (ORIGIN) */}
                                <div className="p-6 md:p-8 bg-slate-50 dark:bg-slate-800/40 rounded-[2rem] border dark:border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-6 relative group overflow-hidden">
                                   <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity"><User size={48}/></div>
                                   <div className="flex items-center gap-5">
@@ -1158,7 +1109,7 @@ export default function AdminPage() {
                                         {selectedAccount.authorAvatar && <Image src={selectedAccount.authorAvatar} alt="" fill className="object-cover" />}
                                      </div>
                                      <div className="min-w-0">
-                                        <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-1">Account Seller</p>
+                                        <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-1">Original Seller</p>
                                         <p className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white truncate">{selectedAccount.authorName}</p>
                                         <div className="flex items-center gap-3 mt-2">
                                            <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 font-black">{selectedAccount.phone}</Badge>
@@ -1166,16 +1117,10 @@ export default function AdminPage() {
                                         </div>
                                      </div>
                                   </div>
-                                  {selectedAccount.sellerReportedAt && (
-                                     <div className="flex items-center gap-2 bg-green-50 dark:bg-green-950/20 px-4 py-2 rounded-xl text-green-600 dark:text-green-400 font-bold text-[10px] uppercase">
-                                        <CheckCircle2 size={14}/> Seller Response Active
-                                     </div>
-                                  )}
                                </div>
 
                                <div className="h-px bg-slate-100 dark:bg-white/5 mx-8" />
 
-                               {/* BUYER CLAIMS QUEUE (LIVE UPDATES) */}
                                <div className="space-y-6">
                                   {(() => {
                                     const claimants = Object.values(selectedAccount.claimants || {});
@@ -1240,16 +1185,15 @@ export default function AdminPage() {
                        </div>
 
                        <div className="space-y-8">
-                         {/* Lifecycle Override Control */}
                          <Card className="rounded-[2.5rem] border-none shadow-xl bg-white dark:bg-slate-900 p-8 space-y-8 sticky top-8">
                             <div className="space-y-6">
                                <div className="flex items-center gap-3">
                                   <RefreshCw className="text-amber-500" size={24} />
-                                  <h4 className="font-bold text-lg uppercase tracking-tight">Lifecycle Override</h4>
+                                  <h4 className="font-bold text-lg uppercase tracking-tight">Lifecycle Control</h4>
                                </div>
                                <div className="space-y-5">
                                   <div className="space-y-2">
-                                     <Label className="text-[10px] font-black uppercase text-slate-400 ml-2 tracking-widest">Account Status</Label>
+                                     <Label className="text-[10px] font-black uppercase text-slate-400 ml-2 tracking-widest">Change Account Status</Label>
                                      <Select value={pendingAccountStatus} onValueChange={setPendingAccountStatus}>
                                         <SelectTrigger className="h-16 rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-6 font-bold text-base shadow-inner"><SelectValue /></SelectTrigger>
                                         <SelectContent className="rounded-2xl border-none shadow-2xl z-[200]">
@@ -1260,7 +1204,7 @@ export default function AdminPage() {
 
                                   {pendingAccountStatus === 'sold' && (
                                      <div className="space-y-2 animate-in slide-in-from-top-2">
-                                        <Label className="text-[10px] font-black text-primary ml-2 tracking-widest">Assign Sale To</Label>
+                                        <Label className="text-[10px] font-black text-primary ml-2 tracking-widest">Assign Final Buyer</Label>
                                         <Select value={assignBuyerId} onValueChange={setAssignBuyerId}>
                                            <SelectTrigger className="h-16 rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-6 font-bold text-sm shadow-inner"><SelectValue placeholder="Select Winner" /></SelectTrigger>
                                            <SelectContent className="rounded-2xl border-none shadow-2xl z-[200]">
@@ -1271,7 +1215,7 @@ export default function AdminPage() {
                                   )}
 
                                   <Button onClick={handleAccountStatusSave} disabled={isSavingStatus} className="w-full h-20 rounded-3xl font-black text-xl shadow-2xl shadow-primary/20 bg-primary hover:bg-primary/90 uppercase tracking-[0.2em] active:scale-95 transition-all">
-                                     {isSavingStatus ? <Loader2 className="animate-spin w-8 h-8" /> : "Commit Save"}
+                                     {isSavingStatus ? <Loader2 className="animate-spin w-8 h-8" /> : "Save Logic"}
                                   </Button>
                                </div>
                             </div>
@@ -1280,13 +1224,13 @@ export default function AdminPage() {
                                <div className="space-y-6 pt-8 border-t dark:border-white/5">
                                   <div className="flex items-center gap-3">
                                      <ShieldAlert className="text-red-500" size={24} />
-                                     <h4 className="font-bold text-lg uppercase tracking-tight text-red-500">Auto-Enforcement</h4>
+                                     <h4 className="font-bold text-lg uppercase tracking-tight text-red-500">Enforcement Action</h4>
                                   </div>
                                   <p className="text-[11px] font-bold text-muted-foreground uppercase leading-relaxed bg-red-50 dark:bg-red-950/20 p-4 rounded-2xl border border-red-100 dark:border-red-900/20">
                                      SELLER UNRESPONSIVE (24H+). REJECT LISTING OR FORCE SALE IMMEDIATELY.
                                   </p>
                                   <Button variant="destructive" onClick={() => setIsEnforceDialogOpen(true)} className="w-full h-20 rounded-3xl font-black text-xl shadow-2xl shadow-red-500/20 uppercase tracking-[0.1em] active:scale-95 transition-all">
-                                    Enforce Penalty
+                                    Apply Penalty
                                   </Button>
                                </div>
                             )}
@@ -1297,9 +1241,331 @@ export default function AdminPage() {
                </div>
             </div>
           )}
-        </main>
 
-        {/* Existing Dialogs (User, Game, etc.) remain below main */}
+          {activeView === 'inventory' && (
+            <div className="space-y-12">
+               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                  <div>
+                    <h2 className="text-2xl md:text-4xl font-headline font-bold uppercase tracking-tight">Game Collections</h2>
+                    <p className="text-muted-foreground font-medium uppercase text-xs tracking-widest mt-1">Manage parent games and their top-up packages.</p>
+                  </div>
+                  <Button onClick={() => handleOpenGameDialog()} className="h-14 rounded-2xl gap-2 font-bold bg-primary px-8 shadow-xl shadow-primary/20"><Plus size={20}/> New Game</Button>
+               </div>
+
+               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {games.map(game => (
+                    <Card key={game.id} className={cn("p-4 rounded-[1.5rem] border-none shadow-lg transition-all group", selectedGameId === game.id ? "ring-2 ring-primary bg-primary/5" : "bg-white dark:bg-slate-900")}>
+                       <div className="flex items-center gap-4 cursor-pointer" onClick={() => setSelectedGameId(game.id === selectedGameId ? null : game.id)}>
+                          <div className="w-16 h-16 rounded-2xl bg-slate-50 dark:bg-slate-800 overflow-hidden relative shadow-sm shrink-0 border border-white dark:border-white/5">
+                             {game.icon ? <Image src={game.icon} alt="" fill className="object-cover" /> : <Gamepad2 size={24} className="m-auto mt-5 text-slate-300"/>}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                             <h3 className="font-bold text-base md:text-lg truncate uppercase tracking-tight">{game.title}</h3>
+                             <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{game.category}</p>
+                          </div>
+                          <div className="flex flex-col gap-1">
+                             <Button size="icon" variant="ghost" className="h-8 w-8 text-blue-500" onClick={(e) => { e.stopPropagation(); handleOpenGameDialog(game); }}><Edit size={16}/></Button>
+                             <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500" onClick={(e) => { e.stopPropagation(); confirmDelete(game.id, 'game'); }}><Trash2 size={16}/></Button>
+                          </div>
+                       </div>
+                       
+                       {selectedGameId === game.id && (
+                         <div className="mt-4 pt-4 border-t dark:border-white/5 space-y-3 animate-in slide-in-from-top-2">
+                            <div className="flex justify-between items-center px-1">
+                               <span className="text-[10px] font-black uppercase text-slate-400">Inventory Items</span>
+                               <Button size="sm" variant="ghost" onClick={() => handleOpenProductDialog()} className="h-7 text-[10px] text-primary uppercase font-black">+ Add Item</Button>
+                            </div>
+                            <div className="space-y-2 max-h-[300px] overflow-y-auto scrollbar-hide">
+                               {products.filter(p => p.gameId === game.id).map(p => (
+                                 <div key={p.id} className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl flex items-center justify-between group/item">
+                                    <div className="flex items-center gap-3">
+                                       <div className="w-8 h-8 rounded-lg bg-white dark:bg-slate-800 overflow-hidden relative border border-white dark:border-white/10 shrink-0">
+                                          {p.thumbnail ? <Image src={p.thumbnail} alt="" fill className="object-cover" /> : <Box size={14} className="m-auto mt-2 text-slate-300"/>}
+                                       </div>
+                                       <div className="min-w-0">
+                                          <p className="text-[11px] font-bold truncate max-w-[120px] uppercase">{p.title}</p>
+                                          <p className="text-[9px] font-black text-primary">${p.price}</p>
+                                       </div>
+                                    </div>
+                                    <div className="flex gap-1 opacity-0 group-hover/item:opacity-100 transition-opacity">
+                                       <Button size="icon" variant="ghost" className="h-7 w-7 text-blue-500" onClick={() => handleOpenProductDialog(p)}><Edit size={12}/></Button>
+                                       <Button size="icon" variant="ghost" className="h-7 w-7 text-red-500" onClick={() => confirmDelete(p.id, 'product')}><Trash2 size={12}/></Button>
+                                    </div>
+                                 </div>
+                               ))}
+                            </div>
+                         </div>
+                       )}
+                    </Card>
+                  ))}
+               </div>
+            </div>
+          )}
+
+          {activeView === 'events' && (
+            <div className="space-y-12">
+               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                  <div>
+                    <h2 className="text-2xl md:text-4xl font-headline font-bold uppercase tracking-tight">Active Events</h2>
+                    <p className="text-muted-foreground font-medium uppercase text-xs tracking-widest mt-1">Manage banners, time-limited sales, and community updates.</p>
+                  </div>
+                  <div className="flex gap-4">
+                     <Button variant="outline" onClick={() => setIsBannerDialogOpen(true)} className="h-14 rounded-2xl gap-2 font-bold px-8"><ImageIcon size={20}/> New Banner</Button>
+                     <Button onClick={() => handleOpenEventDialog()} className="h-14 rounded-2xl gap-2 font-bold bg-primary px-8 shadow-xl shadow-primary/20"><Megaphone size={20}/> Create Event</Button>
+                  </div>
+               </div>
+
+               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {events.map(ev => (
+                    <Card key={ev.id} className="rounded-[2.5rem] bg-white dark:bg-slate-900 border-none shadow-xl overflow-hidden group">
+                       <div className="aspect-video relative bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                          {ev.thumbnailUrl ? <Image src={ev.thumbnailUrl} alt="" fill className="object-cover group-hover:scale-110 transition-transform duration-1000" /> : <Megaphone size={32} className="m-auto absolute inset-0 text-slate-300"/>}
+                          <div className="absolute top-4 right-4 flex gap-2">
+                             <Button size="icon" className="bg-white/80 dark:bg-black/40 text-blue-500 rounded-xl" onClick={() => handleOpenEventDialog(ev)}><Edit size={16}/></Button>
+                             <Button size="icon" className="bg-white/80 dark:bg-black/40 text-red-500 rounded-xl" onClick={() => confirmDelete(ev.id, 'event')}><Trash2 size={16}/></Button>
+                          </div>
+                          <div className="absolute bottom-4 left-4">
+                             <Badge className={cn("rounded-full uppercase text-[8px] font-black px-3 py-1", ev.active ? "bg-green-500 text-white" : "bg-slate-500 text-white")}>
+                                {ev.active ? "Live" : "Ended"}
+                             </Badge>
+                          </div>
+                       </div>
+                       <div className="p-6 md:p-8 space-y-2">
+                          <h3 className="font-bold text-base md:text-xl truncate uppercase tracking-tight">{ev.title}</h3>
+                          <p className="text-[11px] text-muted-foreground line-clamp-2 leading-relaxed font-medium">{ev.shortDescription}</p>
+                          <div className="pt-4 border-t dark:border-white/5 flex items-center gap-2">
+                             <Clock size={12} className="text-primary"/>
+                             <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">
+                                {ev.expiresAt ? `Ends ${format(new Date(ev.expiresAt), 'MMM d, HH:mm')}` : "Permanent"}
+                             </span>
+                          </div>
+                       </div>
+                    </Card>
+                  ))}
+               </div>
+
+               <div className="space-y-6 pt-12 border-t dark:border-white/5">
+                  <h3 className="text-xl font-headline font-bold uppercase tracking-tight ml-2">Slider Banners</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                     {banners.map(b => (
+                       <div key={b.id} className="relative aspect-[3/1] rounded-2xl overflow-hidden group shadow-lg">
+                          <Image src={b.imageUrl} alt="" fill className="object-cover" />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                             <Button size="icon" variant="ghost" className="text-white hover:text-red-500" onClick={() => confirmDelete(b.id, 'banner')}><Trash2 size={18}/></Button>
+                          </div>
+                       </div>
+                     ))}
+                  </div>
+               </div>
+            </div>
+          )}
+
+          {activeView === 'users' && (
+            <div className="space-y-12">
+               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                  <div>
+                    <h2 className="text-2xl md:text-4xl font-headline font-bold uppercase tracking-tight">Community Control</h2>
+                    <p className="text-muted-foreground font-medium uppercase text-xs tracking-widest mt-1">Search users, update roles, and manage reward points.</p>
+                  </div>
+                  <div className="relative w-full max-w-md">
+                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                     <Input 
+                       placeholder="Search name, email, or UID..." 
+                       value={userSearchQuery} 
+                       onChange={e => setUserSearchQuery(e.target.value)} 
+                       className="pl-12 h-14 rounded-2xl dark:bg-slate-900 dark:border-white/5 font-bold shadow-sm" 
+                     />
+                  </div>
+               </div>
+
+               <Card className="rounded-[2.5rem] overflow-hidden border-none shadow-xl bg-white dark:bg-slate-900">
+                  <div className="overflow-x-auto scrollbar-hide">
+                    <Table className="min-w-[900px]">
+                      <TableHeader className="bg-slate-50/50 dark:bg-slate-800/40">
+                        <TableRow className="border-none">
+                          <TableHead className="px-8 font-bold">User Identity</TableHead>
+                          <TableHead className="font-bold">Contact & Role</TableHead>
+                          <TableHead className="font-bold">Reward Balance</TableHead>
+                          <TableHead className="font-bold">Status</TableHead>
+                          <TableHead className="text-right px-8 font-bold">Action</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredUsers.length === 0 ? (
+                          <TableRow><TableCell colSpan={5} className="h-40 text-center opacity-30 italic">No users found.</TableCell></TableRow>
+                        ) : (
+                          filteredUsers.map(u => (
+                            <TableRow key={u.uid} className="border-slate-50 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-slate-800/30">
+                              <TableCell className="px-8">
+                                <div className="flex items-center gap-4">
+                                   <div className="w-10 h-10 rounded-full overflow-hidden relative bg-slate-100 dark:bg-slate-800 border-2 border-white dark:border-white/10 shrink-0">
+                                      {u.photoURL ? <Image src={u.photoURL} alt="" fill className="object-cover" /> : <User size={16} className="m-auto mt-3 text-slate-300"/>}
+                                   </div>
+                                   <div className="min-w-0">
+                                      <p className="font-bold text-sm text-slate-900 dark:text-white truncate max-w-[150px]">{u.name}</p>
+                                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest truncate max-w-[150px]">{u.email}</p>
+                                   </div>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex flex-col gap-1">
+                                   <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400">{u.phoneNumber || "No Phone"}</span>
+                                   <Badge variant="secondary" className="w-fit text-[8px] font-black uppercase h-5">{u.role}</Badge>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                 <div className="flex items-center gap-2">
+                                    <div className="p-1.5 bg-amber-50 dark:bg-amber-500/10 rounded-lg text-amber-500"><Star size={14} fill="currentColor"/></div>
+                                    <span className="font-headline font-bold text-lg">{u.points || 0}</span>
+                                 </div>
+                              </TableCell>
+                              <TableCell>
+                                 {u.banned ? (
+                                   <Badge className="bg-red-500 text-white border-none text-[8px] font-black uppercase">Banned</Badge>
+                                 ) : (
+                                   <Badge className="bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400 border-none text-[8px] font-black uppercase">Active</Badge>
+                                 )}
+                              </TableCell>
+                              <TableCell className="text-right px-8">
+                                 <div className="flex justify-end gap-2">
+                                    <Button size="sm" variant="outline" className="rounded-full h-9 px-4 font-bold text-xs" onClick={() => { setSelectedUser(u); setIsUserManageOpen(true); }}>Manage</Button>
+                                    <Button size="icon" variant="ghost" className="h-9 w-9 text-red-500" onClick={() => confirmDelete(u.uid, 'user')}><Trash2 size={18}/></Button>
+                                 </div>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+               </Card>
+            </div>
+          )}
+
+          {activeView === 'settings' && (
+            <div className="max-w-5xl mx-auto space-y-12">
+               <div className="space-y-2">
+                  <h2 className="text-2xl md:text-4xl font-headline font-bold uppercase tracking-tight">Global Controls</h2>
+                  <p className="text-muted-foreground font-medium uppercase text-xs tracking-widest">Configuration and store preferences.</p>
+               </div>
+
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {/* Visuals & Brand */}
+                  <Card className="p-8 rounded-[2.5rem] border-none shadow-xl bg-white dark:bg-slate-900 space-y-8">
+                     <div className="flex items-center gap-3 text-primary">
+                        <ImageIcon size={20}/>
+                        <h4 className="font-bold text-lg uppercase tracking-tight">Brand Identity</h4>
+                     </div>
+                     <div className="flex flex-col items-center gap-6 p-6 bg-slate-50 dark:bg-slate-800/40 rounded-[2rem] border border-dashed border-slate-200 dark:border-white/10 relative overflow-hidden group">
+                        <div className="w-32 h-32 rounded-[2rem] bg-white dark:bg-slate-900 flex items-center justify-center relative overflow-hidden shadow-xl ring-8 ring-primary/5">
+                           {storeSettings.logo ? <Image src={storeSettings.logo} alt="Logo" fill className="object-contain p-4" unoptimized /> : <div className="text-4xl font-black text-slate-100">O</div>}
+                           <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer z-10" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'logo')} />
+                           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-black uppercase">Change Logo</div>
+                        </div>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Application Icon (Favicon & PWA)</p>
+                     </div>
+                  </Card>
+
+                  {/* App Status */}
+                  <Card className="p-8 rounded-[2.5rem] border-none shadow-xl bg-white dark:bg-slate-900 space-y-8">
+                     <div className="flex items-center gap-3 text-amber-500">
+                        <ShieldAlert size={20}/>
+                        <h4 className="font-bold text-lg uppercase tracking-tight">Maintenance Mode</h4>
+                     </div>
+                     <div className="space-y-6">
+                        <div className="flex items-center justify-between p-6 bg-slate-50 dark:bg-slate-800/40 rounded-[2rem] border dark:border-white/5">
+                           <div className="min-w-0">
+                              <p className="font-bold text-sm">Force Offline</p>
+                              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-0.5">Redirect users to maintenance page</p>
+                           </div>
+                           <Switch checked={appStatusForm.offline} onCheckedChange={v => setAppStatusForm(f => ({ ...f, offline: v }))} />
+                        </div>
+                        {appStatusForm.offline && (
+                          <div className="space-y-4 animate-in slide-in-from-top-2">
+                             <Input placeholder="Offline Title" value={appStatusForm.offlineTitle} onChange={e => setAppStatusForm(f => ({ ...f, offlineTitle: e.target.value }))} className="h-12 rounded-xl border-none bg-slate-50 dark:bg-slate-800 font-bold" />
+                             <Textarea placeholder="Maintenance Body Text" value={appStatusForm.offlineBody} onChange={e => setAppStatusForm(f => ({ ...f, offlineBody: e.target.value }))} className="rounded-xl border-none bg-slate-50 dark:bg-slate-800 font-medium" />
+                             <Button onClick={handleSaveAppStatus} className="w-full h-14 rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-primary/20">Commit Offline Status</Button>
+                          </div>
+                        )}
+                     </div>
+                  </Card>
+
+                  {/* Support Links */}
+                  <Card className="p-8 rounded-[2.5rem] border-none shadow-xl bg-white dark:bg-slate-900 space-y-8">
+                     <div className="flex items-center gap-3 text-green-500">
+                        <MessageCircle size={20}/>
+                        <h4 className="font-bold text-lg uppercase tracking-tight">Support Channels</h4>
+                     </div>
+                     <div className="space-y-5">
+                        <SettingInput label="Support WhatsApp" value={helpLinksForm.whatsappNumber} onChange={v => setHelpLinksForm(f => ({ ...f, whatsappNumber: v }))} placeholder="613982172" />
+                        <SettingInput label="TikTok Username" value={helpLinksForm.tiktokUrl} onChange={v => setHelpLinksForm(f => ({ ...f, tiktokUrl: v }))} placeholder="https://tiktok.com/@oskar" />
+                        <SettingInput label="Tutorial Video Link" value={helpLinksForm.tutorialUrl} onChange={v => setHelpLinksForm(f => ({ ...f, tutorialUrl: v }))} placeholder="YouTube URL" />
+                        <Button onClick={handleSaveHelpLinks} className="w-full h-14 rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-primary/20">Update Support Links</Button>
+                     </div>
+                  </Card>
+
+                  {/* Fee Logic */}
+                  <Card className="p-8 rounded-[2.5rem] border-none shadow-xl bg-white dark:bg-slate-900 space-y-8">
+                     <div className="flex items-center gap-3 text-indigo-500">
+                        <DollarSign size={20}/>
+                        <h4 className="font-bold text-lg uppercase tracking-tight">Marketplace Fees</h4>
+                     </div>
+                     <div className="space-y-6">
+                        <div className="grid grid-cols-2 gap-4">
+                           <SettingInput label="Weekly Listing ($)" type="number" value={feeConfigForm.listingFeeWeekly.toString()} onChange={v => setFeeConfigForm(f => ({ ...f, listingFeeWeekly: parseFloat(v) }))} placeholder="1.00" />
+                           <SettingInput label="Monthly Listing ($)" type="number" value={feeConfigForm.listingFeeMonthly.toString()} onChange={v => setFeeConfigForm(f => ({ ...f, listingFeeMonthly: parseFloat(v) }))} placeholder="3.00" />
+                        </div>
+                        <Button onClick={handleSaveFees} className="w-full h-14 rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-primary/20">Apply New Fees</Button>
+                     </div>
+                  </Card>
+               </div>
+
+               {/* Payment Methods Table */}
+               <Card className="rounded-[2.5rem] overflow-hidden border-none shadow-xl bg-white dark:bg-slate-900">
+                  <div className="p-8 border-b dark:border-white/5 flex justify-between items-center bg-slate-50/30 dark:bg-slate-800/20">
+                     <h3 className="font-headline font-bold text-xl uppercase tracking-tight">Payment Methods</h3>
+                     <Button size="sm" onClick={() => handleOpenPaymentMethodDialog()} className="h-10 rounded-xl gap-2 font-bold px-6 shadow-md shadow-primary/10">+ Add Provider</Button>
+                  </div>
+                  <div className="overflow-x-auto scrollbar-hide">
+                    <Table className="min-w-[800px]">
+                      <TableHeader className="bg-slate-50/50 dark:bg-slate-800/40">
+                        <TableRow className="border-none">
+                          <TableHead className="px-8 font-bold">Provider</TableHead>
+                          <TableHead className="font-bold">USSD Template</TableHead>
+                          <TableHead className="font-bold">Status</TableHead>
+                          <TableHead className="text-right px-8 font-bold">Action</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {paymentMethods.map(m => (
+                          <TableRow key={m.id} className="border-slate-50 dark:border-white/5">
+                            <TableCell className="px-8">
+                               <div className="flex items-center gap-4">
+                                  <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 overflow-hidden relative shrink-0 border border-white dark:border-white/10 shadow-sm">
+                                     {m.icon ? <Image src={m.icon} alt="" fill className="object-cover" /> : <SmartphoneIcon size={16} className="m-auto mt-3 text-slate-300"/>}
+                                  </div>
+                                  <span className="font-bold text-sm uppercase">{m.name}</span>
+                               </div>
+                            </TableCell>
+                            <TableCell><code className="bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-md text-xs font-bold text-primary">{m.ussdTemplate}</code></TableCell>
+                            <TableCell>
+                               {m.active ? <Badge className="bg-green-500 text-white border-none text-[8px] font-black uppercase">Active</Badge> : <Badge className="bg-slate-500 text-white border-none text-[8px] font-black uppercase">Disabled</Badge>}
+                            </TableCell>
+                            <TableCell className="text-right px-8">
+                               <div className="flex justify-end gap-2">
+                                  <Button size="icon" variant="ghost" className="h-9 w-9 text-blue-500" onClick={() => handleOpenPaymentMethodDialog(m)}><Edit size={18}/></Button>
+                                  <Button size="icon" variant="ghost" className="h-9 w-9 text-red-500" onClick={() => confirmDelete(m.id, 'payment')}><Trash2 size={18}/></Button>
+                               </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+               </Card>
+            </div>
+          )}
+        </main>
       </div>
 
       <Dialog open={isUserManageOpen} onOpenChange={setIsUserManageOpen}>
@@ -1387,7 +1653,7 @@ export default function AdminPage() {
               <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Short Tagline</Label><Input value={eventForm.shortDescription} onChange={e => setEventForm({ ...eventForm, shortDescription: e.target.value })} className="h-12 rounded-xl dark:bg-slate-800 border-none" placeholder="30% off for 24 hours" required /></div>
               <div className="grid grid-cols-2 gap-4">
                  <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Duration Value</Label><Input type="number" value={eventForm.duration} onChange={e => setEventForm({ ...eventForm, duration: e.target.value })} className="h-12 rounded-xl dark:bg-slate-800 border-none" placeholder="24" /></div>
-                 <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Unit</Label><Select value={eventForm.durationUnit} onValueChange={v => setEventForm({ ...eventForm, durationUnit: v })}><SelectTrigger className="h-12 rounded-xl dark:bg-slate-800 border-none"><SelectValue /></SelectTrigger><SelectContent className="rounded-xl"><SelectItem value="days">Days</SelectItem><SelectItem value="hours">Hours</SelectItem><SelectItem value="minutes">Minutes</SelectItem></SelectContent></Select></div>
+                 <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Unit</Label><Select value={eventForm.durationUnit} onValueChange={v => setEventForm({ ...eventForm, durationUnit: v })}> <SelectTrigger className="h-12 rounded-xl dark:bg-slate-800 border-none"><SelectValue /></SelectTrigger> <SelectContent className="rounded-xl"><SelectItem value="days">Days</SelectItem><SelectItem value="hours">Hours</SelectItem><SelectItem value="minutes">Minutes</SelectItem></SelectContent> </Select></div>
               </div>
               <Button type="submit" disabled={isUploading} className="w-full h-14 rounded-2xl font-bold shadow-lg uppercase tracking-widest">{isUploading ? <Loader2 className="animate-spin" /> : "Save Live Event"}</Button>
            </form>
@@ -1458,7 +1724,7 @@ export default function AdminPage() {
               </div>
 
               <div className="space-y-4">
-                 <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Seller Message (Will be displayed to them)</Label>
+                 <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Seller Message (Displayed to them)</Label>
                  <Textarea 
                    value={enforceMessage}
                    onChange={e => setEnforceMessage(e.target.value)}
@@ -1499,7 +1765,7 @@ function StatCard({ label, value, icon: Icon, color, badge }: { label: string, v
   );
 }
 
-function StatItem({ icon: Icon, label, value, color }: { icon: any, label: string, value: any, color?: string }) {
+function DetailItem({ icon: Icon, label, value, color }: { icon: any, label: string, value: any, color?: string }) {
   return (
     <div className="space-y-1">
        <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-1.5"><Icon size={10} /> {label}</p>
@@ -1508,12 +1774,11 @@ function StatItem({ icon: Icon, label, value, color }: { icon: any, label: strin
   );
 }
 
-function AssetBadge({ icon: Icon, label, value }: { icon: any, label: string, value: number }) {
+function SettingInput({ label, value, onChange, placeholder, type = "text" }: { label: string, value: string, onChange: (v: string) => void, placeholder: string, type?: string }) {
   return (
-    <Badge className="bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-none px-3 py-1.5 rounded-xl flex items-center gap-2 font-bold shadow-sm">
-       <Icon size={12} className="text-primary" />
-       <span className="text-[9px] uppercase tracking-tighter">{label}:</span>
-       <span className="text-xs text-primary font-black">{value || 0}</span>
-    </Badge>
+    <div className="space-y-2">
+       <Label className="text-[10px] font-black uppercase text-slate-400 ml-1 tracking-widest">{label}</Label>
+       <Input type={type} placeholder={placeholder} value={value} onChange={e => onChange(e.target.value)} className="h-12 rounded-xl border-none bg-slate-50 dark:bg-slate-800 font-bold px-4" />
+    </div>
   );
 }
