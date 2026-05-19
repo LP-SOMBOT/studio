@@ -144,7 +144,7 @@ function CountdownDisplay({ expiresAt, status }: { expiresAt?: number, status: s
       if (diff <= 0) setTimeLeft("EXPIRED");
       else {
         const d = Math.floor(diff / (1000 * 60 * 60 * 24));
-        const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60));
+        const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
         setTimeLeft(`${d}d ${h}h ${m}m`);
       }
@@ -1470,7 +1470,11 @@ export default function AdminPage() {
                </div>
 
                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {events.map(ev => (
+                  {events.map(ev => {
+                    const isExpired = ev.expiresAt && ev.expiresAt < Date.now();
+                    const isLive = ev.active && !isExpired;
+                    
+                    return (
                     <Card key={ev.id} className="rounded-[2.5rem] bg-white dark:bg-slate-900 border-none shadow-xl overflow-hidden group">
                        <div className="aspect-video relative bg-slate-100 dark:bg-slate-800 overflow-hidden">
                           {ev.thumbnailUrl ? <Image src={ev.thumbnailUrl} alt="" fill className="object-cover group-hover:scale-110 transition-transform duration-1000" unoptimized /> : <Megaphone size={32} className="m-auto absolute inset-0 text-slate-300"/>}
@@ -1479,8 +1483,11 @@ export default function AdminPage() {
                              <Button size="icon" className="bg-white/80 dark:bg-black/40 text-red-500 rounded-xl" onClick={() => confirmDelete(ev.id, 'event')}><Trash2 size={16}/></Button>
                           </div>
                           <div className="absolute bottom-4 left-4">
-                             <Badge className={cn("rounded-full uppercase text-[8px] font-black px-3 py-1", ev.active ? "bg-green-50 text-white" : "bg-slate-500 text-white")}>
-                                {ev.active ? "Live" : "Ended"}
+                             <Badge className={cn(
+                               "rounded-full uppercase text-[8px] font-black px-3 py-1 border-none shadow-lg", 
+                               isLive ? "bg-green-600 text-white" : "bg-red-600 text-white"
+                             )}>
+                                {isLive ? "Live" : "Ended"}
                              </Badge>
                           </div>
                        </div>
@@ -1495,7 +1502,7 @@ export default function AdminPage() {
                           </div>
                        </div>
                     </Card>
-                  ))}
+                  )})}
                </div>
 
                <div className="space-y-6 pt-12 border-t dark:border-white/5">
@@ -1759,7 +1766,7 @@ export default function AdminPage() {
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                  <div className="p-8 bg-slate-50 dark:bg-slate-800/40 rounded-[2.5rem] border-2 border-slate-100 dark:border-white/5 space-y-6">
                                     <div className="flex items-center gap-3">
-                                       <Clock className="text-indigo-500" />
+                                       <CalendarIcon className="text-indigo-500" />
                                        <p className="font-bold text-xl uppercase tracking-tight">Weekly Fee</p>
                                     </div>
                                     <SettingInput label="Amount ($)" type="number" value={feeConfigForm.listingFeeWeekly.toString()} onChange={v => setFeeConfigForm(f => ({ ...f, listingFeeWeekly: parseFloat(v) }))} placeholder="1.00" />
@@ -2257,3 +2264,5 @@ function SettingInput({ label, value, onChange, placeholder, type = "text" }: { 
     </div>
   );
 }
+
+    
