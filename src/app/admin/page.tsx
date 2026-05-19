@@ -66,7 +66,7 @@ import {
   Radio,
   Monitor,
   Layout,
-  Calendar
+  Calendar as CalendarIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -144,7 +144,7 @@ function CountdownDisplay({ expiresAt, status }: { expiresAt?: number, status: s
       if (diff <= 0) setTimeLeft("EXPIRED");
       else {
         const d = Math.floor(diff / (1000 * 60 * 60 * 24));
-        const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60));
         const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
         setTimeLeft(`${d}d ${h}h ${m}m`);
       }
@@ -338,6 +338,11 @@ export default function AdminPage() {
     if (!selectedAccountId) return null;
     return accountPosts.find(p => p.id === selectedAccountId);
   }, [selectedAccountId, accountPosts]);
+
+  const selectedOrder = useMemo(() => {
+    if (!selectedOrderId) return null;
+    return allOrders.find(o => o.id === selectedOrderId);
+  }, [selectedOrderId, allOrders]);
 
   const urgentAccounts = useMemo(() => {
     const now = Date.now();
@@ -868,6 +873,142 @@ export default function AdminPage() {
                   </Table>
                 </div>
               </Card>
+            </div>
+          )}
+
+          {activeView === 'orders' && selectedOrderId && selectedOrder && (
+            <div className="fixed inset-0 z-50 bg-slate-50 dark:bg-slate-950 flex flex-col overflow-hidden animate-in slide-in-from-right-4 duration-500">
+               <header className="h-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b dark:border-white/5 flex items-center justify-between px-4 sm:px-10 shrink-0">
+                  <div className="flex items-center gap-4">
+                     <Button variant="ghost" onClick={() => setSelectedOrderId(null)} className="rounded-full h-12 w-12 p-0">
+                        <ChevronLeft className="w-8 h-8" />
+                     </Button>
+                     <div>
+                       <h3 className="font-headline font-bold text-xl md:text-2xl dark:text-white uppercase tracking-tight">Order Insight</h3>
+                       <p className="text-[10px] font-bold text-muted-foreground uppercase">Ref: #{selectedOrder.id.toUpperCase()}</p>
+                     </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                     <Badge className={cn("rounded-full px-4 py-1 uppercase font-black text-[10px]", getStatusBadge(selectedOrder.status))}>{selectedOrder.status}</Badge>
+                     <Button size="icon" variant="ghost" className="text-red-500" onClick={() => confirmDelete(selectedOrder.id, 'order')}><Trash2 size={20} /></Button>
+                  </div>
+               </header>
+
+               <div className="flex-1 overflow-y-auto p-4 sm:p-10 space-y-8 scrollbar-hide pb-32">
+                  <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
+                     <div className="lg:col-span-2 space-y-8">
+                        <Card className="rounded-[2.5rem] border-none shadow-xl bg-white dark:bg-slate-900 p-8 md:p-12 space-y-10">
+                           <div className="flex justify-between items-start">
+                              <div className="space-y-2">
+                                 <h4 className="text-2xl md:text-4xl font-headline font-bold uppercase tracking-tight">{selectedOrder.items?.[0]?.title || "Game Package"}</h4>
+                                 <div className="flex items-center gap-3">
+                                    <Badge variant="outline" className="font-black text-[10px] tracking-widest uppercase">{selectedOrder.paymentMethod}</Badge>
+                                    <span className="text-xs font-bold text-muted-foreground uppercase">{getSmartTimestamp(selectedOrder.createdAt)}</span>
+                                 </div>
+                              </div>
+                              <div className="text-right">
+                                 <p className="text-3xl md:text-5xl font-headline font-bold text-primary tracking-tighter">${selectedOrder.total?.toFixed(2)}</p>
+                              </div>
+                           </div>
+
+                           <div className="grid grid-cols-2 md:grid-cols-3 gap-8 pt-8 border-t dark:border-white/5">
+                              <DetailItem icon={Gamepad2} label="Player ID" value={selectedOrder.gameDetails?.playerID || "N/A"} color="text-primary font-mono" />
+                              <DetailItem icon={User} label="In-Game Name" value={selectedOrder.gameDetails?.playerName || "N/A"} />
+                              <DetailItem icon={CreditCard} label="Sender Number" value={selectedOrder.gameDetails?.senderNumber || "N/A"} />
+                              <DetailItem icon={Smartphone} label="WhatsApp" value={selectedOrder.gameDetails?.whatsappNumber || "N/A"} />
+                              <DetailItem icon={Clock} label="Order Date" value={format(new Date(selectedOrder.createdAt), 'MMM d, h:mm a')} />
+                              <DetailItem icon={Tag} label="Category" value={selectedOrder.gameDetails?.category || "Top-Up"} />
+                           </div>
+                        </Card>
+
+                        <Card className="rounded-[2.5rem] border-none shadow-xl bg-white dark:bg-slate-900 p-8 md:p-12 space-y-8">
+                           <div className="flex items-center gap-3">
+                              <div className="p-2 bg-blue-50 dark:bg-blue-500/10 rounded-xl text-blue-500"><ShieldCheck size={24}/></div>
+                              <h4 className="font-headline font-bold text-xl md:text-2xl uppercase">Administration Log</h4>
+                           </div>
+                           
+                           {selectedOrder.processedBy ? (
+                             <div className="p-6 bg-slate-50 dark:bg-slate-800/40 rounded-[2rem] border dark:border-white/5 flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                   <div className="w-14 h-14 rounded-full overflow-hidden relative border-2 border-white dark:border-slate-800 shadow-lg">
+                                      {selectedOrder.processedBy.photoURL ? <Image src={selectedOrder.processedBy.photoURL} alt="" fill className="object-cover" /> : <User size={24} className="m-auto mt-2 opacity-20" />}
+                                   </div>
+                                   <div>
+                                      <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest leading-none mb-1">Handling Admin</p>
+                                      <p className="text-lg font-bold">{selectedOrder.processedBy.name}</p>
+                                      <p className="text-[10px] font-bold text-primary uppercase mt-1">Status changed at {getSmartTimestamp(selectedOrder.processedAt)}</p>
+                                   </div>
+                                </div>
+                                {selectedOrder.completedAt && (
+                                   <div className="text-right">
+                                      <p className="text-[10px] font-black uppercase text-muted-foreground opacity-40">Resolved on</p>
+                                      <p className="text-xs font-bold">{format(new Date(selectedOrder.completedAt), 'MMM d, HH:mm')}</p>
+                                   </div>
+                                )}
+                             </div>
+                           ) : (
+                             <div className="py-12 text-center opacity-30 italic flex flex-col items-center gap-4 bg-slate-50/50 dark:bg-slate-800/20 rounded-[2rem] border-2 border-dashed">
+                                <ShieldQuestion size={48} className="text-slate-300" />
+                                <p className="text-lg font-bold uppercase tracking-widest">Awaiting Assignment...</p>
+                             </div>
+                           )}
+
+                           {selectedOrder.status === 'cancelled' && selectedOrder.cancellationReason && (
+                              <div className="p-6 bg-red-50 dark:bg-red-950/20 border-2 border-red-100 dark:border-red-900/30 rounded-[2rem] space-y-2">
+                                 <p className="text-[10px] font-black uppercase text-red-500 tracking-widest">Reason for Cancellation</p>
+                                 <p className="text-sm font-medium italic text-red-700 dark:text-red-400">"{selectedOrder.cancellationReason}"</p>
+                              </div>
+                           )}
+                        </Card>
+                     </div>
+
+                     <div className="space-y-8">
+                        <Card className="rounded-[2.5rem] border-none shadow-xl bg-white dark:bg-slate-900 p-8 space-y-8 sticky top-8">
+                           <div className="space-y-6">
+                              <div className="flex items-center gap-3">
+                                 <RefreshCw className="text-amber-500" size={24} />
+                                 <h4 className="font-bold text-lg uppercase tracking-tight">Lifecycle Control</h4>
+                              </div>
+                              <div className="space-y-5">
+                                 <div className="space-y-2">
+                                    <Label className="text-[10px] font-black uppercase text-slate-400 ml-2 tracking-widest">Change Order Status</Label>
+                                    <Select value={pendingOrderStatus} onValueChange={setPendingStatus}>
+                                       <SelectTrigger className="h-16 rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-6 font-bold text-base shadow-inner"><SelectValue /></SelectTrigger>
+                                       <SelectContent className="rounded-2xl border-none shadow-2xl z-[200]">
+                                          {["pending", "processing", "successful", "cancelled"].map(s => <SelectItem key={s} value={s} className="rounded-xl uppercase font-bold text-xs p-3">{s}</SelectItem>)}
+                                       </SelectContent>
+                                    </Select>
+                                 </div>
+
+                                 {pendingOrderStatus === 'cancelled' && (
+                                    <div className="space-y-2 animate-in slide-in-from-top-2">
+                                       <Label className="text-[10px] font-black text-red-500 ml-2 tracking-widest">Reason for User</Label>
+                                       <Textarea 
+                                          placeholder="e.g. Invalid Sender Number or Wrong Player ID" 
+                                          value={cancellationReason}
+                                          onChange={e => setCancellationReason(e.target.value)}
+                                          className="rounded-2xl bg-slate-50 dark:bg-slate-800 border-none min-h-[100px] p-4 font-medium text-xs sm:text-sm shadow-inner"
+                                       />
+                                    </div>
+                                 )}
+
+                                 <Button onClick={handleStatusSave} disabled={isSavingStatus} className="w-full h-20 rounded-3xl font-black text-xl shadow-2xl shadow-primary/20 bg-primary hover:bg-primary/90 uppercase tracking-[0.2em] active:scale-95 transition-all">
+                                    {isSavingStatus ? <Loader2 className="animate-spin w-8 h-8" /> : "Sync Order Status"}
+                                 </Button>
+                              </div>
+                           </div>
+                           
+                           <div className="pt-8 border-t dark:border-white/5 space-y-4">
+                              <p className="text-[9px] font-black uppercase text-muted-foreground text-center tracking-widest">Quick Actions</p>
+                              <div className="flex gap-2">
+                                 <Button variant="outline" className="flex-1 h-12 rounded-xl text-[10px] font-black uppercase tracking-widest" onClick={() => copyToClipboard(selectedOrder.gameDetails?.playerID)}>Copy ID</Button>
+                                 <Button variant="outline" className="flex-1 h-12 rounded-xl text-[10px] font-black uppercase tracking-widest" onClick={() => window.open(`https://wa.me/${formatWhatsAppNumber(selectedOrder.gameDetails?.whatsappNumber)}`, '_blank')}>WhatsApp</Button>
+                              </div>
+                           </div>
+                        </Card>
+                     </div>
+                  </div>
+               </div>
             </div>
           )}
 
@@ -1625,7 +1766,7 @@ export default function AdminPage() {
                                  </div>
                                  <div className="p-8 bg-slate-50 dark:bg-slate-800/40 rounded-[2.5rem] border-2 border-slate-100 dark:border-white/5 space-y-6">
                                     <div className="flex items-center gap-3">
-                                       <Calendar className="text-indigo-500" />
+                                       <CalendarIcon className="text-indigo-500" />
                                        <p className="font-bold text-xl uppercase tracking-tight">Monthly Fee</p>
                                     </div>
                                     <SettingInput label="Amount ($)" type="number" value={feeConfigForm.listingFeeMonthly.toString()} onChange={v => setFeeConfigForm(f => ({ ...f, listingFeeMonthly: parseFloat(v) }))} placeholder="3.00" />
@@ -1881,11 +2022,11 @@ export default function AdminPage() {
       <Dialog open={isProductDialogOpen} onOpenChange={setIsProductDialogOpen}>
         <DialogContent className="max-w-xl w-[95%] rounded-[2rem] sm:rounded-[3rem] p-0 border-none shadow-2xl bg-white dark:bg-slate-900 max-h-[90vh] overflow-y-auto scrollbar-hide">
            <div className="h-2 bg-primary w-full shrink-0" />
-           <DialogHeader className="p-6 sm:p-8 pb-0">
+           <DialogHeader className="p-6 sm:p-10 pb-0">
              <DialogTitle className="text-xl md:text-3xl font-headline font-bold text-slate-900 dark:text-white uppercase tracking-tight">{editingProduct ? 'Edit Inventory' : 'New Package'}</DialogTitle>
            </DialogHeader>
 
-           <form onSubmit={handleSaveProduct} className="p-6 sm:p-8 space-y-6 sm:space-y-8">
+           <form onSubmit={handleSaveProduct} className="p-5 sm:p-10 space-y-6 sm:space-y-8">
               <div className="flex flex-col items-center gap-4">
                  <div className="relative w-full aspect-video rounded-2xl md:rounded-[2rem] bg-slate-50 dark:bg-slate-800 border-2 border-dashed border-slate-200 dark:border-white/10 flex flex-col items-center justify-center group overflow-hidden shadow-inner transition-all hover:border-primary/40">
                     {productForm.thumbnail ? (
