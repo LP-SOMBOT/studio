@@ -159,7 +159,7 @@ function CountdownDisplay({ expiresAt, status }: { expiresAt?: number, status: s
       if (diff <= 0) setTimeLeft("EXPIRED");
       else {
         const d = Math.floor(diff / (1000 * 60 * 60 * 24));
-        const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60));
         const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
         setTimeLeft(`${d}d ${h}h ${m}m`);
       }
@@ -1058,6 +1058,7 @@ export default function AdminPage() {
                        
                        {(() => {
                          const buyer = allUsers.find(u => u.uid === selectedAccount.boughtBy);
+                         const claimant = selectedAccount.claimants?.[selectedAccount.boughtBy || ''];
                          return (
                            <div className="flex items-center gap-4 bg-white/10 p-4 md:p-6 rounded-3xl backdrop-blur-xl border border-white/20 min-w-[280px]">
                               <div className="w-12 h-12 rounded-full overflow-hidden relative border-2 border-white/50 shrink-0 shadow-lg">
@@ -1066,7 +1067,15 @@ export default function AdminPage() {
                               <div className="min-w-0">
                                  <p className="text-[10px] font-black uppercase text-white/60 tracking-widest leading-none mb-1">New Owner</p>
                                  <p className="text-lg font-bold truncate">{buyer?.name || "Verified Buyer"}</p>
-                                 <p className="text-[10px] font-mono opacity-80 truncate">{buyer?.email || 'N/A'}</p>
+                                 <div className="flex flex-col gap-0.5 mt-1">
+                                    <p className="text-[10px] font-mono opacity-80 truncate">{buyer?.email || 'N/A'}</p>
+                                    {claimant?.whatsapp && (
+                                       <div className="flex items-center gap-1.5 mt-1 bg-green-500/20 px-2 py-0.5 rounded-full w-fit">
+                                          <Smartphone size={10} className="text-green-300" />
+                                          <span className="text-[10px] font-black">{claimant.whatsapp}</span>
+                                       </div>
+                                    )}
+                                 </div>
                               </div>
                            </div>
                          );
@@ -1657,6 +1666,7 @@ export default function AdminPage() {
                           
                           {(() => {
                             const buyer = allUsers.find(u => u.uid === selectedAccount.boughtBy);
+                            const claimant = selectedAccount.claimants?.[selectedAccount.boughtBy || ''];
                             return (
                               <div className="flex items-center gap-4 bg-white/10 p-4 md:p-6 rounded-3xl backdrop-blur-xl border border-white/20 min-w-[300px]">
                                   <div className="w-14 h-14 rounded-full overflow-hidden relative border-2 border-white/50 shrink-0 shadow-lg">
@@ -1665,8 +1675,14 @@ export default function AdminPage() {
                                   <div className="min-w-0">
                                     <p className="text-[10px] font-black uppercase text-white/60 tracking-widest leading-none mb-1">Final Buyer</p>
                                     <p className="text-lg md:text-xl font-bold truncate">{buyer?.name || "Verified Client"}</p>
-                                    <div className="flex items-center gap-1.5 opacity-80 mt-1">
+                                    <div className="flex flex-col gap-1.5 opacity-80 mt-1">
                                        <span className="text-[10px] font-mono truncate">{buyer?.email || 'N/A'}</span>
+                                       {claimant?.whatsapp && (
+                                          <div className="flex items-center gap-1.5 mt-1 bg-green-500/20 px-2 py-0.5 rounded-full w-fit">
+                                             <Smartphone size={10} className="text-green-300" />
+                                             <span className="text-[10px] font-black">{claimant.whatsapp}</span>
+                                          </div>
+                                       )}
                                     </div>
                                   </div>
                               </div>
