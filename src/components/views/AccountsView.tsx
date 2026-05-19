@@ -36,7 +36,8 @@ import {
   Target as TargetIcon,
   Layers,
   Sparkles,
-  Trophy
+  Trophy,
+  History
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -86,12 +87,10 @@ export default function AccountsView() {
         const isOwner = userId && p.uid === userId;
         const isInvolvedInDeal = userId && (orders || []).some(o => o.gameDetails?.postId === p.id && o.userId === userId);
         
-        // Admins, Owners, and active Claimants always see the account
         if (isAdmin || isOwner || isInvolvedInDeal) {
           return true;
         }
 
-        // General public only see approved, unsold, unhidden, non-expired accounts
         if (p.status !== 'approved') return false;
         if (p.sold === true) return false;
         if (p.hiddenFromMarket === true) return false;
@@ -292,8 +291,14 @@ function PostAccountView({ editingPost, onCancel, onComplete }: { editingPost?: 
     arrivalEmotes: editingPost?.arrivalEmotes?.toString() || '0',
     dharka: editingPost?.dharka?.toString() || '0',
     term: editingPost?.term || 'weekly',
-    primeLevel: editingPost?.primeLevel?.toString() || '1'
+    primeLevel: editingPost?.primeLevel?.toString() || '1',
+    age: editingPost?.age || '',
+    accountId: editingPost?.accountId || '',
+    accountName: editingPost?.accountName || '',
+    internalWeapons: editingPost?.internalWeapons?.toString() || '0'
   });
+
+  const isFreeFire = formData.gameType === 'freefire';
 
   const listingFee = useMemo(() => {
     if (formData.term === 'monthly') return storeSettings?.config?.shop?.listingFeeMonthly || 3.00;
@@ -322,15 +327,16 @@ function PostAccountView({ editingPost, onCancel, onComplete }: { editingPost?: 
       const payload = {
         ...formData,
         thumbnailUrl: formData.imageUrls[0] || '', 
-        level: parseInt(formData.level),
-        price: parseFloat(formData.price),
-        evoWeapons: parseInt(formData.evoWeapons),
-        totalWeapons: parseInt(formData.totalWeapons),
-        emotes: parseInt(formData.emotes),
-        executionEmotes: parseInt(formData.executionEmotes),
-        arrivalEmotes: parseInt(formData.arrivalEmotes),
-        dharka: parseInt(formData.dharka),
-        primeLevel: parseInt(formData.primeLevel),
+        level: parseInt(formData.level || '0'),
+        price: parseFloat(formData.price || '0'),
+        evoWeapons: parseInt(formData.evoWeapons || '0'),
+        totalWeapons: parseInt(formData.totalWeapons || '0'),
+        emotes: parseInt(formData.emotes || '0'),
+        executionEmotes: parseInt(formData.executionEmotes || '0'),
+        arrivalEmotes: parseInt(formData.arrivalEmotes || '0'),
+        dharka: parseInt(formData.dharka || '0'),
+        primeLevel: parseInt(formData.primeLevel || '1'),
+        internalWeapons: parseInt(formData.internalWeapons || '0'),
         fee: listingFee
       };
 
@@ -450,7 +456,7 @@ function PostAccountView({ editingPost, onCancel, onComplete }: { editingPost?: 
                            <h4 className="font-headline font-bold text-sm md:text-lg uppercase tracking-tight">Game Identity</h4>
                         </div>
                         <FormGroup label="Game Type">
-                           <Select value={formData.gameType} onValueChange={v => setFormData({...formData, gameType: v})}>
+                           <Select value={formData.gameType} onValueChange={v => setFormData({...formData, gameType: v as any})}>
                               <SelectTrigger className="h-12 md:h-16 rounded-xl md:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-6 font-bold text-sm md:text-lg focus:ring-2 focus:ring-primary shadow-inner">
                                  <SelectValue />
                               </SelectTrigger>
@@ -471,23 +477,27 @@ function PostAccountView({ editingPost, onCancel, onComplete }: { editingPost?: 
                               </SelectContent>
                            </Select>
                         </FormGroup>
-                        <FormGroup label="Prime Level">
-                           <Select value={formData.primeLevel} onValueChange={v => setFormData({...formData, primeLevel: v})}>
-                              <SelectTrigger className="h-12 md:h-16 rounded-xl md:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-6 font-bold text-sm md:text-lg focus:ring-2 focus:ring-primary shadow-inner">
-                                 <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent className="rounded-2xl border-none shadow-2xl bg-white dark:bg-slate-900 z-[200]">
-                                 <SelectItem value="1" className="rounded-xl font-bold uppercase text-xs p-3">Level 1</SelectItem>
-                                 <SelectItem value="2" className="rounded-xl font-bold uppercase text-xs p-3">Level 2</SelectItem>
-                                 <SelectItem value="3" className="rounded-xl font-bold uppercase text-xs p-3">Level 3</SelectItem>
-                                 <SelectItem value="4" className="rounded-xl font-bold uppercase text-xs p-3">Level 4</SelectItem>
-                                 <SelectItem value="5" className="rounded-xl font-bold uppercase text-xs p-3">Level 5</SelectItem>
-                                 <SelectItem value="6" className="rounded-xl font-bold uppercase text-xs p-3">Level 6</SelectItem>
-                                 <SelectItem value="7" className="rounded-xl font-bold uppercase text-xs p-3">Level 7</SelectItem>
-                                 <SelectItem value="8" className="rounded-xl font-bold uppercase text-xs p-3">Level 8</SelectItem>
-                              </SelectContent>
-                           </Select>
-                        </FormGroup>
+                        
+                        {isFreeFire ? (
+                          <>
+                            <FormGroup label="Prime Level">
+                              <Select value={formData.primeLevel} onValueChange={v => setFormData({...formData, primeLevel: v})}>
+                                  <SelectTrigger className="h-12 md:h-16 rounded-xl md:rounded-2xl bg-slate-50 dark:bg-slate-800 border-none px-6 font-bold text-sm md:text-lg shadow-inner">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent className="rounded-2xl border-none shadow-2xl bg-white dark:bg-slate-900 z-[200]">
+                                    {[1,2,3,4,5,6,7,8].map(l => <SelectItem key={l} value={l.toString()} className="rounded-xl font-bold uppercase text-xs p-3">Level {l}</SelectItem>)}
+                                  </SelectContent>
+                              </Select>
+                            </FormGroup>
+                            <FormInput label="Account Age" value={formData.age} onChange={v => setFormData({...formData, age: v})} placeholder="e.g. 2 years" />
+                          </>
+                        ) : (
+                          <>
+                             <FormInput label="In-Game Name (Alias)" value={formData.accountName} onChange={v => setFormData({...formData, accountName: v})} placeholder="e.g. Ghost_01" />
+                             <FormInput label="Account ID" value={formData.accountId} onChange={v => setFormData({...formData, accountId: v})} placeholder="e.g. 982172" />
+                          </>
+                        )}
                      </Card>
 
                      <Card className="p-5 md:p-8 rounded-[1.5rem] md:rounded-[2.5rem] border-none shadow-lg bg-white dark:bg-slate-900 space-y-6 md:space-y-8">
@@ -495,7 +505,7 @@ function PostAccountView({ editingPost, onCancel, onComplete }: { editingPost?: 
                            <Star size={18} />
                            <h4 className="font-headline font-bold text-sm md:text-lg uppercase tracking-tight">Level & Pricing</h4>
                         </div>
-                        <FormInput label="Account Level" value={formData.level} type="number" onChange={v => setFormData({...formData, level: v})} placeholder="e.g. 65" />
+                        <FormInput label="Character Level" value={formData.level} type="number" onChange={v => setFormData({...formData, level: v})} placeholder="e.g. 65" />
                         <FormInput label="Selling Price ($)" value={formData.price} type="number" onChange={v => setFormData({...formData, price: v})} placeholder="e.g. 50" highlight />
                      </Card>
                   </div>
@@ -510,19 +520,30 @@ function PostAccountView({ editingPost, onCancel, onComplete }: { editingPost?: 
                         </div>
                      </div>
                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 md:gap-8 lg:gap-12">
-                        <FormInput label="Evo Guns" icon={Sword} value={formData.evoWeapons} type="number" onChange={v => setFormData({...formData, evoWeapons: v})} placeholder="0" />
-                        <FormInput label="Total Guns" icon={Target} value={formData.totalWeapons} type="number" onChange={v => setFormData({...formData, totalWeapons: v})} placeholder="0" />
-                        <FormInput label="Emotes" icon={Zap} value={formData.emotes} type="number" onChange={v => setFormData({...formData, emotes: v})} placeholder="0" />
-                        <FormInput label="Arrivals" icon={Star} value={formData.arrivalEmotes} type="number" onChange={v => setFormData({...formData, arrivalEmotes: v})} placeholder="0" />
-                        <FormInput label="Execution" icon={Bomb} value={formData.executionEmotes} type="number" onChange={v => setFormData({...formData, executionEmotes: v})} placeholder="0" />
-                        <FormInput label="Dharka" icon={ShoppingBag} value={formData.dharka} type="number" onChange={v => setFormData({...formData, dharka: v})} placeholder="0" />
+                        {isFreeFire ? (
+                          <>
+                            <FormInput label="Evo Guns" icon={Sword} value={formData.evoWeapons} type="number" onChange={v => setFormData({...formData, evoWeapons: v})} placeholder="0" />
+                            <FormInput label="Total Weapons" icon={Target} value={formData.totalWeapons} type="number" onChange={v => setFormData({...formData, totalWeapons: v})} placeholder="0" />
+                            <FormInput label="Emotes" icon={Zap} value={formData.emotes} type="number" onChange={v => setFormData({...formData, emotes: v})} placeholder="0" />
+                            <FormInput label="Arrival Emotes" icon={Star} value={formData.arrivalEmotes} type="number" onChange={v => setFormData({...formData, arrivalEmotes: v})} placeholder="0" />
+                            <FormInput label="Dharka" icon={ShoppingBag} value={formData.dharka} type="number" onChange={v => setFormData({...formData, dharka: v})} placeholder="0" />
+                          </>
+                        ) : (
+                          <>
+                             <FormInput label="Evo Weapons" icon={Sword} value={formData.evoWeapons} type="number" onChange={v => setFormData({...formData, evoWeapons: v})} placeholder="0" />
+                             <FormInput label="Internal Weapons" icon={Target} value={formData.internalWeapons} type="number" onChange={v => setFormData({...formData, internalWeapons: v})} placeholder="0" />
+                             <FormInput label="Emotes" icon={Zap} value={formData.emotes} type="number" onChange={v => setFormData({...formData, emotes: v})} placeholder="0" />
+                             <FormInput label="Execution Emotes" icon={Bomb} value={formData.executionEmotes} type="number" onChange={v => setFormData({...formData, executionEmotes: v})} placeholder="0" />
+                             <FormInput label="Arrival Emotes" icon={Star} value={formData.arrivalEmotes} type="number" onChange={v => setFormData({...formData, arrivalEmotes: v})} placeholder="0" />
+                          </>
+                        )}
                      </div>
                   </Card>
 
                   {/* Final Listing Settings */}
                   <Card className="p-6 md:p-10 rounded-[1.5rem] md:rounded-[3rem] border-none shadow-lg bg-white dark:bg-slate-900 grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
                      <FormGroup label="Listing Duration">
-                        <Select value={formData.term} onValueChange={v => setFormData({...formData, term: v})}>
+                        <Select value={formData.term} onValueChange={v => setFormData({...formData, term: v as any})}>
                            <SelectTrigger className="h-12 md:h-20 rounded-xl md:rounded-[1.5rem] bg-slate-50 dark:bg-slate-800 border-none px-6 font-bold text-sm md:text-xl shadow-inner">
                               <SelectValue />
                            </SelectTrigger>
