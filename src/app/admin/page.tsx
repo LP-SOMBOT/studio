@@ -1391,7 +1391,7 @@ export default function AdminPage() {
                   </div>
                </div>
 
-               <Card className="rounded-[2.5rem] overflow-hidden border-none shadow-xl bg-white dark:bg-slate-900">
+               <Card className="rounded-[1.5rem] overflow-hidden border-none shadow-xl bg-white dark:bg-slate-900">
                   <div className="overflow-x-auto scrollbar-hide">
                     <Table className="min-w-[900px]">
                       <TableHeader className="bg-slate-50/50 dark:bg-slate-800/40">
@@ -1517,38 +1517,36 @@ export default function AdminPage() {
                                  <Switch checked={appStatusForm.offline} onCheckedChange={v => setAppStatusForm(f => ({ ...f, offline: v }))} className="scale-150" />
                               </div>
 
-                              {appStatusForm.offline && (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-in slide-in-from-top-4 duration-500">
-                                   <div className="space-y-6">
-                                      <SettingInput label="Maintenance Title" value={appStatusForm.offlineTitle || ''} onChange={v => setAppStatusForm(f => ({ ...f, offlineTitle: v }))} placeholder="Store is currently offline" />
-                                      <div className="space-y-2">
-                                         <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Maintenance Description</Label>
-                                         <Textarea 
-                                           placeholder="Provide a reason for the downtime to your users..." 
-                                           value={appStatusForm.offlineBody || ''} 
-                                           onChange={e => setAppStatusForm(f => ({ ...f, offlineBody: e.target.value }))} 
-                                           className="rounded-2xl border-none bg-slate-50 dark:bg-slate-800 font-medium min-h-[150px] shadow-inner p-6" 
-                                         />
-                                      </div>
-                                      <Button onClick={handleSaveAppStatus} className="w-full h-16 rounded-2xl font-black uppercase tracking-widest shadow-2xl bg-amber-500 hover:bg-amber-600">Activate Offline Protocol</Button>
-                                   </div>
-                                   <div className="space-y-6">
-                                      <p className="text-[10px] font-black uppercase text-slate-400 ml-1">Maintenance Hero Image</p>
-                                      <div className="relative aspect-video rounded-[2.5rem] bg-slate-50 dark:bg-slate-800 border-2 border-dashed border-slate-200 dark:border-white/10 overflow-hidden group flex items-center justify-center">
-                                         {appStatusForm.offlineImageUrl ? (
-                                           <Image src={appStatusForm.offlineImageUrl} alt="Offline Hero" fill className="object-cover" unoptimized />
-                                         ) : (
-                                           <div className="text-center opacity-30">
-                                              <ImageIcon className="w-12 h-12 mx-auto mb-2" />
-                                              <p className="text-xs font-black uppercase">Upload Banner</p>
-                                           </div>
-                                         )}
-                                         <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer z-10" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'offline')} />
-                                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-black uppercase">Update Visual</div>
-                                      </div>
-                                   </div>
-                                </div>
-                              )}
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-in slide-in-from-top-4 duration-500">
+                                 <div className="space-y-6">
+                                    <SettingInput label="Maintenance Title" value={appStatusForm.offlineTitle || ''} onChange={v => setAppStatusForm(f => ({ ...f, offlineTitle: v }))} placeholder="Store is currently offline" />
+                                    <div className="space-y-2">
+                                       <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Maintenance Description</Label>
+                                       <Textarea 
+                                         placeholder="Provide a reason for the downtime to your users..." 
+                                         value={appStatusForm.offlineBody || ''} 
+                                         onChange={e => setAppStatusForm(f => ({ ...f, offlineBody: e.target.value }))} 
+                                         className="rounded-2xl border-none bg-slate-50 dark:bg-slate-800 font-medium min-h-[150px] shadow-inner p-6" 
+                                       />
+                                    </div>
+                                    <Button onClick={handleSaveAppStatus} className="w-full h-16 rounded-2xl font-black uppercase tracking-widest shadow-2xl bg-amber-500 hover:bg-amber-600">Sync Offline Config</Button>
+                                 </div>
+                                 <div className="space-y-6">
+                                    <p className="text-[10px] font-black uppercase text-slate-400 ml-1">Maintenance Hero Image</p>
+                                    <div className="relative aspect-video rounded-[2.5rem] bg-slate-50 dark:bg-slate-800 border-2 border-dashed border-slate-200 dark:border-white/10 overflow-hidden group flex items-center justify-center">
+                                       {appStatusForm.offlineImageUrl ? (
+                                         <Image src={appStatusForm.offlineImageUrl} alt="Offline Hero" fill className="object-cover" unoptimized />
+                                       ) : (
+                                         <div className="text-center opacity-30">
+                                            <ImageIcon className="w-12 h-12 mx-auto mb-2" />
+                                            <p className="text-xs font-black uppercase">Upload Banner</p>
+                                         </div>
+                                       )}
+                                       <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer z-10" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'offline')} />
+                                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-black uppercase">Update Visual</div>
+                                    </div>
+                                 </div>
+                              </div>
                            </div>
                         </AccordionContent>
                      </Card>
