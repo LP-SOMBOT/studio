@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useMemo, useEffect, useState } from "react";
@@ -12,9 +11,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
 import { format } from "date-fns";
 
-export default function EventDetailPage(props: { params: Promise<{ id: string }> }) {
-  const params = React.use(props.params);
-  const id = params.id;
+export default function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = React.use(params);
+  const id = resolvedParams.id;
   const router = useRouter();
   const { events, setActiveTab } = useApp();
   const [timeLeft, setTimeLeft] = useState<string>("");
