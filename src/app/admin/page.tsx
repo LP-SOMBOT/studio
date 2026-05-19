@@ -59,7 +59,11 @@ import {
   ShieldQuestion,
   Layers,
   Sparkles,
-  Info
+  Info,
+  DollarSign,
+  ArrowUpCircle,
+  ArrowDownCircle,
+  Ban
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
