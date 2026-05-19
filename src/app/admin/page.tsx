@@ -39,8 +39,6 @@ import {
   Video,
   Bell,
   ChevronLeft,
-  SmartphoneIcon,
-  CreditCardIcon,
   Trophy,
   Megaphone,
   UserCircle,
@@ -64,7 +62,10 @@ import {
   ArrowUpCircle,
   ArrowDownCircle,
   Ban,
-  Star
+  Star,
+  Radio,
+  Monitor,
+  Layout
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -108,6 +109,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { toast } from "@/hooks/use-toast";
 import { cn, formatWhatsAppNumber } from "@/lib/utils";
 import Image from "next/image";
@@ -1168,9 +1175,9 @@ export default function AdminPage() {
                                             </div>
 
                                             <div className="flex gap-2">
-                                               <Button onClick={() => window.open(`https://wa.me/${formatWhatsAppNumber(claim.whatsapp)}`, '_blank')} variant="outline" className="h-12 md:h-16 px-6 rounded-2xl gap-2 font-bold bg-white dark:bg-slate-900 border-slate-200">
+                                               <button onClick={() => window.open(`https://wa.me/${formatWhatsAppNumber(claim.whatsapp)}`, '_blank')} className="h-12 md:h-16 px-6 rounded-2xl gap-2 font-bold bg-white dark:bg-slate-900 border border-slate-200 flex items-center justify-center">
                                                   <MessageCircle size={18} className="text-green-500" /> WhatsApp
-                                               </Button>
+                                               </button>
                                                {selectedAccount.status !== 'sold' && (
                                                  <Button 
                                                    onClick={() => handleForceSold(claim.uid, claim.name)}
@@ -1285,7 +1292,7 @@ export default function AdminPage() {
                                  <div key={p.id} className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl flex items-center justify-between group/item">
                                     <div className="flex items-center gap-3">
                                        <div className="w-8 h-8 rounded-lg bg-white dark:bg-slate-800 overflow-hidden relative border border-white dark:border-white/10 shrink-0">
-                                          {p.thumbnail ? <Image src={p.thumbnail} alt="" fill className="object-cover" /> : <Box size={14} className="m-auto mt-2 text-slate-300"/>}
+                                          {p.thumbnail ? <Image src={p.thumbnail} alt="" fill className="object-cover" unoptimized /> : <Box size={14} className="m-auto mt-2 text-slate-300"/>}
                                        </div>
                                        <div className="min-w-0">
                                           <p className="text-[11px] font-bold truncate max-w-[120px] uppercase">{p.title}</p>
@@ -1324,7 +1331,7 @@ export default function AdminPage() {
                   {events.map(ev => (
                     <Card key={ev.id} className="rounded-[2.5rem] bg-white dark:bg-slate-900 border-none shadow-xl overflow-hidden group">
                        <div className="aspect-video relative bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                          {ev.thumbnailUrl ? <Image src={ev.thumbnailUrl} alt="" fill className="object-cover group-hover:scale-110 transition-transform duration-1000" /> : <Megaphone size={32} className="m-auto absolute inset-0 text-slate-300"/>}
+                          {ev.thumbnailUrl ? <Image src={ev.thumbnailUrl} alt="" fill className="object-cover group-hover:scale-110 transition-transform duration-1000" unoptimized /> : <Megaphone size={32} className="m-auto absolute inset-0 text-slate-300"/>}
                           <div className="absolute top-4 right-4 flex gap-2">
                              <Button size="icon" className="bg-white/80 dark:bg-black/40 text-blue-500 rounded-xl" onClick={() => handleOpenEventDialog(ev)}><Edit size={16}/></Button>
                              <Button size="icon" className="bg-white/80 dark:bg-black/40 text-red-500 rounded-xl" onClick={() => confirmDelete(ev.id, 'event')}><Trash2 size={16}/></Button>
@@ -1448,126 +1455,294 @@ export default function AdminPage() {
           )}
 
           {activeView === 'settings' && (
-            <div className="max-w-5xl mx-auto space-y-12">
+            <div className="max-w-5xl mx-auto space-y-12 pb-24">
                <div className="space-y-2">
-                  <h2 className="text-2xl md:text-4xl font-headline font-bold uppercase tracking-tight">Global Controls</h2>
-                  <p className="text-muted-foreground font-medium uppercase text-xs tracking-widest">Configuration and store preferences.</p>
+                  <h2 className="text-2xl md:text-4xl font-headline font-bold uppercase tracking-tight">Advanced Controls</h2>
+                  <p className="text-muted-foreground font-medium uppercase text-xs tracking-widest">Fine-tune your store's identity, visibility, and marketplace logic.</p>
                </div>
 
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  {/* Visuals & Brand */}
-                  <Card className="p-8 rounded-[2.5rem] border-none shadow-xl bg-white dark:bg-slate-900 space-y-8">
-                     <div className="flex items-center gap-3 text-primary">
-                        <ImageIcon size={20}/>
-                        <h4 className="font-bold text-lg uppercase tracking-tight">Brand Identity</h4>
-                     </div>
-                     <div className="flex flex-col items-center gap-6 p-6 bg-slate-50 dark:bg-slate-800/40 rounded-[2rem] border border-dashed border-slate-200 dark:border-white/10 relative overflow-hidden group">
-                        <div className="w-32 h-32 rounded-[2rem] bg-white dark:bg-slate-900 flex items-center justify-center relative overflow-hidden shadow-xl ring-8 ring-primary/5">
-                           {storeSettings.logo ? <Image src={storeSettings.logo} alt="Logo" fill className="object-contain p-4" unoptimized /> : <div className="text-4xl font-black text-slate-100">O</div>}
-                           <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer z-10" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'logo')} />
-                           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-black uppercase">Change Logo</div>
-                        </div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Application Icon (Favicon & PWA)</p>
-                     </div>
-                  </Card>
-
-                  {/* App Status */}
-                  <Card className="p-8 rounded-[2.5rem] border-none shadow-xl bg-white dark:bg-slate-900 space-y-8">
-                     <div className="flex items-center gap-3 text-amber-500">
-                        <ShieldAlert size={20}/>
-                        <h4 className="font-bold text-lg uppercase tracking-tight">Maintenance Mode</h4>
-                     </div>
-                     <div className="space-y-6">
-                        <div className="flex items-center justify-between p-6 bg-slate-50 dark:bg-slate-800/40 rounded-[2rem] border dark:border-white/5">
-                           <div className="min-w-0">
-                              <p className="font-bold text-sm">Force Offline</p>
-                              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-0.5">Redirect users to maintenance page</p>
+               <Accordion type="single" collapsible className="space-y-6">
+                  {/* Brand Identity */}
+                  <AccordionItem value="brand" className="border-none">
+                     <Card className="rounded-[1.5rem] md:rounded-[2.5rem] border-none shadow-xl bg-white dark:bg-slate-900 overflow-hidden">
+                        <AccordionTrigger className="px-8 py-8 hover:no-underline">
+                           <div className="flex items-center gap-4 text-primary">
+                              <Layout className="w-6 h-6" />
+                              <div className="text-left">
+                                 <h4 className="font-headline font-bold text-lg uppercase tracking-tight">Brand Identity</h4>
+                                 <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">Logo, visual presence, and icons</p>
+                              </div>
                            </div>
-                           <Switch checked={appStatusForm.offline} onCheckedChange={v => setAppStatusForm(f => ({ ...f, offline: v }))} />
-                        </div>
-                        {appStatusForm.offline && (
-                          <div className="space-y-4 animate-in slide-in-from-top-2">
-                             <Input placeholder="Offline Title" value={appStatusForm.offlineTitle} onChange={e => setAppStatusForm(f => ({ ...f, offlineTitle: e.target.value }))} className="h-12 rounded-xl border-none bg-slate-50 dark:bg-slate-800 font-bold" />
-                             <Textarea placeholder="Maintenance Body Text" value={appStatusForm.offlineBody} onChange={e => setAppStatusForm(f => ({ ...f, offlineBody: e.target.value }))} className="rounded-xl border-none bg-slate-50 dark:bg-slate-800 font-medium" />
-                             <Button onClick={handleSaveAppStatus} className="w-full h-14 rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-primary/20">Commit Offline Status</Button>
-                          </div>
-                        )}
-                     </div>
-                  </Card>
+                        </AccordionTrigger>
+                        <AccordionContent className="px-8 pb-8 pt-4">
+                           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                              <div className="flex flex-col items-center gap-6 p-10 bg-slate-50 dark:bg-slate-800/40 rounded-[2rem] border-2 border-dashed border-slate-200 dark:border-white/10 relative overflow-hidden group">
+                                 <div className="w-40 h-40 rounded-[2.5rem] bg-white dark:bg-slate-900 flex items-center justify-center relative overflow-hidden shadow-2xl ring-8 ring-primary/5 transition-transform group-hover:scale-105">
+                                    {storeSettings.logo ? <Image src={storeSettings.logo} alt="Logo" fill className="object-contain p-6" unoptimized /> : <div className="text-6xl font-black text-slate-100">O</div>}
+                                    <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer z-10" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'logo')} />
+                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-black uppercase text-center p-4">Click to Change Store Logo</div>
+                                 </div>
+                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Application Favicon & Branding</p>
+                              </div>
+                              <div className="space-y-6">
+                                 <div className="p-6 bg-primary/5 rounded-[2rem] border border-primary/10">
+                                    <p className="text-xs font-medium leading-relaxed">Your store logo is used for the PWA splash screen, favicon, and email notifications. Use a high-quality square image for best results.</p>
+                                 </div>
+                              </div>
+                           </div>
+                        </AccordionContent>
+                     </Card>
+                  </AccordionItem>
 
-                  {/* Support Links */}
-                  <Card className="p-8 rounded-[2.5rem] border-none shadow-xl bg-white dark:bg-slate-900 space-y-8">
-                     <div className="flex items-center gap-3 text-green-500">
-                        <MessageCircle size={20}/>
-                        <h4 className="font-bold text-lg uppercase tracking-tight">Support Channels</h4>
-                     </div>
-                     <div className="space-y-5">
-                        <SettingInput label="Support WhatsApp" value={helpLinksForm.whatsappNumber} onChange={v => setHelpLinksForm(f => ({ ...f, whatsappNumber: v }))} placeholder="613982172" />
-                        <SettingInput label="TikTok Username" value={helpLinksForm.tiktokUrl} onChange={v => setHelpLinksForm(f => ({ ...f, tiktokUrl: v }))} placeholder="https://tiktok.com/@oskar" />
-                        <SettingInput label="Tutorial Video Link" value={helpLinksForm.tutorialUrl} onChange={v => setHelpLinksForm(f => ({ ...f, tutorialUrl: v }))} placeholder="YouTube URL" />
-                        <Button onClick={handleSaveHelpLinks} className="w-full h-14 rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-primary/20">Update Support Links</Button>
-                     </div>
-                  </Card>
+                  {/* Maintenance Mode */}
+                  <AccordionItem value="maintenance" className="border-none">
+                     <Card className="rounded-[1.5rem] md:rounded-[2.5rem] border-none shadow-xl bg-white dark:bg-slate-900 overflow-hidden">
+                        <AccordionTrigger className="px-8 py-8 hover:no-underline">
+                           <div className="flex items-center gap-4 text-amber-500">
+                              <ShieldAlert className="w-6 h-6" />
+                              <div className="text-left">
+                                 <h4 className="font-headline font-bold text-lg uppercase tracking-tight">Maintenance Protocol</h4>
+                                 <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">Manage store visibility and downtime</p>
+                              </div>
+                           </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="px-8 pb-8 pt-4">
+                           <div className="space-y-8">
+                              <div className="flex items-center justify-between p-8 bg-slate-50 dark:bg-slate-800/40 rounded-[2rem] border-2 border-slate-100 dark:border-white/5 shadow-inner">
+                                 <div className="min-w-0">
+                                    <p className="font-bold text-xl sm:text-2xl text-slate-900 dark:text-white">Force Offline Mode</p>
+                                    <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mt-1">Redirect all non-admin users to maintenance page</p>
+                                 </div>
+                                 <Switch checked={appStatusForm.offline} onCheckedChange={v => setAppStatusForm(f => ({ ...f, offline: v }))} className="scale-150" />
+                              </div>
 
-                  {/* Fee Logic */}
-                  <Card className="p-8 rounded-[2.5rem] border-none shadow-xl bg-white dark:bg-slate-900 space-y-8">
-                     <div className="flex items-center gap-3 text-indigo-500">
-                        <DollarSign size={20}/>
-                        <h4 className="font-bold text-lg uppercase tracking-tight">Marketplace Fees</h4>
-                     </div>
-                     <div className="space-y-6">
-                        <div className="grid grid-cols-2 gap-4">
-                           <SettingInput label="Weekly Listing ($)" type="number" value={feeConfigForm.listingFeeWeekly.toString()} onChange={v => setFeeConfigForm(f => ({ ...f, listingFeeWeekly: parseFloat(v) }))} placeholder="1.00" />
-                           <SettingInput label="Monthly Listing ($)" type="number" value={feeConfigForm.listingFeeMonthly.toString()} onChange={v => setFeeConfigForm(f => ({ ...f, listingFeeMonthly: parseFloat(v) }))} placeholder="3.00" />
-                        </div>
-                        <Button onClick={handleSaveFees} className="w-full h-14 rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-primary/20">Apply New Fees</Button>
-                     </div>
-                  </Card>
-               </div>
+                              {appStatusForm.offline && (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-in slide-in-from-top-4 duration-500">
+                                   <div className="space-y-6">
+                                      <SettingInput label="Maintenance Title" value={appStatusForm.offlineTitle || ''} onChange={v => setAppStatusForm(f => ({ ...f, offlineTitle: v }))} placeholder="Store is currently offline" />
+                                      <div className="space-y-2">
+                                         <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Maintenance Description</Label>
+                                         <Textarea 
+                                           placeholder="Provide a reason for the downtime to your users..." 
+                                           value={appStatusForm.offlineBody || ''} 
+                                           onChange={e => setAppStatusForm(f => ({ ...f, offlineBody: e.target.value }))} 
+                                           className="rounded-2xl border-none bg-slate-50 dark:bg-slate-800 font-medium min-h-[150px] shadow-inner p-6" 
+                                         />
+                                      </div>
+                                      <Button onClick={handleSaveAppStatus} className="w-full h-16 rounded-2xl font-black uppercase tracking-widest shadow-2xl bg-amber-500 hover:bg-amber-600">Activate Offline Protocol</Button>
+                                   </div>
+                                   <div className="space-y-6">
+                                      <p className="text-[10px] font-black uppercase text-slate-400 ml-1">Maintenance Hero Image</p>
+                                      <div className="relative aspect-video rounded-[2.5rem] bg-slate-50 dark:bg-slate-800 border-2 border-dashed border-slate-200 dark:border-white/10 overflow-hidden group flex items-center justify-center">
+                                         {appStatusForm.offlineImageUrl ? (
+                                           <Image src={appStatusForm.offlineImageUrl} alt="Offline Hero" fill className="object-cover" unoptimized />
+                                         ) : (
+                                           <div className="text-center opacity-30">
+                                              <ImageIcon className="w-12 h-12 mx-auto mb-2" />
+                                              <p className="text-xs font-black uppercase">Upload Banner</p>
+                                           </div>
+                                         )}
+                                         <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer z-10" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'offline')} />
+                                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-black uppercase">Update Visual</div>
+                                      </div>
+                                   </div>
+                                </div>
+                              )}
+                           </div>
+                        </AccordionContent>
+                     </Card>
+                  </AccordionItem>
 
-               {/* Payment Methods Table */}
-               <Card className="rounded-[2.5rem] overflow-hidden border-none shadow-xl bg-white dark:bg-slate-900">
-                  <div className="p-8 border-b dark:border-white/5 flex justify-between items-center bg-slate-50/30 dark:bg-slate-800/20">
-                     <h3 className="font-headline font-bold text-xl uppercase tracking-tight">Payment Methods</h3>
-                     <Button size="sm" onClick={() => handleOpenPaymentMethodDialog()} className="h-10 rounded-xl gap-2 font-bold px-6 shadow-md shadow-primary/10">+ Add Provider</Button>
-                  </div>
-                  <div className="overflow-x-auto scrollbar-hide">
-                    <Table className="min-w-[800px]">
-                      <TableHeader className="bg-slate-50/50 dark:bg-slate-800/40">
-                        <TableRow className="border-none">
-                          <TableHead className="px-8 font-bold">Provider</TableHead>
-                          <TableHead className="font-bold">USSD Template</TableHead>
-                          <TableHead className="font-bold">Status</TableHead>
-                          <TableHead className="text-right px-8 font-bold">Action</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {paymentMethods.map(m => (
-                          <TableRow key={m.id} className="border-slate-50 dark:border-white/5">
-                            <TableCell className="px-8">
-                               <div className="flex items-center gap-4">
-                                  <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 overflow-hidden relative shrink-0 border border-white dark:border-white/10 shadow-sm">
-                                     {m.icon ? <Image src={m.icon} alt="" fill className="object-cover" /> : <SmartphoneIcon size={16} className="m-auto mt-3 text-slate-300"/>}
-                                  </div>
-                                  <span className="font-bold text-sm uppercase">{m.name}</span>
-                               </div>
-                            </TableCell>
-                            <TableCell><code className="bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-md text-xs font-bold text-primary">{m.ussdTemplate}</code></TableCell>
-                            <TableCell>
-                               {m.active ? <Badge className="bg-green-500 text-white border-none text-[8px] font-black uppercase">Active</Badge> : <Badge className="bg-slate-500 text-white border-none text-[8px] font-black uppercase">Disabled</Badge>}
-                            </TableCell>
-                            <TableCell className="text-right px-8">
-                               <div className="flex justify-end gap-2">
-                                  <Button size="icon" variant="ghost" className="h-9 w-9 text-blue-500" onClick={() => handleOpenPaymentMethodDialog(m)}><Edit size={18}/></Button>
-                                  <Button size="icon" variant="ghost" className="h-9 w-9 text-red-500" onClick={() => confirmDelete(m.id, 'payment')}><Trash2 size={18}/></Button>
-                               </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-               </Card>
+                  {/* Communication Hub */}
+                  <AccordionItem value="communication" className="border-none">
+                     <Card className="rounded-[1.5rem] md:rounded-[2.5rem] border-none shadow-xl bg-white dark:bg-slate-900 overflow-hidden">
+                        <AccordionTrigger className="px-8 py-8 hover:no-underline">
+                           <div className="flex items-center gap-4 text-green-500">
+                              <MessageCircle className="w-6 h-6" />
+                              <div className="text-left">
+                                 <h4 className="font-headline font-bold text-lg uppercase tracking-tight">Communication Hub</h4>
+                                 <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">Social presence and support links</p>
+                              </div>
+                           </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="px-8 pb-8 pt-4">
+                           <div className="space-y-10">
+                              <div className="flex items-center justify-between p-8 bg-slate-50 dark:bg-slate-800/40 rounded-[2rem] border-2 border-slate-100 dark:border-white/5 shadow-inner">
+                                 <div className="flex items-center gap-4">
+                                    <div className="p-3 bg-red-100 dark:bg-red-500/10 rounded-2xl text-red-500"><Radio className="w-6 h-6 animate-pulse" /></div>
+                                    <div className="min-w-0">
+                                       <p className="font-bold text-xl sm:text-2xl text-slate-900 dark:text-white">TikTok LIVE Visibility</p>
+                                       <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mt-1">Show live promo banner on homepage</p>
+                                    </div>
+                                 </div>
+                                 <Switch checked={storeSettings.isLive} onCheckedChange={v => updateStoreSettings({ isLive: v })} className="scale-150" />
+                              </div>
+
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                 <div className="space-y-6">
+                                    <SettingInput label="Support WhatsApp (e.g. 613982172)" value={helpLinksForm.whatsappNumber} onChange={v => setHelpLinksForm(f => ({ ...f, whatsappNumber: v }))} placeholder="252613982172" />
+                                    <SettingInput label="TikTok Profile URL" value={helpLinksForm.tiktokUrl} onChange={v => setHelpLinksForm(f => ({ ...f, tiktokUrl: v }))} placeholder="https://tiktok.com/@oskar" />
+                                 </div>
+                                 <div className="space-y-6">
+                                    <SettingInput label="Tutorial Video (YouTube Link)" value={helpLinksForm.tutorialUrl} onChange={v => setHelpLinksForm(f => ({ ...f, tutorialUrl: v }))} placeholder="https://youtube.com/..." />
+                                    <div className="space-y-2">
+                                       <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Announcement Ticker Text</Label>
+                                       <Input 
+                                          value={storeSettings.announcementTicker || ''} 
+                                          onChange={e => updateStoreSettings({ announcementTicker: e.target.value })} 
+                                          className="h-16 rounded-2xl border-none bg-slate-50 dark:bg-slate-800 font-bold px-6 shadow-inner" 
+                                          placeholder="Welcome to Oskar Shop..." 
+                                       />
+                                    </div>
+                                 </div>
+                              </div>
+                              <Button onClick={handleSaveHelpLinks} className="w-full h-16 rounded-2xl font-black uppercase tracking-widest shadow-2xl bg-green-600 hover:bg-green-700">Apply Communications Update</Button>
+                           </div>
+                        </AccordionContent>
+                     </Card>
+                  </AccordionItem>
+
+                  {/* Marketplace Economy */}
+                  <AccordionItem value="economy" className="border-none">
+                     <Card className="rounded-[1.5rem] md:rounded-[2.5rem] border-none shadow-xl bg-white dark:bg-slate-900 overflow-hidden">
+                        <AccordionTrigger className="px-8 py-8 hover:no-underline">
+                           <div className="flex items-center gap-4 text-indigo-500">
+                              <DollarSign className="w-6 h-6" />
+                              <div className="text-left">
+                                 <h4 className="font-headline font-bold text-lg uppercase tracking-tight">Marketplace Economy</h4>
+                                 <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">Listing fees and shop revenue logic</p>
+                              </div>
+                           </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="px-8 pb-8 pt-4">
+                           <div className="space-y-10">
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                 <div className="p-8 bg-slate-50 dark:bg-slate-800/40 rounded-[2.5rem] border-2 border-slate-100 dark:border-white/5 space-y-6">
+                                    <div className="flex items-center gap-3">
+                                       <Clock className="text-indigo-500" />
+                                       <p className="font-bold text-xl uppercase tracking-tight">Weekly Fee</p>
+                                    </div>
+                                    <SettingInput label="Amount ($)" type="number" value={feeConfigForm.listingFeeWeekly.toString()} onChange={v => setFeeConfigForm(f => ({ ...f, listingFeeWeekly: parseFloat(v) }))} placeholder="1.00" />
+                                 </div>
+                                 <div className="p-8 bg-slate-50 dark:bg-slate-800/40 rounded-[2.5rem] border-2 border-slate-100 dark:border-white/5 space-y-6">
+                                    <div className="flex items-center gap-3">
+                                       <Calendar className="text-indigo-500" />
+                                       <p className="font-bold text-xl uppercase tracking-tight">Monthly Fee</p>
+                                    </div>
+                                    <SettingInput label="Amount ($)" type="number" value={feeConfigForm.listingFeeMonthly.toString()} onChange={v => setFeeConfigForm(f => ({ ...f, listingFeeMonthly: parseFloat(v) }))} placeholder="3.00" />
+                                 </div>
+                              </div>
+                              
+                              <div className="space-y-2">
+                                 <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Admin Payment Number (For Fees)</Label>
+                                 <Input 
+                                    value={storeSettings.paymentNumber || ''} 
+                                    onChange={e => updateStoreSettings({ paymentNumber: e.target.value })} 
+                                    className="h-16 rounded-2xl border-none bg-slate-50 dark:bg-slate-800 font-bold px-6 shadow-inner" 
+                                    placeholder="613982172" 
+                                 />
+                              </div>
+
+                              <Button onClick={handleSaveFees} className="w-full h-16 rounded-2xl font-black uppercase tracking-widest shadow-2xl bg-indigo-600 hover:bg-indigo-700">Sync Economy Settings</Button>
+                           </div>
+                        </AccordionContent>
+                     </Card>
+                  </AccordionItem>
+
+                  {/* Payment Methods */}
+                  <AccordionItem value="payments" className="border-none">
+                     <Card className="rounded-[1.5rem] md:rounded-[2.5rem] border-none shadow-xl bg-white dark:bg-slate-900 overflow-hidden">
+                        <AccordionTrigger className="px-8 py-8 hover:no-underline">
+                           <div className="flex items-center gap-4 text-emerald-500">
+                              <CreditCard className="w-6 h-6" />
+                              <div className="text-left">
+                                 <h4 className="font-headline font-bold text-lg uppercase tracking-tight">Payment Ecosystem</h4>
+                                 <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">Manage available payment providers</p>
+                              </div>
+                           </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="p-0">
+                           <div className="p-8 border-b dark:border-white/5 flex justify-between items-center bg-slate-50/30 dark:bg-slate-800/20">
+                              <h3 className="font-bold text-base uppercase tracking-widest text-muted-foreground">Active Providers</h3>
+                              <Button size="sm" onClick={() => handleOpenPaymentMethodDialog()} className="h-12 rounded-xl gap-2 font-black px-6 shadow-xl shadow-emerald-500/20 bg-emerald-600">+ Add Method</Button>
+                           </div>
+                           <div className="overflow-x-auto scrollbar-hide">
+                             <Table className="min-w-[800px]">
+                               <TableHeader className="bg-slate-50/50 dark:bg-slate-800/40">
+                                 <TableRow className="border-none">
+                                   <TableHead className="px-8 font-bold">Provider</TableHead>
+                                   <TableHead className="font-bold">USSD Template</TableHead>
+                                   <TableHead className="font-bold">Status</TableHead>
+                                   <TableHead className="text-right px-8 font-bold">Action</TableHead>
+                                 </TableRow>
+                               </TableHeader>
+                               <TableBody>
+                                 {paymentMethods.map(m => (
+                                   <TableRow key={m.id} className="border-slate-50 dark:border-white/5">
+                                     <TableCell className="px-8">
+                                        <div className="flex items-center gap-4">
+                                           <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 overflow-hidden relative shrink-0 border border-white dark:border-white/10 shadow-sm">
+                                              {m.icon ? <Image src={m.icon} alt="" fill className="object-cover" /> : <Monitor size={20} className="m-auto mt-3 text-slate-300"/>}
+                                           </div>
+                                           <span className="font-black text-sm uppercase tracking-widest">{m.name}</span>
+                                        </div>
+                                     </TableCell>
+                                     <TableCell><code className="bg-slate-100 dark:bg-slate-800 px-4 py-2 rounded-xl text-[11px] font-black text-primary font-mono">{m.ussdTemplate}</code></TableCell>
+                                     <TableCell>
+                                        {m.active ? <Badge className="bg-green-500 text-white border-none text-[8px] font-black uppercase tracking-widest">Live</Badge> : <Badge className="bg-slate-500 text-white border-none text-[8px] font-black uppercase tracking-widest">Paused</Badge>}
+                                     </TableCell>
+                                     <TableCell className="text-right px-8">
+                                        <div className="flex justify-end gap-2">
+                                           <Button size="icon" variant="ghost" className="h-10 w-10 text-blue-500 rounded-xl" onClick={() => handleOpenPaymentMethodDialog(m)}><Edit size={20}/></Button>
+                                           <Button size="icon" variant="ghost" className="h-10 w-10 text-red-500 rounded-xl" onClick={() => confirmDelete(m.id, 'payment')}><Trash2 size={20}/></Button>
+                                        </div>
+                                     </TableCell>
+                                   </TableRow>
+                                 ))}
+                               </TableBody>
+                             </Table>
+                           </div>
+                        </AccordionContent>
+                     </Card>
+                  </AccordionItem>
+
+                  {/* Onboarding Slider */}
+                  <AccordionItem value="onboarding" className="border-none">
+                     <Card className="rounded-[1.5rem] md:rounded-[2.5rem] border-none shadow-xl bg-white dark:bg-slate-900 overflow-hidden">
+                        <AccordionTrigger className="px-8 py-8 hover:no-underline">
+                           <div className="flex items-center gap-4 text-purple-500">
+                              <Monitor className="w-6 h-6" />
+                              <div className="text-left">
+                                 <h4 className="font-headline font-bold text-lg uppercase tracking-tight">Onboarding Slider</h4>
+                                 <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">Manage the 3-step introductory screens</p>
+                              </div>
+                           </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="px-8 pb-8 pt-4">
+                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 md:gap-10">
+                              {[0, 1, 2].map(idx => (
+                                <div key={idx} className="space-y-4">
+                                   <p className="text-[10px] font-black uppercase text-slate-400 text-center tracking-widest">Slide {idx + 1}</p>
+                                   <div className="relative aspect-[3/4] rounded-[2rem] bg-slate-50 dark:bg-slate-800 border-2 border-dashed border-slate-200 dark:border-white/10 overflow-hidden group shadow-lg">
+                                      {storeSettings.onboardingImages?.[idx] ? (
+                                        <Image src={storeSettings.onboardingImages[idx]} alt={`Slide ${idx + 1}`} fill className="object-cover" unoptimized />
+                                      ) : (
+                                        <div className="absolute inset-0 flex flex-col items-center justify-center opacity-30">
+                                           <ImageIcon className="w-10 h-10 mb-2" />
+                                           <p className="text-[10px] font-black uppercase">No Image</p>
+                                        </div>
+                                      )}
+                                      <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer z-10" onChange={e => e.target.files?.[0] && handleOnboardingImageUpload(e.target.files[0], idx)} />
+                                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-black uppercase text-center p-6">Click to Upload Slide {idx + 1}</div>
+                                      {isUploading && <div className="absolute inset-0 bg-white/80 dark:bg-black/80 flex items-center justify-center z-20"><Loader2 className="animate-spin text-primary" /></div>}
+                                   </div>
+                                </div>
+                              ))}
+                           </div>
+                        </AccordionContent>
+                     </Card>
+                  </AccordionItem>
+               </Accordion>
             </div>
           )}
         </main>
@@ -1671,7 +1846,7 @@ export default function AdminPage() {
            <form onSubmit={handleSavePaymentMethod} className="space-y-6 mt-4">
               <div className="flex justify-center mb-4">
                  <div className="relative w-20 h-20 rounded-2xl bg-slate-50 dark:bg-slate-800 border-2 border-dashed border-slate-200 dark:border-white/5 flex items-center justify-center group overflow-hidden">
-                    {paymentMethodForm.icon ? <Image src={paymentMethodForm.icon} alt="" fill className="object-cover" /> : <SmartphoneIcon className="text-slate-300" />}
+                    {paymentMethodForm.icon ? <Image src={paymentMethodForm.icon} alt="" fill className="object-cover" /> : <Smartphone className="text-slate-300" />}
                     <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'payment')} />
                  </div>
               </div>
@@ -1783,7 +1958,7 @@ function SettingInput({ label, value, onChange, placeholder, type = "text" }: { 
   return (
     <div className="space-y-2">
        <Label className="text-[10px] font-black uppercase text-slate-400 ml-1 tracking-widest">{label}</Label>
-       <Input type={type} placeholder={placeholder} value={value} onChange={e => onChange(e.target.value)} className="h-12 rounded-xl border-none bg-slate-50 dark:bg-slate-800 font-bold px-4" />
+       <Input type={type} placeholder={placeholder} value={value} onChange={e => onChange(e.target.value)} className="h-16 rounded-2xl border-none bg-slate-50 dark:bg-slate-800 font-bold px-6 shadow-inner" />
     </div>
   );
 }
