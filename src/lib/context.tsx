@@ -124,6 +124,7 @@ type AccountPost = {
     whatsapp: string;
     photo?: string;
     timestamp: number;
+    status?: 'pending' | 'accepted' | 'rejected';
   }>;
   processedBy?: {
     uid: string;
@@ -709,7 +710,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const deleteAccountPost = async (pid: string) => { if (!rtdb) return; await remove(ref(rtdb, `accountPosts/${pid}`)); toast({ title: "Post Deleted" }); };
   const deleteOrder = async (oid: string) => { if (!rtdb) return; await remove(ref(rtdb, `orders/${oid}`)); toast({ title: "Order Deleted" }); };
 
-  const buyAccountPost = (post: any) => {
+  const buyAccountPost = (post: AccountPost) => {
     if (!user) {
       toast({ title: "Fadlan soo gal", description: "Waa inaad soo gashaa si aad u iibsato account-kan.", variant: "destructive" });
       router.push('/login');
@@ -732,8 +733,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const updates: any = {};
       if (postData.claimants?.[user.uid]) {
         updates[`accountPosts/${postId}/claimants/${user.uid}`] = null;
-        // If this was the last claimant causing conflict, we don't automatically reset status, 
-        // let the seller or admin handle it.
       }
       if (targetOrder) {
         updates[`orders/${targetOrder.id}/buyerOutcome`] = outcome;
@@ -746,13 +745,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     } else {
       const reportTime = Date.now();
       
-      // REAL-TIME FIX: Write buyer info directly to the account post
       const claimantInfo = {
         uid: user.uid,
         name: enhancedUser.name || "Buyer",
         whatsapp: targetOrder?.gameDetails?.whatsappNumber || enhancedUser.phoneNumber || "N/A",
         photo: enhancedUser.photoURL || "",
-        timestamp: reportTime
+        timestamp: reportTime,
+        status: 'pending'
       };
 
       await update(ref(rtdb, `accountPosts/${postId}/claimants/${user.uid}`), claimantInfo);
@@ -784,40 +783,53 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     
     const postRef = ref(rtdb, `accountPosts/${postId}`);
     const postSnap = await get(postRef);
-    const post = postSnap.val();
-    if (!post) return;
+    const postData = postSnap.val();
+    if (!postData) return;
 
-    const targetBuyerId = buyerId;
-    if (!targetBuyerId) return;
+    if (!buyerId) return;
+
+    const updates: any = {};
+    const reportTime = Date.now();
+
+    // 1. Update the individual claimant's status
+    updates[`accountPosts/${postId}/claimants/${buyerId}/status`] = confirmed ? 'accepted' : 'rejected';
+    updates[`accountPosts/${postId}/sellerReported`] = true;
+    updates[`accountPosts/${postId}/sellerReportedAt`] = reportTime;
 
     if (confirmed) {
-      await update(postRef, {
-        status: 'sold',
-        sold: true,
-        sellerReported: true,
-        sellerReportedAt: Date.now(),
-        completedAt: Date.now(),
-        boughtBy: targetBuyerId,
-        holdingBy: targetBuyerId,
-        conflict: false,
-        claimants: null // Finalized
-      });
-      toast({ title: "Account Sold!", description: "Transaction finalized successfully." });
-      broadcastNotification("Purchase Confirmed! 🤑", "Seller has confirmed your purchase. The account is yours!", targetBuyerId);
+      // Logic: If seller's first claim response is sold, go directly to sold.
+      // But if they have previously rejected someone, or have multiple claims, admin should see it as conflict/holding.
+      const hasPreviousRejections = Object.values(postData.claimants || {}).some(c => c.status === 'rejected');
+      const otherClaimantsCount = Object.keys(postData.claimants || {}).length - 1;
+
+      if (hasPreviousRejections || otherClaimantsCount > 0) {
+        // Multi-claim scenario or history of rejection -> Go to holding for admin review
+        updates[`accountPosts/${postId}/status`] = 'holding';
+        updates[`accountPosts/${postId}/conflict`] = true;
+        updates[`accountPosts/${postId}/boughtBy`] = buyerId;
+        updates[`accountPosts/${postId}/holdingBy`] = buyerId;
+      } else {
+        // First claim and confirmed -> Go directly to sold
+        updates[`accountPosts/${postId}/status`] = 'sold';
+        updates[`accountPosts/${postId}/sold`] = true;
+        updates[`accountPosts/${postId}/boughtBy`] = buyerId;
+        updates[`accountPosts/${postId}/holdingBy`] = buyerId;
+        updates[`accountPosts/${postId}/completedAt`] = reportTime;
+        updates[`accountPosts/${postId}/claimants`] = null; // Clean up
+      }
+
+      toast({ title: "Response Recorded!", description: confirmed ? "Sale confirmed. Waiting for finalization." : "Claim rejected." });
+      broadcastNotification("Purchase Update! 🤑", confirmed ? "Seller has accepted your purchase claim!" : "Seller rejected your purchase claim.", buyerId);
     } else {
-      // Conflict: Seller rejects this specific buyer's claim
-      const updates: any = {};
+      // Conflict: Seller explicitly rejects this buyer
       updates[`accountPosts/${postId}/status`] = 'holding';
       updates[`accountPosts/${postId}/conflict`] = true;
-      updates[`accountPosts/${postId}/sellerReported`] = true;
-      updates[`accountPosts/${postId}/sellerReportedAt`] = Date.now();
-      // Remove this specific claimant
-      updates[`accountPosts/${postId}/claimants/${targetBuyerId}`] = null;
       
-      await update(ref(rtdb), updates);
-      toast({ title: "Reported Disagreement", description: "Admin will review this transaction." });
-      await broadcastAdminNotification("Conflict Detected! ⚠️", `Seller disagreed with buyer report for account #${postId.toUpperCase()}.`);
+      toast({ title: "Claim Rejected", description: "This will be reviewed by an admin." });
+      await broadcastAdminNotification("Conflict Detected! ⚠️", `Seller rejected buyer claim for account #${postId.toUpperCase()}.`);
     }
+
+    await update(ref(rtdb), updates);
   };
 
   const enforceAccountAction = async (postId: string, action: 'delete' | 'holding' | 'approved' | 'pending', message: string) => {
@@ -833,7 +845,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       conflict: false,
       buyerReported: false,
       buyerReportedAt: null,
-      claimants: null // Reset claims when admin enforces
+      claimants: null 
     };
 
     if (action === 'delete') {
@@ -895,7 +907,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     await update(ref(rtdb, `orders/${oid}`), assignmentUpdate);
     
     if (status === 'successful') {
-      if (accountItem && accountItem.id) await update(ref(rtdb, `accountPosts/${accountItem.id}`), { status: 'sold', sold: true, boughtBy: userId, holdingBy: userId });
+      if (accountItem && accountItem.id) await update(ref(rtdb, `accountPosts/${accountItem.id}`), { status: 'sold', sold: true, boughtBy: userId, holdingBy: userId, claimants: null });
       if (userId && oldStatus !== 'successful') {
         await update(ref(rtdb, `users/${userId}`), { points: increment(1) });
         broadcastNotification("Order Successful! ✅", "Dalabkaaga waa lagu guuleystay. Waxaad heshay 1 point!", userId);
